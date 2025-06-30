@@ -1,17 +1,19 @@
 package com.sundtrack.catan.messaging;
 
+import com.sundtrack.catan.game.Board;
+
 public class Greeting {
 
-    private String content;
+    private Board content;
 
     public Greeting() {
     }
 
-    public Greeting(String content) {
+    public Greeting(Board content) {
         this.content = content;
     }
 
-    public String getContent() {
+    public Board getContent() {
         return content;
     }
 

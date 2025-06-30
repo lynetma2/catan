@@ -13,4 +13,16 @@ public class Board {
         this.roads = new ArrayList<>();
         this.buildings = new ArrayList<>();
     }
+
+    public ArrayList<Hex> getMap() {
+        return map;
+    }
+
+    public ArrayList<Road> getRoads() {
+        return roads;
+    }
+
+    public ArrayList<Vertex> getBuildings() {
+        return buildings;
+    }
 }

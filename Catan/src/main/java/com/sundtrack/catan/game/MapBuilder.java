@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class MapBuilder {
 
-    public ArrayList<Hex> classicNotRandom() {
+    public static ArrayList<Hex> classicNotRandom() {
         ArrayList<Hex> map = new ArrayList<>();
 
         //Hardcoded cuz not random
