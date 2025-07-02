@@ -1,0 +1,60 @@
+import {Orientation} from "./Orientation.ts";
+import {Point} from "./Point.ts";
+import {Hex} from "./Hex.ts";
+
+export class Layout {
+
+    public orientation: Orientation;
+    public size: Point;
+    public origin: Point;
+
+    constructor(orientation: Orientation, size: Point, origin: Point) {
+        this.origin = origin;
+        this.size = size;
+        this.orientation = orientation;
+    }
+
+    public static pointy: Orientation = new Orientation(Math.sqrt(3.0), Math.sqrt(3.0) / 2.0, 0.0, 3.0 / 2.0, Math.sqrt(3.0) / 3.0, -1.0 / 3.0, 0.0, 2.0 / 3.0, 0.5);
+    public static flat: Orientation = new Orientation(3.0 / 2.0, 0.0, Math.sqrt(3.0) / 2.0, Math.sqrt(3.0), 2.0 / 3.0, 0.0, -1.0 / 3.0, Math.sqrt(3.0) / 3.0, 0.0);
+
+    public hexToPixel(h: Hex): Point {
+        const M: Orientation = this.orientation;
+        const size: Point = this.size;
+        const origin: Point = this.origin;
+        const x: number = (M.f0 * h.q + M.f1 * h.r) * size.x;
+        const y: number = (M.f2 * h.q + M.f3 * h.r) * size.y;
+        return new Point(x + origin.x, y + origin.y);
+    }
+
+    public pixelToHexFractional(p: Point): Hex {
+        const M: Orientation = this.orientation;
+        const size: Point = this.size;
+        const origin: Point = this.origin;
+        const pt: Point = new Point((p.x - origin.x) / size.x, (p.y - origin.y) / size.y);
+        const q: number = M.b0 * pt.x + M.b1 * pt.y;
+        const r: number = M.b2 * pt.x + M.b3 * pt.y;
+        return new Hex(q, r, -q - r);
+    }
+
+    public pixelToHexRounded(p: Point): Hex {
+        return this.pixelToHexFractional(p).round();
+    }
+
+    public hexCornerOffset(corner: number): Point {
+        const M: Orientation = this.orientation;
+        const size: Point = this.size;
+        const angle: number = 2.0 * Math.PI * (M.start_angle - corner) / 6.0;
+        return new Point(size.x * Math.cos(angle), size.y * Math.sin(angle));
+    }
+
+    public polygonCorners(h: Hex): Point[] {
+        const corners: Point[] = [];
+        const center: Point = this.hexToPixel(h);
+        for (let i = 0; i < 6; i++) {
+            const offset: Point = this.hexCornerOffset(i);
+            corners.push(new Point(center.x + offset.x, center.y + offset.y));
+        }
+        return corners;
+    }
+
+}
