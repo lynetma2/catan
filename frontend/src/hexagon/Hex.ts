@@ -1,3 +1,5 @@
+import type {Layout} from "./Layout.ts";
+
 export class Hex {
     public q: number;
     public r: number;
@@ -85,6 +87,17 @@ export class Hex {
             results.push(a_nudge.lerp(b_nudge, step * i).round());
         }
         return results;
+    }
+
+    public path2d(layout: Layout): Path2D {
+        const polygon = layout.polygonCorners(this);
+        const hex = new Path2D();
+        hex.moveTo(polygon[0].x, polygon[0].y);
+        for (let i = 1; i < polygon.length; i++) {
+            hex.lineTo(polygon[i].x, polygon[i].y);
+        }
+        hex.lineTo(polygon[0].x, polygon[0].y);
+        return hex
     }
 
 }
