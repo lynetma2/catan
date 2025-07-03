@@ -1,6 +1,7 @@
 import {Orientation} from "./Orientation.ts";
 import {Point} from "./Point.ts";
 import {Hex} from "./Hex.ts";
+import {Edge} from "./Edge.ts";
 
 export class Layout {
 
@@ -8,7 +9,7 @@ export class Layout {
     public size: Point;
     public origin: Point;
 
-    constructor(orientation: Orientation, size: Point, origin: Point) {
+    constructor(orientation: Orientation, size: Point, origin: Point, gap: number) {
         this.origin = origin;
         this.size = size;
         this.orientation = orientation;
@@ -56,5 +57,85 @@ export class Layout {
         }
         return corners;
     }
+
+    public hexToPixelVertice(h: Hex) {
+        const center = this.hexToPixel(h);
+        const leftOffset = this.hexCornerOffset(0);
+        const rightOffset = this.hexCornerOffset(3);
+    }
+
+    public edgeToPixelVertices(e: Edge) {
+        const h = new Hex(e.q, e.r, e.s);
+        const polygonCorners = this.polygonCorners(h);
+        const vertices: Point[] = [];
+
+        switch (e.direction) {
+            case "NORTH":
+                vertices.push(polygonCorners[4]);
+                vertices.push(polygonCorners[5]);
+                break;
+            case "EAST":
+                vertices.push(polygonCorners[5]);
+                vertices.push(polygonCorners[0]);
+                break;
+            case "WEST":
+                vertices.push(polygonCorners[3]);
+                vertices.push(polygonCorners[4]);
+                break;
+        }
+
+        return vertices;
+    }
+
+    public pixelToEdgeRounded(p: Point) {
+        //Plan!
+        const hexCenter = this.pixelToHexRounded(p);
+        const polygonCorners = this.polygonCorners(hexCenter);
+        let shortestsDistance: number | undefined = undefined;
+        let shortestsCoordinates: Edge | undefined = undefined;
+        for (let i = 0; i < 6; i++) {
+            const a = polygonCorners[i];
+            const b = polygonCorners[(i + 1) % 6];
+            const d = (Math.abs((b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x))
+                / Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2)));
+
+            //Calculate hex coordinates of the current edge.
+            let coordinates: Edge | undefined = undefined;
+            switch (i) {
+                case 0:
+                    coordinates = new Edge(hexCenter.q + 1, hexCenter.r, hexCenter.s - 1, Edge.WEST_DIRECTION);
+                    shortestsDistance = d;
+                    shortestsCoordinates = coordinates;
+                    break;
+                case 1:
+                    coordinates = new Edge(hexCenter.q, hexCenter.r + 1, hexCenter.s - 1, Edge.NORTH_DIRECTION);
+                    break;
+                case 2:
+                    coordinates = new Edge(hexCenter.q - 1, hexCenter.r + 1, hexCenter.s, Edge.EAST_DIRECTION);
+                    break;
+                case 3:
+                    coordinates = new Edge(hexCenter.q + 1, hexCenter.r, hexCenter.s - 1, Edge.WEST_DIRECTION);
+                    break;
+                case 4:
+                    coordinates = new Edge(hexCenter.q + 1, hexCenter.r, hexCenter.s - 1, Edge.NORTH_DIRECTION);
+                    break;
+                case 5:
+                    coordinates = new Edge(hexCenter.q + 1, hexCenter.r, hexCenter.s - 1, Edge.EAST_DIRECTION);
+                    break;
+            }
+
+            if (shortestsDistance && shortestsDistance > d) {
+                shortestsDistance = d;
+                shortestsCoordinates = coordinates;
+            }
+        }
+        //Udregn Hex fra denne position
+        //Udregn edges i hex
+        //Udregn afstand til edges
+        //Returner den med kortest afstand, i hex coordinater.
+
+        return shortestsCoordinates;
+    }
+
 
 }
