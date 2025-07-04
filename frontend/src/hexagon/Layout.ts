@@ -2,17 +2,24 @@ import {Orientation} from "./Orientation.ts";
 import {Point} from "./Point.ts";
 import {Hex} from "./Hex.ts";
 import {Edge} from "./Edge.ts";
+import {Vertex} from "./Vertex.ts";
 
 export class Layout {
 
     public orientation: Orientation;
     public size: Point;
     public origin: Point;
+    public road_width: number;
+    public city_radius: number;
+    public settlement_radius: number;
 
-    constructor(orientation: Orientation, size: Point, origin: Point, gap: number) {
+    constructor(orientation: Orientation, size: Point, origin: Point, road_width?: number, city_radius?: number, settlement_radius?: number) {
         this.origin = origin;
         this.size = size;
         this.orientation = orientation;
+        this.road_width = road_width ? road_width : 1;
+        this.city_radius = city_radius ? city_radius : 3;
+        this.settlement_radius = settlement_radius ? settlement_radius : 1;
     }
 
     public static pointy: Orientation = new Orientation(Math.sqrt(3.0), Math.sqrt(3.0) / 2.0, 0.0, 3.0 / 2.0, Math.sqrt(3.0) / 3.0, -1.0 / 3.0, 0.0, 2.0 / 3.0, 0.5);
@@ -58,10 +65,16 @@ export class Layout {
         return corners;
     }
 
-    public hexToPixelVertice(h: Hex) {
+    public vertexToPixelVertex(v: Vertex) {
+        const h = new Hex(v.q, v.r, v.s);
         const center = this.hexToPixel(h);
-        const leftOffset = this.hexCornerOffset(0);
-        const rightOffset = this.hexCornerOffset(3);
+        let offset: Point;
+        if (v.direction == Vertex.EAST_DIRECTION) {
+            offset = this.hexCornerOffset(0)
+        } else {
+            offset = this.hexCornerOffset(3)
+        }
+        return new Point(center.x + offset.x, center.y + offset.y)
     }
 
     public edgeToPixelVertices(e: Edge) {
@@ -71,16 +84,16 @@ export class Layout {
 
         switch (e.direction) {
             case "NORTH":
-                vertices.push(polygonCorners[4]);
-                vertices.push(polygonCorners[5]);
+                vertices.push(polygonCorners[1]);
+                vertices.push(polygonCorners[2]);
                 break;
             case "EAST":
-                vertices.push(polygonCorners[5]);
                 vertices.push(polygonCorners[0]);
+                vertices.push(polygonCorners[1]);
                 break;
             case "WEST":
+                vertices.push(polygonCorners[2]);
                 vertices.push(polygonCorners[3]);
-                vertices.push(polygonCorners[4]);
                 break;
         }
 
@@ -101,26 +114,32 @@ export class Layout {
 
             //Calculate hex coordinates of the current edge.
             let coordinates: Edge | undefined = undefined;
+            let cc = undefined;
             switch (i) {
                 case 0:
-                    coordinates = new Edge(hexCenter.q + 1, hexCenter.r, hexCenter.s - 1, Edge.WEST_DIRECTION);
+                    coordinates = new Edge(hexCenter.q, hexCenter.r, hexCenter.s, Edge.EAST_DIRECTION);
                     shortestsDistance = d;
                     shortestsCoordinates = coordinates;
                     break;
                 case 1:
-                    coordinates = new Edge(hexCenter.q, hexCenter.r + 1, hexCenter.s - 1, Edge.NORTH_DIRECTION);
+                    coordinates = new Edge(hexCenter.q, hexCenter.r, hexCenter.s, Edge.NORTH_DIRECTION);
+                    cc = 1;
                     break;
                 case 2:
-                    coordinates = new Edge(hexCenter.q - 1, hexCenter.r + 1, hexCenter.s, Edge.EAST_DIRECTION);
+                    coordinates = new Edge(hexCenter.q, hexCenter.r, hexCenter.s, Edge.WEST_DIRECTION);
+                    cc = 2;
                     break;
                 case 3:
-                    coordinates = new Edge(hexCenter.q + 1, hexCenter.r, hexCenter.s - 1, Edge.WEST_DIRECTION);
+                    coordinates = new Edge(hexCenter.q - 1, hexCenter.r + 1, hexCenter.s, Edge.EAST_DIRECTION);
+                    cc = 3;
                     break;
                 case 4:
-                    coordinates = new Edge(hexCenter.q + 1, hexCenter.r, hexCenter.s - 1, Edge.NORTH_DIRECTION);
+                    coordinates = new Edge(hexCenter.q, hexCenter.r + 1, hexCenter.s - 1, Edge.NORTH_DIRECTION);
+                    cc = 4;
                     break;
                 case 5:
-                    coordinates = new Edge(hexCenter.q + 1, hexCenter.r, hexCenter.s - 1, Edge.EAST_DIRECTION);
+                    coordinates = new Edge(hexCenter.q + 1, hexCenter.r, hexCenter.s - 1, Edge.WEST_DIRECTION);
+                    cc = 5;
                     break;
             }
 
@@ -133,7 +152,60 @@ export class Layout {
         //Udregn edges i hex
         //Udregn afstand til edges
         //Returner den med kortest afstand, i hex coordinater.
+        return shortestsCoordinates;
+    }
 
+    public pixelToVertixRounded(p: Point) {
+        //Plan!
+        const hexCenter = this.pixelToHexRounded(p);
+        const polygonCorners = this.polygonCorners(hexCenter);
+        let shortestsDistance: number | undefined = undefined;
+        let shortestsCoordinates: Vertex | undefined = undefined;
+        for (let i = 0; i < 6; i++) {
+            const a = polygonCorners[i];
+            const b = p;
+            const d = Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2));
+
+            //Calculate hex coordinates of the current edge.
+            let coordinates: Vertex | undefined = undefined;
+            let cc = undefined;
+            switch (i) {
+                case 0:
+                    coordinates = new Vertex(hexCenter.q, hexCenter.r, hexCenter.s, Vertex.EAST_DIRECTION);
+                    shortestsDistance = d;
+                    shortestsCoordinates = coordinates;
+                    break;
+                case 1:
+                    coordinates = new Vertex(hexCenter.q + 1, hexCenter.r - 1, hexCenter.s, Vertex.WEST_DIRECTION);
+                    cc = 1;
+                    break;
+                case 2:
+                    coordinates = new Vertex(hexCenter.q - 1, hexCenter.r, hexCenter.s + 1, Vertex.EAST_DIRECTION);
+                    cc = 2;
+                    break;
+                case 3:
+                    coordinates = new Vertex(hexCenter.q, hexCenter.r, hexCenter.s, Vertex.WEST_DIRECTION);
+                    cc = 3;
+                    break;
+                case 4:
+                    coordinates = new Vertex(hexCenter.q -1, hexCenter.r + 1, hexCenter.s, Vertex.EAST_DIRECTION);
+                    cc = 4;
+                    break;
+                case 5:
+                    coordinates = new Vertex(hexCenter.q + 1, hexCenter.r, hexCenter.s -1, Vertex.WEST_DIRECTION);
+                    cc = 5;
+                    break;
+            }
+
+            if (shortestsDistance && shortestsDistance > d) {
+                shortestsDistance = d;
+                shortestsCoordinates = coordinates;
+            }
+        }
+        //Udregn Hex fra denne position
+        //Udregn edges i hex
+        //Udregn afstand til edges
+        //Returner den med kortest afstand, i hex coordinater.
         return shortestsCoordinates;
     }
 

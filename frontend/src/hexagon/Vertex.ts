@@ -1,0 +1,25 @@
+import type {Layout} from "./Layout.ts";
+
+export class Vertex {
+    public q:number;
+    public r:number;
+    public s:number;
+    public direction: string;
+    public static EAST_DIRECTION: string = "EAST";
+    public static WEST_DIRECTION: string = "WEST";
+
+    constructor(q: number, r: number, s:number, direction: string) {
+        this.q = q;
+        this.r = r;
+        this.s = s;
+        this.direction = direction;
+    }
+
+    //TODO update this
+    public path2d(layout: Layout, isCity: boolean): Path2D {
+        const point = layout.vertexToPixelVertex(this);
+        const circle = new Path2D();
+        circle.arc(point.x, point.y, isCity ? layout.city_radius : layout.settlement_radius, 0, Math.PI * 2);
+        return circle
+    }
+}

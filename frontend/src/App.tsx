@@ -6,13 +6,14 @@ import {Point} from "./hexagon/Point.ts";
 import {Terrain} from "./game/Terrain.ts";
 import {Board} from "./game/Board.ts";
 import {Road} from "./game/Road.ts";
+import {Building} from "./game/Building.ts";
 
 function App() {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
-            const layout = new Layout(Layout.flat, new Point(50, 50), new Point(500, 500));
+            const layout = new Layout(Layout.flat, new Point(50, 50), new Point(500, 500), 10, 10, 5);
 
             //Example map
             const map = new Map<string, Terrain>();
@@ -31,7 +32,7 @@ function App() {
                 return;
             }
 
-            const board = new Board(map, new Map<string, Road>(), layout, canvas);
+            const board = new Board(map, new Map<string, Road>(), new Map<string, Building>, layout, canvas);
             //let currentSelection: Terrain | undefined = undefined;
             board.draw()
 
@@ -49,15 +50,24 @@ function App() {
             //     board.draw();
             // });
 
+            // canvas.addEventListener("mousemove", e => {
+            //     const edge = layout.pixelToEdgeRounded(new Point(getMousePos(canvas, e).x, getMousePos(canvas, e).y));
+            //     console.log(edge);
+            //     if (edge && !board.roads.has(`q${edge.q}r${edge.r}d${edge.direction}`)) {
+            //         board.roads.clear()
+            //         board.roads.set(`q${edge.q}r${edge.r}d${edge.direction}`, new Road(edge, 0))
+            //         board.draw();
+            //     }
+            // });
+
             canvas.addEventListener("mousemove", e => {
-                const edge = layout.pixelToEdgeRounded(new Point(getMousePos(canvas, e).x, getMousePos(canvas, e).y));
-                console.log(edge);
-                if (edge && !board.roads.has(`q${edge.q}r${edge.r}d${edge.direction}`)) {
-                    board.roads.clear()
-                    board.roads.set(`q${edge.q}r${edge.r}d${edge.direction}`, new Road(edge, 0))
-                    board.draw();
-                }
-            });
+                const vertex = layout.pixelToVertixRounded(new Point(getMousePos(canvas, e).x, getMousePos(canvas, e).y));
+                    if (vertex && !board.roads.has(`q${vertex.q}r${vertex.r}d${vertex.direction}`)) {
+                        board.buildings.clear()
+                        board.buildings.set(`q${vertex.q}r${vertex.r}d${vertex.direction}`, new Building(vertex, 0, Building.CITY))
+                        board.draw();
+                    }
+            })
 
             console.log("UseEffect ran")
         }
