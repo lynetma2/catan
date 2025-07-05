@@ -55,7 +55,6 @@ export class Board {
             //Cleanup
             ctx.fillStyle = "black"
         }
-
     }
     //TBD
 }
