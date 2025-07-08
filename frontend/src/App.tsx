@@ -7,10 +7,12 @@ import {Terrain} from "./game/Terrain.ts";
 import {Board} from "./game/Board.ts";
 import {Road} from "./game/Road.ts";
 import {Building} from "./game/Building.ts";
+import {GameServerSocket} from "./communication/GameServerSocket.ts";
 
 function App() {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const gameServerRef = useRef<GameServerSocket>(null);
 
     useEffect(() => {
             const layout = new Layout(Layout.flat, new Point(50, 50), new Point(500, 500), 10, 10, 5);
@@ -60,17 +62,32 @@ function App() {
             //     }
             // });
 
-            canvas.addEventListener("mousemove", e => {
-                const vertex = layout.pixelToVertixRounded(new Point(getMousePos(canvas, e).x, getMousePos(canvas, e).y));
-                    if (vertex && !board.roads.has(`q${vertex.q}r${vertex.r}d${vertex.direction}`)) {
-                        board.buildings.clear()
-                        board.buildings.set(`q${vertex.q}r${vertex.r}d${vertex.direction}`, new Building(vertex, 0, Building.CITY))
-                        board.draw();
-                    }
-            })
+            // canvas.addEventListener("mousemove", e => {
+            //     const vertex = layout.pixelToVertixRounded(new Point(getMousePos(canvas, e).x, getMousePos(canvas, e).y));
+            //         if (vertex && !board.roads.has(`q${vertex.q}r${vertex.r}d${vertex.direction}`)) {
+            //             board.buildings.clear()
+            //             board.buildings.set(`q${vertex.q}r${vertex.r}d${vertex.direction}`, new Building(vertex, 0, Building.CITY))
+            //             board.draw();
+            //         }
+            // })
 
             console.log("UseEffect ran")
-        }
+
+
+            gameServerRef.current = new GameServerSocket("http://localhost:8080/game-websocket");
+            gameServerRef.current.activate();
+            const timeout = setTimeout(() => {
+                gameServerRef.current?.sendEvent("join");
+            }, 1000)
+
+            return () => {
+                console.log("return called ");
+                clearTimeout(timeout);
+                if (gameServerRef.current) {
+                    gameServerRef.current.deactivate();
+                }
+            };
+        }, []
     )
 
     function getMousePos(canvas: HTMLCanvasElement, event: MouseEvent) {
