@@ -4,8 +4,10 @@ import SockJS from 'sockjs-client/dist/sockjs';
 export class GameServerSocket {
     public socket: WebSocket;
     public stompClient: Client;
+    public gameID: number;
 
-    constructor(url: string) {
+    constructor(url: string, gameID: number) {
+        this.gameID = gameID;
         this.socket = new SockJS(url);
         this.stompClient = new Client({
             webSocketFactory: () => this.socket,
@@ -44,6 +46,17 @@ export class GameServerSocket {
         } else {
             console.error("Stomp client not connected!");
         }
+    }
+
+    //Only used for testing, should be removed when going to production.
+    public static newGameServer() {
+        return fetch("http://localhost:8080/game/newGame", {
+            method: "POST",
+            body: "",
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        });
     }
 
     //TODO add subscribe channels and handlers.

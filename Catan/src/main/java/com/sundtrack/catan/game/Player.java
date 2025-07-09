@@ -8,11 +8,11 @@ public class Player {
     private final ArrayList<Integer> developmentCards;
     private int points;
 
-    public Player(String name, int points) {
+    public Player(String name) {
         this.name = name;
         this.resources = new ArrayList<>();
         this.developmentCards = new ArrayList<>();
-        this.points = points;
+        this.points = 0;
     }
 
     public ArrayList<Integer> getResources() {

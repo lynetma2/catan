@@ -8,6 +8,7 @@ import {Board} from "./game/Board.ts";
 import {Road} from "./game/Road.ts";
 import {Building} from "./game/Building.ts";
 import {GameServerSocket} from "./communication/GameServerSocket.ts";
+import {Game} from "./game/Game.ts";
 
 function App() {
 
@@ -15,7 +16,7 @@ function App() {
     const gameServerRef = useRef<GameServerSocket>(null);
 
     useEffect(() => {
-            const layout = new Layout(Layout.flat, new Point(50, 50), new Point(500, 500), 10, 10, 5);
+            const layout = new Layout(Layout.pointy, new Point(50, 50), new Point(500, 500), 10, 10, 5);
 
             //Example map
             const map = new Map<string, Terrain>();
@@ -72,9 +73,11 @@ function App() {
             // })
 
             console.log("UseEffect ran")
+            GameServerSocket.newGameServer().then((response) => {
+               Game.fromResponse(response);
+            });
 
-
-            gameServerRef.current = new GameServerSocket("http://localhost:8080/game-websocket");
+            gameServerRef.current = new GameServerSocket("http://localhost:8080/game-websocket", 0);
             gameServerRef.current.activate();
             const timeout = setTimeout(() => {
                 gameServerRef.current?.sendEvent("join");
