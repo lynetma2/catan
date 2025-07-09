@@ -4,10 +4,10 @@ import SockJS from 'sockjs-client/dist/sockjs';
 export class GameServerSocket {
     public socket: WebSocket;
     public stompClient: Client;
-    public gameID: number;
+    public gameId: number;
 
     constructor(url: string, gameID: number) {
-        this.gameID = gameID;
+        this.gameId = gameID;
         this.socket = new SockJS(url);
         this.stompClient = new Client({
             webSocketFactory: () => this.socket,

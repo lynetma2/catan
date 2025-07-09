@@ -13,43 +13,41 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-@RestController
+@Controller
 public class LobbyController {
 
     HashMap<Integer, Lobby> lobbies = new HashMap<>();
 
-    //TODO change to websocket for the lobby even.
-
-    @MessageMapping("/newLobby")
-    @SendToUser("/newLobby")
-    public Messages.NewLobby newLobby(String firstPlayerName) {
+    @MessageMapping("/new")
+    @SendToUser("/new")
+    public Messages.NewLobby newLobby(Messages.PlayerMessage playerMessage) {
         int id = (int)(Math.random() * 1000001);
         Lobby lobby = new Lobby();
-        lobby.getPlayers().put(firstPlayerName, true);
+        lobby.getPlayers().put(playerMessage.playerName(), true);
         lobbies.put(id, lobby);
         return new Messages.NewLobby(id, lobby);
     }
 
-    @MessageMapping("/joinLobby/{id}")
+    @MessageMapping("/join/{id}")
     @SendTo("/status/{id}")
-    public Lobby joinLobby(@DestinationVariable Integer id, String playerName) {
+    public Lobby joinLobby(@DestinationVariable Integer id, Messages.PlayerMessage playerMessage) {
         if(!lobbies.containsKey(id)) {
             throw new RuntimeException("Lobby with id " + id + " does not exist");
         }
-        lobbies.get(id).getPlayers().put(playerName, false);
+        lobbies.get(id).getPlayers().put(playerMessage.playerName(), false);
         //TODO decide proper return value
         return lobbies.get(id);
     }
 
-    @MessageMapping("/leaveLobby/{id}")
-    @SendToUser("/status")
-    public String leaveLobby(@DestinationVariable Integer id, String playerName) {
+    @MessageMapping("/leave/{id}")
+    @SendToUser("/status/{id}")
+    public Lobby leaveLobby(@DestinationVariable Integer id, Messages.PlayerMessage playerMessage) {
         if(!lobbies.containsKey(id)) {
             throw new RuntimeException("Lobby with id " + id + " does not exist");
         }
-        lobbies.get(id).getPlayers().remove(playerName);
+        lobbies.get(id).getPlayers().remove(playerMessage.playerName());
         //TODO decide proper return value
-        return "Left Successfully";
+        return lobbies.get(id);
     }
 
     //TODO add the possibility to start a game from the lobby leader (First username)
@@ -58,11 +56,18 @@ public class LobbyController {
     //TODO add ready check in the lobby
     @MessageMapping("/event/{id}")
     @SendTo("/status/{id}")
-    public Lobby event(@DestinationVariable Integer id, String event) {
+    public Lobby event(@DestinationVariable Integer id, LobbyEvent event) {
         if(!lobbies.containsKey(id)) {
             throw new RuntimeException("Lobby with id " + id + " does not exist");
         }
         //TODO handle the event
+
+        switch (event.getKind()) {
+            case SETREADY -> lobbies.get(id).getPlayers().put(event.getPlayer(), true);
+            case SETNOTREADY -> lobbies.get(id).getPlayers().put(event.getPlayer(), false);
+            case STARTGAME -> System.out.println("Starting game, event nothing happened");
+            default -> throw new RuntimeException("Unknown kind of event " + event.getKind());
+        }
 
         return lobbies.get(id);
     }
@@ -73,10 +78,9 @@ public class LobbyController {
 
     public class LobbyEvent {
         enum EventKind {
-            JOIN,
             SETREADY,
             SETNOTREADY,
-            LEAVE,
+            STARTGAME,
             //TODO add some to handle settings
         }
 

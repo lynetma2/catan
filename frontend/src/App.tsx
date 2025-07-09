@@ -7,13 +7,15 @@ import {Terrain} from "./game/Terrain.ts";
 import {Board} from "./game/Board.ts";
 import {Road} from "./game/Road.ts";
 import {Building} from "./game/Building.ts";
-import {GameServerSocket} from "./communication/GameServerSocket.ts";
+import {GameServerSocket} from "./game/GameServerSocket.ts";
 import {Game} from "./game/Game.ts";
+import {LobbySocket} from "./lobby/LobbySocket.ts";
 
 function App() {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const gameServerRef = useRef<GameServerSocket>(null);
+    const lobbyServerRef = useRef<LobbySocket>(null);
 
     useEffect(() => {
             const layout = new Layout(Layout.pointy, new Point(50, 50), new Point(500, 500), 10, 10, 5);
@@ -73,21 +75,29 @@ function App() {
             // })
 
             console.log("UseEffect ran")
-            GameServerSocket.newGameServer().then((response) => {
-               Game.fromResponse(response);
-            });
+            lobbyServerRef.current = new LobbySocket();
+            lobbyServerRef.current.newLobby("I AM TEST", (lobby) => {
+                console.log(lobby);
+            })
 
-            gameServerRef.current = new GameServerSocket("http://localhost:8080/game-websocket", 0);
-            gameServerRef.current.activate();
-            const timeout = setTimeout(() => {
-                gameServerRef.current?.sendEvent("join");
-            }, 1000)
+            // GameServerSocket.newGameServer().then((response) => {
+            //    Game.fromResponse(response);
+            // });
+            //
+            // gameServerRef.current = new GameServerSocket("http://localhost:8080/game-websocket", 0);
+            // gameServerRef.current.activate();
+            // const timeout = setTimeout(() => {
+            //     gameServerRef.current?.sendEvent("join");
+            // }, 1000)
 
             return () => {
                 console.log("return called ");
-                clearTimeout(timeout);
-                if (gameServerRef.current) {
-                    gameServerRef.current.deactivate();
+                //clearTimeout(timeout);
+                // if (gameServerRef.current) {
+                //     gameServerRef.current.deactivate();
+                // }
+                if (lobbyServerRef.current) {
+                    lobbyServerRef.current.deactivate();
                 }
             };
         }, []
