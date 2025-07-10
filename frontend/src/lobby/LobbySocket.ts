@@ -4,7 +4,7 @@ import {Lobby} from "./Lobby.ts";
 import type {LobbyEvent} from "./LobbyEvent.ts";
 
 export class LobbySocket {
-    public static lobbyURL = "http://localhost:8080/lobby-websocket";
+    public static lobbyURL = "http://localhost:8080/ws";
     public socket: WebSocket;
     public stompClient: Client;
     public lobbyId?: number;
@@ -94,7 +94,7 @@ export class LobbySocket {
         }
 
         this.stompClient.publish({
-            destination: `/event/${this.lobbyId}`,
+            destination: `/lobby/event/${this.lobbyId}`,
             body: JSON.stringify(event),
         });
     }

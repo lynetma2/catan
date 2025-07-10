@@ -17,6 +17,10 @@ export class GameServerSocket {
                 console.log('Connected to WebSocket server!');
                 this.stompClient.subscribe("/game/status", (response) => {
                     console.log(response.body);
+                });
+                this.stompClient.subscribe("/topic/greetings", (response) => {
+                    console.log("Greetings from WebSocket server!");
+                    console.log(response.body);
                 })
             },
             onStompError: (frame) => console.error(frame),
@@ -42,6 +46,18 @@ export class GameServerSocket {
             this.stompClient.publish({
                 destination: "/game/event",
                 body: JSON.stringify({'name': "Join event happened"}),
+            });
+        } else {
+            console.error("Stomp client not connected!");
+        }
+    }
+
+    public sendHello(message: string) {
+        if (this.stompClient && this.stompClient.connected) {
+            console.log("Sending hello message");
+            this.stompClient.publish({
+                destination: "/game/hello",
+                body: JSON.stringify({'name': message}),
             });
         } else {
             console.error("Stomp client not connected!");

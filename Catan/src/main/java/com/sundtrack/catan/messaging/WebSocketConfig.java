@@ -13,13 +13,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/game");
-        config.setApplicationDestinationPrefixes("/game");
+        config.enableSimpleBroker("/");
+        config.setApplicationDestinationPrefixes("/");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/game-websocket")
+        registry.addEndpoint("/ws")
                 .setAllowedOrigins("http://localhost:5173") // Allow requests from the React frontend
                 .withSockJS();
     }

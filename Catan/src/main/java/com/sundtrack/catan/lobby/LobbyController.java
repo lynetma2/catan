@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 @Controller
+@MessageMapping("/lobby")
 public class LobbyController {
 
     HashMap<Integer, Lobby> lobbies = new HashMap<>();

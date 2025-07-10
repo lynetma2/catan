@@ -19,6 +19,7 @@ import java.util.HashMap;
 
 @Controller
 @CrossOrigin(origins = "*")
+@MessageMapping("/game")
 public class GameController {
 
     private static final HashMap<Integer, Game> games = new HashMap<>();
