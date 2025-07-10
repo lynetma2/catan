@@ -20,6 +20,7 @@ export class LobbySocket {
             },
             onStompError: (frame) => console.error(frame),
         });
+        this.activate();
     }
 
     public activate() {
@@ -71,6 +72,7 @@ export class LobbySocket {
         }
 
         this.stompClient.subscribe('/lobby/new', response => {
+            console.log("subcription event on /lobby/new:", response.body);
             const nLobby = JSON.parse(response.body);
             //TODO check that the response is what is expected.
 
@@ -85,6 +87,7 @@ export class LobbySocket {
             destination: "/lobby/new",
             body: JSON.stringify({'playerName': playerName}),
         });
+        console.log("Published /lobby/new");
     }
 
     public sendEvent(event: LobbyEvent) {

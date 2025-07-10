@@ -55,15 +55,15 @@ function App() {
             //     board.draw();
             // });
 
-            canvas.addEventListener("mousemove", e => {
-                const edge = layout.pixelToEdgeRounded(new Point(getMousePos(canvas, e).x, getMousePos(canvas, e).y));
-                console.log(edge);
-                if (edge && !board.roads.has(`q${edge.q}r${edge.r}d${edge.direction}`)) {
-                    board.roads.clear()
-                    board.roads.set(`q${edge.q}r${edge.r}d${edge.direction}`, new Road(edge, 0))
-                    board.draw();
-                }
-            });
+            // canvas.addEventListener("mousemove", e => {
+            //     const edge = layout.pixelToEdgeRounded(new Point(getMousePos(canvas, e).x, getMousePos(canvas, e).y));
+            //     console.log(edge);
+            //     if (edge && !board.roads.has(`q${edge.q}r${edge.r}d${edge.direction}`)) {
+            //         board.roads.clear()
+            //         board.roads.set(`q${edge.q}r${edge.r}d${edge.direction}`, new Road(edge, 0))
+            //         board.draw();
+            //     }
+            // });
 
             // canvas.addEventListener("mousemove", e => {
             //     const vertex = layout.pixelToVertixRounded(new Point(getMousePos(canvas, e).x, getMousePos(canvas, e).y));
@@ -75,30 +75,30 @@ function App() {
             // })
 
             console.log("UseEffect ran")
-            // lobbyServerRef.current = new LobbySocket();
-            // lobbyServerRef.current.newLobby("I AM TEST", (lobby) => {
-            //     console.log(lobby);
-            //})
+            lobbyServerRef.current = new LobbySocket();
+            lobbyServerRef.current.newLobby("I AM TEST", (lobby) => {
+                console.log(lobby);
+            })
 
-            GameServerSocket.newGameServer().then((response) => {
-               Game.fromResponse(response);
-            });
-
-            gameServerRef.current = new GameServerSocket("http://localhost:8080/ws", 0);
-            gameServerRef.current.activate();
-            const timeout = setTimeout(() => {
-                gameServerRef.current?.sendHello("From frontend");
-            }, 1000)
+            // GameServerSocket.newGameServer().then((response) => {
+            //    Game.fromResponse(response);
+            // });
+            //
+            // gameServerRef.current = new GameServerSocket("http://localhost:8080/ws", 0);
+            // gameServerRef.current.activate();
+            // const timeout = setTimeout(() => {
+            //     gameServerRef.current?.sendHello("From frontend");
+            // }, 1000)
 
             return () => {
                 console.log("return called ");
-                clearTimeout(timeout);
-                if (gameServerRef.current) {
-                    gameServerRef.current.deactivate();
-                }
-                // if (lobbyServerRef.current) {
-                //     lobbyServerRef.current.deactivate();
+                // clearTimeout(timeout);
+                // if (gameServerRef.current) {
+                //     gameServerRef.current.deactivate();
                 // }
+                if (lobbyServerRef.current) {
+                    lobbyServerRef.current.deactivate();
+                }
             };
         }, []
     )
