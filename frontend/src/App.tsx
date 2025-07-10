@@ -75,18 +75,20 @@ function App() {
             // })
 
             console.log("UseEffect ran")
-            lobbyServerRef.current = new LobbySocket();
-            lobbyServerRef.current.init().then(() => {
-                if (!lobbyServerRef.current) {
-                    console.error("LobbySocket not available, when trying call newLobby");
-                    return;
-                }
-                console.log("LobbySocket available");
-                lobbyServerRef.current.newLobby("I AM TEST", (lobby) => {
-                    console.log(lobby);
-                });
-                lobbyServerRef.current.sendHello("TESTMESSAGE");
+            LobbySocket.newLobby("I AM TEST").then(() => {
+                console.log("LobbySocket.newLobby() finished");
             });
+
+            // lobbyServerRef.current = new LobbySocket();
+            // lobbyServerRef.current.init().then(() => {
+            //     if (!lobbyServerRef.current) {
+            //         console.error("LobbySocket not available, when trying call newLobby");
+            //         return;
+            //     }
+            //     console.log("LobbySocket available");
+            //     lobbyServerRef.current.newLobby("I AM TEST")
+            //     lobbyServerRef.current.sendHello("TESTMESSAGE");
+            // });
 
 
             // GameServerSocket.newGameServer().then((response) => {
@@ -105,10 +107,10 @@ function App() {
                 // if (gameServerRef.current) {
                 //     gameServerRef.current.deactivate();
                 // }
-                if (lobbyServerRef.current) {
-                    lobbyServerRef.current.deactivate();
-                    lobbyServerRef.current = null;
-                }
+                // if (lobbyServerRef.current) {
+                //     lobbyServerRef.current.deactivate();
+                //     lobbyServerRef.current = null;
+                // }
             };
         }, []
     )

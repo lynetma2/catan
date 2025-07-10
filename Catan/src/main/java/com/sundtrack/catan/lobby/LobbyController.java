@@ -10,42 +10,32 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 @Controller
+@CrossOrigin(origins = "*")
 @MessageMapping("/lobby")
 public class LobbyController {
 
     HashMap<Integer, Lobby> lobbies = new HashMap<>();
 
-//    @MessageMapping("/hello")
-//    @SendTo("/topic/greetings")
-//    public Greeting greeting(HelloMessage message) throws Exception {
-//        Thread.sleep(1000); // simulated delay
-//        return new Greeting(new Board(MapBuilder.classicNotRandom()));
-//        //return new Greeting("Hello, " + HtmlUtils.htmlEscape(message.getName()) + "!");
-//    }
-
-    @MessageMapping("/test")
-    @SendToUser("/topic/greetings")
-    public Greeting newLobby(Messages.PlayerMessage playerMessage) {
+    @PostMapping("/lobby/new")
+    @ResponseBody
+    public Messages.NewLobby newLobby(@RequestBody Messages.PlayerMessage playerMessage) {
         System.out.println("New Lobby event happened");
         System.out.println(playerMessage);
-//        int id = (int)(Math.random() * 1000001);
-//        Lobby lobby = new Lobby();
-//        lobby.getPlayers().put(playerMessage.playerName(), true);
-//        lobbies.put(id, lobby);
-//        return new Messages.NewLobby(id, lobby);
-        return new Greeting(new Board(MapBuilder.classicNotRandom()));
+        int id = (int)(Math.random() * 1000001);
+        Lobby lobby = new Lobby();
+        lobby.getPlayers().put(playerMessage.playerName(), true);
+        lobbies.put(id, lobby);
+        return new Messages.NewLobby(id, lobby);
     }
 
     @MessageMapping("/join/{id}")
-    @SendTo("/status/{id}")
+    @SendTo("/lobby/status/{id}")
     public Lobby joinLobby(@DestinationVariable Integer id, Messages.PlayerMessage playerMessage) {
         if(!lobbies.containsKey(id)) {
             throw new RuntimeException("Lobby with id " + id + " does not exist");
@@ -56,7 +46,7 @@ public class LobbyController {
     }
 
     @MessageMapping("/leave/{id}")
-    @SendToUser("/status/{id}")
+    @SendTo("/lobby/status/{id}")
     public Lobby leaveLobby(@DestinationVariable Integer id, Messages.PlayerMessage playerMessage) {
         if(!lobbies.containsKey(id)) {
             throw new RuntimeException("Lobby with id " + id + " does not exist");
@@ -71,7 +61,7 @@ public class LobbyController {
 
     //TODO add ready check in the lobby
     @MessageMapping("/event/{id}")
-    @SendTo("/status/{id}")
+    @SendTo("/lobby/status/{id}")
     public Lobby event(@DestinationVariable Integer id, LobbyEvent event) {
         if(!lobbies.containsKey(id)) {
             throw new RuntimeException("Lobby with id " + id + " does not exist");

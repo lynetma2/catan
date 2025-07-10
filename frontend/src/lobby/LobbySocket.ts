@@ -96,35 +96,16 @@ export class LobbySocket {
         });
     }
 
-    public newLobby(playerName: string, onLobbyUpdate: (newLobby: Lobby) => void) {
-        if (!this.stompClient || !this.stompClient.connected) {
-            console.error("Stomp client not connected!");
-            return;
-        }
-
-        this.stompClient.subscribe('/lobby/new', response => {
-            console.log("subcription event on /lobby/new:", response.body);
-            //const nLobby = JSON.parse(response.body);
-            //TODO check that the response is what is expected.
-
-            // this.lobbyId = nLobby.id;
-            // const newLobby = new Lobby(nLobby.lobby.players);
-            // onLobbyUpdate(newLobby);
-            // this.addStatusSubscription(nLobby.id, onLobbyUpdate);
-
-            if (!this.stompClient || !this.stompClient.connected) {
-                console.error("Stomp client not connected!");
-                return;
-            }
-
-            //this.stompClient.unsubscribe('/lobby/new');
-        });
-
-        this.stompClient.publish({
-            destination: "/lobby/test",
+    public static async newLobby(playerName: string) {
+        const response = await fetch("http://localhost:8080/lobby/new", {
+            method: "POST",
             body: JSON.stringify({'playerName': playerName}),
+            headers: {
+                "Content-Type": "application/json",
+            }
         });
-        console.log("Published /lobby/test");
+
+        console.log(response.json());
     }
 
     public sendEvent(event: LobbyEvent) {
