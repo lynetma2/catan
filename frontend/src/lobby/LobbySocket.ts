@@ -5,29 +5,55 @@ import type {LobbyEvent} from "./LobbyEvent.ts";
 
 export class LobbySocket {
     public static lobbyURL = "http://localhost:8080/ws";
-    public socket: WebSocket;
-    public stompClient: Client;
+    public socket?: WebSocket;
+    public stompClient?: Client;
     public lobbyId?: number;
 
     constructor() {
-        this.socket = new SockJS(LobbySocket.lobbyURL);
-        this.stompClient = new Client({
-            webSocketFactory: () => this.socket,
-            reconnectDelay: 5000,
-            debug: (str: string) => console.log(str),
-            onConnect: () => {
-                console.log('Connected to WebSocket server!');
-            },
-            onStompError: (frame) => console.error(frame),
+        //Empty cuz relying on third parties to become initialized
+    }
+
+    public async init(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.socket = new SockJS(LobbySocket.lobbyURL);
+            this.stompClient = new Client({
+                webSocketFactory: () => this.socket,
+                reconnectDelay: 5000,
+                debug: (str: string) => console.log(str),
+                onConnect: () => {
+                    console.log('Connected to WebSocket server!');
+                    if (!this.stompClient) {
+                        reject()
+                        return;
+                    }
+
+                    this.stompClient.subscribe("/user/queue/topic/greetings", (response) => {
+                        console.log("Greetings from WebSocket server!");
+                        console.log(response.body);
+                    })
+                    resolve();
+                },
+                onStompError: (frame) => console.error(frame),
+            });
+            this.activate();
         });
-        this.activate();
     }
 
     public activate() {
+        if (!this.stompClient) {
+            console.error("Activate called before init is finished");
+            return;
+        }
+
         this.stompClient.activate();
     }
 
     public deactivate() {
+        if (!this.stompClient) {
+            console.error("Deactivate called before init is finished");
+            return;
+        }
+
         this.stompClient.deactivate().then(() => {
                 console.log('Deactivated!');
             }
@@ -35,6 +61,11 @@ export class LobbySocket {
     }
 
     private addStatusSubscription(lobbyId: number, onLobbyUpdate: (newLobby: Lobby) => void) {
+        if (!this.stompClient) {
+            console.error("Adding status subscription before init is finished");
+            return;
+        }
+
         this.lobbyId = lobbyId;
         this.stompClient.subscribe(`/lobby/status/${lobbyId}`, (response) => {
             const lobby = JSON.parse(response.body);
@@ -73,21 +104,27 @@ export class LobbySocket {
 
         this.stompClient.subscribe('/lobby/new', response => {
             console.log("subcription event on /lobby/new:", response.body);
-            const nLobby = JSON.parse(response.body);
+            //const nLobby = JSON.parse(response.body);
             //TODO check that the response is what is expected.
 
-            this.lobbyId = nLobby.id;
-            const newLobby = new Lobby(nLobby.lobby.players);
-            onLobbyUpdate(newLobby);
-            this.addStatusSubscription(nLobby.id, onLobbyUpdate);
-            this.stompClient.unsubscribe('/lobby/new');
+            // this.lobbyId = nLobby.id;
+            // const newLobby = new Lobby(nLobby.lobby.players);
+            // onLobbyUpdate(newLobby);
+            // this.addStatusSubscription(nLobby.id, onLobbyUpdate);
+
+            if (!this.stompClient || !this.stompClient.connected) {
+                console.error("Stomp client not connected!");
+                return;
+            }
+
+            //this.stompClient.unsubscribe('/lobby/new');
         });
 
         this.stompClient.publish({
-            destination: "/lobby/new",
+            destination: "/lobby/test",
             body: JSON.stringify({'playerName': playerName}),
         });
-        console.log("Published /lobby/new");
+        console.log("Published /lobby/test");
     }
 
     public sendEvent(event: LobbyEvent) {
@@ -100,5 +137,17 @@ export class LobbySocket {
             destination: `/lobby/event/${this.lobbyId}`,
             body: JSON.stringify(event),
         });
+    }
+
+    public sendHello(message: string) {
+        if (this.stompClient && this.stompClient.connected) {
+            console.log("Sending hello message");
+            this.stompClient.publish({
+                destination: "/lobby/hello",
+                body: JSON.stringify({'name': message}),
+            });
+        } else {
+            console.error("Stomp client not connected!");
+        }
     }
 }

@@ -76,9 +76,18 @@ function App() {
 
             console.log("UseEffect ran")
             lobbyServerRef.current = new LobbySocket();
-            lobbyServerRef.current.newLobby("I AM TEST", (lobby) => {
-                console.log(lobby);
-            })
+            lobbyServerRef.current.init().then(() => {
+                if (!lobbyServerRef.current) {
+                    console.error("LobbySocket not available, when trying call newLobby");
+                    return;
+                }
+                console.log("LobbySocket available");
+                lobbyServerRef.current.newLobby("I AM TEST", (lobby) => {
+                    console.log(lobby);
+                });
+                lobbyServerRef.current.sendHello("TESTMESSAGE");
+            });
+
 
             // GameServerSocket.newGameServer().then((response) => {
             //    Game.fromResponse(response);
@@ -98,6 +107,7 @@ function App() {
                 // }
                 if (lobbyServerRef.current) {
                     lobbyServerRef.current.deactivate();
+                    lobbyServerRef.current = null;
                 }
             };
         }, []

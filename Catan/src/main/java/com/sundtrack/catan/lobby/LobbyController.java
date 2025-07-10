@@ -1,5 +1,9 @@
 package com.sundtrack.catan.lobby;
 
+import com.sundtrack.catan.game.Board;
+import com.sundtrack.catan.game.MapBuilder;
+import com.sundtrack.catan.messaging.Greeting;
+import com.sundtrack.catan.messaging.HelloMessage;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -19,14 +23,25 @@ public class LobbyController {
 
     HashMap<Integer, Lobby> lobbies = new HashMap<>();
 
-    @MessageMapping("/new")
-    @SendToUser("/new")
-    public Messages.NewLobby newLobby(Messages.PlayerMessage playerMessage) {
-        int id = (int)(Math.random() * 1000001);
-        Lobby lobby = new Lobby();
-        lobby.getPlayers().put(playerMessage.playerName(), true);
-        lobbies.put(id, lobby);
-        return new Messages.NewLobby(id, lobby);
+//    @MessageMapping("/hello")
+//    @SendTo("/topic/greetings")
+//    public Greeting greeting(HelloMessage message) throws Exception {
+//        Thread.sleep(1000); // simulated delay
+//        return new Greeting(new Board(MapBuilder.classicNotRandom()));
+//        //return new Greeting("Hello, " + HtmlUtils.htmlEscape(message.getName()) + "!");
+//    }
+
+    @MessageMapping("/test")
+    @SendToUser("/topic/greetings")
+    public Greeting newLobby(Messages.PlayerMessage playerMessage) {
+        System.out.println("New Lobby event happened");
+        System.out.println(playerMessage);
+//        int id = (int)(Math.random() * 1000001);
+//        Lobby lobby = new Lobby();
+//        lobby.getPlayers().put(playerMessage.playerName(), true);
+//        lobbies.put(id, lobby);
+//        return new Messages.NewLobby(id, lobby);
+        return new Greeting(new Board(MapBuilder.classicNotRandom()));
     }
 
     @MessageMapping("/join/{id}")
