@@ -1,4 +1,4 @@
-import {Vertex} from "../hexagon/Vertex.ts";
+import {Vertex} from "./hexagon/Vertex.ts";
 
 export class Building {
     public vertex: Vertex;

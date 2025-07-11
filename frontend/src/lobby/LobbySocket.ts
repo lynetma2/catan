@@ -13,8 +13,9 @@ export class LobbySocket {
         //Empty cuz relying on third parties to become initialized
     }
 
-    public async init(): Promise<void> {
+    public async init(lobbyId: number,  onLobbyUpdate: (newLobby: Lobby) => void): Promise<void> {
         return new Promise<void>((resolve, reject) => {
+            this.lobbyId = lobbyId;
             this.socket = new SockJS(LobbySocket.lobbyURL);
             this.stompClient = new Client({
                 webSocketFactory: () => this.socket,
@@ -27,10 +28,7 @@ export class LobbySocket {
                         return;
                     }
 
-                    this.stompClient.subscribe("/user/queue/topic/greetings", (response) => {
-                        console.log("Greetings from WebSocket server!");
-                        console.log(response.body);
-                    })
+                    this.addStatusSubscription(lobbyId, onLobbyUpdate);
                     resolve();
                 },
                 onStompError: (frame) => console.error(frame),
@@ -106,6 +104,7 @@ export class LobbySocket {
         });
 
         console.log(response.json());
+        return response.json();
     }
 
     public sendEvent(event: LobbyEvent) {
@@ -120,15 +119,4 @@ export class LobbySocket {
         });
     }
 
-    public sendHello(message: string) {
-        if (this.stompClient && this.stompClient.connected) {
-            console.log("Sending hello message");
-            this.stompClient.publish({
-                destination: "/lobby/hello",
-                body: JSON.stringify({'name': message}),
-            });
-        } else {
-            console.error("Stomp client not connected!");
-        }
-    }
 }

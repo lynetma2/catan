@@ -1,4 +1,4 @@
-import {Edge} from "../hexagon/Edge.ts";
+import {Edge} from "./hexagon/Edge.ts";
 
 export class Road {
     public edge: Edge;

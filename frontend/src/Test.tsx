@@ -11,7 +11,7 @@ import {GameServerSocket} from "./game/GameServerSocket.ts";
 import {Game} from "./game/Game.ts";
 import {LobbySocket} from "./lobby/LobbySocket.ts";
 
-function App() {
+function Test() {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const gameServerRef = useRef<GameServerSocket>(null);
@@ -130,4 +130,4 @@ function App() {
     )
 }
 
-export default App
+export default Test
