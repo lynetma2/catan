@@ -1,18 +1,20 @@
 package com.sundtrack.catan.lobby;
 
-import com.sundtrack.catan.game.Board;
-import com.sundtrack.catan.game.MapBuilder;
-import com.sundtrack.catan.messaging.Greeting;
-import com.sundtrack.catan.messaging.HelloMessage;
-import org.springframework.http.ResponseEntity;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.annotation.SendToUser;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.socket.messaging.SessionConnectEvent;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 @Controller
@@ -21,26 +23,40 @@ import java.util.HashMap;
 public class LobbyController {
 
     HashMap<Integer, Lobby> lobbies = new HashMap<>();
+    HashMap<String, Lobby.LobbyIdandUsername> activeUsers = new HashMap<>();
+    private SimpMessagingTemplate template;
+
+    @Autowired
+    public LobbyController(SimpMessagingTemplate template) {
+        this.template = template;
+    }
 
     @PostMapping("/lobby/new")
     @ResponseBody
-    public Messages.NewLobby newLobby(@RequestBody Messages.PlayerMessage playerMessage) {
-        System.out.println("New Lobby event happened");
-        System.out.println(playerMessage);
+    public Messages.NewLobby newLobby(@Header("simpSessionId") String sessionId, @RequestBody Messages.PlayerMessage playerMessage) {
         int id = (int)(Math.random() * 1000001);
+
+        //Storing session information
+        activeUsers.put(sessionId, new Lobby.LobbyIdandUsername(playerMessage.playerName(), id));
+
         Lobby lobby = new Lobby();
-        lobby.getPlayers().put(playerMessage.playerName(), true);
+        Lobby.Player player = new Lobby.Player(playerMessage.playerName(), true, true);
+        lobby.getPlayers().put(playerMessage.playerName(), player);
         lobbies.put(id, lobby);
         return new Messages.NewLobby(id, lobby);
     }
 
     @MessageMapping("/join/{id}")
     @SendTo("/lobby/status/{id}")
-    public Lobby joinLobby(@DestinationVariable Integer id, Messages.PlayerMessage playerMessage) {
+    public Lobby joinLobby(@Header("simpSessionId") String sessionId, @DestinationVariable Integer id, Messages.PlayerMessage playerMessage) {
         if(!lobbies.containsKey(id)) {
             throw new RuntimeException("Lobby with id " + id + " does not exist");
         }
-        lobbies.get(id).getPlayers().put(playerMessage.playerName(), false);
+        //Storing session information
+        activeUsers.put(sessionId, new Lobby.LobbyIdandUsername(playerMessage.playerName(), id));
+
+        Lobby.Player player = new Lobby.Player(playerMessage.playerName(), false, false);
+        lobbies.get(id).getPlayers().put(playerMessage.playerName(), player);
         //TODO decide proper return value
         return lobbies.get(id);
     }
@@ -62,48 +78,63 @@ public class LobbyController {
     //TODO add ready check in the lobby
     @MessageMapping("/event/{id}")
     @SendTo("/lobby/status/{id}")
-    public Lobby event(@DestinationVariable Integer id, LobbyEvent event) {
+    public Lobby event(@DestinationVariable Integer id, Lobby.LobbyEvent event) {
         if(!lobbies.containsKey(id)) {
             throw new RuntimeException("Lobby with id " + id + " does not exist");
         }
         //TODO handle the event
+        System.out.println("Lobby event happened");
 
         switch (event.getKind()) {
-            case SETREADY -> lobbies.get(id).getPlayers().put(event.getPlayer(), true);
-            case SETNOTREADY -> lobbies.get(id).getPlayers().put(event.getPlayer(), false);
-            case STARTGAME -> System.out.println("Starting game, event nothing happened");
+            case SETREADY -> {
+                Lobby.Player player = lobbies.get(id).getPlayers().get(event.getPlayerName());
+                player.setReady(true);
+            }
+            case SETNOTREADY -> {
+                Lobby.Player player = lobbies.get(id).getPlayers().get(event.getPlayerName());
+                player.setReady(false);
+            }
+            case STARTGAME -> {
+                System.out.println("Starting game, event nothing happened");
+            }
             default -> throw new RuntimeException("Unknown kind of event " + event.getKind());
         }
 
         return lobbies.get(id);
     }
 
-    //TODO intercept connection closing and the close the lobby if empty
+    @EventListener(SessionDisconnectEvent.class)
+    public void handleDisconnect(SessionDisconnectEvent event) {
+        //System.out.println("SessionDisconnectEvent = " + event);
+        if (activeUsers.containsKey(event.getSessionId())) {
+            Lobby.LobbyIdandUsername collection = activeUsers.get(event.getSessionId());
+            if(!lobbies.containsKey(collection.id())) {
+                throw new RuntimeException("Lobby with id " + collection.id() + " does not exist");
+            }
+            lobbies.get(collection.id()).getPlayers().remove(collection.username());
+
+            //TODO check if teh lobby is empty
+
+            activeUsers.remove(event.getSessionId());
+            String text = null;
+            try {
+                text = new ObjectMapper().writeValueAsString(lobbies.get(collection.id()));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+
+            this.template.convertAndSend("/lobby/status/" + collection.id(), text);
+        }
+        //TODO intercept connection closing and the close the lobby if empty
+    }
+
+    @EventListener(SessionConnectEvent.class)
+    public void handleConnect(SessionConnectEvent event) {
+        //System.out.println("SessionConnectEvent = " + event);
+        //TODO somehow get a link between the session Id and the lobby id and playerName.
+    }
+
 
     //TODO (Very late) add chat in the lobby
 
-    public class LobbyEvent {
-        enum EventKind {
-            SETREADY,
-            SETNOTREADY,
-            STARTGAME,
-            //TODO add some to handle settings
-        }
-
-        private final EventKind kind;
-        private final String player;
-
-        public  LobbyEvent(EventKind kind, String player) {
-            this.kind = kind;
-            this.player = player;
-        }
-
-        public EventKind getKind() {
-            return kind;
-        }
-
-        public String getPlayer() {
-            return player;
-        }
-    }
 }

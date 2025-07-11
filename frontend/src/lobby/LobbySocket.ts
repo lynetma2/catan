@@ -1,16 +1,16 @@
 import {Client} from "@stomp/stompjs";
 import SockJS from 'sockjs-client/dist/sockjs';
-import {Lobby} from "./Lobby.ts";
-import type {LobbyEvent} from "./LobbyEvent.ts";
+import {Lobby, type LobbyEvent, type NewLobby} from "./Lobby.ts";
 
 export class LobbySocket {
     public static lobbyURL = "http://localhost:8080/ws";
     public socket?: WebSocket;
     public stompClient?: Client;
     public lobbyId?: number;
+    public username: string;
 
-    constructor() {
-        //Empty cuz relying on third parties to become initialized
+    constructor(username: string) {
+        this.username = username;
     }
 
     public async init(lobbyId: number,  onLobbyUpdate: (newLobby: Lobby) => void): Promise<void> {
@@ -72,20 +72,20 @@ export class LobbySocket {
                 console.error("Wrongly formatted lobby from the server!");
                 return;
             }
+
+
             //TODO check that it is actually a map (JSON does natively handle maps)
-            const newLobby = new Lobby(lobby.players);
+            const newLobby = Lobby.fromJSON(lobby);
             onLobbyUpdate(newLobby);
             return;
         });
     }
 
-    public joinLobby(playerName: string, lobbyId: number, onLobbyUpdate: (newLobby: Lobby) => void) {
+    public joinLobby(playerName: string, lobbyId: number) {
         if (!this.stompClient || !this.stompClient.connected) {
             console.error("Stomp client not connected!");
             return;
         }
-
-        this.addStatusSubscription(lobbyId, onLobbyUpdate);
 
         console.log(`Joining lobby ${lobbyId}...`);
         this.stompClient.publish({
@@ -94,7 +94,7 @@ export class LobbySocket {
         });
     }
 
-    public static async newLobby(playerName: string) {
+    public static async newLobby(playerName: string): Promise<NewLobby> {
         const response = await fetch("http://localhost:8080/lobby/new", {
             method: "POST",
             body: JSON.stringify({'playerName': playerName}),
@@ -103,7 +103,6 @@ export class LobbySocket {
             }
         });
 
-        console.log(response.json());
         return response.json();
     }
 
