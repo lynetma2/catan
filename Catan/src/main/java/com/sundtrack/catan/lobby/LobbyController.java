@@ -2,6 +2,7 @@ package com.sundtrack.catan.lobby;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sundtrack.catan.CatanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.EventListener;
@@ -22,28 +23,23 @@ import java.util.HashMap;
 @MessageMapping("/lobby")
 public class LobbyController {
 
-    HashMap<Integer, Lobby> lobbies = new HashMap<>();
-    HashMap<String, Lobby.LobbyIdandUsername> activeUsers = new HashMap<>();
+    private final CatanService catanService;
     private SimpMessagingTemplate template;
 
     @Autowired
-    public LobbyController(SimpMessagingTemplate template) {
+    public LobbyController(CatanService catanService, SimpMessagingTemplate template) {
+        this.catanService = catanService;
         this.template = template;
     }
 
     @PostMapping("/lobby/new")
     @ResponseBody
     public Messages.NewLobby newLobby(@Header("simpSessionId") String sessionId, @RequestBody Messages.PlayerMessage playerMessage) {
-        int id = (int)(Math.random() * 1000001);
 
-        //Storing session information
-        activeUsers.put(sessionId, new Lobby.LobbyIdandUsername(playerMessage.playerName(), id));
+        Messages.NewLobby newLobby = catanService.newLobby(playerMessage);
+        catanService.putActiveUser(sessionId, new Lobby.LobbyIdandUsername(playerMessage.playerName(), newLobby.id()));
 
-        Lobby lobby = new Lobby();
-        Lobby.Player player = new Lobby.Player(playerMessage.playerName(), true, true);
-        lobby.getPlayers().put(playerMessage.playerName(), player);
-        lobbies.put(id, lobby);
-        return new Messages.NewLobby(id, lobby);
+        return newLobby;
     }
 
     @MessageMapping("/join/{id}")
@@ -95,7 +91,7 @@ public class LobbyController {
                 player.setReady(false);
             }
             case STARTGAME -> {
-                System.out.println("Starting game, event nothing happened");
+                System.out.println("Starting game event");
             }
             default -> throw new RuntimeException("Unknown kind of event " + event.getKind());
         }

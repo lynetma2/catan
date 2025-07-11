@@ -47,7 +47,7 @@ public class Lobby {
     }
 
     public static class LobbyEvent {
-        enum EventKind {
+        public enum EventKind {
             SETREADY,
             SETNOTREADY,
             STARTGAME,
