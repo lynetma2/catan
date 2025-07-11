@@ -6,9 +6,7 @@ import {LobbySocket} from "./LobbySocket.ts";
 import type {Lobby, LobbyEvent, Player} from "@/lobby/Lobby.ts";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Label} from "@/components/ui/label.tsx";
-import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
-import {Loader2} from "lucide-react";
 
 function LobbyView() {
 
@@ -52,12 +50,9 @@ function LobbyView() {
                     if (!lobby) {
                         lobbyServerRef.current.joinLobby(username, lobbyId);
                     }
-
-                    //Should Join the lobby instead.
                 }
             );
         }
-        //TODO somehow get the username of the current user.
 
         return () => {
         }
@@ -90,10 +85,6 @@ function LobbyView() {
     }
 
     //Needed stuff brainstorming
-    //lobbysocket
-    //LobbyId
-    //Current User (name atleast)
-    //Lobby State object. (The one triggering rerenders)
     //Chat state object. (Also able to trigger rerender)
     //Settings state object. (Going to be added later on)
 

@@ -7,10 +7,9 @@ export class LobbySocket {
     public socket?: WebSocket;
     public stompClient?: Client;
     public lobbyId?: number;
-    public username: string;
 
-    constructor(username: string) {
-        this.username = username;
+    constructor() {
+        //Empty cuz async constructor needed.
     }
 
     public async init(lobbyId: number,  onLobbyUpdate: (newLobby: Lobby) => void): Promise<void> {
