@@ -2,9 +2,8 @@ package com.sundtrack.catan.lobby;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sundtrack.catan.CatanService;
+import com.sundtrack.catan.service.CatanService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.Header;
@@ -15,8 +14,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-
-import java.util.HashMap;
 
 @Controller
 @CrossOrigin(origins = "*")
@@ -34,38 +31,34 @@ public class LobbyController {
 
     @PostMapping("/lobby/new")
     @ResponseBody
-    public Messages.NewLobby newLobby(@Header("simpSessionId") String sessionId, @RequestBody Messages.PlayerMessage playerMessage) {
-
-        Messages.NewLobby newLobby = catanService.newLobby(playerMessage);
-        catanService.putActiveUser(sessionId, new Lobby.LobbyIdandUsername(playerMessage.playerName(), newLobby.id()));
-
-        return newLobby;
+    public Messages.NewLobby newLobby( @RequestBody Messages.PlayerMessage playerMessage) {
+        return catanService.newLobby(playerMessage);
     }
 
     @MessageMapping("/join/{id}")
     @SendTo("/lobby/status/{id}")
     public Lobby joinLobby(@Header("simpSessionId") String sessionId, @DestinationVariable Integer id, Messages.PlayerMessage playerMessage) {
-        if(!lobbies.containsKey(id)) {
+        if(!catanService.getLobbies().containsKey(id)) {
             throw new RuntimeException("Lobby with id " + id + " does not exist");
         }
         //Storing session information
-        activeUsers.put(sessionId, new Lobby.LobbyIdandUsername(playerMessage.playerName(), id));
+        catanService.getActiveUsers().put(sessionId, new Lobby.LobbyIdandUsername(playerMessage.playerName(), id));
 
         Lobby.Player player = new Lobby.Player(playerMessage.playerName(), false, false);
-        lobbies.get(id).getPlayers().put(playerMessage.playerName(), player);
+        catanService.getLobby(id).getPlayers().put(playerMessage.playerName(), player);
         //TODO decide proper return value
-        return lobbies.get(id);
+        return catanService.getLobby(id);
     }
 
     @MessageMapping("/leave/{id}")
     @SendTo("/lobby/status/{id}")
     public Lobby leaveLobby(@DestinationVariable Integer id, Messages.PlayerMessage playerMessage) {
-        if(!lobbies.containsKey(id)) {
+        if(!catanService.getLobbies().containsKey(id)) {
             throw new RuntimeException("Lobby with id " + id + " does not exist");
         }
-        lobbies.get(id).getPlayers().remove(playerMessage.playerName());
+        catanService.getLobby(id).getPlayers().remove(playerMessage.playerName());
         //TODO decide proper return value
-        return lobbies.get(id);
+        return catanService.getLobby(id);
     }
 
     //TODO add the possibility to start a game from the lobby leader (First username)
@@ -75,46 +68,25 @@ public class LobbyController {
     @MessageMapping("/event/{id}")
     @SendTo("/lobby/status/{id}")
     public Lobby event(@DestinationVariable Integer id, Lobby.LobbyEvent event) {
-        if(!lobbies.containsKey(id)) {
-            throw new RuntimeException("Lobby with id " + id + " does not exist");
-        }
-        //TODO handle the event
-        System.out.println("Lobby event happened");
-
-        switch (event.getKind()) {
-            case SETREADY -> {
-                Lobby.Player player = lobbies.get(id).getPlayers().get(event.getPlayerName());
-                player.setReady(true);
-            }
-            case SETNOTREADY -> {
-                Lobby.Player player = lobbies.get(id).getPlayers().get(event.getPlayerName());
-                player.setReady(false);
-            }
-            case STARTGAME -> {
-                System.out.println("Starting game event");
-            }
-            default -> throw new RuntimeException("Unknown kind of event " + event.getKind());
-        }
-
-        return lobbies.get(id);
+        return catanService.handleLobbyEvent(id, event);
     }
 
     @EventListener(SessionDisconnectEvent.class)
     public void handleDisconnect(SessionDisconnectEvent event) {
         //System.out.println("SessionDisconnectEvent = " + event);
-        if (activeUsers.containsKey(event.getSessionId())) {
-            Lobby.LobbyIdandUsername collection = activeUsers.get(event.getSessionId());
-            if(!lobbies.containsKey(collection.id())) {
+        if (catanService.getActiveUsers().containsKey(event.getSessionId())) {
+            Lobby.LobbyIdandUsername collection = catanService.getActiveUsers().get(event.getSessionId());
+            if(!catanService.getLobbies().containsKey(collection.id())) {
                 throw new RuntimeException("Lobby with id " + collection.id() + " does not exist");
             }
-            lobbies.get(collection.id()).getPlayers().remove(collection.username());
+            catanService.getLobbies().get(collection.id()).getPlayers().remove(collection.username());
 
-            //TODO check if teh lobby is empty
+            //TODO check if the lobby is empty
 
-            activeUsers.remove(event.getSessionId());
+            catanService.getActiveUsers().remove(event.getSessionId());
             String text = null;
             try {
-                text = new ObjectMapper().writeValueAsString(lobbies.get(collection.id()));
+                text = new ObjectMapper().writeValueAsString(catanService.getLobbies().get(collection.id()));
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }

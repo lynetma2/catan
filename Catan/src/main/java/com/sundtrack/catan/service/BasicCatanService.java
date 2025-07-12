@@ -1,4 +1,4 @@
-package com.sundtrack.catan;
+package com.sundtrack.catan.service;
 
 import com.sundtrack.catan.game.Board;
 import com.sundtrack.catan.game.Game;
@@ -11,16 +11,18 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class BasicCatanService implements CatanService {
     //TODO at one point this should be moved to repository storage.
-    HashMap<Integer, Lobby> lobbies = new HashMap<>();
-    HashMap<Integer, Game> games = new HashMap<>();
-    HashMap<String, Lobby.LobbyIdandUsername> activeUsers = new HashMap<>();
+    private final Map<Integer, Lobby> lobbies = new ConcurrentHashMap<>();
+    private final Map<Integer, Game> games = new ConcurrentHashMap<>();
+    private final Map<String, Lobby.LobbyIdandUsername> activeUsers = new ConcurrentHashMap<>();
 
     @Override
-    public HashMap<Integer, Lobby> getLobbies() {
+    public Map<Integer, Lobby> getLobbies() {
         return lobbies;
     }
 
@@ -36,6 +38,7 @@ public class BasicCatanService implements CatanService {
         Lobby.Player player = new Lobby.Player(playerMessage.playerName(), true, true);
         lobby.getPlayers().put(playerMessage.playerName(), player);
         lobbies.put(id, lobby);
+        System.out.println("This is a test from inside the newLobby");
 
         return new Messages.NewLobby(id, lobby);
     }
@@ -72,7 +75,7 @@ public class BasicCatanService implements CatanService {
     }
 
     @Override
-    public HashMap<Integer, Game> getGames() {
+    public Map<Integer, Game> getGames() {
         return games;
     }
 
@@ -109,7 +112,7 @@ public class BasicCatanService implements CatanService {
     }
 
     @Override
-    public HashMap<String, Lobby.LobbyIdandUsername> getActiveUsers() {
+    public Map<String, Lobby.LobbyIdandUsername> getActiveUsers() {
         return activeUsers;
     }
 

@@ -56,7 +56,7 @@ public class GameController {
             throw new RuntimeException(e);
         }
 
-        this.template.convertAndSend("/lobby/status/" + id, text);
+        this.template.convertAndSend("/game/fullStatus/" + id, text);
         return event;
     }
 
