@@ -1,12 +1,10 @@
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import  {useState} from 'react';
+import {useState} from 'react';
 import {Input} from "@/components/ui/input.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import {Button} from "@/components/ui/button.tsx";
-import {LobbySocket} from "@/lobby/LobbySocket.ts";
 import {Loader2} from "lucide-react";
 import {useNavigate} from "react-router";
-import {Lobby} from "@/lobby/Lobby.ts";
 
 function IndexPage() {
     const navigate = useNavigate();
@@ -34,14 +32,22 @@ function IndexPage() {
         }
 
         setLoading(true);
-        LobbySocket.newLobby(username).then((response) => {
-            const lobbyId = response.id;
-            const lobby = Lobby.fromJSON(response.lobby)
-            setLoading(false);
-            //Ready to move to next page.
-            navigate(`/lobby/${lobbyId}`, {state: {lobby: lobby, username: username}});
+        fetch("http://localhost:8080/lobby/new", {
+            method: "POST",
+            body: JSON.stringify({'playerName': username}),
+            headers: {
+                "Content-Type": "application/json",
+            }
+        }).then((response: Response) => {
+            if (response.status === 200) {
+                response.json().then((data) => {
+                    const lobbyId = data.lobbyId;
+                    setLoading(false);
+                    //Ready to move to next page.
+                    navigate(`/lobby/${lobbyId}`, {state: {username: username}});
+                });
+            }
         });
-
     }
 
     return (
@@ -55,9 +61,11 @@ function IndexPage() {
                     <CardContent>
                         <div className="grid w-full max-w-sm items-center gap-3">
                             <Label>Username</Label>
-                            <Input id="username" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                            <Input id="username" placeholder="Username" value={username}
+                                   onChange={(e) => setUsername(e.target.value)}/>
                         </div>
-                        <Button className="w-full mt-1" disabled={loading} onClick={newLobby}>{loading ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : "Create Lobby"}</Button>
+                        <Button className="w-full mt-1" disabled={loading} onClick={newLobby}>{loading ?
+                            <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : "Create Lobby"}</Button>
                     </CardContent>
                 </Card>
 
@@ -68,11 +76,13 @@ function IndexPage() {
                     <CardContent>
                         <div className="grid w-full max-w-sm items-center gap-3">
                             <Label>Lobby Id</Label>
-                            <Input type="number" id="lobbyId" placeholder="Lobby Id" value={lobbyId} onChange={e => setLobbyId(parseInt(e.target.value))}/>
+                            <Input type="number" id="lobbyId" placeholder="Lobby Id" value={lobbyId}
+                                   onChange={e => setLobbyId(parseInt(e.target.value))}/>
                         </div>
                         <div className="grid w-full max-w-sm items-center gap-3 mt-1">
                             <Label>Username</Label>
-                            <Input id="username" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                            <Input id="username" placeholder="Username" value={username}
+                                   onChange={(e) => setUsername(e.target.value)}/>
                         </div>
                         <Button className="w-full mt-1" onClick={joinLobby}>Join Lobby</Button>
                     </CardContent>

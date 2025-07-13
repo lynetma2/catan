@@ -1,4 +1,4 @@
-import type {Hex} from "./hexagon/Hex.ts";
+import type {Hex} from "../hexagon/Hex.ts";
 
 export class Terrain {
     public hex: Hex;

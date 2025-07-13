@@ -1,4 +1,4 @@
-import type {Layout} from "./hexagon/Layout.ts";
+import type {Layout} from "../hexagon/Layout.ts";
 import type {Terrain} from "./Terrain.ts";
 import type {Road} from "./Road.ts";
 import {Building} from "./Building.ts";

@@ -3,7 +3,6 @@ package com.sundtrack.catan.lobby;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sundtrack.catan.activeSessions.ActiveSessionService;
-import com.sundtrack.catan.service.CatanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -42,21 +41,27 @@ public class LobbyController {
 
     @MessageMapping("/join/{lobbyId}")
     @SendTo("/lobby/status/{lobbyId}")
-    public Lobby joinLobby(@Header("simpSessionId") String sessionId, @DestinationVariable Integer id, LobbyMessages.PlayerNameMessage playerNameMessage) {
+    public Lobby joinLobby(@Header("simpSessionId") String sessionId, @DestinationVariable Integer lobbyId, LobbyMessages.PlayerNameMessage playerNameMessage) {
 
         //Storing session information
-        activeSessionService.putActiveUser(sessionId, new Lobby.LobbyIdandUsername(playerNameMessage.playerName(), id));
+        activeSessionService.putActiveUser(sessionId, new Lobby.LobbyIdandUsername(playerNameMessage.playerName(), lobbyId));
 
         //TODO Somehow check if the user should be the new leader.
-        Lobby.Player player = new Lobby.Player(playerNameMessage.playerName(), false, false);
+        boolean isLeader = false;
+        if (lobbyService.getLobby(lobbyId).getPlayers().isEmpty()){
+            isLeader = true;
+        } else if(lobbyService.getLobby(lobbyId).getPlayers().size() == 1){
+            isLeader = lobbyService.getLobby(lobbyId).getPlayers().containsKey(playerNameMessage.playerName());
+        }
+        Lobby.Player player = new Lobby.Player(playerNameMessage.playerName(), isLeader, isLeader);
         //TODO decide proper return value
-        return lobbyService.joinLobby(id, player);
+        return lobbyService.joinLobby(lobbyId, player);
     }
 
     @MessageMapping("/leave/{lobbyId}")
     @SendTo("/lobby/status/{lobbyId}")
-    public Lobby leaveLobby(@DestinationVariable Integer id, LobbyMessages.PlayerNameMessage playerNameMessage) {
-        return lobbyService.leaveLobby(id, playerNameMessage.playerName());
+    public Lobby leaveLobby(@DestinationVariable Integer lobbyId, LobbyMessages.PlayerNameMessage playerNameMessage) {
+        return lobbyService.leaveLobby(lobbyId, playerNameMessage.playerName());
     }
 
     //TODO add the possibility to start a game from the lobby leader (First username)
@@ -65,8 +70,8 @@ public class LobbyController {
     //TODO add ready check in the lobby
     @MessageMapping("/event/{lobbyId}")
     @SendTo("/lobby/status/{lobbyId}")
-    public Lobby event(@DestinationVariable Integer id, Lobby.LobbyEvent event) {
-        return lobbyService.handleLobbyEvent(id, event);
+    public Lobby event(@DestinationVariable Integer lobbyId, Lobby.LobbyEvent event) {
+        return lobbyService.handleLobbyEvent(lobbyId, event);
     }
 
     @EventListener(SessionDisconnectEvent.class)

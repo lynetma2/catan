@@ -3,12 +3,12 @@ import './App.css'
 import {Hex} from "./game/hexagon/Hex.ts";
 import {Layout} from "./game/hexagon/Layout.ts";
 import {Point} from "./game/hexagon/Point.ts";
-import {Terrain} from "./game/Terrain.ts";
-import {Board} from "./game/Board.ts";
-import {Road} from "./game/Road.ts";
-import {Building} from "./game/Building.ts";
+import {Terrain} from "./game/entity/Terrain.ts";
+import {Board} from "./game/entity/Board.ts";
+import {Road} from "./game/entity/Road.ts";
+import {Building} from "./game/entity/Building.ts";
 import {GameServerSocket} from "./game/GameServerSocket.ts";
-import {Game} from "./game/Game.ts";
+import {Game} from "./game/entity/Game.ts";
 import {LobbySocket} from "./lobby/LobbySocket.ts";
 
 function App() {

@@ -6,11 +6,13 @@ import com.sundtrack.catan.game.entity.MapBuilder;
 import com.sundtrack.catan.game.entity.Player;
 import com.sundtrack.catan.lobby.Lobby;
 import com.sundtrack.catan.messaging.Events.GameEvent;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Service
 public class GameServiceImpl implements GameService {
 
     private final Map<Integer, Game> games = new ConcurrentHashMap<>();

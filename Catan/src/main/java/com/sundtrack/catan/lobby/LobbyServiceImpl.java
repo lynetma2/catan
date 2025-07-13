@@ -1,5 +1,11 @@
 package com.sundtrack.catan.lobby;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sundtrack.catan.game.GameService;
+import com.sundtrack.catan.game.entity.Game;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -9,6 +15,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LobbyServiceImpl implements LobbyService {
 
     private final Map<Integer, Lobby> lobbies = new ConcurrentHashMap<>();
+    private GameService gameService;
+    private SimpMessagingTemplate template;
+
+    @Autowired
+    public void setGameService(GameService gameService, SimpMessagingTemplate simpMessagingTemplate) {
+        this.gameService = gameService;
+        this.template = simpMessagingTemplate;
+    }
 
     @Override
     public Map<Integer, Lobby> getLobbies() {
@@ -28,8 +42,6 @@ public class LobbyServiceImpl implements LobbyService {
     public int createLobby(String username) {
         int id = (int)(Math.random() * 1000001);
         Lobby lobby = new Lobby();
-        Lobby.Player player = new Lobby.Player(username, true, true);
-        lobby.addPlayer(player);
         lobbies.put(id, lobby);
         return id;
     }
@@ -57,6 +69,21 @@ public class LobbyServiceImpl implements LobbyService {
             }
             case STARTGAME -> {
                 System.out.println("Starting game event");
+                if (!this.getLobby(lobbyId).getPlayer(event.getPlayerName()).getIsLeader()) {
+                    return this.getLobby(lobbyId);
+                }
+                Game game = gameService.newGame(lobbyId, this.getLobby(lobbyId));
+
+                String text = null;
+                try {
+                    text = new ObjectMapper().writeValueAsString(game);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+
+                //Sending full state on both connections.
+                this.template.convertAndSend("/game/status/" + lobbyId, text);
+                this.template.convertAndSend("/game/fullStatus/" + lobbyId, text);
             }
             default -> throw new RuntimeException("Unknown kind of event " + event.getKind());
         }

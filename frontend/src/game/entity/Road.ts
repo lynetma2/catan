@@ -1,16 +1,12 @@
-import {Vertex} from "./hexagon/Vertex.ts";
+import {Edge} from "../hexagon/Edge.ts";
 
-export class Building {
-    public vertex: Vertex;
+export class Road {
+    public edge: Edge;
     public player: number;
-    public kind: string;
-    public static SETTLEMENT: string = "SETTLEMENT";
-    public static CITY: string = "CITY";
 
-    constructor(vertex: Vertex, player: number, kind: string) {
-        this.vertex = vertex;
+    constructor(edge: Edge, player: number) {
+        this.edge = edge;
         this.player = player;
-        this.kind = kind;
     }
 
     public styling() {

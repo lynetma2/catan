@@ -2,65 +2,69 @@
 import * as React from 'react';
 import {useLocation, useNavigate, useParams} from "react-router";
 import {useEffect, useRef} from "react";
-import {LobbySocket} from "./LobbySocket.ts";
-import type {Lobby, LobbyEvent, Player} from "@/lobby/Lobby.ts";
+import {Lobby, type LobbyEvent, type Player} from "@/lobby/Lobby.ts";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import {Button} from "@/components/ui/button.tsx";
+import {useWebSocket} from "@/WebSocketProvider.tsx";
+import type {StompSubscription} from "@stomp/stompjs";
 
 function LobbyView() {
 
     const navigate = useNavigate();
     const params = useParams();
     const location = useLocation();
-    const lobbyServerRef = useRef<LobbySocket>(null);
-    const initLobby = !location.state || !location.state.lobby ? null : location.state.lobby;
-    const [lobby, setLobby] = React.useState<Lobby | null>(initLobby);
+    const { isConnected, sendMessage, subscribe } = useWebSocket();
+    const lobbySubscription = useRef<StompSubscription>(null);
+    const [lobby, setLobby] = React.useState<Lobby | null>(null);
 
+    const username : string = location.state && location.state.username ? location.state.username : "";
+    const lobbyId = params.lobbyId ? parseInt(params.lobbyId) : undefined;
     const isLeader = location.state && location.state.username ? lobby?.players.get(location.state.username)?.isLeader : false;
     const isReady = location.state && location.state.username ? lobby?.players.get(location.state.username)?.isReady : false;
 
-
     useEffect(() => {
-        if (!location.state || !location.state.username) {
+        if (!username) {
             console.error("No username found");
             navigate(`/`);
             return;
         }
-        const username = location.state.username;
-        if (!params.lobbyId) {
+        if (!lobbyId) {
             console.error("LobbyView no lobbyId found");
             return;
         }
+        if (!isConnected) {
+            console.error("WebSocket not connected");
+            return;
+        }
 
-        if (!lobbyServerRef.current) {
-            lobbyServerRef.current = new LobbySocket();
-            const lobbyId = parseInt(params.lobbyId);
-            lobbyServerRef.current.init(lobbyId, (newLobby) => {
-                console.log("Got new lobby");
-                console.log(newLobby);
-                setLobby(newLobby);
-            }).then(
-                () => {
-                    if (!lobbyServerRef.current) {
-                        console.error("lobbyServer not found");
-                        return;
-                    }
-
-                    if (!lobby) {
-                        lobbyServerRef.current.joinLobby(username, lobbyId);
-                    }
+        if (!lobbySubscription.current) {
+            lobbySubscription.current = subscribe(`/lobby/status/${lobbyId}`, (response) => {
+                const lobby = JSON.parse(response.body);
+                if (!lobby.players) {
+                    //Some error happened
+                    console.error("Wrongly formatted lobby from the server!");
+                    return;
                 }
-            );
+
+                //TODO check that it is actually a map (JSON does natively handle maps)
+                const newLobby = Lobby.fromJSON(lobby);
+                setLobby(newLobby);
+            });
+            sendMessage(`/lobby/join/${lobbyId}`, {'playerName': username})
         }
 
         return () => {
-        }
-    }, [lobby, location.state, navigate, params.lobbyId]);
+            if (lobbySubscription.current) {
+                lobbySubscription.current.unsubscribe();
+                lobbySubscription.current = null;
+            }
+        };
+    }, [isConnected]);
 
     function startGame() {
-        if (!lobbyServerRef.current) {
-            console.error("LobbyServerRef is not available");
+        if (!isConnected) {
+            console.error("WebSocket not connected");
             return;
         }
 
@@ -68,12 +72,12 @@ function LobbyView() {
             kind: "STARTGAME",
             playerName: location.state.username,
         }
-        lobbyServerRef.current.sendEvent(event);
+        sendMessage(`/lobby/event/${lobbyId}`, event);
     }
 
     function updateReadyState() {
-        if (!lobbyServerRef.current) {
-            console.error("LobbyServerRef is not available");
+        if (!isConnected) {
+            console.error("WebSocket not connected");
             return;
         }
 
@@ -81,7 +85,7 @@ function LobbyView() {
             kind: isReady ? "SETNOTREADY" : "SETREADY",
             playerName: location.state.username,
         }
-        lobbyServerRef.current.sendEvent(event)
+        sendMessage(`/lobby/event/${lobbyId}`, event);
     }
 
     //Needed stuff brainstorming

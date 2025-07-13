@@ -12,10 +12,7 @@ export class Lobby {
 }
 
 export interface NewLobby {
-    id: number;
-    lobby: {
-        players: {[key: string]: Player};
-    }
+    lobbyId: number;
 }
 
 export interface Player {

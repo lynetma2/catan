@@ -1,6 +1,6 @@
 import type {Board} from "./Board.ts";
 import type {Player} from "./Player.ts";
-import type {GameEvent} from "./GameEvent.ts";
+import type {GameEvent} from "../GameEvent.ts";
 
 export class Game {
     public board: Board;
