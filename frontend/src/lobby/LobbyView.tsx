@@ -41,6 +41,13 @@ function LobbyView() {
         if (!lobbySubscription.current) {
             lobbySubscription.current = subscribe(`/lobby/status/${lobbyId}`, (response) => {
                 const lobby = JSON.parse(response.body);
+                console.log("lobby is: ", lobby);
+                if (lobby.kind && lobby.kind == "STARTGAME") {
+                    console.log("Should change view now!");
+                    //Should change view and show the starting game...
+                    navigate(`/game/${lobbyId}`, {state: {username: username}});
+                }
+
                 if (!lobby.players) {
                     //Some error happened
                     console.error("Wrongly formatted lobby from the server!");

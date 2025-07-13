@@ -76,4 +76,10 @@ public class GameController {
         this.template.convertAndSend("/game/status/" + lobbyId, text);
         this.template.convertAndSend("/game/fullStatus/" + lobbyId, text);
     }
+
+    @MessageMapping("/get/{lobbyId}")
+    @SendTo("/game/fullStatus/{lobbyId}")
+    public Game getGame(@DestinationVariable Integer lobbyId) {
+        return gameService.getGame(lobbyId);
+    }
 }

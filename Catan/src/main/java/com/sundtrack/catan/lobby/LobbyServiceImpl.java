@@ -76,14 +76,13 @@ public class LobbyServiceImpl implements LobbyService {
 
                 String text = null;
                 try {
-                    text = new ObjectMapper().writeValueAsString(game);
+                    text = new ObjectMapper().writeValueAsString(event);
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
 
                 //Sending full state on both connections.
-                this.template.convertAndSend("/game/status/" + lobbyId, text);
-                this.template.convertAndSend("/game/fullStatus/" + lobbyId, text);
+                this.template.convertAndSend("/lobby/status/" + lobbyId, text);
             }
             default -> throw new RuntimeException("Unknown kind of event " + event.getKind());
         }
@@ -113,4 +112,5 @@ public class LobbyServiceImpl implements LobbyService {
         //TODO decide proper return value
         return lobbies.get(lobbyId);
     }
+
 }
