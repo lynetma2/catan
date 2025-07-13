@@ -1,16 +1,15 @@
 package com.sundtrack.catan.service;
 
-import com.sundtrack.catan.game.Board;
-import com.sundtrack.catan.game.Game;
-import com.sundtrack.catan.game.MapBuilder;
-import com.sundtrack.catan.game.Player;
+import com.sundtrack.catan.game.entity.Board;
+import com.sundtrack.catan.game.entity.Game;
+import com.sundtrack.catan.game.entity.MapBuilder;
+import com.sundtrack.catan.game.entity.Player;
 import com.sundtrack.catan.lobby.Lobby;
-import com.sundtrack.catan.lobby.Messages;
+import com.sundtrack.catan.lobby.LobbyMessages;
 import com.sundtrack.catan.messaging.Events.GameEvent;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,15 +31,15 @@ public class BasicCatanService implements CatanService {
     }
 
     @Override
-    public Messages.NewLobby newLobby(Messages.PlayerMessage playerMessage) {
+    public LobbyMessages.NewLobby newLobby(LobbyMessages.PlayerNameMessage playerNameMessage) {
         int id = (int)(Math.random() * 1000001);
         Lobby lobby = new Lobby();
-        Lobby.Player player = new Lobby.Player(playerMessage.playerName(), true, true);
-        lobby.getPlayers().put(playerMessage.playerName(), player);
+        Lobby.Player player = new Lobby.Player(playerNameMessage.playerName(), true, true);
+        lobby.getPlayers().put(playerNameMessage.playerName(), player);
         lobbies.put(id, lobby);
         System.out.println("This is a test from inside the newLobby");
 
-        return new Messages.NewLobby(id, lobby);
+        return new LobbyMessages.NewLobby(id, lobby);
     }
 
     @Override
@@ -51,7 +50,7 @@ public class BasicCatanService implements CatanService {
     @Override
     public Lobby handleLobbyEvent(int lobbyId, Lobby.LobbyEvent event) {
         if(!lobbies.containsKey(lobbyId)) {
-            throw new RuntimeException("Lobby with id " + lobbyId + " does not exist");
+            throw new RuntimeException("Lobby with lobbyId " + lobbyId + " does not exist");
         }
         //TODO handle the event
         System.out.println("Lobby event happened");
@@ -105,7 +104,7 @@ public class BasicCatanService implements CatanService {
         System.out.println("Got Game Event of kind: " + event.getKind());
         //TODO add event handling and verification of the event.
         if (!games.containsKey(gameId)) {
-            throw new RuntimeException("Game with id " + gameId + " not found");
+            throw new RuntimeException("Game with lobbyId " + gameId + " not found");
         }
 
         return games.get(gameId);

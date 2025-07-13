@@ -1,4 +1,4 @@
-package com.sundtrack.catan.game;
+package com.sundtrack.catan.game.entity;
 import java.util.ArrayList;
 
 public class Board {

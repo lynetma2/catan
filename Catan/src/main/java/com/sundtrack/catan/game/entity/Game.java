@@ -1,4 +1,4 @@
-package com.sundtrack.catan.game;
+package com.sundtrack.catan.game.entity;
 
 import com.sundtrack.catan.messaging.Events.GameEvent;
 import java.util.ArrayList;

@@ -14,6 +14,22 @@ public class Lobby {
         return players;
     }
 
+    public void addPlayer(Player player) {
+        players.put(player.username,  player);
+    }
+
+    public void removePlayer(String username) {
+        players.remove(username);
+    }
+
+    public Player getPlayer(String username) {
+        if (!players.containsKey(username)) {
+            throw new RuntimeException("Player with name " + username + " does not exist");
+        }
+
+        return players.get(username);
+    }
+
     public static class Player {
         private String username;
         private boolean isLeader;
@@ -71,5 +87,5 @@ public class Lobby {
         }
     }
 
-    public static record LobbyIdandUsername (String username, int id){}
+    public static record LobbyIdandUsername (String username, int lobbyId){}
 }

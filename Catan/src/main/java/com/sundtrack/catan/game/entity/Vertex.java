@@ -1,4 +1,4 @@
-package com.sundtrack.catan.game;
+package com.sundtrack.catan.game.entity;
 
 public class Vertex {
     enum VertexKind {

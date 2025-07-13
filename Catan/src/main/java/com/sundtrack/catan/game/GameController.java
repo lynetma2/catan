@@ -1,23 +1,20 @@
-package com.sundtrack.catan.messaging;
+package com.sundtrack.catan.game;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sundtrack.catan.game.Board;
-import com.sundtrack.catan.game.Game;
-import com.sundtrack.catan.game.MapBuilder;
-import com.sundtrack.catan.game.Player;
+import com.sundtrack.catan.game.entity.Board;
+import com.sundtrack.catan.game.entity.Game;
+import com.sundtrack.catan.game.entity.MapBuilder;
+import com.sundtrack.catan.game.entity.Player;
 import com.sundtrack.catan.lobby.Lobby;
 import com.sundtrack.catan.messaging.Events.GameEvent;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,16 +32,16 @@ public class GameController {
         this.template = template;
     }
 
-    // For full state sync: /game/fullStatus/{id}
-    // For event state: /game/status/{id}
+    // For full state sync: /game/fullStatus/{lobbyId}
+    // For event state: /game/status/{lobbyId}
 
-    @MessageMapping("/event/{id}")
-    @SendTo("/game/status/{id}")
+    @MessageMapping("/event/{lobbyId}")
+    @SendTo("/game/status/{lobbyId}")
     public GameEvent eventHandling(GameEvent event, @DestinationVariable int id) {
         System.out.println("Got Game Event of kind: " + event.getKind());
         //TODO add event handling and verification of the event.
         if (!games.containsKey(id)) {
-            throw new RuntimeException("Game with id " + id + " not found");
+            throw new RuntimeException("Game with lobbyId " + id + " not found");
         }
 
         //TODO design incremental game state system at some point.

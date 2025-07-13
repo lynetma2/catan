@@ -1,19 +1,18 @@
 package com.sundtrack.catan.service;
 
 
-import com.sundtrack.catan.game.Game;
+import com.sundtrack.catan.game.entity.Game;
 import com.sundtrack.catan.lobby.Lobby;
-import com.sundtrack.catan.lobby.Messages;
+import com.sundtrack.catan.lobby.LobbyMessages;
 import com.sundtrack.catan.messaging.Events.GameEvent;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public interface CatanService {
     //Lobby related methods
     Map<Integer, Lobby> getLobbies();
     Lobby getLobby(int lobbyId);
-    Messages.NewLobby newLobby(Messages.PlayerMessage playerMessage);
+    LobbyMessages.NewLobby newLobby(LobbyMessages.PlayerNameMessage playerNameMessage);
     void removeLobby(int lobbyId);
     Lobby handleLobbyEvent(int lobbyId, Lobby.LobbyEvent event);
 

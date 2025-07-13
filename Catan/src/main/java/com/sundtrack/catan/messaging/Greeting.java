@@ -1,6 +1,6 @@
 package com.sundtrack.catan.messaging;
 
-import com.sundtrack.catan.game.Board;
+import com.sundtrack.catan.game.entity.Board;
 
 public class Greeting {
 
