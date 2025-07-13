@@ -21,15 +21,13 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 @MessageMapping("/lobby")
 public class LobbyController {
 
-    private final CatanService catanService;
     private final LobbyService lobbyService;
     private final ActiveSessionService activeSessionService;
     private SimpMessagingTemplate template;
 
     @Autowired
-    public LobbyController(ActiveSessionService activeSessionService, LobbyService lobbyService, CatanService catanService, SimpMessagingTemplate template) {
+    public LobbyController(ActiveSessionService activeSessionService, LobbyService lobbyService, SimpMessagingTemplate template) {
         this.lobbyService = lobbyService;
-        this.catanService = catanService;
         this.activeSessionService = activeSessionService;
         this.template = template;
     }
@@ -74,7 +72,7 @@ public class LobbyController {
     @EventListener(SessionDisconnectEvent.class)
     public void handleDisconnect(SessionDisconnectEvent event) {
         //System.out.println("SessionDisconnectEvent = " + event);
-        if (catanService.getActiveUsers().containsKey(event.getSessionId())) {
+        if (activeSessionService.getActiveUsers().containsKey(event.getSessionId())) {
             Lobby.LobbyIdandUsername activeUser = activeSessionService.getActiveUser(event.getSessionId());
             lobbyService.getLobby(activeUser.lobbyId()).removePlayer(activeUser.username());
             //TODO check if the lobby is empty... Maybe this should be done inside the removePlayer call somehow.
@@ -82,7 +80,7 @@ public class LobbyController {
             activeSessionService.removeActiveUser(event.getSessionId());
             String text = null;
             try {
-                text = new ObjectMapper().writeValueAsString(catanService.getLobbies().get(activeUser.lobbyId()));
+                text = new ObjectMapper().writeValueAsString(lobbyService.getLobby(activeUser.lobbyId()));
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
