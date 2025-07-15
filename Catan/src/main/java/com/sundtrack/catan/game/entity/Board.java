@@ -1,4 +1,6 @@
 package com.sundtrack.catan.game.entity;
+import com.sundtrack.catan.game.entity.coordinates.HexCoordinates;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,9 +10,9 @@ public class Board {
     private final Map<String, Hex> map;
     private final Map<String, Road> roads;
     private final Map<String, Building> buildings;
-    private Hex robber;
+    private HexCoordinates robber;
 
-    public Board(Map<String, Hex> map, Hex robber) {
+    public Board(Map<String, Hex> map, HexCoordinates robber) {
         this.map = map;
         this.roads = new HashMap<>();
         this.buildings = new HashMap<>();
@@ -29,8 +31,8 @@ public class Board {
         return buildings;
     }
 
-    public boolean isHexOccupied(Hex hex) {
-        return robber.getQ() == hex.getQ() && robber.getR() == hex.getR() && robber.getS() == hex.getS();
+    public boolean isHexOccupied(HexCoordinates hex) {
+        return robber.equals(hex);
     }
 
     public boolean isRoadOccupied(Road road) {

@@ -1,7 +1,9 @@
 package com.sundtrack.catan.game.entity;
 
+import com.sundtrack.catan.game.entity.coordinates.HexCoordinates;
+
 public class Hex {
-    enum TerrainKind {
+    public enum TerrainKind {
         LUMBER,
         BRICK,
         GRAIN,
@@ -12,26 +14,26 @@ public class Hex {
         SEA
     }
 
-    private int q, r;
-    private TerrainKind kind;
+    private final HexCoordinates coordinates;
+    private final TerrainKind kind;
 
-    public Hex(int q, int r, int s, TerrainKind kind) {
-        assert q + r + s == 0;
-        this.q = q;
-        this.r = r;
+    public Hex(HexCoordinates coordinates, TerrainKind kind) {
+        this.coordinates = coordinates;
         this.kind = kind;
     }
 
-    public int getQ() {
-        return q;
+    public Hex(int q, int r, TerrainKind kind) {
+        this.coordinates = new HexCoordinates(q, r);
+        this.kind = kind;
     }
 
-    public int getR() {
-        return r;
+    public Hex(int q, int r, int s, TerrainKind kind) {
+        this.coordinates = new HexCoordinates(q, r, s);
+        this.kind = kind;
     }
 
-    public int getS() {
-        return -r-q;
+    public HexCoordinates getCoordinates() {
+        return coordinates;
     }
 
     public TerrainKind getKind() {
@@ -39,6 +41,9 @@ public class Hex {
     }
 
     public String toKey() {
-        return "q" + this.q + "r" + this.r + "s" + this.getS();
+        int q = coordinates.getQ();
+        int r = coordinates.getR();
+        int s = coordinates.getS();
+        return "q" + q + "r" + r + "s" + s;
     }
 }

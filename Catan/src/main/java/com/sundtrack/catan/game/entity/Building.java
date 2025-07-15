@@ -1,43 +1,26 @@
 package com.sundtrack.catan.game.entity;
 
+import com.sundtrack.catan.game.entity.coordinates.HexCoordinates;
+import com.sundtrack.catan.game.entity.coordinates.VertexCoordinates;
+
 public class Building {
     public enum Kind {
         SETTLEMENT,
         CITY
     }
 
-    public enum Direction {
-        WEST, EAST
-    }
-
     private Kind buildingKind;
-    private final Direction direction;
-    private final int q, r;
+    private final VertexCoordinates coordinates;
     private final String playerName;
 
-    public Building(int q, int r, int s, Direction direction, Kind kind, String playerName) {
-        assert q + r + s == 0;
-        this.q = q;
-        this.r = r;
+    public Building(VertexCoordinates coordinates, Kind kind, String playerName) {
+        this.coordinates = coordinates;
         this.buildingKind = kind;
-        this.direction = direction;
         this.playerName = playerName;
     }
 
-    public int getQ() {
-        return q;
-    }
-
-    public int getR() {
-        return r;
-    }
-
-    public int getS() {
-        return -r-q;
-    }
-
-    public Building.Direction getDirection() {
-        return direction;
+    public VertexCoordinates getCoordinates() {
+        return coordinates;
     }
 
     public Kind getBuildingKind() {
@@ -57,20 +40,25 @@ public class Building {
     }
 
     public String toKey() {
-        return "q" + this.q + "r" + this.r + "s" + this.getS() + "d" + this.direction;
+        int q = coordinates.getQ();
+        int r = coordinates.getR();
+        int s = coordinates.getS();
+        VertexCoordinates.Direction direction = coordinates.getDirection();
+        return "q" + q + "r" + r + "s" + s + "d" + direction;
     }
 
-    public Hex[] neighbours() {
-        if (direction == Direction.EAST) {
-            Hex hex1 = new Hex(-1+q, r, 1+getS(), Hex.TerrainKind.SEA);
-            Hex hex2 = new Hex(q, r, getS(), Hex.TerrainKind.SEA);
-            Hex hex3 = new Hex(-1+q, 1+r, getS(), Hex.TerrainKind.SEA);
-            return new Hex[]{hex1, hex2, hex3};
+    public HexCoordinates[] hexNeighbours() {
+        VertexCoordinates.Direction direction = coordinates.getDirection();
+        if (direction == VertexCoordinates.Direction.EAST) {
+            HexCoordinates coordinates1 = new HexCoordinates(-1+coordinates.getQ(), coordinates.getR());
+            HexCoordinates coordinates2 = new HexCoordinates(coordinates.getQ(), coordinates.getR());
+            HexCoordinates coordinates3 = new HexCoordinates(-1+coordinates.getQ(), 1+coordinates.getR());
+            return new HexCoordinates[]{coordinates1, coordinates2, coordinates3};
         } else {
-            Hex hex1 = new Hex(1+q, -1+r, getS(), Hex.TerrainKind.SEA);
-            Hex hex2 = new Hex(q, r, getS(), Hex.TerrainKind.SEA);
-            Hex hex3 = new Hex(-1+q, r, -1+getS(), Hex.TerrainKind.SEA);
-            return new Hex[]{hex1, hex2, hex3};
+            HexCoordinates coordinates1 = new HexCoordinates(1+coordinates.getQ(), -1+coordinates.getR());
+            HexCoordinates coordinates2 = new HexCoordinates(coordinates.getQ(), coordinates.getR());
+            HexCoordinates coordinates3 = new HexCoordinates(+1+coordinates.getQ(), coordinates.getR());
+            return new HexCoordinates[]{coordinates1, coordinates2, coordinates3};
         }
     }
 }

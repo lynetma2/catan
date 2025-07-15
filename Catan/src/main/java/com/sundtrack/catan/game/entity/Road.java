@@ -1,43 +1,42 @@
 package com.sundtrack.catan.game.entity;
 
+import com.sundtrack.catan.game.entity.coordinates.EdgeCoordinates;
+import com.sundtrack.catan.game.entity.coordinates.HexCoordinates;
+import com.sundtrack.catan.game.entity.coordinates.VertexCoordinates;
+
 public class Road {
-    public enum Direction {
-        NORTH, EAST, WEST
-    }
 
-    private final int q, r;
+    private final EdgeCoordinates coordinates;
     private final String playerName;
-    private final Direction direction;
 
-    public Road(int q, int r, int s, Direction direction, String playerName) {
-        assert q + r + s == 0;
-        this.q = q;
-        this.r = r;
+    public Road(int q, int r, int s, EdgeCoordinates.Direction direction, String playerName) {
+        this.coordinates = new EdgeCoordinates(q, r, s, direction);
         this.playerName = playerName;
-        this.direction = direction;
     }
 
-    public int getQ() {
-        return q;
+    public Road(int q, int r, EdgeCoordinates.Direction direction, String playerName) {
+        this.coordinates = new EdgeCoordinates(q, r, direction);
+        this.playerName = playerName;
     }
 
-    public int getR() {
-        return r;
+    public Road(EdgeCoordinates coordinates, String playerName) {
+        this.coordinates = coordinates;
+        this.playerName = playerName;
     }
 
-    public int getS() {
-        return -r-q;
+    public HexCoordinates getCoordinates() {
+        return coordinates;
     }
 
     public String getPlayerName() {
         return playerName;
     }
 
-    public Direction getDirection() {
-        return direction;
-    }
-
     public String toKey() {
-        return "q" + this.q + "r" + this.r + "s" + this.getS() + "d" + this.direction;
+        int q = coordinates.getQ();
+        int r = coordinates.getR();
+        int s = coordinates.getS();
+        EdgeCoordinates.Direction direction = coordinates.getDirection();
+        return "q" + q + "r" + r + "s" + s + "d" + direction;
     }
 }
