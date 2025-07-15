@@ -1,6 +1,8 @@
-import type {Board} from "./Board.ts";
-import type {Player} from "./Player.ts";
+import {Board} from "./Board.ts";
+import {Player} from "./Player.ts";
 import type {GameEvent} from "../GameEvent.ts";
+import type {Layout} from "@/game/hexagon/Layout.ts";
+import type {IMessage} from "@stomp/stompjs";
 
 export class Game {
     public board: Board;
@@ -17,11 +19,19 @@ export class Game {
         this.dices = dices;
     }
 
-    public static fromResponse(response: Response): Game {
-        const body = response.json();
-        console.log("body");
-        console.log(body);
-        return;
+    public static fromJSON(message: IMessage, layout: Layout, canvas: HTMLCanvasElement): Game {
+        const json = JSON.parse(message.body);
+
+        //Parsing the board:
+        const board = Board.fromJSON(json.board, layout, canvas);
+        const dices = json.dices;
+        const players = json.players.map((player) => {
+            return Player.fromJSON(player);
+        });
+        const events = json.events;
+        const resources = json.resources;
+
+        return new Game(board, players, events, dices, resources);
     }
 
     public initializeGameSocket() {

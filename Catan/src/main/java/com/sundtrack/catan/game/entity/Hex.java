@@ -37,4 +37,8 @@ public class Hex {
     public TerrainKind getKind() {
         return kind;
     }
+
+    public String toKey() {
+        return "q" + this.q + "r" + this.r + "s" + this.getS();
+    }
 }

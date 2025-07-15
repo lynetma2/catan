@@ -1,7 +1,8 @@
 import type {Layout} from "../hexagon/Layout.ts";
-import type {Terrain} from "./Terrain.ts";
+import {Terrain} from "./Terrain.ts";
 import type {Road} from "./Road.ts";
 import {Building} from "./Building.ts";
+import {Hex} from "@/game/hexagon/Hex.ts";
 
 export class Board {
     public map: Map<string,Terrain>;
@@ -16,6 +17,17 @@ export class Board {
         this.buildings = buildings;
         this.layout = layout;
         this.canvas = canvas;
+    }
+
+    public static fromJSON(object: any, layout: Layout, canvas: HTMLCanvasElement): Board {
+        const map = new Map<string,Terrain>();
+        object.map.forEach((terrain: any) => {
+            const t = new Terrain(new Hex(terrain.q, terrain.r, terrain.s), terrain.kind, terrain.dice, terrain.tradeKind);
+            map.set(`q${terrain.q}r${terrain.r}s${terrain.s}`, t);
+        });
+
+        //TODO handle roads and buildings
+        return new Board(map, new Map<string, Road>(), new Map<string, Building>, layout, canvas);
     }
 
     public draw() {

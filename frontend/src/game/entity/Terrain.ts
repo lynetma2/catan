@@ -29,6 +29,11 @@ export class Terrain {
                 return "#C8BF80"
             case "SELECTED":
                 return "blue"
+            case "SEA":
+                return "blue"
+            //TODO handle ports
+            case "PORT":
+                return "brown"
             default:
                 return "#000"
         }
