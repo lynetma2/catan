@@ -59,4 +59,18 @@ public class Building {
     public String toKey() {
         return "q" + this.q + "r" + this.r + "s" + this.getS() + "d" + this.direction;
     }
+
+    public Hex[] neighbours() {
+        if (direction == Direction.EAST) {
+            Hex hex1 = new Hex(-1+q, r, 1+getS(), Hex.TerrainKind.SEA);
+            Hex hex2 = new Hex(q, r, getS(), Hex.TerrainKind.SEA);
+            Hex hex3 = new Hex(-1+q, 1+r, getS(), Hex.TerrainKind.SEA);
+            return new Hex[]{hex1, hex2, hex3};
+        } else {
+            Hex hex1 = new Hex(1+q, -1+r, getS(), Hex.TerrainKind.SEA);
+            Hex hex2 = new Hex(q, r, getS(), Hex.TerrainKind.SEA);
+            Hex hex3 = new Hex(-1+q, r, -1+getS(), Hex.TerrainKind.SEA);
+            return new Hex[]{hex1, hex2, hex3};
+        }
+    }
 }

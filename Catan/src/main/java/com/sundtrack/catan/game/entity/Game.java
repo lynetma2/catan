@@ -8,11 +8,11 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Game {
 
     //Resource array indices
-    private final int LUMBER_INDEX = 0;
-    private final int BRICK_INDEX = 1;
-    private final int GRAIN_INDEX = 2;
-    private final int WOOL_INDEX = 3;
-    private final int ORE_INDEX = 4;
+    public static final int LUMBER_INDEX = 0;
+    public static final int BRICK_INDEX = 1;
+    public static final int GRAIN_INDEX = 2;
+    public static final int WOOL_INDEX = 3;
+    public static final int ORE_INDEX = 4;
 
     private final Board board;
     private final List<Player> players;

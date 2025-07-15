@@ -74,11 +74,18 @@ public class Board {
     }
 
     public Map<String, Integer> calculateLongestRoad() {
+
         //TODO calculate this!
         return new HashMap<>();
     }
 
     public Map<String, List<Integer>> diceResult(int[] dices) {
+        //For each building, check the 3 hexes around it and give resources accordingly.
+
+        buildings.values().forEach(building -> {
+            //TODO create a record for storing the coordinates with two constructors and use it around the codebase.
+        });
+
         //TODO calculate this!
         return new HashMap<>();
     }
