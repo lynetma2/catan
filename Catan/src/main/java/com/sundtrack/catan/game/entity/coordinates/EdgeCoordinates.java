@@ -78,6 +78,27 @@ public class EdgeCoordinates extends HexCoordinates{
         return neighbours;
     }
 
+    public VertexCoordinates[] EdgeVertices() {
+        int q = super.getQ();
+        int r = super.getR();
+        VertexCoordinates[] coordinates = new VertexCoordinates[2];
+        switch (direction) {
+            case NORTH -> {
+                coordinates[0] = new VertexCoordinates(q-1,r, VertexCoordinates.Direction.EAST);
+                coordinates[1] = new VertexCoordinates(q+1,r-1, VertexCoordinates.Direction.WEST);
+            }
+            case EAST -> {
+                coordinates[0] = new VertexCoordinates(q,r, VertexCoordinates.Direction.EAST);
+                coordinates[1] = new VertexCoordinates(q+1,r-1, VertexCoordinates.Direction.WEST);
+            }
+            case WEST -> {
+                coordinates[0] = new VertexCoordinates(q,r, VertexCoordinates.Direction.WEST);
+                coordinates[1] = new VertexCoordinates(q-1,r, VertexCoordinates.Direction.EAST);
+            }
+        }
+        return coordinates;
+    }
+
     @Override
     public String toKey() {
         return super.toKey() + "d" + direction;
