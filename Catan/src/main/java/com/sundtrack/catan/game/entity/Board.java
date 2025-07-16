@@ -62,7 +62,19 @@ public class Board {
             throw new IllegalStateException("Building already exists for this vertex or the Vertex is blocked by another building");
         }
 
-        //TODO check that there is a road from the same player connecting this Vertex.
+        boolean roadExists = false;
+        EdgeCoordinates[] neighbours = building.edgeNeighbours();
+        for (EdgeCoordinates neighbour : neighbours) {
+            if (roads.containsKey(neighbour.toKey())) {
+                roadExists = roads.get(neighbour.toKey()).getPlayerName() == building.getPlayerName();
+            }
+        }
+
+        if (!roadExists) {
+            throw new IllegalStateException("Building can't be placed without a road connecting to it");
+        }
+
+        //TODO make sure the early game special case can exist.
 
         buildings.put(building.toKey(), building);
     }
@@ -74,6 +86,8 @@ public class Board {
 
         //TODO check that the road to be added can be added legally.
             //Means check that there is a road from the same player connecting to this one, and check that there is no building from another player in between.
+
+
 
         roads.put(road.toKey(), road);
     }
