@@ -1,8 +1,9 @@
 package com.sundtrack.catan.game.entity;
 
-import com.sundtrack.catan.messaging.Events.GameEvent;
+import com.sundtrack.catan.game.Events.GameEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Game {
@@ -15,13 +16,13 @@ public class Game {
     public static final int ORE_INDEX = 4;
 
     private final Board board;
-    private final List<Player> players;
+    private final Map<String, Player> players;
     private final int[] dices = new int[] {1,1};
     private final List<GameEvent> events = new ArrayList<>();
-    private final int[] resources = new int[] {19,19,19,19,19};
+    private final Integer[] resources = new Integer[] {19,19,19,19,19};
     //TODO add something to log the events, and save them.
 
-    public Game(Board board, List<Player> players) {
+    public Game(Board board, Map<String, Player> players) {
         this.board = board;
         this.players = players;
     }
@@ -30,7 +31,7 @@ public class Game {
         return board;
     }
 
-    public List<Player> getPlayers() {
+    public Map<String, Player> getPlayers() {
         return players;
     }
 
@@ -38,8 +39,12 @@ public class Game {
         return dices;
     }
 
-    public int[] getResources() {
+    public Integer[] getResources() {
         return resources;
+    }
+
+    public void setDices(int[] dices) {
+        System.arraycopy(dices, 0, this.dices, 0, dices.length);
     }
 
     public List<GameEvent> getGameEvents() {
@@ -60,6 +65,4 @@ public class Game {
         //Add the executed event to the list of events.
         events.add(gameEvent);
     }
-
-
 }

@@ -5,7 +5,7 @@ import com.sundtrack.catan.game.entity.Game;
 import com.sundtrack.catan.game.entity.MapBuilder;
 import com.sundtrack.catan.game.entity.Player;
 import com.sundtrack.catan.lobby.Lobby;
-import com.sundtrack.catan.messaging.Events.GameEvent;
+import com.sundtrack.catan.game.Events.GameEvent;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

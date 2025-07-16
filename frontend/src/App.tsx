@@ -56,7 +56,7 @@ function App() {
             // });
 
             // canvas.addEventListener("mousemove", e => {
-                 const edge = layout.pixelToEdgeRounded(new Point(getMousePos(canvas, e).x, getMousePos(canvas, e).y));
+            //     const edge = layout.pixelToEdgeRounded(new Point(getMousePos(canvas, e).x, getMousePos(canvas, e).y));
             //     console.log(edge);
             //     if (edge && !board.roads.has(`q${edge.q}r${edge.r}d${edge.direction}`)) {
             //         board.roads.clear()

@@ -1,10 +1,11 @@
-package com.sundtrack.catan.messaging.Events;
+package com.sundtrack.catan.game.Events;
 
+import com.sundtrack.catan.game.entity.Game;
 import com.sundtrack.catan.game.entity.Hex;
 import com.sundtrack.catan.game.entity.Road;
 import com.sundtrack.catan.game.entity.Building;
 
-public class GameEvent {
+public abstract class GameEvent {
 
     public enum EventKind {
         ROLLDICE,
@@ -18,23 +19,23 @@ public class GameEvent {
     }
 
     private final EventKind kind;
-    private final int player;
+    private final String player;
     private final int id;
-    private final Hex hex;
-    private final Road road;
-    private final Building vertex;
+//    private final Hex hex;
+//    private final Road road;
+//    private final Building vertex;
     //TODO add some fields to handle trade and developmentcard.
 
-    public GameEvent(EventKind kind, int player, int id, Hex hex, Road road,  Building vertex) {
+    public GameEvent(EventKind kind, String player, int id) {
         this.kind = kind;
         this.player = player;
         this.id = id;
-        this.hex = hex;
-        this.road = road;
-        this.vertex = vertex;
+//        this.hex = hex;
+//        this.road = road;
+//        this.vertex = vertex;
     }
 
-    public int getPlayer() {
+    public String getPlayer() {
         return player;
     }
 
@@ -46,4 +47,5 @@ public class GameEvent {
         return id;
     }
 
+    public abstract void doEvent(Game game);
 }

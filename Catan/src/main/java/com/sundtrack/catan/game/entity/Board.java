@@ -104,11 +104,11 @@ public class Board {
         robber = coordinates;
     }
 
-    public void upgradeBuilding(Building building) {
-        if (!buildings.containsKey(building.toKey()) || (buildings.containsKey(building.toKey()) && buildings.get(building.toKey()).getBuildingKind() == Building.Kind.CITY)) {
+    public void upgradeBuilding(VertexCoordinates coordinates) {
+        if (!buildings.containsKey(coordinates.toKey()) || (buildings.containsKey(coordinates.toKey()) && buildings.get(coordinates.toKey()).getBuildingKind() == Building.Kind.CITY)) {
             throw new IllegalStateException("Building does not exist for this vertex or can't be upgraded");
         }
-        buildings.get(building.toKey()).upgradeBuilding();
+        buildings.get(coordinates.toKey()).upgradeBuilding();
     }
 
     public Map<String, Integer> calculateLongestRoad() {
@@ -117,16 +117,19 @@ public class Board {
         return new HashMap<>();
     }
 
-    public Map<String, Integer[]> resourceIncrement(int[] dices, List<Player> players) {
+    public Map<String, Integer[]> resourceIncrement(int[] dices, Map<String, Player> players) {
         Map<String, Integer[]> resourceMap = new HashMap<>();
-        players.forEach(player -> {
-            resourceMap.put(player.getName(), new  Integer[]{0, 0, 0, 0, 0});
+        players.forEach((playerName, player) -> {
+            resourceMap.put(playerName, new  Integer[]{0, 0, 0, 0, 0});
         });
 
         //For each building, check the 3 hexes around it and give resources accordingly.
         buildings.values().forEach(building -> {
             HexCoordinates[] neighbours = building.hexNeighbours();
             for (HexCoordinates neighbour : neighbours) {
+                if (neighbour.equals(robber)) {
+                    continue;
+                }
                 Hex hex = map.get(neighbour.toKey());
                 boolean isInstance = hex instanceof ResourceTerrain;
                 if (isInstance) {

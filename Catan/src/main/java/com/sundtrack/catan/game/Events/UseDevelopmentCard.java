@@ -1,4 +1,4 @@
-package com.sundtrack.catan.messaging.Events;
+package com.sundtrack.catan.game.Events;
 
 public class UseDevelopmentCard extends GameEvent{
     private GameEvent.EventKind kind;
