@@ -27,57 +27,55 @@ public class EdgeCoordinates extends HexCoordinates{
     public EdgeCoordinates[] edgeNeighbours() {
         int q  = super.getQ();
         int r = super.getR();
+        EdgeCoordinates[] neighbours = new EdgeCoordinates[4];
         switch (direction) {
             case EAST -> {
-                EdgeCoordinates coordinates1 = new EdgeCoordinates(q,r, Direction.NORTH);
-                EdgeCoordinates coordinates2 = new EdgeCoordinates(q+1,r-1, Direction.WEST);
-                EdgeCoordinates coordinates3 = new EdgeCoordinates(q+1,r,Direction.NORTH);
-                EdgeCoordinates coordinates4 = new EdgeCoordinates(q+1,r,Direction.WEST);
-                return new EdgeCoordinates[]{coordinates1,coordinates2,coordinates3,coordinates4};
+                neighbours[0] = new EdgeCoordinates(q,r, Direction.NORTH);
+                neighbours[1] = new EdgeCoordinates(q+1,r-1, Direction.WEST);
+                neighbours[2] = new EdgeCoordinates(q+1,r,Direction.NORTH);
+                neighbours[3] = new EdgeCoordinates(q+1,r,Direction.WEST);
             }
             case WEST -> {
-                EdgeCoordinates coordinates1 = new EdgeCoordinates(q,r, Direction.NORTH);
-                EdgeCoordinates coordinates2 = new EdgeCoordinates(q-1,r, Direction.EAST);
-                EdgeCoordinates coordinates3 = new EdgeCoordinates(q-1,r+1,Direction.NORTH);
-                EdgeCoordinates coordinates4 = new EdgeCoordinates(q-1,r+1,Direction.EAST);
-                return new EdgeCoordinates[]{coordinates1,coordinates2,coordinates3,coordinates4};
+                neighbours[0] = new EdgeCoordinates(q,r, Direction.NORTH);
+                neighbours[1] = new EdgeCoordinates(q-1,r, Direction.EAST);
+                neighbours[2] = new EdgeCoordinates(q-1,r+1,Direction.NORTH);
+                neighbours[3] = new EdgeCoordinates(q-1,r+1,Direction.EAST);
             }
             case NORTH -> {
-                EdgeCoordinates coordinates1 = new EdgeCoordinates(q,r, Direction.EAST);
-                EdgeCoordinates coordinates2 = new EdgeCoordinates(q,r,Direction.WEST);
-                EdgeCoordinates coordinates3 = new EdgeCoordinates(q-1,r,Direction.EAST);
-                EdgeCoordinates coordinates4 = new EdgeCoordinates(q+1,r-1,Direction.WEST);
-                return  new EdgeCoordinates[]{coordinates1,coordinates2,coordinates3,coordinates4};
+                neighbours[0] = new EdgeCoordinates(q,r, Direction.EAST);
+                neighbours[1] = new EdgeCoordinates(q,r,Direction.WEST);
+                neighbours[2] = new EdgeCoordinates(q-1,r,Direction.EAST);
+                neighbours[3] = new EdgeCoordinates(q+1,r-1,Direction.WEST);
             }
         }
-        return null;
+        return neighbours;
     }
 
     public VertexCoordinates[] vertexNeighbours() {
         int q  = super.getQ();
         int r = super.getR();
-        VertexCoordinates[] coordinates = new VertexCoordinates[4];
+        VertexCoordinates[] neighbours = new VertexCoordinates[4];
         switch (direction) {
             case NORTH -> {
-                coordinates[0] = new VertexCoordinates(q,r, VertexCoordinates.Direction.WEST);
-                coordinates[1] = new VertexCoordinates(q,r, VertexCoordinates.Direction.EAST);
-                coordinates[2] = new VertexCoordinates(q,r-1, VertexCoordinates.Direction.WEST);
-                coordinates[3] = new VertexCoordinates(q,r-1,VertexCoordinates.Direction.EAST);
+                neighbours[0] = new VertexCoordinates(q,r, VertexCoordinates.Direction.WEST);
+                neighbours[1] = new VertexCoordinates(q,r, VertexCoordinates.Direction.EAST);
+                neighbours[2] = new VertexCoordinates(q,r-1, VertexCoordinates.Direction.WEST);
+                neighbours[3] = new VertexCoordinates(q,r-1,VertexCoordinates.Direction.EAST);
             }
             case EAST -> {
-                coordinates[0] = new VertexCoordinates(q+2,r-1, VertexCoordinates.Direction.WEST);
-                coordinates[1] = new VertexCoordinates(q+1,r, VertexCoordinates.Direction.WEST);
-                coordinates[2] = new VertexCoordinates(q,r-1, VertexCoordinates.Direction.EAST);
-                coordinates[3] = new VertexCoordinates(q-1,r,VertexCoordinates.Direction.EAST);
+                neighbours[0] = new VertexCoordinates(q+2,r-1, VertexCoordinates.Direction.WEST);
+                neighbours[1] = new VertexCoordinates(q+1,r, VertexCoordinates.Direction.WEST);
+                neighbours[2] = new VertexCoordinates(q,r-1, VertexCoordinates.Direction.EAST);
+                neighbours[3] = new VertexCoordinates(q-1,r,VertexCoordinates.Direction.EAST);
             }
             case WEST -> {
-                coordinates[0] = new VertexCoordinates(q,r-1, VertexCoordinates.Direction.WEST);
-                coordinates[1] = new VertexCoordinates(q+1,r-1, VertexCoordinates.Direction.WEST);
-                coordinates[2] = new VertexCoordinates(q-2,r+1, VertexCoordinates.Direction.EAST);
-                coordinates[3] = new VertexCoordinates(q-1,r+1, VertexCoordinates.Direction.EAST);
+                neighbours[0] = new VertexCoordinates(q,r-1, VertexCoordinates.Direction.WEST);
+                neighbours[1] = new VertexCoordinates(q+1,r-1, VertexCoordinates.Direction.WEST);
+                neighbours[2] = new VertexCoordinates(q-2,r+1, VertexCoordinates.Direction.EAST);
+                neighbours[3] = new VertexCoordinates(q-1,r+1, VertexCoordinates.Direction.EAST);
             }
         }
-        return coordinates;
+        return neighbours;
     }
 
     @Override

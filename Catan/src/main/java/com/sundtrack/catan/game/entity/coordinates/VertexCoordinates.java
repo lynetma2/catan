@@ -25,47 +25,51 @@ public class VertexCoordinates extends HexCoordinates {
     }
 
     public HexCoordinates[] hexNeighbours() {
+        int q = super.getQ();
+        int r = super.getR();
+        HexCoordinates[] neighbours = new HexCoordinates[3];
         if (direction == VertexCoordinates.Direction.WEST) {
-            HexCoordinates coordinates1 = new HexCoordinates(-1+super.getQ(), super.getR());
-            HexCoordinates coordinates2 = new HexCoordinates(super.getQ(), super.getR());
-            HexCoordinates coordinates3 = new HexCoordinates(-1+super.getQ(), 1+super.getR());
-            return new HexCoordinates[]{coordinates1, coordinates2, coordinates3};
+            neighbours[0] = new HexCoordinates(q - 1, r);
+            neighbours[1] = new HexCoordinates(q, r);
+            neighbours[2] = new HexCoordinates(q, r+1);
         } else {
-            HexCoordinates coordinates1 = new HexCoordinates(1+super.getQ(), -1+super.getR());
-            HexCoordinates coordinates2 = new HexCoordinates(super.getQ(), super.getR());
-            HexCoordinates coordinates3 = new HexCoordinates(+1+super.getQ(), super.getR());
-            return new HexCoordinates[]{coordinates1, coordinates2, coordinates3};
+            neighbours[0] = new HexCoordinates(q+1, r-1);
+            neighbours[1] = new HexCoordinates(q, r);
+            neighbours[2] = new HexCoordinates(q+1, r);
         }
+        return neighbours;
     }
 
     public EdgeCoordinates[]  edgeNeighbours() {
+        int q = super.getQ();
+        int r = super.getR();
+        EdgeCoordinates[] neighbours = new EdgeCoordinates[3];
         if (direction == VertexCoordinates.Direction.WEST) {
-            EdgeCoordinates coordinates1 = new EdgeCoordinates(super.getQ(), super.getR(), EdgeCoordinates.Direction.WEST);
-            EdgeCoordinates coordinates2 = new EdgeCoordinates(super.getQ()-1, super.getR()+1, EdgeCoordinates.Direction.NORTH);
-            EdgeCoordinates coordinates3 = new EdgeCoordinates(super.getQ()-1, super.getR()+1, EdgeCoordinates.Direction.EAST);
-            return new EdgeCoordinates[]{coordinates1, coordinates2, coordinates3};
+            neighbours[0] = new EdgeCoordinates(q,r, EdgeCoordinates.Direction.WEST);
+            neighbours[1] = new EdgeCoordinates(q-1, r+1, EdgeCoordinates.Direction.NORTH);
+            neighbours[2] = new EdgeCoordinates(q-1, r+1, EdgeCoordinates.Direction.EAST);
         } else {
-            EdgeCoordinates coordinates1 = new EdgeCoordinates(super.getQ(), super.getR(), EdgeCoordinates.Direction.EAST);
-            EdgeCoordinates coordinates2 = new EdgeCoordinates(super.getQ()+1, super.getR(), EdgeCoordinates.Direction.NORTH);
-            EdgeCoordinates coordinates3 = new EdgeCoordinates(super.getQ()+1, super.getR(), EdgeCoordinates.Direction.WEST);
-            return new EdgeCoordinates[]{coordinates1, coordinates2, coordinates3};
+            neighbours[0] = new EdgeCoordinates(q,r, EdgeCoordinates.Direction.EAST);
+            neighbours[1] = new EdgeCoordinates(q+1, r, EdgeCoordinates.Direction.NORTH);
+            neighbours[2] = new EdgeCoordinates(q+1, r, EdgeCoordinates.Direction.WEST);
         }
+        return neighbours;
     }
 
     public VertexCoordinates[] vertexNeighbours() {
         int q  = super.getQ();
         int r = super.getR();
+        VertexCoordinates[] neighbours = new VertexCoordinates[3];
         if (direction == VertexCoordinates.Direction.WEST) {
-            VertexCoordinates coordinates1 = new VertexCoordinates(q-1,r, VertexCoordinates.Direction.EAST);
-            VertexCoordinates coordinates2 = new VertexCoordinates(q-2,1+r, VertexCoordinates.Direction.EAST);
-            VertexCoordinates coordinates3 = new VertexCoordinates(q-1,1+r, VertexCoordinates.Direction.EAST);
-            return new VertexCoordinates[]{coordinates1, coordinates2, coordinates3};
+            neighbours[0] = new VertexCoordinates(q-1,r, VertexCoordinates.Direction.EAST);
+            neighbours[1] = new VertexCoordinates(q-2,1+r, VertexCoordinates.Direction.EAST);
+            neighbours[2] = new VertexCoordinates(q-1,1+r, VertexCoordinates.Direction.EAST);
         } else {
-            VertexCoordinates coordinates1 = new VertexCoordinates(q+1, r-1, VertexCoordinates.Direction.WEST);
-            VertexCoordinates coordinates2 = new  VertexCoordinates(q+2, r-1, VertexCoordinates.Direction.WEST);
-            VertexCoordinates coordinates3 = new VertexCoordinates(q+1, r, VertexCoordinates.Direction.WEST);
-            return new VertexCoordinates[]{coordinates1, coordinates2, coordinates3};
+            neighbours[0] = new VertexCoordinates(q+1, r-1, VertexCoordinates.Direction.WEST);
+            neighbours[1] = new  VertexCoordinates(q+2, r-1, VertexCoordinates.Direction.WEST);
+            neighbours[2] = new VertexCoordinates(q+1, r, VertexCoordinates.Direction.WEST);
         }
+        return neighbours;
     }
 
     @Override

@@ -24,7 +24,7 @@ public class Road {
         this.playerName = playerName;
     }
 
-    public HexCoordinates getCoordinates() {
+    public EdgeCoordinates getCoordinates() {
         return coordinates;
     }
 

@@ -1,5 +1,7 @@
 package com.sundtrack.catan.game.entity;
+import com.sundtrack.catan.game.entity.coordinates.EdgeCoordinates;
 import com.sundtrack.catan.game.entity.coordinates.HexCoordinates;
+import com.sundtrack.catan.game.entity.coordinates.VertexCoordinates;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,37 +37,57 @@ public class Board {
         return robber.equals(hex);
     }
 
-    public boolean isRoadOccupied(Road road) {
-        return roads.containsKey(road.toKey());
+    public boolean isRoadOccupied(EdgeCoordinates coordinates) {
+        return roads.containsKey(coordinates.toKey());
     }
 
-    public boolean isVertexOccupied(Building building) {
-        return buildings.containsKey(building.toKey());
+    public boolean isVertexOccupied(VertexCoordinates coordinates) {
+        boolean exactVertexUsed = buildings.containsKey(coordinates.toKey());
+
+        //Blocked by neighboring vertex
+        boolean blockedFromNeighbour = false;
+        VertexCoordinates[] neighbours = coordinates.vertexNeighbours();
+        for (VertexCoordinates neighbour : neighbours) {
+            if (buildings.containsKey(neighbour.toKey())) {
+                blockedFromNeighbour = true;
+                break;
+            }
+        }
+
+        return exactVertexUsed || blockedFromNeighbour;
     }
 
     public void addBuilding(Building building) {
-        if (isVertexOccupied(building)) {
-            throw new IllegalStateException("Building already exists for this vertex");
+        if (isVertexOccupied(building.getCoordinates())) {
+            throw new IllegalStateException("Building already exists for this vertex or the Vertex is blocked by another building");
         }
+
+        //TODO check that there is a road from the same player connecting this Vertex.
+
         buildings.put(building.toKey(), building);
     }
 
     public void addRoad(Road road) {
-        if (isRoadOccupied(road)) {
+        if (isRoadOccupied(road.getCoordinates())) {
             throw new IllegalStateException("Road already exists for this edge");
         }
+
+        //TODO check that the road to be added can be added legally.
+            //Means check that there is a road from the same player connecting to this one, and check that there is no building from another player in between.
+
         roads.put(road.toKey(), road);
     }
 
-    public void moveRobber(Hex hex) {
-        if (isHexOccupied(hex)) {
+    public void moveRobber(HexCoordinates coordinates) {
+        if (isHexOccupied(coordinates)) {
             throw new IllegalStateException("Robber already at this hex");
         }
-        if (hex.getKind() == Hex.TerrainKind.PORT || hex.getKind() == Hex.TerrainKind.SEA) {
+        Hex.TerrainKind kind = map.get(coordinates.toKey()).getKind();
+        if (kind == Hex.TerrainKind.PORT || kind == Hex.TerrainKind.SEA) {
             throw new IllegalStateException("Robber can't swim or rob a port!");
         }
 
-        robber = hex;
+        robber = coordinates;
     }
 
     public void upgradeBuilding(Building building) {
@@ -81,14 +103,30 @@ public class Board {
         return new HashMap<>();
     }
 
-    public Map<String, List<Integer>> diceResult(int[] dices) {
-        //For each building, check the 3 hexes around it and give resources accordingly.
-
-        buildings.values().forEach(building -> {
-            //TODO create a record for storing the coordinates with two constructors and use it around the codebase.
+    public Map<String, Integer[]> resourceIncrement(int[] dices, List<Player> players) {
+        Map<String, Integer[]> resourceMap = new HashMap<>();
+        players.forEach(player -> {
+            resourceMap.put(player.getName(), new  Integer[]{0, 0, 0, 0, 0});
         });
 
-        //TODO calculate this!
-        return new HashMap<>();
+        //For each building, check the 3 hexes around it and give resources accordingly.
+        buildings.values().forEach(building -> {
+            HexCoordinates[] neighbours = building.hexNeighbours();
+            for (HexCoordinates neighbour : neighbours) {
+                Hex hex = map.get(neighbour.toKey());
+                boolean isInstance = hex instanceof ResourceTerrain;
+                if (isInstance) {
+                    Hex.TerrainKind kind = hex.getKind();
+                    int dice = ((ResourceTerrain) hex).getDice();
+                    if (dices[0] + dices[1] == dice) {
+                        Integer[] resources = resourceMap.get(building.getPlayerName());
+                        Player.addResources(resources, kind, building.getBuildingKind() == Building.Kind.SETTLEMENT ? 1 : 2);
+                    }
+                }
+
+            }
+        });
+
+        return resourceMap;
     }
 }

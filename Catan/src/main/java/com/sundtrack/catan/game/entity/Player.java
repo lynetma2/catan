@@ -42,13 +42,36 @@ public class Player {
         this.points = points;
     }
 
-    public void setResources(Hex.TerrainKind kind, int amount) {
+    public static void setResources(Integer[] resources, Hex.TerrainKind kind, int amount) {
         switch (kind) {
-            case ORE ->  this.resources[ORE_INDEX] = amount;
-            case WOOL -> this.resources[WOOL_INDEX] = amount;
-            case GRAIN -> this.resources[GRAIN_INDEX] = amount;
-            case BRICK ->  this.resources[BRICK_INDEX] = amount;
-            case LUMBER ->   this.resources[LUMBER_INDEX] = amount;
+            case ORE ->  resources[ORE_INDEX] = amount;
+            case WOOL -> resources[WOOL_INDEX] = amount;
+            case GRAIN -> resources[GRAIN_INDEX] = amount;
+            case BRICK ->  resources[BRICK_INDEX] = amount;
+            case LUMBER ->   resources[LUMBER_INDEX] = amount;
+            case null, default -> System.out.println("Wrong kind for resource change");
+        }
+    }
+
+    public static void addResources(Integer[] resources, Hex.TerrainKind kind, int amount) {
+        switch (kind) {
+            case ORE ->  resources[ORE_INDEX] += amount;
+            case WOOL -> resources[WOOL_INDEX] += amount;
+            case GRAIN -> resources[GRAIN_INDEX] += amount;
+            case BRICK ->  resources[BRICK_INDEX] += amount;
+            case LUMBER ->   resources[LUMBER_INDEX] += amount;
+            case null, default -> System.out.println("Wrong kind for resource change");
+        }
+    }
+
+    public static void removeResources(Integer[] resources, Hex.TerrainKind kind, int amount) {
+        //TODO add checks...
+        switch (kind) {
+            case ORE ->  resources[ORE_INDEX] -= amount;
+            case WOOL -> resources[WOOL_INDEX] -= amount;
+            case GRAIN -> resources[GRAIN_INDEX] -= amount;
+            case BRICK ->  resources[BRICK_INDEX] -= amount;
+            case LUMBER ->   resources[LUMBER_INDEX] -= amount;
             case null, default -> System.out.println("Wrong kind for resource change");
         }
     }
