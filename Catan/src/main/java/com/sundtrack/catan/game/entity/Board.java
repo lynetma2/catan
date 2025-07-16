@@ -6,6 +6,7 @@ import com.sundtrack.catan.game.entity.coordinates.VertexCoordinates;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class Board {
 
@@ -66,7 +67,7 @@ public class Board {
         EdgeCoordinates[] neighbours = building.edgeNeighbours();
         for (EdgeCoordinates neighbour : neighbours) {
             if (roads.containsKey(neighbour.toKey())) {
-                roadExists = roads.get(neighbour.toKey()).getPlayerName() == building.getPlayerName();
+                roadExists = Objects.equals(roads.get(neighbour.toKey()).getPlayerName(), building.getPlayerName());
             }
         }
 
@@ -86,8 +87,39 @@ public class Board {
 
         //TODO check that the road to be added can be added legally.
             //Means check that there is a road from the same player connecting to this one, and check that there is no building from another player in between.
+        boolean linkToRoad = false;
+        EdgeCoordinates[] neighbours =  road.getCoordinates().edgeNeighbours();
+        for (EdgeCoordinates neighbour : neighbours) {
+            if (roads.containsKey(neighbour.toKey())) {
+                Road placedRoad = roads.get(neighbour.toKey());
+                if (Objects.equals(placedRoad.getPlayerName(), road.getPlayerName())) {
+                    //Ensure that the link is not blocked
+                    VertexCoordinates[] placedVertices = placedRoad.getCoordinates().EdgeVertices();
+                    VertexCoordinates[] toBePlacedVertices = placedRoad.getCoordinates().EdgeVertices();
+                    for (VertexCoordinates vertex : toBePlacedVertices) {
+                        for (VertexCoordinates placedVertex : placedVertices) {
+                            if (vertex.equals(placedVertex)) {
+                                //Should be empty
+                                linkToRoad = !buildings.containsKey(vertex.toKey());
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
+        boolean linkToBuilding = false;
+        //Check that there is a building connecting this edge.
+        VertexCoordinates[] toBePlacedVertices = road.getCoordinates().EdgeVertices();
+        for (VertexCoordinates vertex : toBePlacedVertices) {
+            if (buildings.containsKey(vertex.toKey())) {
+                linkToBuilding = buildings.get(vertex.toKey()).getPlayerName().equals(road.getPlayerName());
+            }
+        }
 
+        if (!linkToRoad && !linkToBuilding) {
+            throw new IllegalStateException("Road not allowed for this edge");
+        }
 
         roads.put(road.toKey(), road);
     }
