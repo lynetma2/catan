@@ -1,5 +1,6 @@
 package com.sundtrack.catan.game.entity;
 
+import com.sundtrack.catan.game.entity.coordinates.EdgeCoordinates;
 import com.sundtrack.catan.game.entity.coordinates.HexCoordinates;
 import com.sundtrack.catan.game.entity.coordinates.VertexCoordinates;
 
@@ -40,25 +41,18 @@ public class Building {
     }
 
     public String toKey() {
-        int q = coordinates.getQ();
-        int r = coordinates.getR();
-        int s = coordinates.getS();
-        VertexCoordinates.Direction direction = coordinates.getDirection();
-        return "q" + q + "r" + r + "s" + s + "d" + direction;
+        return coordinates.toKey();
     }
 
     public HexCoordinates[] hexNeighbours() {
-        VertexCoordinates.Direction direction = coordinates.getDirection();
-        if (direction == VertexCoordinates.Direction.EAST) {
-            HexCoordinates coordinates1 = new HexCoordinates(-1+coordinates.getQ(), coordinates.getR());
-            HexCoordinates coordinates2 = new HexCoordinates(coordinates.getQ(), coordinates.getR());
-            HexCoordinates coordinates3 = new HexCoordinates(-1+coordinates.getQ(), 1+coordinates.getR());
-            return new HexCoordinates[]{coordinates1, coordinates2, coordinates3};
-        } else {
-            HexCoordinates coordinates1 = new HexCoordinates(1+coordinates.getQ(), -1+coordinates.getR());
-            HexCoordinates coordinates2 = new HexCoordinates(coordinates.getQ(), coordinates.getR());
-            HexCoordinates coordinates3 = new HexCoordinates(+1+coordinates.getQ(), coordinates.getR());
-            return new HexCoordinates[]{coordinates1, coordinates2, coordinates3};
-        }
+        return coordinates.hexNeighbours();
+    }
+
+    public EdgeCoordinates[]  edgeNeighbours() {
+        return coordinates.edgeNeighbours();
+    }
+
+    public VertexCoordinates[] vertexNeighbours() {
+        return coordinates.vertexNeighbours();
     }
 }

@@ -33,10 +33,6 @@ public class Road {
     }
 
     public String toKey() {
-        int q = coordinates.getQ();
-        int r = coordinates.getR();
-        int s = coordinates.getS();
-        EdgeCoordinates.Direction direction = coordinates.getDirection();
-        return "q" + q + "r" + r + "s" + s + "d" + direction;
+        return coordinates.toKey();
     }
 }

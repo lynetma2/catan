@@ -28,6 +28,10 @@ public class HexCoordinates {
         return -q-r;
     }
 
+    public String toKey() {
+        return "q" + q + "r" + r + "s" + getS();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
