@@ -10,6 +10,8 @@ import {Building} from "./game/entity/Building.ts";
 import {GameServerSocket} from "./game/GameServerSocket.ts";
 import {Game} from "./game/entity/Game.ts";
 import {LobbySocket} from "./lobby/LobbySocket.ts";
+import {Player} from "@/game/entity/Player.ts";
+import {DevelopmentCard} from "@/game/entity/DevelopmentCard.ts";
 
 function App() {
 
@@ -37,9 +39,12 @@ function App() {
                 return;
             }
 
-            const board = new Board(map, new Map<string, Road>(), new Map<string, Building>, layout, canvas);
+            const board = new Board(map, new Map<string, Road>(), new Map<string, Building>);
             //let currentSelection: Terrain | undefined = undefined;
-            board.draw()
+            board.draw(canvas, layout);
+            const testCards = [new DevelopmentCard("KNIGHT"), new DevelopmentCard("YEAR_OF_THE_PLENTY")];
+            const player = new Player("Dennis", [2,1,2,1,2], testCards, 2);
+            player.draw(canvas);
 
             // canvas.addEventListener("mousemove", e => {
             //     console.log(e);

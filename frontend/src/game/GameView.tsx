@@ -1,5 +1,4 @@
 // @flow
-import * as React from 'react';
 import {useLocation, useNavigate, useParams} from "react-router";
 import {useEffect, useRef} from "react";
 import {useWebSocket} from "@/WebSocketProvider.tsx";
@@ -7,6 +6,7 @@ import type {StompSubscription} from "@stomp/stompjs";
 import {Game} from "@/game/entity/Game.ts";
 import {Layout} from "@/game/hexagon/Layout.ts";
 import {Point} from "@/game/hexagon/Point.ts";
+import {Button} from "@/components/ui/button.tsx";
 
 function GameView() {
 
