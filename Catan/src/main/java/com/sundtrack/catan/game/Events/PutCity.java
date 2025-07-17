@@ -24,6 +24,8 @@ public class PutCity extends GameEvent {
         try {
             Player.batchRemoveResources(resources, requiredResources);
             game.getBoard().upgradeBuilding(coordinates);
+
+            Player.batchAddResources(game.getResources(), requiredResources);
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());
         }

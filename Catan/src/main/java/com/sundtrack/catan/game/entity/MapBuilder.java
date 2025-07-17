@@ -1,10 +1,14 @@
 package com.sundtrack.catan.game.entity;
 
+import com.sundtrack.catan.game.entity.coordinates.HexCoordinates;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MapBuilder {
 
-    public static ArrayList<Hex> classicNotRandom() {
+    public static Board classicNotRandom() {
         ArrayList<Hex> map = new ArrayList<>();
 
         //Hardcoded cuz not random
@@ -53,7 +57,10 @@ public class MapBuilder {
         map.add(new ResourceTerrain(-2,5,-3, Hex.TerrainKind.BRICK, 4));
         map.add(new ResourceTerrain(-2,5,-3, Hex.TerrainKind.LUMBER, 5));
 
-        return map;
+        Map<String, Hex> mapmap = new HashMap<>();
+        map.forEach(hex -> mapmap.put(hex.toKey(), hex));
+
+        return new Board(mapmap, new HexCoordinates(0,3));
     }
 
 

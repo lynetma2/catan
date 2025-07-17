@@ -7,7 +7,7 @@ public class MoveRobber extends GameEvent {
 
     private final HexCoordinates coordinates;
 
-    public MoveRobber(int player, int id, HexCoordinates coordinates) {
+    public MoveRobber(String player, int id, HexCoordinates coordinates) {
         super(EventKind.MOVEROBBER, player, id);
         this.coordinates = coordinates;
     }

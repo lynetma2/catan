@@ -1,7 +1,10 @@
 package com.sundtrack.catan.game.entity;
 
 import com.sundtrack.catan.game.Events.GameEvent;
+import com.sundtrack.catan.game.entity.cards.DevelopmentCard;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -17,14 +20,23 @@ public class Game {
 
     private final Board board;
     private final Map<String, Player> players;
-    private final int[] dices = new int[] {1,1};
-    private final List<GameEvent> events = new ArrayList<>();
-    private final Integer[] resources = new Integer[] {19,19,19,19,19};
+    private final int[] dices;
+    private final List<GameEvent> events;
+    private final Integer[] resources;
+    private final List<DevelopmentCard> developmentCards;
+    private final List<String> turnOrder;
     //TODO add something to log the events, and save them.
 
     public Game(Board board, Map<String, Player> players) {
         this.board = board;
         this.players = players;
+        this.developmentCards = DevelopmentCard.generateDeck();
+        this.turnOrder = new ArrayList<>(players.keySet());
+        Collections.shuffle(this.turnOrder);
+
+        this.resources = new Integer[] {19,19,19,19,19};
+        this.events = new ArrayList<>();
+        this.dices = new int[] {1,1};
     }
 
     public Board getBoard() {
@@ -51,16 +63,12 @@ public class Game {
         return events;
     }
 
+    public List<DevelopmentCard> getDevelopmentCards() {
+        return developmentCards;
+    }
+
     public void handleGameEvent(GameEvent gameEvent) {
-        switch (gameEvent.getKind()) {
-            case ROLLDICE ->  {
-                dices[0] = ThreadLocalRandom.current().nextInt(1, 6 + 1);
-                dices[1] = ThreadLocalRandom.current().nextInt(1, 6 + 1);
-
-                //TODO do the effect of the dice roll
-            }
-
-        }
+        gameEvent.doEvent(this);
 
         //Add the executed event to the list of events.
         events.add(gameEvent);

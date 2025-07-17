@@ -9,6 +9,7 @@ import com.sundtrack.catan.game.Events.GameEvent;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,11 +34,11 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Game newGame(int lobbyId, Lobby lobby) {
-        ArrayList<Player> newPlayers = new ArrayList<>();
+        Map<String, Player> newPlayers = new HashMap<>();
         lobby.getPlayers().values().forEach(player -> {
-            newPlayers.add(new Player(player.getUsername()));
+            newPlayers.put(player.getUsername(), new Player(player.getUsername()));
         });
-        games.put(lobbyId, new Game(new Board(MapBuilder.classicNotRandom()), newPlayers));
+        games.put(lobbyId, new Game(MapBuilder.classicNotRandom(), newPlayers));
 
         return games.get(lobbyId);
     }
@@ -54,6 +55,9 @@ public class GameServiceImpl implements GameService {
             throw new RuntimeException("Game with lobbyId " + gameId + " not found");
         }
 
-        return games.get(gameId);
+        Game game = games.get(gameId);
+        game.handleGameEvent(event);
+
+        return game;
     }
 }

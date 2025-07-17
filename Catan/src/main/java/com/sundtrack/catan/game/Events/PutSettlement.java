@@ -25,9 +25,11 @@ public class PutSettlement extends GameEvent {
         try {
             Player.batchRemoveResources(resources, requiredResources);
             game.getBoard().addBuilding(new Building(coordinates, Building.Kind.SETTLEMENT, playerName));
+            Player.batchAddResources(game.getResources(), requiredResources);
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());
         }
+
     }
 
     //TODO add methods to handle the event happening.

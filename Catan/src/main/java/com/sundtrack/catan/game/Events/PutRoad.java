@@ -25,9 +25,11 @@ public class PutRoad extends GameEvent{
         try {
             Player.batchRemoveResources(resources, requiredResources);
             game.getBoard().addRoad(new Road(coordinates, playerName));
+            Player.batchAddResources(game.getResources(), requiredResources);
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());
         }
+
     }
 
     //TODO add methods to handle the event happening.

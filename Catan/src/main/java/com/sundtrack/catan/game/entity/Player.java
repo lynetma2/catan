@@ -1,5 +1,7 @@
 package com.sundtrack.catan.game.entity;
 
+import com.sundtrack.catan.game.entity.cards.DevelopmentCard;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +10,7 @@ import static com.sundtrack.catan.game.entity.Game.*;
 public class Player {
     private String name;
     private final Integer[] resources;
-    private final ArrayList<Integer> developmentCards;
+    private final ArrayList<DevelopmentCard> developmentCards;
     private int points;
 
     public Player(String name) {
@@ -22,7 +24,7 @@ public class Player {
         return resources;
     }
 
-    public List<Integer> getDevelopmentCards() {
+    public List<DevelopmentCard> getDevelopmentCards() {
         return developmentCards;
     }
 
