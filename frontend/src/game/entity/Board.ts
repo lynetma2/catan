@@ -8,18 +8,14 @@ export class Board {
     public map: Map<string,Terrain>;
     public roads: Map<string,Road>;
     public buildings: Map<string,Building>;
-    public layout: Layout;
-    public canvas: HTMLCanvasElement;
 
-    constructor(map: Map<string,Terrain>, roads: Map<string, Road>, buildings: Map<string, Building>, layout: Layout, canvas: HTMLCanvasElement) {
+    constructor(map: Map<string,Terrain>, roads: Map<string, Road>, buildings: Map<string, Building>) {
         this.map = map;
         this.roads = roads;
         this.buildings = buildings;
-        this.layout = layout;
-        this.canvas = canvas;
     }
 
-    public static fromJSON(object: any, layout: Layout, canvas: HTMLCanvasElement): Board {
+    public static fromJSON(object: any): Board {
         const map = new Map<string,Terrain>();
         object.map.forEach((terrain: any) => {
             const t = new Terrain(new Hex(terrain.q, terrain.r, terrain.s), terrain.kind, terrain.dice, terrain.tradeKind);
@@ -27,22 +23,22 @@ export class Board {
         });
 
         //TODO handle roads and buildings
-        return new Board(map, new Map<string, Road>(), new Map<string, Building>, layout, canvas);
+        return new Board(map, new Map<string, Road>(), new Map<string, Building>);
     }
 
-    public draw() {
-        const ctx = this.canvas.getContext("2d");
+    public draw(canvas: HTMLCanvasElement, layout: Layout) {
+        const ctx = canvas.getContext("2d");
         if (!ctx) {
             return;
         }
 
-        //Clearing the map
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        //Should not clear the map
+        //ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         //Start by drawing the map.
         for (const [, value] of this.map) {
             ctx.fillStyle = value.styling();
-            ctx.fill(value.hex.path2d(this.layout));
+            ctx.fill(value.hex.path2d(layout));
 
             //Cleanup
             ctx.fillStyle = "black";
@@ -51,8 +47,8 @@ export class Board {
         //Drawing roads.
         for (const [, value] of this.roads) {
             ctx.strokeStyle = value.styling();
-            ctx.lineWidth = this.layout.road_width;
-            ctx.stroke(value.edge.path2d(this.layout));
+            ctx.lineWidth = layout.road_width;
+            ctx.stroke(value.edge.path2d(layout));
 
             //Cleanup
             ctx.strokeStyle = "black"
@@ -62,7 +58,7 @@ export class Board {
         //Drawing buildings
         for (const [, value] of this.buildings) {
             ctx.fillStyle = value.styling();
-            ctx.fill(value.vertex.path2d(this.layout, value.kind == Building.CITY))
+            ctx.fill(value.vertex.path2d(layout, value.kind == Building.CITY))
 
             //Cleanup
             ctx.fillStyle = "black"
