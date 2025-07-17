@@ -12,6 +12,8 @@ import {Game} from "./game/entity/Game.ts";
 import {LobbySocket} from "./lobby/LobbySocket.ts";
 import {Player} from "@/game/entity/Player.ts";
 import {DevelopmentCard} from "@/game/entity/DevelopmentCard.ts";
+import {ActionButton} from "@/game/entity/ActionButtons.ts";
+import {GameEvent} from "@/game/GameEvent.ts";
 
 function App() {
 
@@ -45,7 +47,8 @@ function App() {
             const testCards = [new DevelopmentCard("KNIGHT"), new DevelopmentCard("YEAR_OF_THE_PLENTY")];
             const player = new Player("Dennis", [2,1,2,1,2], testCards, 2);
             player.draw(canvas);
-
+            const actions = [new ActionButton(GameEvent.TRADE), new ActionButton(GameEvent.PUTROAD), new ActionButton(GameEvent.PUTSETTLEMENT), new ActionButton(GameEvent.PUTCITY), new ActionButton(GameEvent.DRAWDEVELOPMENTCARD)]
+            ActionButton.drawButtons(canvas, actions);
             // canvas.addEventListener("mousemove", e => {
             //     console.log(e);
             //     const h = layout.pixelToHexRounded(new Point(getMousePos(canvas, e).x, getMousePos(canvas, e).y));

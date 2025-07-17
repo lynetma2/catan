@@ -34,16 +34,13 @@ export class Game {
         return new Game(board, players, events, dices, resources);
     }
 
-    public initializeGameSocket() {
-
-    }
-
-    public stateHandler() {
-
-    }
-
-    public destroyGameSocket() {
-
+    public draw(canvas: HTMLCanvasElement, layout: Layout) {
+        //TODO clear
+        //Draw board
+        //Draw current player inventory
+        //Draw buttons.
+        //Draw Players stats
+        //Draw the dices
     }
 
     //TODO insert event handlers.

@@ -1,4 +1,3 @@
-import type {Layout} from "@/game/hexagon/Layout.ts";
 import type {DevelopmentCard} from "@/game/entity/DevelopmentCard.ts";
 
 export class Player {
@@ -25,6 +24,11 @@ export class Player {
         this.resources.draw(canvas);
         this.drawDevelopmentCards(canvas);
 
+    }
+
+    public static drawPlayerSats(canvas: HTMLCanvasElement) {
+        //TODO draw right hand stat show
+        //Create private method to draw one player then draw all using this method.
     }
 
     private drawDevelopmentCards(canvas: HTMLCanvasElement) {

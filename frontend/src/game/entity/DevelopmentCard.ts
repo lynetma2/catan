@@ -40,8 +40,7 @@ export class DevelopmentCard {
         ctx.strokeStyle = "Purple";
 
         ctx.fillRect(xAxis, yAxis, cardWidth, cardHeight);
-        ctx.rect(xAxis, yAxis, cardWidth, cardHeight);
-        ctx.stroke();
+        ctx.strokeRect(xAxis, yAxis, cardWidth, cardHeight);
 
         ctx.fillStyle = "white";
         ctx.strokeStyle = "White";
