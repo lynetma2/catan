@@ -37,8 +37,10 @@ export class Board {
 
         //Start by drawing the map.
         for (const [, value] of this.map) {
+            ctx.beginPath();
             ctx.fillStyle = value.styling();
             ctx.fill(value.hex.path2d(layout));
+            ctx.closePath();
 
             //Cleanup
             ctx.fillStyle = "black";
@@ -46,23 +48,33 @@ export class Board {
 
         //Drawing roads.
         for (const [, value] of this.roads) {
+            ctx.beginPath();
             ctx.strokeStyle = value.styling();
             ctx.lineWidth = layout.road_width;
             ctx.stroke(value.edge.path2d(layout));
+            ctx.closePath();
 
             //Cleanup
+            ctx.beginPath();
             ctx.strokeStyle = "black"
             ctx.lineWidth = 1;
+            ctx.stroke(value.edge.path2d(layout));
+            ctx.closePath();
         }
 
         //Drawing buildings
         for (const [, value] of this.buildings) {
-            ctx.fillStyle = value.styling();
-            ctx.fill(value.vertex.path2d(layout, value.kind == Building.CITY))
+            //ctx.fillStyle = value.styling();
+            //ctx.fill(value.vertex.path2d(layout, value.kind == Building.CITY));
+            value.vertex.drawBuilding(canvas, layout, false, "green");
 
             //Cleanup
             ctx.fillStyle = "black"
         }
+
+
+
+
     }
     //TBD
 }

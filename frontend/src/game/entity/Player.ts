@@ -44,8 +44,7 @@ export class Player {
 
         const statsHeight = 80;
         const statsWidth = 200;
-        const margin = 0;
-        let x = 800;
+        const x = 800;
 
         //Draw box
         ctx.beginPath();
