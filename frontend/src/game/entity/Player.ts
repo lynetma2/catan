@@ -26,9 +26,38 @@ export class Player {
 
     }
 
-    public static drawPlayerSats(canvas: HTMLCanvasElement) {
+    public static drawPlayerStats(canvas: HTMLCanvasElement, y: number) {
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+            console.error("Can't draw player stats");
+            return;
+        }
+
+        const statsHeight = 80;
+        const statsWidth = 200;
+        const margin = 0;
+
         //TODO draw right hand stat show
-        //Create private method to draw one player then draw all using this method.
+
+        //Draw Circle with name and points
+        const circleX = 805;
+        const circleY = 20 + y;
+        const circleRadius = 20;
+        const startAngle = 0;
+        const endAngle = 2 * Math.PI;
+        ctx.beginPath();
+        ctx.arc(circleX, circleY, circleRadius, startAngle, endAngle, false);
+        ctx.fillStyle = "blue"; //Should be player color
+        ctx.fill();
+
+
+        //Draw number of cards
+        //Draw Knights
+        //Draw longest road
+
+
+
     }
 
     private drawDevelopmentCards(canvas: HTMLCanvasElement) {
