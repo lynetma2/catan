@@ -55,7 +55,7 @@ export function HouseSVGString(width: number, height: number, fillcolor: string)
 }
 
 export function DevelopmentCardBackSVGString(width: number, height: number, strokeColor: string) {
-    const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 48 48"><path fill="none" stroke="${strokeColor}" stroke-linecap="round" stroke-linejoin="round" d="m17.42 4.5l6.63 3.83l6.46-3.74l6.54 4.19v7.87l6 3.45v8l-5.93 3.43v7.91l-7 4l-6-3.45l-5.92 3.49l-7.31-4.23V31.1L5 27.68v-7.59l6.41-3.71V8.19Z"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M18 19.7v8.09l6 3.49l5.92-3.42v-8l-6-3.47Zm-6.61-3.32L18 19.7m5.93-3.3l.12-8.07m5.88 11.54l7.12-3.22M24 31.28l.12 8.77M10.89 31.1L18 27.79m19.09 3.75l-7.16-3.68M15.6 10.26h3.87v3.88H15.6zm13.06 0h3.87v3.88h-3.87zm6.14 11.57h3.87v3.88H34.8zm-6.46 12.38h3.87v3.88h-3.87zm-12.78-.59h3.87v3.88h-3.87zM9.18 21.83h3.87v3.88H9.18zm19.47-9.64h-9.16m-1.87 1.97l-6.46 7.66m25.55 3.9l-6.3 8.49"/></svg>`
+    const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 48 48"><path fill="none" stroke="${strokeColor}" stroke-linecap="round" stroke-linejoin="round" d="m17.42 4.5l6.63 3.83l6.46-3.74l6.54 4.19v7.87l6 3.45v8l-5.93 3.43v7.91l-7 4l-6-3.45l-5.92 3.49l-7.31-4.23V31.1L5 27.68v-7.59l6.41-3.71V8.19Z"/><path fill="none" stroke="${strokeColor}" stroke-linecap="round" stroke-linejoin="round" d="M18 19.7v8.09l6 3.49l5.92-3.42v-8l-6-3.47Zm-6.61-3.32L18 19.7m5.93-3.3l.12-8.07m5.88 11.54l7.12-3.22M24 31.28l.12 8.77M10.89 31.1L18 27.79m19.09 3.75l-7.16-3.68M15.6 10.26h3.87v3.88H15.6zm13.06 0h3.87v3.88h-3.87zm6.14 11.57h3.87v3.88H34.8zm-6.46 12.38h3.87v3.88h-3.87zm-12.78-.59h3.87v3.88h-3.87zM9.18 21.83h3.87v3.88H9.18zm19.47-9.64h-9.16m-1.87 1.97l-6.46 7.66m25.55 3.9l-6.3 8.49"/></svg>`
     return encode(svgString);
 }
 
@@ -96,5 +96,25 @@ export function Dice5SVGString(width: number, height: number, fillcolor: string)
 
 export function Dice6SVGString(width: number, height: number, fillcolor: string) {
     const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 24 24"><g fill="${fillcolor}"><path d="M16.945 5.055a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm-2 11.837a2 2 0 1 1 4 0a2 2 0 0 1-4 0Zm-7.89-2a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm-2-7.837a2 2 0 1 1 4 0a2 2 0 0 1-4 0Zm11.89 2.919a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm-11.89 2a2 2 0 1 1 4 0a2 2 0 0 1-4 0Z"/><path fill-rule="evenodd" d="M4 1a3 3 0 0 0-3 3v16a3 3 0 0 0 3 3h16a3 3 0 0 0 3-3V4a3 3 0 0 0-3-3H4Zm16 2H4a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1Z" clip-rule="evenodd"/></g></svg>`
+    return encode(svgString);
+}
+
+export function HandshakeSVGString(width: number, height: number, fillcolor: string) {
+    const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 640 512"><path fill="${fillcolor}" d="m272.2 64.6l-51.1 51.1c-15.3 4.2-29.5 11.9-41.5 22.5L153 161.9c-10.2 9.1-23.5 14.1-37.2 14.1H96v128c20.4.6 39.8 8.9 54.3 23.4l35.6 35.6l7 7l27 27c6.2 6.2 16.4 6.2 22.6 0c1.7-1.7 3-3.7 3.7-5.8c2.8-7.7 9.3-13.5 17.3-15.3s16.4.6 22.2 6.5l10.8 10.6c11.6 11.6 30.4 11.6 41.9 0c5.4-5.4 8.3-12.3 8.6-19.4c.4-8.8 5.6-16.6 13.6-20.4s17.3-3 24.4 2.1c9.4 6.7 22.5 5.8 30.9-2.6c9.4-9.4 9.4-24.6 0-33.9L340.1 243l-35.8 33c-27.3 25.2-69.2 25.6-97 .9c-31.7-28.2-32.4-77.4-1.6-106.5l70.1-66.2C303.2 78.4 339.4 64 377.1 64c36.1 0 71 13.3 97.9 37.2l30.1 26.8H624c8.8 0 16 7.2 16 16v208c0 17.7-14.3 32-32 32h-32c-11.8 0-22.2-6.4-27.7-16h-84.9c-3.4 6.7-7.9 13.1-13.5 18.7c-17.1 17.1-40.8 23.8-63 20.1c-3.6 7.3-8.5 14.1-14.6 20.2c-27.3 27.3-70 30-100.4 8.1c-25.1 20.8-62.5 19.5-86-4.1L159 404l-7-7l-35.6-35.6c-5.5-5.5-12.7-8.7-20.4-9.3c0 17.6-14.4 31.9-32 31.9H32c-17.7 0-32-14.3-32-32V144c0-8.8 7.2-16 16-16h99.8c2 0 3.9-.7 5.3-2l26.5-23.6C175.5 77.7 211.4 64 248.7 64H259c4.4 0 8.9.2 13.2.6zM544 320V176h-48c-5.9 0-11.6-2.2-15.9-6.1l-36.9-32.8C425 120.9 401.5 112 377.1 112c-25.4 0-49.8 9.7-68.3 27.1l-70.1 66.2c-10.3 9.8-10.1 26.3.5 35.7c9.3 8.3 23.4 8.1 32.5-.3l71.9-66.4c9.7-9 24.9-8.4 33.9 1.4s8.4 24.9-1.4 33.9l-.8.8l74.4 74.4c10 10 16.5 22.3 19.4 35.1H544zM64 336a16 16 0 1 0-32 0a16 16 0 1 0 32 0zm528 16a16 16 0 1 0 0-32a16 16 0 1 0 0 32z"/></svg>`
+    return encode(svgString);
+}
+
+export function RoadSVGString(width: number, height: number, fillcolor: string) {
+    const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 100 100"><rect width="60" height="100" x="20" y="0" rx="20" ry="20" fill="${fillcolor}" /></svg>`
+    return encode(svgString);
+}
+
+export function WaitingSVGString(width: number, height: number, strokeColor: string) {
+    const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 24 24"><path fill="none" stroke="${strokeColor}" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 22h14M5 2h14m-2 20v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>`
+    return encode(svgString);
+}
+
+export function FinishTurnSVGString(width: number, height: number, strokeColor: string) {
+    const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 24 24"><g fill="none" stroke="${strokeColor}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" color="currentColor"><path d="M21.837 12.918c-.282.77-1.136 1.387-2.842 2.62c-2.327 1.68-3.49 2.52-4.464 2.459a2.7 2.7 0 0 1-1.909-.965C12 16.286 12 14.858 12 12s0-4.286.622-5.032a2.7 2.7 0 0 1 1.91-.965c.972-.061 2.136.779 4.463 2.46c1.706 1.232 2.56 1.849 2.842 2.62a2.67 2.67 0 0 1 0 1.835"/><path d="M11.837 12.918c-.282.77-1.136 1.387-2.842 2.62c-2.327 1.68-3.49 2.52-4.464 2.459a2.7 2.7 0 0 1-1.909-.965C2 16.286 2 14.858 2 12s0-4.286.622-5.032a2.7 2.7 0 0 1 1.91-.965c.972-.061 2.136.779 4.463 2.46c1.706 1.232 2.56 1.849 2.842 2.62a2.67 2.67 0 0 1 0 1.835"/></g></svg>`
     return encode(svgString);
 }

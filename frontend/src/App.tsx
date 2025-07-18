@@ -56,7 +56,7 @@ function App() {
             player.drawPlayerStats(canvas, 800);
             const player2 = new Player("Jørgen", [2, 1, 2, 1, 2], testCards, 2);
             player2.drawPlayerStats(canvas, 700);
-            const actions = [new ActionButton(GameEvent.TRADE), new ActionButton(GameEvent.PUTROAD), new ActionButton(GameEvent.PUTSETTLEMENT), new ActionButton(GameEvent.PUTCITY), new ActionButton(GameEvent.DRAWDEVELOPMENTCARD)]
+            const actions = [new ActionButton(GameEvent.TRADE), new ActionButton(GameEvent.PUTROAD), new ActionButton(GameEvent.PUTSETTLEMENT), new ActionButton(GameEvent.PUTCITY), new ActionButton(GameEvent.DRAWDEVELOPMENTCARD), new ActionButton(ActionButton.WAITINGSTATE)]
             ActionButton.drawButtons(canvas, actions);
             drawBankCards(canvas, [15, 15, 15, 15, 15], 25, 800, 600);
             drawDices(canvas, [2, 5], 670, 830);

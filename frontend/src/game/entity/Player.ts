@@ -201,7 +201,8 @@ export class PlayerResource {
         }
 
         ctx.beginPath();
-        ctx.fillRect(xAxis, yAxis, cardWidth, cardHeight);
+        ctx.roundRect(xAxis, yAxis, cardWidth, cardHeight, 10);
+        ctx.fill();
         ctx.closePath();
         ctx.drawImage(image, xAxis + 10, yAxis + 10);
 
