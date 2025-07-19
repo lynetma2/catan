@@ -35,7 +35,7 @@ function App() {
                 const r1 = Math.max(-N, -q - N)
                 const r2 = Math.min(N, -q + N)
                 for (let r = r1; r <= r2; r++) {
-                    const t = new Terrain(new Hex(q, r, -q - r), kinds[Math.floor(Math.random() * kinds.length)])
+                    const t = new Terrain(new Hex(q, r, -q - r), kinds[Math.floor(Math.random() * kinds.length)], Math.floor(Math.random() * 13));
                     map.set(`q${q}r${r}s${-q - r}`, t)
                 }
             }
@@ -56,10 +56,22 @@ function App() {
             player.drawPlayerStats(canvas, 800);
             const player2 = new Player("Jørgen", [2, 1, 2, 1, 2], testCards, 2);
             player2.drawPlayerStats(canvas, 700);
-            const actions = [new ActionButton(GameEvent.TRADE), new ActionButton(GameEvent.PUTROAD), new ActionButton(GameEvent.PUTSETTLEMENT), new ActionButton(GameEvent.PUTCITY), new ActionButton(GameEvent.DRAWDEVELOPMENTCARD), new ActionButton(ActionButton.WAITINGSTATE)]
-            ActionButton.drawButtons(canvas, actions);
+            const actions = ActionButton.testButtons(canvas);
+            actions.forEach(action => {
+                action.draw()
+            })
             drawBankCards(canvas, [15, 15, 15, 15, 15], 25, 800, 600);
             drawDices(canvas, [2, 5], 670, 830);
+
+            canvas.addEventListener("mousemove", (e) => {
+                const mouse = getMousePos(canvas, e);
+                actions.forEach(action => {
+                    action.hoverHandler(mouse, (kind: string) => {
+                        console.log("hovering kind: ", kind);
+                    });
+                })
+            })
+
             // canvas.addEventListener("mousemove", e => {
             //     console.log(e);
             //     const h = layout.pixelToHexRounded(new Point(getMousePos(canvas, e).x, getMousePos(canvas, e).y));

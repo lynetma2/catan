@@ -1,4 +1,5 @@
 import type {Layout} from "./Layout.ts";
+import type {Point} from "@/game/hexagon/Point.ts";
 
 export class Hex {
     public q: number;
@@ -100,4 +101,7 @@ export class Hex {
         return hex
     }
 
+    public pixelCenter(layout: Layout): Point {
+        return layout.hexToPixel(this);
+    }
 }

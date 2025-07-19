@@ -37,13 +37,7 @@ export class Board {
 
         //Start by drawing the map.
         for (const [, value] of this.map) {
-            ctx.beginPath();
-            ctx.fillStyle = value.styling();
-            ctx.fill(value.hex.path2d(layout));
-            ctx.closePath();
-
-            //Cleanup
-            ctx.fillStyle = "black";
+            value.draw(canvas, layout);
         }
 
         //Drawing roads.
