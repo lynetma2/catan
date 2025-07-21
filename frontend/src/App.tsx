@@ -44,33 +44,39 @@ function App() {
                 return;
             }
             const buildingMap = new Map<string, Building>
-            buildingMap.set("q1r1s-2dEAST", new Building(new Vertex(1, 1, -2, Vertex.EAST_DIRECTION), "kage", Building.SETTLEMENT))
+            buildingMap.set("q1r1s-2dEAST", new Building(new Vertex(1, 1, -2, Vertex.EAST_DIRECTION), "Dennis", Building.SETTLEMENT))
             const roadMap = new Map<string, Road>();
-            roadMap.set(`q1r1s-2d${Edge.EAST_DIRECTION}`, new Road(new Edge(1,1,-2, Edge.EAST_DIRECTION),"kage"));
+            roadMap.set(`q1r1s-2d${Edge.EAST_DIRECTION}`, new Road(new Edge(1,1,-2, Edge.EAST_DIRECTION),"Dennis"));
             const board = new Board(map, roadMap, buildingMap);
             //let currentSelection: Terrain | undefined = undefined;
-            board.draw(canvas, layout);
+            //board.draw(canvas, layout);
             const testCards = [new DevelopmentCard("KNIGHT"), new DevelopmentCard("YEAR_OF_THE_PLENTY")];
             const player = new Player("Dennis", [2, 1, 2, 1, 2], testCards, 2);
-            player.draw(canvas);
-            player.drawPlayerStats(canvas, 800);
+            //player.draw(canvas);
+            //player.drawPlayerStats(canvas, 800);
             const player2 = new Player("Jørgen", [2, 1, 2, 1, 2], testCards, 2);
-            player2.drawPlayerStats(canvas, 700);
-            const actions = ActionButton.testButtons(canvas);
-            actions.forEach(action => {
-                action.draw()
-            })
-            drawBankCards(canvas, [15, 15, 15, 15, 15], 25, 800, 600);
-            drawDices(canvas, [2, 5], 670, 830);
+            //player2.drawPlayerStats(canvas, 700);
+            //const actions = ActionButton.testButtons(canvas);
+            // actions.forEach(action => {
+            //     action.draw()
+            // })
+            // drawBankCards(canvas, [15, 15, 15, 15, 15], 25, 800, 600);
+            // drawDices(canvas, [2, 5], 670, 830);
 
-            canvas.addEventListener("mousemove", (e) => {
-                const mouse = getMousePos(canvas, e);
-                actions.forEach(action => {
-                    action.hoverHandler(mouse, (kind: string) => {
-                        console.log("hovering kind: ", kind);
-                    });
-                })
-            })
+            // canvas.addEventListener("mousemove", (e) => {
+            //     const mouse = getMousePos(canvas, e);
+            //     actions.forEach(action => {
+            //         action.hoverHandler(mouse, (kind: string) => {
+            //             console.log("hovering kind: ", kind);
+            //         });
+            //     })
+            // });
+
+            //console.log("edge.fromkey(): ", Edge.fromKey("q2r-2s0dNORTH"));
+
+            const game = new Game(board, [player, player2], [], [1,3], [15,15,15,15,15], canvas, layout, "Dennis");
+            game.draw();
+            game.addEventListeners();
 
             // canvas.addEventListener("mousemove", e => {
             //     console.log(e);

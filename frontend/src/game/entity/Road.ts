@@ -23,5 +23,13 @@ export class Road {
                 return "orange"
         }
     }
+
+    public vertexNeighbours() {
+        return this.edge.vertexNeighbours()
+    }
+
+    public edgeVertices() {
+        return this.edge.edgeVertices()
+    }
     //TBD
 }

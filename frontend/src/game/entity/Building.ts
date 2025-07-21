@@ -14,4 +14,15 @@ export class Building {
     }
 
     //TBD
+    public hexNeighbours() {
+        return this.vertex.hexNeighbours()
+    }
+
+    public edgeNeighbours() {
+        return this.vertex.edgeNeighbours()
+    }
+
+    public vertexNeighbours() {
+        return this.vertex.vertexNeighbours()
+    }
 }

@@ -15,12 +15,17 @@ export class Terrain {
     public static DESERT = "DESERT";
     public static SELECTED = "SELECTED";
     public static SEA = "SEA";
+    public static PORT = "PORT";
 
     constructor(hex: Hex, kind: string, dice?: number, tradeKind?: string) {
         this.hex = hex;
         this.kind = kind;
         this.dice = dice;
         this.tradeKind = tradeKind;
+    }
+
+    public toKey(): string {
+        return this.hex.toKey();
     }
 
     public draw(canvas: HTMLCanvasElement, layout: Layout): void {
@@ -63,6 +68,9 @@ export class Terrain {
                 color = "#00F"
                 break;
             case Terrain.SEA:
+                color = "#00F"
+                break;
+            case Terrain.PORT:
                 color = "#00F"
                 break;
         }

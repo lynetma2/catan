@@ -44,4 +44,8 @@ public class DevelopmentCard {
 
         return developmentCards;
     }
+
+    public Kind getKind() {
+        return kind;
+    }
 }

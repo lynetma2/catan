@@ -1,5 +1,6 @@
 import type {Layout} from "./Layout.ts";
 import type {Point} from "@/game/hexagon/Point.ts";
+import {Vertex} from "@/game/hexagon/Vertex.ts";
 
 export class Hex {
     public q: number;
@@ -11,6 +12,10 @@ export class Hex {
         this.q = q;
         this.r = r;
         this.s = s;
+    }
+
+    public toKey(): string {
+        return `q${this.q}r${this.r}s${this.s}`;
     }
 
     public add(b: Hex): Hex {
@@ -103,5 +108,16 @@ export class Hex {
 
     public pixelCenter(layout: Layout): Point {
         return layout.hexToPixel(this);
+    }
+
+    public vertexNeighbours() {
+        const neighbours: Vertex[] = [];
+        neighbours[0] = new Vertex(this.q, this.r, this.s, Vertex.EAST_DIRECTION);
+        neighbours[1] = new Vertex(this.q, this.r, this.s, Vertex.WEST_DIRECTION);
+        neighbours[2] = new Vertex(this.q-1, this.r, this.s +1, Vertex.EAST_DIRECTION);
+        neighbours[3] = new Vertex(this.q+1, this.r-1, this.s, Vertex.WEST_DIRECTION);
+        neighbours[4] = new Vertex(this.q-1, this.r+1, this.s, Vertex.EAST_DIRECTION);
+        neighbours[5] = new Vertex(this.q+1, this.r, this.s -1, Vertex.WEST_DIRECTION);
+        return neighbours;
     }
 }

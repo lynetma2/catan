@@ -3,7 +3,7 @@ import {
     CitySVGString,
     DevelopmentCardBackSVGString, FinishTurnSVGString,
     HandshakeSVGString,
-    HouseSVGString,
+    HouseSVGString, PathSVGString,
     RoadSVGString, WaitingSVGString
 } from "@/assets/assets.tsx";
 
@@ -47,7 +47,7 @@ export class ActionButton {
         }
 
         ctx.beginPath();
-        ctx.clearRect(this.startX, this.startY, this.width, this.height);
+        ctx.clearRect(this.startX - 5, this.startY - 5, this.width + 10, this.height + 10);
         ctx.closePath();
 
         switch (this.kind) {
@@ -65,7 +65,7 @@ export class ActionButton {
                 break;
             case GameEvent.PUTROAD:
                 //TODO draw something for this.
-                image.src = RoadSVGString(this.iconWidth, this.iconHeight, color);
+                image.src = PathSVGString(this.iconWidth, this.iconHeight, color);
                 break;
             case ActionButton.WAITINGSTATE:
                 image.src = WaitingSVGString(this.iconWidth, this.iconHeight, color);
@@ -78,9 +78,9 @@ export class ActionButton {
 
         ctx.fillStyle = "white";
         ctx.strokeStyle = color;
-        ctx.lineWidth = this.isHovered ? 5 : 1;
+        ctx.lineWidth = this.isHovered ? 4 : 1;
         ctx.beginPath();
-        ctx.fillRect(this.startX, this.startY, this.width, this.height);
+        //ctx.fillRect(this.startX, this.startY, this.width, this.height);
         ctx.strokeRect(this.startX, this.startY, this.width, this.height);
         ctx.closePath();
 
@@ -90,14 +90,15 @@ export class ActionButton {
         ctx.lineWidth = 1;
     }
 
-    public clickHandler(event: MouseEvent, callback:(kind: string) => void) {
+    public clickHandler(mouse: {x:number, y:number}, callback:(kind: string) => void) {
         if (this.isHovered) {
+            console.log("testing inside the handler")
             callback(this.kind);
             return;
         }
 
-        const insideXAxis = event.x <= (this.startX + this.width) && event.x >= this.startX;
-        const insideYAxis = event.y <= (this.startY + this.height) && event.y >= this.startY;
+        const insideXAxis = mouse.x <= (this.startX + this.width) && mouse.x >= this.startX;
+        const insideYAxis = mouse.y <= (this.startY + this.height) && mouse.y >= this.startY;
         //TODO add animation
         if (insideXAxis && insideYAxis) {
             //Handle the event in here
@@ -121,6 +122,10 @@ export class ActionButton {
                 this.draw();
             }
         }
+    }
+
+    public addHoverAnimation(mouse: {x:number, y:number}) {
+        this.hoverHandler(mouse, () => {});
     }
 
     public static testButtons(canvas: HTMLCanvasElement): ActionButton[] {

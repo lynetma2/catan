@@ -44,9 +44,10 @@ function GameView() {
                     return;
                 }
                 console.log("response: ", JSON.parse(response.body));
-                const game = Game.fromJSON(response, layout, canvasRef.current);
+                const game = Game.fromJSON(response, layout, canvasRef.current, username);
                 gameRef.current = game;
-                gameRef.current.board.draw();
+                gameRef.current.draw();
+                gameRef.current.addEventListeners();
 
                 //For now just trying drawing the game
                 //TODO make sure the Game object is the same in the backend and in the frontend.
