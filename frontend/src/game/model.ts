@@ -27,6 +27,7 @@ interface Trade {
 interface GameStats {
     turnNumber: number;
     diceAppearances: number[];
+    isActiveUI: boolean;
 }
 
 interface Player {
