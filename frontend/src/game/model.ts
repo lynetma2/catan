@@ -15,6 +15,10 @@ interface GameState {
         giving: Resources;
         wanting: Resources;
     }
+    robber: {
+        location: Hex;
+        stealFrom?: string[];
+    }
 }
 
 interface Trade {
@@ -50,11 +54,11 @@ interface PlayerStats {
 }
 
 interface Resources {
-    wood: number;
+    lumber: number;
     brick: number;
     grain: number;
+    wool: number;
     ore: number;
-    sheep: number;
 }
 
 interface Board {
@@ -65,9 +69,9 @@ interface Board {
 
 interface Terrain {
     hex: Hex;
-    kind: ResourceKinds;
+    kind: TileKind;
     dice?: number;
-    tradeKind?: ResourceKinds;
+    tradeKind?: TradeKind;
 }
 
 interface Hex {
@@ -101,7 +105,16 @@ interface Vertex {
     direction: VertexDirection;
 }
 
-enum ResourceKinds {
+enum TradeKind {
+    lumber,
+    brick,
+    grain,
+    wool,
+    ore,
+    any
+}
+
+enum TileKind {
     lumber,
     brick,
     grain,
