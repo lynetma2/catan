@@ -7,6 +7,15 @@ import {ActionButton} from "@/game/entity/ActionButtons.ts";
 import {drawBankCards, drawDices} from "@/game/entity/VisualUtilities.ts";
 import {Terrain} from "@/game/entity/Terrain.ts";
 
+export enum InputState {
+    HousePlacingMode = "HousePlacingMode",
+    RoadPlacingMode = "RoadPlacingMode",
+    CityPlacingMode = "CityPlacingMode",
+    RollDicesMode = "RollDicesMode",
+    DefaultMode = "DefaultMode",
+    NotMyTurnMode = "NotMyTurnMode",
+}
+
 export class Game {
     public board: Board;
     public players: Player[];
@@ -19,9 +28,7 @@ export class Game {
     private actionButttons: ActionButton[];
     private canvas: HTMLCanvasElement;
     private layout: Layout;
-    private housePlacingMode: boolean;
-    private roadPlacingMode: boolean;
-    private cityPlacingMode: boolean;
+    private inputState: InputState;
 
     constructor(board: Board, players: Player[], events: GameEvent[], dices: number[], resources: number[], canvas: HTMLCanvasElement, layout: Layout, localPlayer: string) {
         this.board = board;
@@ -36,9 +43,7 @@ export class Game {
         this.developmentCards = 25;
 
         //Internal state management
-        this.housePlacingMode = false;
-        this.roadPlacingMode = false;
-        this.cityPlacingMode = false;
+        this.inputState = InputState.DefaultMode;
 
         //For know test buttons are used.
         this.actionButttons = ActionButton.testButtons(canvas);
@@ -68,10 +73,10 @@ export class Game {
 
         //Draw board
         this.board.draw(this.canvas, this.layout);
-        if (this.housePlacingMode) {
+        if (this.inputState == InputState.HousePlacingMode) {
             //TODO fix these
             this.board.drawLegalHouses(true, "player1", this.canvas, this.layout);
-        } else if (this.roadPlacingMode) {
+        } else if (this.inputState == InputState.RoadPlacingMode) {
             //TODO fix this
             this.board.drawLegalRoads(false, "Dennis", this.canvas, this.layout, this.board.buildings.get("q1r1s-2dEAST"));
         }
@@ -120,21 +125,19 @@ export class Game {
                     switch (kind) {
                         case GameEvent.PUTSETTLEMENT:
                             //Draw the options.
-                            this.housePlacingMode = !this.housePlacingMode;
+                            this.inputState = this.inputState == InputState.HousePlacingMode ? InputState.DefaultMode : InputState.HousePlacingMode;
                             this.draw();
                             break;
                         case GameEvent.PUTROAD:
-                            this.roadPlacingMode = !this.roadPlacingMode;
+                            this.inputState = this.inputState == InputState.RoadPlacingMode ? InputState.DefaultMode : InputState.RoadPlacingMode;
                             this.draw();
                             break;
                         case GameEvent.PUTCITY:
-                            this.cityPlacingMode = !this.cityPlacingMode;
+                            this.inputState = this.inputState == InputState.CityPlacingMode ? InputState.DefaultMode : InputState.CityPlacingMode;
                             this.draw();
                             break;
                         default:
-                            this.housePlacingMode = false;
-                            this.roadPlacingMode = false;
-                            this.cityPlacingMode = false;
+                            this.inputState = InputState.DefaultMode;
                             this.draw()
                             break;
                     }

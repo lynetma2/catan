@@ -10,7 +10,11 @@ interface GameState {
         resources: Resources;
         growthCards: number;
     }
-    trades: Trade[];
+    publicTrades: Trade[];
+    currentTrade?: {
+        giving: Resources;
+        wanting: Resources;
+    }
 }
 
 interface Trade {
@@ -139,6 +143,7 @@ enum GamePhase {
     placingRobber,
     usingYearOfThePlenty,
     usingMonopoly,
-    usingRoadBuilding,
+    usingRoadBuildingRoadOne,
+    usingRoadBuildingRoadTwo,
     notActiveTurn,
 }
