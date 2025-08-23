@@ -20,13 +20,14 @@ export enum InputState {
     RoadPlacingMode = "RoadPlacingMode",
     CityPlacingMode = "CityPlacingMode",
     RollDicesMode = "RollDicesMode",
+    RobberPlacingMode = "RobberPlacingMode",
     DefaultMode = "DefaultMode",
     NotMyTurnMode = "NotMyTurnMode",
 }
 
 export class Game {
     public board: Board;
-    public players: Player[];
+    public players: Map<string, Player>;
     public dices: number[];
     public events: GameEvent[];
     public resources: number[];
@@ -40,7 +41,7 @@ export class Game {
     private buttons: Button[];
     private interactionManager: InteractionManager;
 
-    constructor(board: Board, players: Player[], events: GameEvent[], dices: number[], resources: number[], canvas: HTMLCanvasElement, layout: Layout, localPlayer: string) {
+    constructor(board: Board, players: Map<string, Player>, events: GameEvent[], dices: number[], resources: number[], canvas: HTMLCanvasElement, layout: Layout, localPlayer: string, manager: InteractionManager, eventBus: EventBus<GameEvents>) {
         this.board = board;
         this.players = players;
         this.events = events;
@@ -54,8 +55,8 @@ export class Game {
 
         //Internal state management
         this.inputState = InputState.DefaultMode;
-        this.eventBus = new EventBus<GameEvents>();
-        this.interactionManager = new InteractionManager(canvas);
+        this.eventBus = eventBus;
+        this.interactionManager = manager;
 
         //For know test buttons are used.
         this.buttons = this.initializeButtons();
@@ -68,22 +69,22 @@ export class Game {
         this.eventBus.publish('NotificationEvent', {title: "test Notification Event", stopPropagation: false, uid: "123456", timestamp: 0})
     }
 
-    public static fromJSON(message: IMessage, layout: Layout, canvas: HTMLCanvasElement, localPlayer: string): Game {
+    public static fromJSON(message: IMessage, layout: Layout, canvas: HTMLCanvasElement, localPlayer: string, manager: InteractionManager, eventBus: EventBus<GameEvents>): Game {
         const json = JSON.parse(message.body);
 
         //Parsing the board:
-        const board = Board.fromJSON(json.board);
+        const board = Board.fromJSON(json.board, canvas, layout, InputState.DefaultMode, manager, eventBus);
         const dices = json.dices;
 
-        const players = Object.entries(json.players).map(([key, value]) => {
-            console.log("key", key);
-            console.log("value", value);
-            return Player.fromJSON(value);
+        const playersList = Object.entries(json.players).map(([key, value]) => {
+            return [key, Player.fromJSON(value)] as [string, Player];
         });
+        const players = new Map<string, Player>(playersList)
+
         const events = json.events;
         const resources = json.resources;
 
-        return new Game(board, players, events, dices, resources, canvas, layout, localPlayer, new EventBus<GameEvents>());
+        return new Game(board, players, events, dices, resources, canvas, layout, localPlayer, manager, eventBus);
     }
 
     public draw() {
@@ -91,7 +92,7 @@ export class Game {
         this.clearCanvas(this.canvas);
 
         //Draw board
-        this.board.draw(this.canvas, this.layout);
+        this.board.draw();
         if (this.inputState == InputState.HousePlacingMode) {
             //TODO fix these
             this.board.drawLegalHouses(true, "player1", this.canvas, this.layout);
@@ -121,6 +122,11 @@ export class Game {
 
         //Draw the dices
         drawDices(this.canvas, this.dices, 670, 830);
+    }
+
+    public updateInputState(state: InputState) {
+        this.inputState = state;
+        this.board.inputState = state;
     }
 
     private createButton(

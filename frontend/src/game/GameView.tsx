@@ -7,6 +7,9 @@ import {Game} from "@/game/core/Game.ts";
 import {Layout} from "@/game/hexagon/Layout.ts";
 import {Point} from "@/game/hexagon/Point.ts";
 import {Button} from "@/components/ui/button.tsx";
+import {InteractionManager} from "@/game/input/InteractionManager.ts";
+import {EventBus} from "@/game/core/EventBus.ts";
+import type {GameEvents} from "@/game/core/types.ts";
 
 function GameView() {
 
@@ -44,7 +47,7 @@ function GameView() {
                     return;
                 }
                 console.log("response: ", JSON.parse(response.body));
-                const game = Game.fromJSON(response, layout, canvasRef.current, username);
+                const game = Game.fromJSON(response, layout, canvasRef.current, username, new InteractionManager(canvasRef.current), new EventBus<GameEvents>());
                 gameRef.current = game;
                 gameRef.current.draw();
                 //gameRef.current.addEventListeners();

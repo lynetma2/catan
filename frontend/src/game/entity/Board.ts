@@ -5,21 +5,50 @@ import {Building} from "./Building.ts";
 import {Hex} from "@/game/hexagon/Hex.ts";
 import {Vertex} from "@/game/hexagon/Vertex.ts";
 import {Edge} from "@/game/hexagon/Edge.ts";
+import type {Drawable, GameEvents, Interactive} from "@/game/core/types.ts";
+import {InputState} from "@/game/core/Game.ts";
+import type {InteractionManager} from "@/game/input/InteractionManager.ts";
+import {EventBus} from "@/game/core/EventBus.ts";
+import {Point} from "@/game/hexagon/Point.ts";
 
-export class Board {
-    public map: Map<string,Terrain>;
-    public roads: Map<string,Road>;
-    public buildings: Map<string,Building>;
+export class Board implements Interactive, Drawable {
+    public map: Map<string, Terrain>;
+    public roads: Map<string, Road>;
+    public buildings: Map<string, Building>;
+    public bounds: { x: number; y: number; width: number; height: number };
+    public canvas: HTMLCanvasElement;
+    public layout: Layout;
+    public color: string;
+    public id: string;
+    public inputState: InputState;
+    private eventBus: EventBus<GameEvents>
 
-    constructor(map: Map<string,Terrain>, roads: Map<string, Road>, buildings: Map<string, Building>) {
+    constructor(map: Map<string, Terrain>, roads: Map<string, Road>, buildings: Map<string, Building>,
+                bounds: { x: number; y: number; width: number; height: number },
+                canvas: HTMLCanvasElement,
+                layout: Layout,
+                color: string,
+                id: string,
+                inputState: InputState,
+                manager: InteractionManager,
+                eventBus: EventBus<GameEvents>,
+    ) {
         this.map = map;
         this.roads = roads;
         this.buildings = buildings;
+        this.bounds = bounds;
+        this.canvas = canvas;
+        this.layout = layout;
+        this.color = color;
+        this.id = id;
+        this.inputState = inputState;
+        this.eventBus = eventBus;
+        manager.register(this);
     }
 
-    public static fromJSON(object: any): Board {
+    public static fromJSON(object: any, canvas: HTMLCanvasElement, layout: Layout, inputState: InputState, manager: InteractionManager, eventBus: EventBus<GameEvents>): Board {
         console.log("board object:", object);
-        const map = new Map<string,Terrain>();
+        const map = new Map<string, Terrain>();
         const jsonMap = new Map<string, Terrain>(Object.entries(object.map))
         jsonMap.forEach((terrain: any) => {
             console.log(terrain);
@@ -27,14 +56,22 @@ export class Board {
             console.log("parsed terrain", t);
             map.set(t.toKey(), t);
         });
+        const bounds = {
+            x: 0,
+            y: 0,
+            width: canvas.width,
+            height: canvas.height,
+        }
 
         console.log("parsed map of the board: ", map);
 
         //TODO handle roads and buildings
-        return new Board(map, new Map<string, Road>(), new Map<string, Building>);
+        return new Board(map, new Map<string, Road>(), new Map<string, Building>, bounds, canvas, layout, "Black", "board", inputState, manager, eventBus);
     }
 
-    public draw(canvas: HTMLCanvasElement, layout: Layout) {
+    public draw() {
+        const canvas = this.canvas;
+        const layout = this.layout;
         const ctx = canvas.getContext("2d");
         if (!ctx) {
             return;
@@ -225,4 +262,88 @@ export class Board {
 
         return legalPositions;
     }
+
+    public isLegalHouseVertex(vertex: Vertex, playerName: string): boolean {
+        const legalPositions = this.legalHouseCoordinates(playerName);
+        if (legalPositions.has(vertex.toKey())) {
+            return true;
+        }
+        return false;
+    }
+
+    public isLegalRoadEdge(edge: Edge, playerName: string): boolean {
+        const legalPositions = this.legalRoadCoordinates(playerName);
+        if (legalPositions.has(edge.toKey())) {
+            return true;
+        }
+        return false;
+    }
+
+    public isLegalCityVertex(vertex: Vertex, playerName: string): boolean {
+        const legalPositions = this.legalCityCoordinates(playerName);
+        if (legalPositions.has(vertex.toKey())) {
+            return true;
+        }
+        return false;
+    }
+
+    onClick(event: { x: number; y: number }): void {
+        //Somehow get to understand the current InputState
+        switch (this.inputState) {
+            case InputState.RoadPlacingMode: {
+                const edge = this.layout.pixelToEdgeRounded(new Point(event.x, event.y));
+                if (!edge) {
+                    console.error("No edge detected");
+                    return;
+                }
+                this.eventBus.publish('PlaceRoadEvent', EventBus.createEvent({edge: edge}))
+                break;
+            }
+            case InputState.HousePlacingMode: {
+                const vertex = this.layout.pixelToVertexRounded(new Point(event.x, event.y));
+                if (!vertex) {
+                    console.error("No vertex detected");
+                    return;
+                }
+                this.eventBus.publish('PlaceHouseEvent', EventBus.createEvent({vertex: vertex}))
+                break;
+            }
+            case InputState.CityPlacingMode: {
+                const vertex = this.layout.pixelToVertexRounded(new Point(event.x, event.y));
+                if (!vertex) {
+                    console.error("No vertex detected");
+                    return;
+                }
+                this.eventBus.publish('PlaceCityEvent', EventBus.createEvent({vertex: vertex}))
+                break;
+            }
+            case InputState.RobberPlacingMode: {
+                const hex = this.layout.pixelToHexRounded(new Point(event.x, event.y));
+                if (!hex) {
+                    console.error("No hex detected");
+                    return;
+                }
+                this.eventBus.publish('PlaceRobberEvent', EventBus.createEvent({hex: hex}))
+                break;
+            }
+            default:
+                break;
+        }
+
+    }
+
+    onHover(event: { x: number; y: number }): void {
+        //Somehow get to understand the current InputState
+
+    }
+
+    onHoverEnd(event: { x: number; y: number }): void {
+        return;
+    }
+
+    onHoverStart(event: { x: number; y: number }): void {
+        return;
+    }
+
+
 }

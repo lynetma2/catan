@@ -7,6 +7,7 @@ import {
     WheatSVGString,
     WoodSVGString
 } from "@/assets/assets.tsx";
+import type {Resources} from "@/game/core/types.ts";
 
 export class Player {
     public name: string;
@@ -146,22 +147,28 @@ export class Player {
 }
 
 export class PlayerResource {
-    public resources: number[];
+    public resources: Resources;
     public sum: number;
 
     constructor(resources: number[]) {
-        this.resources = resources;
-        this.sum = this.resources.reduce((partialSum, a) => partialSum + a, 0);
+        this.resources = {
+            wood: resources[0],
+            brick: resources[1],
+            grain: resources[2],
+            wool: resources[3],
+            ore: resources[4],
+        };
+        this.sum = resources.reduce((partialSum, a) => partialSum + a, 0);
     }
 
     public draw(canvas: HTMLCanvasElement) {
         let position = 0;
-        this.resources.forEach((resource,i) => {
+        Object.values(this.resources).forEach((resource, i) => {
             for (let j = 0; j < resource; j++) {
                 this.drawResource(i, canvas, position);
                 position++;
             }
-        });
+        })
     }
 
     private drawResource(kind: number, canvas: HTMLCanvasElement, position: number) {

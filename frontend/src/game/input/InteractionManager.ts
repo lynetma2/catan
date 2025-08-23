@@ -25,7 +25,6 @@ export class InteractionManager {
 
     private readonly onClick = (e: MouseEvent) => {
         const { x, y } = this.normalize(e);
-
         const target = this.findTarget(x, y);
         if (target?.onClick) {
             target.onClick({ x, y });
@@ -35,7 +34,6 @@ export class InteractionManager {
     private readonly onMouseMove = (e: MouseEvent) => {
         const { x, y } = this.normalize(e);
         const target = this.findTarget(x, y);
-
         if (target !== this.currentHover) {
             // Hover ended for previous target
             if (this.currentHover?.onHoverEnd) {
@@ -69,13 +67,16 @@ export class InteractionManager {
 
     private findTarget(x: number, y: number): Interactive | null {
         // Simple bounding box test (replace with polygon math if needed)
-        return (
-            this.interactives.find(i =>
+
+        let target = this.interactives.filter((value) => value.id != "board").find(i =>
                 x >= i.bounds.x &&
                 x <= i.bounds.x + i.bounds.width &&
                 y >= i.bounds.y &&
                 y <= i.bounds.y + i.bounds.height
-            ) || null
         );
+
+        target ??= this.interactives.filter((value) => value.id == "board")[0];
+
+        return target;
     }
 }

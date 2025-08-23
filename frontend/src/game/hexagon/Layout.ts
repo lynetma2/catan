@@ -155,7 +155,7 @@ export class Layout {
         return shortestsCoordinates;
     }
 
-    public pixelToVertixRounded(p: Point) {
+    public pixelToVertexRounded(p: Point) {
         //Plan!
         const hexCenter = this.pixelToHexRounded(p);
         const polygonCorners = this.polygonCorners(hexCenter);

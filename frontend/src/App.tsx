@@ -8,15 +8,15 @@ import {Board} from "./game/entity/Board.ts";
 import {Road} from "./game/entity/Road.ts";
 import {Building} from "./game/entity/Building.ts";
 import {GameServerSocket} from "./game/GameServerSocket.ts";
-import {Game} from "./game/core/Game.ts";
+import {Game, InputState} from "./game/core/Game.ts";
 import {LobbySocket} from "./lobby/LobbySocket.ts";
 import {Player} from "@/game/entity/Player.ts";
 import {DevelopmentCard} from "@/game/entity/DevelopmentCard.ts";
-import {ActionButton} from "@/game/entity/ActionButtons.ts";
-import {GameEvent} from "@/game/GameEvent.ts";
-import {drawBankCards, drawDices} from "@/game/entity/VisualUtilities.ts";
 import {Vertex} from "@/game/hexagon/Vertex.ts";
 import {Edge} from "@/game/hexagon/Edge.ts";
+import {InteractionManager} from "@/game/input/InteractionManager.ts";
+import {EventBus} from "@/game/core/EventBus.ts";
+import type {GameEvents} from "@/game/core/types.ts";
 
 function App() {
 
@@ -47,7 +47,10 @@ function App() {
             buildingMap.set("q1r1s-2dEAST", new Building(new Vertex(1, 1, -2, Vertex.EAST_DIRECTION), "Dennis", Building.SETTLEMENT))
             const roadMap = new Map<string, Road>();
             roadMap.set(`q1r1s-2d${Edge.EAST_DIRECTION}`, new Road(new Edge(1,1,-2, Edge.EAST_DIRECTION),"Dennis"));
-            const board = new Board(map, roadMap, buildingMap);
+            const manager = new InteractionManager(canvas);
+            const eventBus = new EventBus<GameEvents>();
+            const board = new Board(map, roadMap, buildingMap,
+                {x: 0, y:0, width: canvas.width, height: canvas.height}, canvas, layout, "", "Board", InputState.DefaultMode, manager, eventBus);
             //let currentSelection: Terrain | undefined = undefined;
             //board.draw(canvas, layout);
             const testCards = [new DevelopmentCard("KNIGHT"), new DevelopmentCard("YEAR_OF_THE_PLENTY")];
@@ -55,6 +58,9 @@ function App() {
             //player.draw(canvas);
             //player.drawPlayerStats(canvas, 800);
             const player2 = new Player("Jørgen", [2, 1, 2, 1, 2], testCards, 2);
+            const players = new Map<string, Player>();
+            players.set("Dennis", player);
+            players.set("Jørgen", player2);
             //player2.drawPlayerStats(canvas, 700);
             //const actions = ActionButton.testButtons(canvas);
             // actions.forEach(action => {
@@ -74,9 +80,8 @@ function App() {
 
             //console.log("edge.fromkey(): ", Edge.fromKey("q2r-2s0dNORTH"));
 
-            const game = new Game(board, [player, player2], [], [1,3], [15,15,15,15,15], canvas, layout, "Dennis");
+            const game = new Game(board, players, [], [1,3], [15,15,15,15,15], canvas, layout, "Dennis", manager, eventBus);
             game.draw();
-            game.addEventListeners();
 
             // canvas.addEventListener("mousemove", e => {
             //     console.log(e);

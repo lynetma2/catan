@@ -20,9 +20,6 @@ export type GameEvents = {
     'PlaceRobberEvent': PlaceRobberEvent;
     'RollDiceEvent': RollDiceEvent;
     'PressedButtonEvent': PressedButtonEvent;
-    'PressedVertexEvent': PressedVertexEvent;
-    'PressedEdgeEvent': PressedEdgeEvent;
-    'PressedHexEvent': PressedHexEvent;
     'NotificationEvent': NotificationEvent;
     'ErrorEvent': ErrorEvent;
 }
@@ -30,17 +27,15 @@ export type GameEvents = {
 export interface BaseEvent {
     uid: string;
     timestamp: number; // Unix timestamp
-    stopPropagation: boolean; // True if the event should continue to listeners
+    stopPropagation: boolean; // false if the event should continue to listeners
 }
 
 export interface PlaceHouseEvent extends BaseEvent {
     vertex: Vertex;
-    player: Player;
 }
 
 export interface PlaceCityEvent extends BaseEvent {
     vertex: Vertex;
-    player: Player;
 }
 
 export interface RollDiceEvent extends BaseEvent {
@@ -49,28 +44,14 @@ export interface RollDiceEvent extends BaseEvent {
 
 export interface PlaceRoadEvent extends BaseEvent {
     edge: Edge;
-    player: Player;
 }
 
 export interface PlaceRobberEvent extends BaseEvent {
     hex: Hex;
-    player: Player;
 }
 
 export interface PressedButtonEvent extends BaseEvent {
     buttonType: ButtonType;
-}
-
-export interface PressedVertexEvent extends BaseEvent {
-    vertex: Vertex;
-}
-
-export interface PressedHexEvent extends BaseEvent {
-    hex: Hex;
-}
-
-export interface PressedEdgeEvent extends BaseEvent {
-    edge: Edge;
 }
 
 export interface NotificationEvent extends BaseEvent {
