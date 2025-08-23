@@ -8,7 +8,7 @@ import {Board} from "./game/entity/Board.ts";
 import {Road} from "./game/entity/Road.ts";
 import {Building} from "./game/entity/Building.ts";
 import {GameServerSocket} from "./game/GameServerSocket.ts";
-import {Game} from "./game/entity/Game.ts";
+import {Game} from "./game/core/Game.ts";
 import {LobbySocket} from "./lobby/LobbySocket.ts";
 import {Player} from "@/game/entity/Player.ts";
 import {DevelopmentCard} from "@/game/entity/DevelopmentCard.ts";

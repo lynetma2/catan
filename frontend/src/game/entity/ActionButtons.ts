@@ -6,10 +6,13 @@ import {
     HouseSVGString, PathSVGString,
     RoadSVGString, WaitingSVGString
 } from "@/assets/assets.tsx";
+import type {Interactive} from "@/game/core/types.ts";
+import {Button} from "@/components/ui/button.tsx";
 
-export class ActionButton {
 
-    public kind: string;
+
+export class ActionButton implements Interactive {
+    public type: ButtonType;
     public startX: number;
     public startY: number;
     public height: number;
@@ -22,16 +25,16 @@ export class ActionButton {
     public static WAITINGSTATE = "WAITINGSTATE";
     public static FINISHTURN = "FINISHTURN";
 
-    constructor(kind: string, startX: number, startY: number, width: number, height: number, canvas: HTMLCanvasElement, color: string) {
-        this.kind = kind;
+    constructor(type: ButtonType, startX: number, startY: number, width: number, height: number, canvas: HTMLCanvasElement, color: string) {
+        this.type = type;
         this.startX = startX;
         this.startY = startY;
         this.height = height;
         this.width = width;
         this.canvas = canvas;
         this.color = color;
-        this.iconHeight = height/2;
-        this.iconWidth = width/2;
+        this.iconHeight = height / 2;
+        this.iconWidth = width / 2;
         this.isHovered = false;
     }
 
@@ -50,31 +53,30 @@ export class ActionButton {
         ctx.clearRect(this.startX - 5, this.startY - 5, this.width + 10, this.height + 10);
         ctx.closePath();
 
-        switch (this.kind) {
-            case GameEvent.TRADE:
+        switch (this.type) {
+            case ButtonType.openTradeMenu:
                 image.src = HandshakeSVGString(this.iconWidth, this.iconHeight, color);
                 break;
-            case GameEvent.PUTCITY:
+            case ButtonType.putCity:
                 image.src = CitySVGString(this.iconWidth, this.iconHeight, color);
                 break;
-            case GameEvent.PUTSETTLEMENT:
+            case ButtonType.putHouse:
                 image.src = HouseSVGString(this.iconWidth, this.iconHeight, color);
                 break;
-            case GameEvent.DRAWDEVELOPMENTCARD:
+            case ButtonType.drawDevelopmentCard:
                 image.src = DevelopmentCardBackSVGString(this.iconWidth, this.iconHeight, color);
                 break;
-            case GameEvent.PUTROAD:
+            case ButtonType.putRoad:
                 //TODO draw something for this.
                 image.src = PathSVGString(this.iconWidth, this.iconHeight, color);
                 break;
-            case ActionButton.WAITINGSTATE:
+            case ButtonType.waitingTurn:
                 image.src = WaitingSVGString(this.iconWidth, this.iconHeight, color);
                 break;
-            case ActionButton.FINISHTURN:
+            case ButtonType.finishTurn:
                 image.src = FinishTurnSVGString(this.iconWidth, this.iconHeight, color);
                 break;
         }
-
 
         ctx.fillStyle = "white";
         ctx.strokeStyle = color;
@@ -90,7 +92,7 @@ export class ActionButton {
         ctx.lineWidth = 1;
     }
 
-    public clickHandler(mouse: {x:number, y:number}, callback:(kind: string) => void) {
+    public clickHandler(mouse: { x: number, y: number }, callback: (kind: string) => void) {
         if (this.isHovered) {
             console.log("testing inside the handler")
             callback(this.kind);
@@ -106,7 +108,7 @@ export class ActionButton {
         }
     }
 
-    public hoverHandler(mouse: {x:number, y:number}, callback:(kind: string) => void) {
+    public hoverHandler(mouse: { x: number, y: number }, callback: (kind: string) => void) {
         const insideXAxis = mouse.x <= (this.startX + this.width) && mouse.x >= this.startX;
         const insideYAxis = mouse.y <= (this.startY + this.height) && mouse.y >= this.startY;
         if (insideXAxis && insideYAxis) {
@@ -124,8 +126,9 @@ export class ActionButton {
         }
     }
 
-    public addHoverAnimation(mouse: {x:number, y:number}) {
-        this.hoverHandler(mouse, () => {});
+    public addHoverAnimation(mouse: { x: number, y: number }) {
+        this.hoverHandler(mouse, () => {
+        });
     }
 
     public static testButtons(canvas: HTMLCanvasElement): ActionButton[] {

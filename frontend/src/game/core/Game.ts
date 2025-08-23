@@ -1,11 +1,19 @@
-import {Board} from "./Board.ts";
-import {Player} from "./Player.ts";
+import {Board} from "../entity/Board.ts";
+import {Player} from "../entity/Player.ts";
 import {GameEvent} from "../GameEvent.ts";
 import type {Layout} from "@/game/hexagon/Layout.ts";
 import type {IMessage} from "@stomp/stompjs";
-import {ActionButton} from "@/game/entity/ActionButtons.ts";
 import {drawBankCards, drawDices} from "@/game/entity/VisualUtilities.ts";
-import {Terrain} from "@/game/entity/Terrain.ts";
+import {EventBus} from "@/game/core/EventBus.ts";
+import type {GameEvents, Middleware} from "@/game/core/types.ts";
+import type {Button} from "@/game/core/Buttons/ButtonType.ts";
+import {PutRoadButton} from "@/game/core/Buttons/PutRoadButton.ts";
+import {PutHouseButton} from "@/game/core/Buttons/PutHouseButton.ts";
+import {PutCityButton} from "@/game/core/Buttons/PutCityButton.ts";
+import {DrawDevelopmentCardButton} from "@/game/core/Buttons/DrawDevelopmentCardButton.ts";
+import {EndTurnButton} from "@/game/core/Buttons/EndTurnButton.ts";
+import {InteractionManager} from "@/game/input/InteractionManager.ts";
+import {GameController} from "@/game/core/GameController.ts";
 
 export enum InputState {
     HousePlacingMode = "HousePlacingMode",
@@ -25,10 +33,12 @@ export class Game {
     public developmentCards: number;
     public localPlayer: string;
     public currentPlayer: string;
-    private actionButttons: ActionButton[];
-    private canvas: HTMLCanvasElement;
-    private layout: Layout;
-    private inputState: InputState;
+    public canvas: HTMLCanvasElement;
+    public layout: Layout;
+    public inputState: InputState;
+    private eventBus: EventBus<GameEvents>;
+    private buttons: Button[];
+    private interactionManager: InteractionManager;
 
     constructor(board: Board, players: Player[], events: GameEvent[], dices: number[], resources: number[], canvas: HTMLCanvasElement, layout: Layout, localPlayer: string) {
         this.board = board;
@@ -44,9 +54,18 @@ export class Game {
 
         //Internal state management
         this.inputState = InputState.DefaultMode;
+        this.eventBus = new EventBus<GameEvents>();
+        this.interactionManager = new InteractionManager(canvas);
 
         //For know test buttons are used.
-        this.actionButttons = ActionButton.testButtons(canvas);
+        this.buttons = this.initializeButtons();
+
+        //Make the eventbus work
+        this.setupEventListeners();
+
+        this.setupLoggingMiddleware();
+
+        this.eventBus.publish('NotificationEvent', {title: "test Notification Event", stopPropagation: false, uid: "123456", timestamp: 0})
     }
 
     public static fromJSON(message: IMessage, layout: Layout, canvas: HTMLCanvasElement, localPlayer: string): Game {
@@ -64,7 +83,7 @@ export class Game {
         const events = json.events;
         const resources = json.resources;
 
-        return new Game(board, players, events, dices, resources, canvas, layout, localPlayer);
+        return new Game(board, players, events, dices, resources, canvas, layout, localPlayer, new EventBus<GameEvents>());
     }
 
     public draw() {
@@ -82,7 +101,7 @@ export class Game {
         }
 
         //Draw buttons.
-        this.actionButttons.forEach(button => {
+        this.buttons.forEach(button => {
             button.draw();
         })
 
@@ -104,54 +123,37 @@ export class Game {
         drawDices(this.canvas, this.dices, 670, 830);
     }
 
-    public addEventListeners() {
-        this.canvas.addEventListener("mousemove", (event: MouseEvent) => {
-            const mousePos = this.getMousePos(this.canvas, event);
-            //Adding the action button hover and click events.
-            this.actionButttons.forEach(action => {
-                action.addHoverAnimation(mousePos);
-
-            });
-        });
-
-        this.canvas.addEventListener("mouseup", (event: MouseEvent) => {
-            const mousePos = this.getMousePos(this.canvas, event);
-            console.log("mouseUp event", mousePos);
-
-            this.actionButttons.forEach(action => {
-                action.clickHandler(mousePos, (kind) => {
-                    console.log("action button clicked!: ", kind);
-                    //TODO implement this.
-                    switch (kind) {
-                        case GameEvent.PUTSETTLEMENT:
-                            //Draw the options.
-                            this.inputState = this.inputState == InputState.HousePlacingMode ? InputState.DefaultMode : InputState.HousePlacingMode;
-                            this.draw();
-                            break;
-                        case GameEvent.PUTROAD:
-                            this.inputState = this.inputState == InputState.RoadPlacingMode ? InputState.DefaultMode : InputState.RoadPlacingMode;
-                            this.draw();
-                            break;
-                        case GameEvent.PUTCITY:
-                            this.inputState = this.inputState == InputState.CityPlacingMode ? InputState.DefaultMode : InputState.CityPlacingMode;
-                            this.draw();
-                            break;
-                        default:
-                            this.inputState = InputState.DefaultMode;
-                            this.draw()
-                            break;
-                    }
-                });
-            });
-        })
+    private createButton(
+        ButtonClass: new (bounds: any, canvas: any, color: string, id: string, manager: InteractionManager, ...args: any[]) => Button,
+        bounds: any,
+        id: string,
+        ...extraArgs: any[]
+    ): Button {
+        return new ButtonClass(bounds, this.canvas, "green", id, this.interactionManager, ...extraArgs);
     }
 
-    private getMousePos(canvas: HTMLCanvasElement, event: MouseEvent) {
-        const rect = canvas.getBoundingClientRect();
-        return {
-            x: event.clientX - rect.left,
-            y: event.clientY - rect.top
-        }
+    private initializeButtons(): Button[] {
+        const margin = 5;
+        const startX = 500;
+        const startY = 900;
+        const buttonSize = { width: 80, height: 80 };
+
+        const buttonTypes: [any, any[]?][] = [
+            [PutRoadButton],
+            [PutHouseButton],
+            [PutCityButton],
+            [DrawDevelopmentCardButton],
+            [EndTurnButton, [false]], // extra arg
+        ];
+
+        return buttonTypes.map(([ButtonClass, extraArgs = []], i) => {
+            const bounds = {
+                x: startX + i * (buttonSize.width + margin),
+                y: startY,
+                ...buttonSize,
+            };
+            return this.createButton(ButtonClass, bounds, i.toString(), this.eventBus, ...extraArgs);
+        });
     }
 
     private clearCanvas(canvas: HTMLCanvasElement) {
@@ -163,6 +165,21 @@ export class Game {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
+
+    private setupEventListeners(): void {
+        this.eventBus.on('PressedButtonEvent',(event) => GameController.handlePressedButtonEvent(event, this))
+    }
+
+    private setupLoggingMiddleware() {
+        this.eventBus.use(this.loggingMiddleware);
+    }
+
+    private loggingMiddleware: Middleware<GameEvents, keyof GameEvents> = (eventName, payload, next) => {
+        // payload's type is a union of all possible event payloads, so you can only access
+        // properties that exist on ALL of them (e.g., 'uid').
+        console.log(`[Middleware] Event '${String(eventName)}' (ID: ${payload.uid}) triggered.`);
+        next(eventName, payload);
+    };
 
     //TODO insert event handlers.
     //TODO make the state able to consider incremental state upgrades.

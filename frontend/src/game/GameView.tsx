@@ -3,7 +3,7 @@ import {useLocation, useNavigate, useParams} from "react-router";
 import {useEffect, useRef} from "react";
 import {useWebSocket} from "@/WebSocketProvider.tsx";
 import type {StompSubscription} from "@stomp/stompjs";
-import {Game} from "@/game/entity/Game.ts";
+import {Game} from "@/game/core/Game.ts";
 import {Layout} from "@/game/hexagon/Layout.ts";
 import {Point} from "@/game/hexagon/Point.ts";
 import {Button} from "@/components/ui/button.tsx";
@@ -47,7 +47,7 @@ function GameView() {
                 const game = Game.fromJSON(response, layout, canvasRef.current, username);
                 gameRef.current = game;
                 gameRef.current.draw();
-                gameRef.current.addEventListeners();
+                //gameRef.current.addEventListeners();
 
                 //For now just trying drawing the game
                 //TODO make sure the Game object is the same in the backend and in the frontend.
