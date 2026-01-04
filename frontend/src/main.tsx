@@ -7,7 +7,7 @@ import ErrorPage from "./genericPages/ErrorPage.tsx";
 import LobbyView from "./lobby/LobbyView.tsx";
 import IndexPage from "@/genericPages/IndexPage.tsx";
 import {WebSocketProvider} from "@/WebSocketProvider.tsx";
-import GameView from "@/game/GameView.tsx";
+import  GameView from "@/game/GameView.tsx";
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>

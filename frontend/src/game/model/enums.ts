@@ -17,16 +17,16 @@ export enum VertexDirection {
     West = "West"
 }
 
-export enum BuildingKind {
-    House = "House",
+export enum BuildingType {
+    Settlement = "Settlement",
     City = "City"
 }
 
 export enum TileKind {
     ResourceTile = "ResourceTile",
     SeaTile = "SeaTile",
-    TradeTile = "TradeTile",
-    DessetTile = "DessetTile"
+    PortTile = "PortTile",
+    DessertTile = "DessertTile"
 }
 
 export enum GamePhase {

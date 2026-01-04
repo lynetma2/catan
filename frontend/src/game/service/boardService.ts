@@ -1,59 +1,63 @@
 import type {Board, Building, Edge, Hex, Player, Road, Vertex} from "@/game/model/types.ts";
-import {BuildingKind, EdgeDirection, VertexDirection} from "@/game/model/enums.ts";
+import {BuildingType, EdgeDirection, VertexDirection} from "@/game/model/enums.ts";
+import {Edge} from "@/game/model/edge.ts";
 
 export class BoardService {
-    private board: Board;
-
-    constructor(board: Board) {
-        this.board = board;
-    }
-
     //Methods that might make sense.
-    public hasBuilding(vertex: Vertex): boolean {
-        return this.board.buildings.has(vertex.toKey());
+    public static hasBuilding(board: Board, vertex: Vertex): boolean {
+        return board.buildings.has(vertex.toKey());
     }
 
-    public hasRoad(edge: Edge): boolean {
-        return this.board.roads.has(edge.toKey());
+    public static hasRoad(board: Board, edge: Edge): boolean {
+        return board.roads.has(edge.toKey());
     }
 
-    public hasHouse(vertex: Vertex): boolean {
-        if (this.board.buildings.has(vertex.toKey())) {
-            return this.board.buildings.get(vertex.toKey())?.kind == BuildingKind.House;
+    public static hasHouse(board: Board, vertex: Vertex): boolean {
+        if (board.buildings.has(vertex.toKey())) {
+            return board.buildings.get(vertex.toKey())?.type == BuildingType.Settlement;
         }
         return false;
     }
 
-    public hasRobber(hex: Hex): boolean {
-        return this.board.robber == hex;
+    public static hasRobber(board: Board, hex: Hex): boolean {
+        return board.robber == hex;
     }
 
-    public hasRoadConnectionTo(vertex: Vertex, player: Player): boolean {
+    public static hasRoadConnectionTo(board: Board, vertex: Vertex, player: Player): boolean {
 
     }
 
-    public putBuilding(building: Building): void {
-        this.board.buildings.set(building.vertex.toKey(), building);
+    public static putBuilding(board: Board, building: Building): void {
+        board.buildings.set(building.vertex.toKey(), building);
     }
 
-    public putRoad(road: Road): void {
-        this.board.roads.set(road.edge.toKey(), road);
+    public static putRoad(board: Board, road: Road): void {
+        board.roads.set(road.edge.toKey(), road);
     }
 
-    public moveRobber(hex: Hex): void {
-        this.board.robber = hex;
+    public static moveRobber(board: Board, hex: Hex): void {
+        board.robber = hex;
     }
 
-    private getAdjacentEdges(vertex: Vertex): Edge[] {
+    private static getAdjacentEdges(vertex: Vertex): Edge[] {
         const edges: Edge[] = [];
-        let vq = vertex.q;
-        let vr = vertex.r;
+        const vq = vertex.q;
+        const vr = vertex.r;
         if (vertex.direction == VertexDirection.West) {
-            edges.push({q: vq, r: vr, direction: EdgeDirection.West})
+            edges.push(new Edge(EdgeDirection.West, vq, vr));
+            edges.push(new Edge(EdgeDirection.North, vq-1, vr+1));
+            edges.push(new Edge(EdgeDirection.East, vq-1, vr+1));
+        } else {
+            edges.push(new Edge(EdgeDirection.East, vq, vr));
+            edges.push(new Edge(EdgeDirection.North, vq+1, vr));
+            edges.push(new Edge(EdgeDirection.West, vq+1, vr));
         }
+        return edges;
     }
 
-    private getAdjacentVertices(edge: Edge): Vertex[] {
-
+    private static getEdgeVertices(edge: Edge): Vertex[] {
+        const vertices: Vertex[] = [];
+        const eq = edge.q;
+        const er = edge.r;
     }
 }
