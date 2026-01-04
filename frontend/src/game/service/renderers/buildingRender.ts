@@ -32,7 +32,12 @@ export class BuildingRender {
         if (!image.complete) return;
 
         ctx.beginPath();
-        ctx.drawImage(image, center.x - this.defaultBuildingWidth / 2, center.y - this.defaultBuildingHeight / 2);
+        ctx.drawImage(image,
+            center.x - this.defaultBuildingWidth / 2,
+            center.y - this.defaultBuildingHeight / 2,
+            this.defaultBuildingWidth,
+            this.defaultBuildingHeight
+        );
         ctx.closePath();
     }
 }

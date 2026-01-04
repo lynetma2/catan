@@ -1,4 +1,6 @@
 import {BuildingType} from "@/game/model/enums.ts";
+import cityIcon from '@/assets/city.svg';
+import settlementIcon from '@/assets/settlement.svg';
 
 export interface BuildingStyle {
     imageSrc: string;
@@ -6,9 +8,9 @@ export interface BuildingStyle {
 
 export const BUILDING_STYLES: Record<BuildingType, BuildingStyle> = {
     [BuildingType.Settlement]: {
-        imageSrc: 'assets/wood.png',
+        imageSrc: settlementIcon,
     },
     [BuildingType.City]: {
-        imageSrc: 'assets/brick.png',
+        imageSrc: cityIcon,
     }
 };
