@@ -1,7 +1,7 @@
 import {
-    BuildingType,
+    BuildingType, ButtonType,
     EdgeDirection,
-    GamePhase,
+    GamePhase, MoveType,
     type ResourceType,
     TileKind,
     VertexDirection
@@ -61,6 +61,11 @@ export interface Tile {
     //TODO handle ports/trade
 }
 
+export interface Button {
+    buttonType: ButtonType;
+    //Todo add more if needed
+}
+
 export interface Board {
     buildings: Map<string, Building>;
     roads: Map<string, Road>;
@@ -91,6 +96,7 @@ export interface GameState {
     players: Player[];
     dices: number[];
     phase: GamePhase;
+    inputState: InputState;
 }
 
 export interface Prices {
@@ -121,11 +127,6 @@ export interface GameStats {
     //tbd
 }
 
-export interface RenderSettings {
-    layoutSettings: LayoutSettings;
-    //tbd
-}
-
 export interface LayoutSettings {
     size: Point;
     origin: Point;
@@ -133,4 +134,20 @@ export interface LayoutSettings {
     roadWidth: number;
     cityRadius: number;
     settlementRadius: number;
+}
+
+export interface InputState {
+    pressedKeys: Set<string>;
+    mousePosition?: Point;
+    potentialMove?: PotentialMove;
+}
+
+export interface ClientState {
+    // The ID of the player currently controlled by this client instance.
+    localPlayerId: string;
+}
+
+export interface PotentialMove {
+    moveType: MoveType;
+    //Todo add more stuff here if needed.
 }

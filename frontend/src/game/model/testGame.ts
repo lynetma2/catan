@@ -1,4 +1,4 @@
-import type {Board, Building, GameState, Player, Road, Tile} from "@/game/model/types.ts";
+import type {Board, Building, GameState, InputState, Player, Road, Tile} from "@/game/model/types.ts";
 import {BuildingType, EdgeDirection, GamePhase, ResourceType, TileKind, VertexDirection} from "@/game/model/enums.ts";
 
 export const generateTestTiles = (): Map<string, Tile> => {
@@ -112,9 +112,15 @@ export const TEST_BOARD: Board = {
     robber: { q: 2, r: 0 } // Desert location based on generation order
 }
 
+export const INITIAL_INPUT: InputState = {
+    pressedKeys: new Set(),
+    mousePosition: null
+}
+
 export const TEST_GAMESTATE: GameState = {
     board: TEST_BOARD,
     players: TEST_PLAYERS,
     dices: [1, 1],
-    phase: GamePhase.Setup
+    phase: GamePhase.Setup,
+    inputState: INITIAL_INPUT
 };

@@ -1,6 +1,7 @@
 import {useEffect, useRef} from 'react'
 import './App.css'
 import {GameLoop} from "@/game/catan.ts";
+import {Logger} from "@/game/utils/Logger.ts";
 
 function App() {
 
@@ -16,11 +17,11 @@ function App() {
             gameLoopRef.current = new GameLoop(canvas);
             gameLoopRef.current.start();
 
-            console.log("UseEffect ran")
+            Logger.info("UseEffect ran");
 
 
             return () => {
-                console.log("return called ");
+                Logger.debug("return called");
                 gameLoopRef.current?.stop();
             };
         }, []

@@ -2,6 +2,7 @@ import type {Hex, LayoutSettings, Point, Tile} from "@/game/model/types.ts";
 import {LayoutService} from "@/game/service/LayoutService.ts";
 import {FIXED_STYLES, type FixedTileKind, RESOURCE_STYLES, type TileStyle} from "@/game/theme/tileStyles.ts";
 import {TileKind} from "@/game/model/enums.ts";
+import {Logger} from "@/game/utils/Logger.ts";
 
 export class TileRender {
     //Used to translate coordinates into string keys.
@@ -31,7 +32,7 @@ export class TileRender {
         if (tile.tileKind === TileKind.ResourceTile) {
             if (!tile.resourceType) {
                 // Fallback for error state (e.g. a resource tile with no type defined)
-                console.warn('ResourceTile missing resourceType', tile);
+                Logger.warn({ tile }, 'ResourceTile missing resourceType');
                 return FIXED_STYLES[TileKind.DessertTile];
             }
             return RESOURCE_STYLES[tile.resourceType];

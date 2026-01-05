@@ -33,3 +33,17 @@ export enum GamePhase {
     Setup = "Setup",
     Default = "Default",
 }
+
+export enum MoveType {
+    placeSettlement = "PlaceSettlement",
+    placeCity = "PlaceCity",
+    placeRoad = "PlaceRoad"
+}
+
+export enum ButtonType {
+    drawDevelopmentCard = "DrawDevelopmentCard",
+    putSettlement = "PutSettlement",
+    putCity = "PutCity",
+    putRoad = "PutRoad",
+    endTurn = "EndTurn"
+}
