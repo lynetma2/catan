@@ -1,4 +1,5 @@
-import type {Board, Building, GameState, LayoutSettings, Road, Tile} from "@/game/model/types.ts";
+import type {Board, Building, GameState, LayoutSettings, Road, Tile, Edge} from "@/game/model/types.ts";
+import {MoveType} from "@/game/model/enums.ts";
 import {TileRender} from "@/game/service/renderers/tileRender.ts";
 import {RoadRender} from "@/game/service/renderers/roadRender.ts";
 import {BuildingRender} from "@/game/service/renderers/buildingRender.ts";
@@ -37,6 +38,28 @@ export class RenderService {
         })
     }
 
+    private drawPotentialMove(layoutSettings: LayoutSettings, game: GameState) {
+        const move = game.inputState.potentialMove;
+        if (!move) return;
+
+        this.context.save();
+
+        // "Pulse" Animation Effect:
+        // Oscillates alpha between 0.3 and 0.7 over time
+        const time = performance.now() / 500; 
+        const alpha = 0.5 + Math.sin(time) * 0.2;
+        this.context.globalAlpha = alpha;
+
+        if (move.moveType === MoveType.Road) {
+            // Reuse the existing RoadRender logic
+            // We create a temporary "Ghost Road" object
+            const ghostRoad: Road = { edge: move.location as Edge, playerName: "Player 1" };
+            RoadRender.draw(this.context, layoutSettings, ghostRoad);
+        }
+
+        this.context.restore();
+    }
+
     // private drawDices(dices: [number]) {
     //
     // }
@@ -59,6 +82,9 @@ export class RenderService {
 
         //Draw board
         this.drawBoard(layoutSettings, game.board);
+
+        //Draw Ghost / Hover Effects
+        this.drawPotentialMove(layoutSettings, game);
 
         //Draw buttons.
         //this.drawButtons(game.buttons);

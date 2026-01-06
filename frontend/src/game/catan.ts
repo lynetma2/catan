@@ -101,7 +101,7 @@ export class GameLoop {
         };
 
         this.inputService.onMouseMove = (x, y) => {
-            InputService.handleMouseMovement(this.game, x, y);
+            InputService.handleMouseMovement(this.game, this.layoutSettings, x, y);
         }
 
         this.inputService.onPan = (dx, dy) => {

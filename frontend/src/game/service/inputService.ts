@@ -1,5 +1,5 @@
 import type {GameState, LayoutSettings} from "@/game/model/types.ts";
-import {ResourceType} from "@/game/model/enums.ts";
+import {MoveType, ResourceType} from "@/game/model/enums.ts";
 import {Logger} from "@/game/utils/Logger.ts";
 
 export class InputService {
@@ -103,9 +103,26 @@ export class InputService {
         Logger.debug({x, y}, `Logic processing click`);
     }
 
-    public static handleMouseMovement(gameState: GameState, x: number, y: number) {
-        // Logger.trace({x, y}, `Logic processing movement`); // Use trace for high-frequency logs
+    public static handleMouseMovement(gameState: GameState, layoutSettings: LayoutSettings, x: number, y: number) {
         gameState.inputState.mousePosition = {x, y};
+
+        // Example: If we are in the "Build Road" phase
+        // const isBuildingRoad = gameState.phase === GamePhase.BuildRoad; 
+        const isBuildingRoad = true; // Hardcoded for demo
+
+        if (isBuildingRoad) {
+            // 1. Snap: Calculate nearest edge
+            // const nearestEdge = HexLayoutService.getNearestEdge(layoutSettings, {x, y});
+            
+            // Mocking a result for demonstration
+            const nearestEdge = { q: 0, r: 0, direction: 1 }; 
+
+            gameState.inputState.potentialMove = {
+                moveType: MoveType.Road,
+                location: nearestEdge,
+                isValid: true // Check BoardService.canPlaceRoad(...) here
+            };
+        }
     }
 
     public static handleMousePan(layoutSettings: LayoutSettings, dx: number, dy: number) {

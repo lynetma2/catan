@@ -149,5 +149,6 @@ export interface ClientState {
 
 export interface PotentialMove {
     moveType: MoveType;
-    //Todo add more stuff here if needed.
+    location: Vertex | Edge;
+    isValid: boolean;
 }
