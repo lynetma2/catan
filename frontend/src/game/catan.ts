@@ -4,6 +4,8 @@
 import type {ClientState, GameState, LayoutSettings} from "@/game/model/types.ts";
 import {RenderService} from "@/game/service/renderService.ts";
 import {InputService} from "@/game/service/inputService.ts";
+import {AnimationService} from "@/game/service/animationService.ts";
+import {PingAnimation} from "@/game/animations/pingAnimation.ts";
 import {TEST_GAMESTATE} from "@/game/model/testGame.ts";
 import {defaultLayoutSettings} from "@/game/model/defaultLayoutSettings.ts";
 
@@ -25,6 +27,7 @@ export class GameLoop {
     //Services used in the game.
     private readonly renderService: RenderService;
     private readonly inputService: InputService;
+    private readonly animationService: AnimationService;
 
     //Update this when changing the multiplayer implementation.
     constructor(canvas: HTMLCanvasElement) {
@@ -38,6 +41,7 @@ export class GameLoop {
         this.eventQueue = null;
         this.renderService = new RenderService(this.canvas);
         this.inputService = new InputService(this.canvas);
+        this.animationService = new AnimationService(this.canvas);
         
         // Create a copy of the settings so we can modify them (pan/zoom) without affecting the default constant
         this.layoutSettings = structuredClone(defaultLayoutSettings);
@@ -70,10 +74,13 @@ export class GameLoop {
 
             if (deltaTimeMs >= this.FRAME_INTERVAL_MS) {
                 this.logicUpdate(); //Put logic updates here!
+                this.animationService.update(deltaTimeMs);
                 this.previousTimeMs = currentTimeMs - (deltaTimeMs % this.FRAME_INTERVAL_MS);
             }
 
             this.renderService.draw(this.layoutSettings, this.game); //Make this use the render.
+            // Draw animations on top of the board
+            this.animationService.draw(this.layoutSettings);
             this.update();
         });
     }
@@ -87,6 +94,9 @@ export class GameLoop {
     initializeInputHandlers(): void {
         this.inputService.onMouseClick = (x, y) => {
             InputService.handleMouseClick(this.game, x, y);
+            
+            // Demo: Play a ping animation where the user clicked
+            this.animationService.play(new PingAnimation({x, y}));
         };
 
         this.inputService.onMouseMove = (x, y) => {
