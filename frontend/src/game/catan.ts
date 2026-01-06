@@ -66,6 +66,7 @@ export class GameLoop {
             this.animationFrameId = null;
         }
         this.inputService.stop();
+        this.animationService.clear();
     }
 
     update(): void {

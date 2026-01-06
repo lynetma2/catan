@@ -22,4 +22,8 @@ export class AnimationService {
     public draw(layoutSettings: LayoutSettings) {
         this.animations.forEach(anim => anim.draw(this.context, layoutSettings));
     }
+
+    public clear() {
+        this.animations = [];
+    }
 }
