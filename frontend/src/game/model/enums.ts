@@ -45,5 +45,6 @@ export enum ButtonType {
     putSettlement = "PutSettlement",
     putCity = "PutCity",
     putRoad = "PutRoad",
-    endTurn = "EndTurn"
+    endTurn = "EndTurn",
+    waiting = "Waiting",
 }

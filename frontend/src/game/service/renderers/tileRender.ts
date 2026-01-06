@@ -1,5 +1,5 @@
 import type {Hex, LayoutSettings, Point, Tile} from "@/game/model/types.ts";
-import {LayoutService} from "@/game/service/LayoutService.ts";
+import {HexLayoutService} from "@/game/service/layout/hexLayoutService.ts";
 import {FIXED_STYLES, type FixedTileKind, RESOURCE_STYLES, type TileStyle} from "@/game/theme/tileStyles.ts";
 import {TileKind} from "@/game/model/enums.ts";
 import {Logger} from "@/game/utils/Logger.ts";
@@ -16,7 +16,7 @@ export class TileRender {
     private static coloredImageCache: Map<string, HTMLCanvasElement> = new Map();
 
     private static hexToPath(layoutSettings: LayoutSettings, hex: Hex): Path2D {
-        const polygon = LayoutService.hexPolygonCorners(layoutSettings, hex);
+        const polygon = HexLayoutService.hexPolygonCorners(layoutSettings, hex);
         const path = new Path2D();
         path.moveTo(polygon[0].x, polygon[0].y);
         for (let i = 1; i < polygon.length; i++) {
@@ -89,7 +89,7 @@ export class TileRender {
 
     private static drawIcon(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, tile: Tile, style: TileStyle) {
         //Get the center.
-        const center: Point = LayoutService.hexToPixel(layoutSettings, tile.hex);
+        const center: Point = HexLayoutService.hexToPixel(layoutSettings, tile.hex);
         const image = this.getColoredIcon(style);
         
         if (image instanceof HTMLImageElement && (!image.complete || image.naturalWidth === 0)) return;
@@ -116,7 +116,7 @@ export class TileRender {
     }
 
     private static drawNumber(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, tile: Tile, style: TileStyle) {
-        const center: Point = LayoutService.hexToPixel(layoutSettings, tile.hex);
+        const center: Point = HexLayoutService.hexToPixel(layoutSettings, tile.hex);
         const scale = style.iconScale ?? TileRender.defaultIconScale;
         const iconHeight = (layoutSettings.size.y / 2) * scale;
         ctx.beginPath();

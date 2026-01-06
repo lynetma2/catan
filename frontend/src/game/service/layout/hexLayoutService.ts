@@ -1,7 +1,7 @@
 import type {Edge, Hex, LayoutSettings, Orientation, Point, Vertex} from "@/game/model/types.ts";
 import {EdgeDirection, VertexDirection} from "@/game/model/enums.ts";
 
-export class LayoutService {
+export class HexLayoutService {
     //Used to manipulate information about the hexagonal pattern used in the background layout.
 
     //Used to change the top layout of the hex pattern.
@@ -55,7 +55,7 @@ export class LayoutService {
     }
 
     public static pixelToHexRounded(layoutSettings: LayoutSettings, p: Point): Hex {
-        const h: Hex = LayoutService.pixelToHexFractional(layoutSettings, p);
+        const h: Hex = HexLayoutService.pixelToHexFractional(layoutSettings, p);
         return {
             q: Math.round(h.q),
             r: Math.round(h.r),
@@ -74,9 +74,9 @@ export class LayoutService {
 
     public static hexPolygonCorners(layoutSettings: LayoutSettings, h: Hex): Point[] {
         const corners: Point[] = [];
-        const center: Point = LayoutService.hexToPixel(layoutSettings, h);
+        const center: Point = HexLayoutService.hexToPixel(layoutSettings, h);
         for (let i = 0; i < 6; i++) {
-            const offset: Point = LayoutService.hexCornerOffset(layoutSettings, i);
+            const offset: Point = HexLayoutService.hexCornerOffset(layoutSettings, i);
             corners.push({
                 x: center.x + offset.x,
                 y: center.y + offset.y
@@ -108,10 +108,10 @@ export class LayoutService {
         let offset: Point;
         switch (vertex.direction) {
             case VertexDirection.East:
-                offset = LayoutService.hexCornerOffset(layoutSettings, 0);
+                offset = HexLayoutService.hexCornerOffset(layoutSettings, 0);
                 break;
             case VertexDirection.West:
-                offset = LayoutService.hexCornerOffset(layoutSettings, 3);
+                offset = HexLayoutService.hexCornerOffset(layoutSettings, 3);
                 break;
         }
         corners.push({x: center.x + offset.x, y: center.y + offset.y})

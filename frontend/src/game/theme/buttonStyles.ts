@@ -1,10 +1,11 @@
 import {ButtonType} from "@/game/model/enums.ts";
 
-import woodIcon from '@/assets/resources/wood.svg';
-import brickIcon from '@/assets/resources/brick.svg';
-import stoneIcon from '@/assets/resources/stone.svg';
-import wheatIcon from '@/assets/resources/wheat.svg';
-import sheepIcon from '@/assets/resources/sheep.svg';
+import pathIcon from '@/assets/path.svg';
+import settlementIcon from '@/assets/settlement.svg';
+import cityIcon from '@/assets/city.svg';
+import developmentCardBackIcon from '@/assets/developmentCard-back.svg'
+import waitingIcon from '@/assets/waiting.svg';
+import endTurnIcon from '@/assets/endTurn.svg';
 
 export interface ButtonStyle {
     fillColor: string;
@@ -18,27 +19,26 @@ export interface ButtonStyle {
 export const BUTTON_STYLES: Record<ButtonType, ButtonStyle> = {
     [ButtonType.drawDevelopmentCard]: {
         fillColor: '#FFF', // Dark Green
-        imageSrc: woodIcon,
-        iconColor: '#FFFFFF', // Example: Make the icon White
+        imageSrc: developmentCardBackIcon,
     },
     [ButtonType.endTurn]: {
         fillColor: '#E06026', // Red/Brown
-        imageSrc: brickIcon,
-        iconColor: '#FFFFFF',
+        imageSrc: endTurnIcon,
     },
     [ButtonType.putCity]: {
         fillColor: '#8EB50B', // Light Green
-        imageSrc: sheepIcon,
-        iconColor: '#FFFFFF',
+        imageSrc: cityIcon,
     },
     [ButtonType.putRoad]: {
         fillColor: '#EFB516', // Yellow/Gold
-        imageSrc: wheatIcon,
-        iconColor: '#FFFFFF',
+        imageSrc: pathIcon,
     },
     [ButtonType.putSettlement]: {
         fillColor: '#A2A8A4', // Grey
-        imageSrc: stoneIcon,
-        iconColor: '#FFFFFF',
+        imageSrc: settlementIcon,
+    },
+    [ButtonType.waiting]: {
+        fillColor: '#FFF',
+        imageSrc: waitingIcon,
     }
 };

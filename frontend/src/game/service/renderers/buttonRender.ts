@@ -1,9 +1,10 @@
 import type {Button, Hex, LayoutSettings, Point, Tile} from "@/game/model/types.ts";
-import {LayoutService} from "@/game/service/LayoutService.ts";
+import {HexLayoutService} from "@/game/service/layout/hexLayoutService.ts";
 import {FIXED_STYLES, type FixedTileKind, RESOURCE_STYLES, type TileStyle} from "@/game/theme/tileStyles.ts";
 import {TileKind} from "@/game/model/enums.ts";
 import {Logger} from "@/game/utils/Logger.ts";
-import type { ButtonStyle } from "@/game/theme/buttonStyles";
+import {BUTTON_STYLES, type ButtonStyle} from "@/game/theme/buttonStyles";
+import {UiLayout, HUDLayoutService} from "@/game/service/layout/HUDLayoutService.ts";
 
 export class ButtonRender {
 
@@ -12,7 +13,10 @@ export class ButtonRender {
     private static coloredImageCache: Map<string, HTMLCanvasElement> = new Map();
 
     private static getStyle(button: Button): ButtonStyle {
+        const styles = BUTTON_STYLES[button.buttonType];
 
+        //TODO Update color to the current user.
+        return styles;
     }
 
     private static getIcon(style: ButtonStyle): HTMLImageElement {
@@ -59,18 +63,37 @@ export class ButtonRender {
         return this.coloredImageCache.get(cacheKey) ?? rawImage;
     }
 
-    private static drawIcon(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, button: Button, style: ButtonStyle) {
+    private static drawIcon(ctx: CanvasRenderingContext2D, layout: UiLayout, style: ButtonStyle) {
+        const img = this.getColoredIcon(style);
+        if (!img) return;
 
+        // Draw image centered on the layout position
+        const halfW = layout.width / 2;
+        const halfH = layout.height / 2;
+        
+        ctx.drawImage(img, layout.x - halfW, layout.y - halfH, layout.width, layout.height);
     }
 
-    private static drawBackground(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, button: Button, style: ButtonStyle) {
-
+    private static drawBackground(ctx: CanvasRenderingContext2D, layout: UiLayout, style: ButtonStyle) {
+        ctx.beginPath();
+        ctx.fillStyle = style.fillColor;
+        // Draw a circle background slightly larger than the icon
+        ctx.arc(layout.x, layout.y, (layout.width / 2) + (5 * layout.scale), 0, 2 * Math.PI);
+        ctx.fill();
+        
+        if (style.strokeColor) {
+            ctx.lineWidth = 3 * layout.scale;
+            ctx.strokeStyle = style.strokeColor;
+            ctx.stroke();
+        }
+        ctx.closePath();
     }
 
     public static draw(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, button: Button) {
         const style = this.getStyle(button);
+        const layout = HUDLayoutService.getLayout(button.buttonType, ctx.canvas.width, ctx.canvas.height);
 
-        this.drawBackground(ctx, layoutSettings, button, style);
-        this.drawIcon(ctx, layoutSettings, button, style);
+        this.drawBackground(ctx, layout, style);
+        this.drawIcon(ctx, layout, style);
     }
 }

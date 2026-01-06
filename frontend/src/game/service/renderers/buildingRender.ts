@@ -1,5 +1,5 @@
 import type {Building, LayoutSettings} from "@/game/model/types";
-import {LayoutService} from "@/game/service/LayoutService.ts";
+import {HexLayoutService} from "@/game/service/layout/hexLayoutService.ts";
 import {BUILDING_STYLES, type BuildingStyle} from "@/game/theme/buildingStyles.ts";
 
 export class BuildingRender {
@@ -25,7 +25,7 @@ export class BuildingRender {
     }
 
     public static draw(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, building: Building) {
-        const center = LayoutService.vertexPolygonCorners(layoutSettings, building.vertex)[0];
+        const center = HexLayoutService.vertexPolygonCorners(layoutSettings, building.vertex)[0];
         const style = this.getStyle(building);
         const image = this.getIcon(style);
 
