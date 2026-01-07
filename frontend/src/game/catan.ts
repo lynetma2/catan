@@ -52,12 +52,21 @@ export class GameLoop {
         this.layoutSettings = structuredClone(defaultLayoutSettings);
         
         // Initialize default state
-        this.currentState = new SetupState(); 
+        this.setGameState(new SetupState());
 
         this.initializeInputHandlers();
 
         this.physics = null;
         this.inputSet = null;
+    }
+
+    public setGameState(newState: GameStateHandler) {
+        if (this.currentState) {
+            this.currentState.onExit(this.game);
+        }
+        this.currentState = newState;
+        // Pass layoutSettings so the new state can immediately snap to the mouse position
+        this.currentState.onEnter(this.game, this.layoutSettings);
     }
 
     start(): void {

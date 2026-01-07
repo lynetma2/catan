@@ -1,29 +1,63 @@
-import type { GameStateHandler } from "./GameState";
-import type {Board, Building, GameState, InputState, LayoutSettings, Player, Road, Tile} from "@/game/model/types.ts";
-
+import type { GameStateHandler } from "./GameStateHandler";
+import type {Edge, GameState, LayoutSettings, Road} from "@/game/model/types.ts";
+import {MoveType} from "@/game/model/enums.ts";
+import {HexLayoutService} from "@/game/service/layout/hexLayoutService.ts";
+import {RoadRender} from "@/game/service/renderers/roadRender.ts";
+import {BoardService} from "@/game/service/logic/boardService.ts";
 
 export class BuildRoadState implements GameStateHandler {
-    onEnter(game: GameState): void {
-        console.log("Entering BuildRoadState");
-        // Any specific setup when entering this state
+    
+    onEnter(game: GameState, layoutSettings: LayoutSettings): void {
+        // If we have a mouse position, immediately calculate ghost so it appears instantly
+        if (game.inputState.mousePosition) {
+            this.updatePotentialMove(game.inputState.mousePosition.x, game.inputState.mousePosition.y, game, layoutSettings);
+        }
     }
 
     onClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
-        // Handle click for building a road
-        console.log(`BuildRoadState: Clicked at ${x}, ${y}`);
-        // Logic to attempt placing a road at the potentialMove location
-        // If successful, transition to another state (e.g., MainGameState or next player's turn)
-        // If not, provide feedback and remain in this state
+        const move = game.inputState.potentialMove;
+        if (move && move.isValid && move.moveType === MoveType.Road) {
+            // Perform the build action
+            // BoardService.putRoad(game.board, { edge: move.location as Edge, playerName: "Player 1" });
+            // game.inputState.potentialMove = undefined;
+            console.log("Road Built!");
+        }
     }
 
     onMouseMove(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
-        // Update potential road placement on mouse move
-        InputService.handleMouseMovement(game, layoutSettings, x, y);
+        this.updatePotentialMove(x, y, game, layoutSettings);
+    }
+
+    private updatePotentialMove(x: number, y: number, game: GameState, layoutSettings: LayoutSettings) {
+        game.inputState.mousePosition = {x, y};
+        
+        // Snap to nearest edge
+        const nearestEdge = HexLayoutService.getNearestEdge(layoutSettings, {x, y});
+        const isValid = !BoardService.hasRoad(game.board, nearestEdge); // Basic validation
+
+        game.inputState.potentialMove = {
+            moveType: MoveType.Road,
+            location: nearestEdge,
+            isValid: isValid
+        };
     }
 
     onExit(game: GameState): void {
-        console.log("Exiting BuildRoadState");
-        // Clean up any state-specific elements
-        game.inputState.potentialMove = undefined; // Clear potential move
+        game.inputState.potentialMove = undefined;
+    }
+
+    draw(ctx: CanvasRenderingContext2D, game: GameState, layoutSettings: LayoutSettings): void {
+        const move = game.inputState.potentialMove;
+        if (move && move.moveType === MoveType.Road && move.location) {
+            ctx.save();
+            ctx.globalAlpha = 0.6;
+            // Color could be green if valid, red if invalid
+            const ghostRoad: Road = { 
+                edge: move.location as Edge, 
+                playerName: "Player 1" // Should come from ClientState
+            };
+            RoadRender.draw(ctx, layoutSettings, ghostRoad);
+            ctx.restore();
+        }
     }
 }
