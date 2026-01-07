@@ -8,6 +8,8 @@ import {AnimationService} from "@/game/service/animationService.ts";
 import {PingAnimation} from "@/game/animations/pingAnimation.ts";
 import {TEST_GAMESTATE} from "@/game/model/testGame.ts";
 import {defaultLayoutSettings} from "@/game/model/defaultLayoutSettings.ts";
+import {GameStateHandler} from "@/game/state/GameStateHandler.ts"; // Hypothetical import
+import {SetupState} from "@/game/state/SetupState.ts"; // Hypothetical import
 
 export class GameLoop {
     MAX_FPS = 144;
@@ -23,6 +25,9 @@ export class GameLoop {
     private readonly canvas: HTMLCanvasElement;
     private animationFrameId: number | null = null;
     private readonly layoutSettings: LayoutSettings;
+    
+    // The State Pattern: Holds the current behavior
+    private currentState: GameStateHandler;
 
     //Services used in the game.
     private readonly renderService: RenderService;
@@ -45,6 +50,9 @@ export class GameLoop {
         
         // Create a copy of the settings so we can modify them (pan/zoom) without affecting the default constant
         this.layoutSettings = structuredClone(defaultLayoutSettings);
+        
+        // Initialize default state
+        this.currentState = new SetupState(); 
 
         this.initializeInputHandlers();
 
@@ -94,14 +102,16 @@ export class GameLoop {
 
     initializeInputHandlers(): void {
         this.inputService.onMouseClick = (x, y) => {
-            InputService.handleMouseClick(this.game, x, y);
+            // Delegate to the State Object
+            this.currentState.onClick(x, y, this.game, this.layoutSettings);
             
             // Demo: Play a ping animation where the user clicked
             this.animationService.play(new PingAnimation({x, y}));
         };
 
         this.inputService.onMouseMove = (x, y) => {
-            InputService.handleMouseMovement(this.game, this.layoutSettings, x, y);
+            // Delegate to the State Object
+            this.currentState.onMouseMove(x, y, this.game, this.layoutSettings);
         }
 
         this.inputService.onPan = (dx, dy) => {
