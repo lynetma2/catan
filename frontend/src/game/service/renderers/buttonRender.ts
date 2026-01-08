@@ -1,10 +1,7 @@
 import type {Button, Hex, LayoutSettings, Point, Tile} from "@/game/model/types.ts";
-import {HexLayoutService} from "@/game/service/layout/hexLayoutService.ts";
-import {FIXED_STYLES, type FixedTileKind, RESOURCE_STYLES, type TileStyle} from "@/game/theme/tileStyles.ts";
-import {TileKind} from "@/game/model/enums.ts";
 import {Logger} from "@/game/utils/Logger.ts";
 import {BUTTON_STYLES, type ButtonStyle} from "@/game/theme/buttonStyles";
-import {UiLayout, HUDLayoutService} from "@/game/service/layout/HUDLayoutService.ts";
+import {type UiLayout, HUDLayoutService} from "@/game/service/layout/HUDLayoutService.ts";
 
 export class ButtonRender {
 
@@ -17,6 +14,17 @@ export class ButtonRender {
 
         //TODO Update color to the current user.
         return styles;
+    }
+
+    private static getRectPath(layout: UiLayout): Path2D {
+        const path = new Path2D();
+        path.moveTo(layout.x, layout.y);
+        path.lineTo(layout.width, layout.y);
+        path.lineTo(layout.width, layout.height);
+        path.lineTo(layout.x, layout.height);
+        path.lineTo(layout.x, layout.y);
+        path.closePath();
+        return path;
     }
 
     private static getIcon(style: ButtonStyle): HTMLImageElement {
@@ -78,8 +86,7 @@ export class ButtonRender {
         ctx.beginPath();
         ctx.fillStyle = style.fillColor;
         // Draw a circle background slightly larger than the icon
-        ctx.arc(layout.x, layout.y, (layout.width / 2) + (5 * layout.scale), 0, 2 * Math.PI);
-        ctx.fill();
+        ctx.fill(this.getRectPath(layout));
         
         if (style.strokeColor) {
             ctx.lineWidth = 3 * layout.scale;

@@ -124,3 +124,12 @@ export const TEST_GAMESTATE: GameState = {
     phase: GamePhase.Setup,
     inputState: INITIAL_INPUT
 };
+
+export const TEST_HUD: any = {
+    buttons: {}
+}
+
+export const generateTestButtons = () => {
+    const buttons = new Map<string, any>();
+
+}
