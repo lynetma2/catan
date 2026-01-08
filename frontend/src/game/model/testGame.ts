@@ -1,5 +1,24 @@
-import type {Board, Building, GameState, InputState, Player, Road, Tile} from "@/game/model/types.ts";
-import {BuildingType, EdgeDirection, GamePhase, ResourceType, TileKind, VertexDirection} from "@/game/model/enums.ts";
+import type {
+    Board,
+    Building,
+    Button,
+    GameState,
+    HUDEntities,
+    InputState,
+    Player,
+    Road,
+    Tile
+} from "@/game/model/types.ts";
+import {
+    BuildingType,
+    ButtonType,
+    EdgeDirection,
+    GamePhase,
+    ResourceType,
+    TileKind,
+    VertexDirection
+} from "@/game/model/enums.ts";
+import {HUDLayoutService} from "@/game/service/layout/HUDLayoutService.ts";
 
 export const generateTestTiles = (): Map<string, Tile> => {
     const map = new Map<string, Tile>();
@@ -125,11 +144,68 @@ export const TEST_GAMESTATE: GameState = {
     inputState: INITIAL_INPUT
 };
 
-export const TEST_HUD: any = {
-    buttons: {}
+export const generateTestButtons = () => {
+    return [END_TURN_BUTTON, PUT_CITY_BUTTON, PUT_SETTLEMENT_BUTTON, PUT_ROAD_BUTTON, DRAW_DEVELOPMENT_CARD]
 }
 
-export const generateTestButtons = () => {
-    const buttons = new Map<string, any>();
+export const CANVAS_WIDTH = 2560;
+export const CANVAS_HEIGHT = 1440;
 
+export const END_TURN_BUTTON: Button = {
+    type: ButtonType.endTurn,
+    layout: {
+        x: 500,
+        y: 900,
+        width: 100,
+        height: 100,
+        scale: 1.0
+    }
+}
+
+export const PUT_CITY_BUTTON: Button = {
+    type: ButtonType.putCity,
+    layout: {
+        x: 600,
+        y: 900,
+        width: 100,
+        height: 100,
+        scale: 1.0
+    }
+}
+
+export const PUT_SETTLEMENT_BUTTON: Button = {
+    type: ButtonType.putSettlement,
+    layout: {
+        x: 700,
+        y: 900,
+        width: 100,
+        height: 100,
+        scale: 1.0
+    }
+}
+
+export const PUT_ROAD_BUTTON: Button = {
+    type: ButtonType.putRoad,
+    layout: {
+        x: 800,
+        y: 900,
+        width: 100,
+        height: 100,
+        scale: 1.0
+    }
+}
+
+export const DRAW_DEVELOPMENT_CARD: Button = {
+    type: ButtonType.drawDevelopmentCard,
+    layout: {
+        x: 900,
+        y: 900,
+        width: 100,
+        height: 100,
+        scale: 1.0
+    }
+}
+
+export const TEST_HUD: HUDEntities = {
+    buttons: generateTestButtons()
 }

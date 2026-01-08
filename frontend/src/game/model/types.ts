@@ -7,6 +7,7 @@ import {
     VertexDirection
 } from "@/game/model/enums.ts";
 import type {PlayerStyle} from "@/game/theme/playerStyles.ts";
+import type {UiLayout} from "@/game/service/layout/HUDLayoutService.ts";
 
 export interface Point {
     x: number;
@@ -62,7 +63,8 @@ export interface Tile {
 }
 
 export interface Button {
-    buttonType: ButtonType;
+    type: ButtonType;
+    layout: UiLayout;
     //Todo add more if needed
 }
 
@@ -151,4 +153,9 @@ export interface PotentialMove {
     moveType: MoveType;
     location: Vertex | Edge;
     isValid: boolean;
+}
+
+export interface HUDEntities {
+    buttons: Button[],
+    //TODO add more...
 }

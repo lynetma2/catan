@@ -1,8 +1,19 @@
-import type {Board, Building, GameState, LayoutSettings, Road, Tile, Edge} from "@/game/model/types.ts";
+import type {
+    Board,
+    Building,
+    GameState,
+    LayoutSettings,
+    Road,
+    Tile,
+    Edge,
+    Button,
+    HUDEntities
+} from "@/game/model/types.ts";
 import {MoveType} from "@/game/model/enums.ts";
 import {TileRender} from "@/game/service/renderers/tileRender.ts";
 import {RoadRender} from "@/game/service/renderers/roadRender.ts";
 import {BuildingRender} from "@/game/service/renderers/buildingRender.ts";
+import {ButtonRender} from "@/game/service/renderers/buttonRender.ts";
 
 
 export class RenderService {
@@ -72,11 +83,13 @@ export class RenderService {
     //
     // }
 
-    // private drawButtons(buttons: [ActionButton]) {
-    //
-    // }
+    private drawButtons(buttons: Button[]) {
+        buttons.forEach(button => {
+            ButtonRender.draw(this.context, button);
+        });
+    }
 
-    draw(layoutSettings: LayoutSettings, game: GameState) {
+    draw(layoutSettings: LayoutSettings, game: GameState, hudEntities: HUDEntities) {
         //Clearing last frame.
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -87,7 +100,7 @@ export class RenderService {
         this.drawPotentialMove(layoutSettings, game);
 
         //Draw buttons.
-        //this.drawButtons(game.buttons);
+        this.drawButtons(hudEntities.buttons);
 
         //Draw Players
         //this.drawPlayers(game.players);

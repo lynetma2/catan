@@ -1,4 +1,4 @@
-import {LayoutSettings} from "@/game/model/types.ts";
+import {type LayoutSettings} from "@/game/model/types.ts";
 
 export interface Animation {
     update(deltaTimeMs: number): void;

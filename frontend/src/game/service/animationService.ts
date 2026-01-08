@@ -1,5 +1,5 @@
-import {Animation} from "@/game/model/animation.ts";
-import {LayoutSettings} from "@/game/model/types.ts";
+import type {Animation} from "@/game/model/animation.ts";
+import type {LayoutSettings} from "@/game/model/types.ts";
 
 export class AnimationService {
     private animations: Animation[] = [];

@@ -1,5 +1,5 @@
-import {Animation} from "@/game/model/animation.ts";
-import {LayoutSettings, Point} from "@/game/model/types.ts";
+import type {Animation} from "@/game/model/animation.ts";
+import type {LayoutSettings, Point} from "@/game/model/types.ts";
 
 export class PingAnimation implements Animation {
     private readonly position: Point;

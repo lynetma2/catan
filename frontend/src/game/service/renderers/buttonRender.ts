@@ -9,8 +9,8 @@ export class ButtonRender {
     private static imageCache: Map<string, HTMLImageElement> = new Map();
     private static coloredImageCache: Map<string, HTMLCanvasElement> = new Map();
 
-    private static getStyle(button: Button): ButtonStyle {
-        const styles = BUTTON_STYLES[button.buttonType];
+    private static getLocalPlayerStyle(button: Button): ButtonStyle {
+        const styles = BUTTON_STYLES[button.type];
 
         //TODO Update color to the current user.
         return styles;
@@ -18,11 +18,7 @@ export class ButtonRender {
 
     private static getRectPath(layout: UiLayout): Path2D {
         const path = new Path2D();
-        path.moveTo(layout.x, layout.y);
-        path.lineTo(layout.width, layout.y);
-        path.lineTo(layout.width, layout.height);
-        path.lineTo(layout.x, layout.height);
-        path.lineTo(layout.x, layout.y);
+        path.rect(layout.x, layout.y, layout.width, layout.height);
         path.closePath();
         return path;
     }
@@ -74,33 +70,31 @@ export class ButtonRender {
     private static drawIcon(ctx: CanvasRenderingContext2D, layout: UiLayout, style: ButtonStyle) {
         const img = this.getColoredIcon(style);
         if (!img) return;
-
-        // Draw image centered on the layout position
-        const halfW = layout.width / 2;
-        const halfH = layout.height / 2;
         
-        ctx.drawImage(img, layout.x - halfW, layout.y - halfH, layout.width, layout.height);
+        ctx.drawImage(img, layout.x, layout.y, layout.width, layout.height);
     }
 
     private static drawBackground(ctx: CanvasRenderingContext2D, layout: UiLayout, style: ButtonStyle) {
         ctx.beginPath();
-        ctx.fillStyle = style.fillColor;
         // Draw a circle background slightly larger than the icon
-        ctx.fill(this.getRectPath(layout));
+        const path = this.getRectPath(layout);
+
+        ctx.fillStyle = "#FFF";
+        ctx.fill(path);
         
         if (style.strokeColor) {
             ctx.lineWidth = 3 * layout.scale;
             ctx.strokeStyle = style.strokeColor;
-            ctx.stroke();
+            ctx.stroke(path);
         }
         ctx.closePath();
     }
 
-    public static draw(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, button: Button) {
-        const style = this.getStyle(button);
-        const layout = HUDLayoutService.getLayout(button.buttonType, ctx.canvas.width, ctx.canvas.height);
+    public static draw(ctx: CanvasRenderingContext2D, button: Button) {
+        const style = this.getLocalPlayerStyle(button);
 
-        this.drawBackground(ctx, layout, style);
-        this.drawIcon(ctx, layout, style);
+        this.drawBackground(ctx, button.layout, style);
+        this.drawIcon(ctx, button.layout, style);
+
     }
 }
