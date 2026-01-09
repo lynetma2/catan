@@ -7,13 +7,16 @@ import type {
     Tile,
     Edge,
     Button,
-    HUDEntities
+    HUDEntities,
+    Vertex,
+    InputState
 } from "@/game/model/types.ts";
-import {MoveType} from "@/game/model/enums.ts";
+import {BuildingType, MoveType} from "@/game/model/enums.ts";
 import {TileRender} from "@/game/service/renderers/tileRender.ts";
 import {RoadRender} from "@/game/service/renderers/roadRender.ts";
 import {BuildingRender} from "@/game/service/renderers/buildingRender.ts";
 import {ButtonRender} from "@/game/service/renderers/buttonRender.ts";
+import type {GameStateHandler} from "@/game/state/GameStateHandler.ts";
 
 
 export class RenderService {
@@ -49,28 +52,6 @@ export class RenderService {
         })
     }
 
-    private drawPotentialMove(layoutSettings: LayoutSettings, game: GameState) {
-        const move = game.inputState.potentialMove;
-        if (!move) return;
-
-        this.context.save();
-
-        // "Pulse" Animation Effect:
-        // Oscillates alpha between 0.3 and 0.7 over time
-        const time = performance.now() / 500; 
-        const alpha = 0.5 + Math.sin(time) * 0.2;
-        this.context.globalAlpha = alpha;
-
-        if (move.moveType === MoveType.Road) {
-            // Reuse the existing RoadRender logic
-            // We create a temporary "Ghost Road" object
-            const ghostRoad: Road = { edge: move.location as Edge, playerName: "Player 1" };
-            RoadRender.draw(this.context, layoutSettings, ghostRoad);
-        }
-
-        this.context.restore();
-    }
-
     // private drawDices(dices: [number]) {
     //
     // }
@@ -83,24 +64,49 @@ export class RenderService {
     //
     // }
 
-    private drawButtons(buttons: Button[]) {
+    public drawButtons(buttons: Button[]) {
         buttons.forEach(button => {
             ButtonRender.draw(this.context, button);
         });
     }
 
-    draw(layoutSettings: LayoutSettings, game: GameState, hudEntities: HUDEntities) {
+    private drawGhost(layoutSettings: LayoutSettings, inputState: InputState) {
+        const move = inputState.potentialMove;
+        if (!move || !move.isValid) return; // Optional: Draw invalid moves in red
+
+        this.context.save();
+        this.context.globalAlpha = 0.6; // Ghost transparency
+
+        if (move.moveType === MoveType.Road) {
+            const road: Road = {
+                edge: move.location as Edge,
+                playerName: "Player 1" // TODO: Use ClientState to get local player color
+            };
+            RoadRender.draw(this.context, layoutSettings, road);
+        } 
+        // Add other ghost types here (Settlement, City) as needed
+        // else if (move.moveType === MoveType.Settlement) { ... }
+
+        this.context.restore();
+    }
+
+    private drawHUD(hudEntities: HUDEntities | undefined) {
+        if (!hudEntities) return;
+        this.drawButtons(hudEntities.buttons);
+    }
+
+    draw(layoutSettings: LayoutSettings, game: GameState, state: GameStateHandler) {
         //Clearing last frame.
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         //Draw board
         this.drawBoard(layoutSettings, game.board);
 
-        //Draw Ghost / Hover Effects
-        this.drawPotentialMove(layoutSettings, game);
+        //Draw Ghosts (Data-Driven)
+        //this.drawGhost(layoutSettings, game.inputState);
 
-        //Draw buttons.
-        this.drawButtons(hudEntities.buttons);
+        //Draw HUD (Data-Driven from State)
+        this.drawHUD(state.getHUDEntities());
 
         //Draw Players
         //this.drawPlayers(game.players);

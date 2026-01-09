@@ -22,6 +22,7 @@ export class GameLoop {
     private profiler = null; //Dunno how to do this, but it is smart to have later on.
     private previousTimeMs = 0;
     private readonly canvas: HTMLCanvasElement;
+    private readonly context: CanvasRenderingContext2D;
     private animationFrameId: number | null = null;
     private readonly layoutSettings: LayoutSettings;
 
@@ -43,6 +44,7 @@ export class GameLoop {
         this.clientState = {localPlayerId: "Player 1"};
 
         this.canvas = canvas;
+        this.context = this.canvas.getContext('2d')!;
         this.eventQueue = null;
         this.renderService = new RenderService(this.canvas);
         this.inputService = new InputService(this.canvas);
@@ -96,7 +98,8 @@ export class GameLoop {
                 this.previousTimeMs = currentTimeMs - (deltaTimeMs % this.FRAME_INTERVAL_MS);
             }
 
-            this.renderService.draw(this.layoutSettings, this.game, this.hudEntities); //Make this use the render.
+            this.renderService.draw(this.layoutSettings, this.game, this.currentState);
+
             // Draw animations on top of the board
             this.animationService.draw(this.layoutSettings);
             this.update();

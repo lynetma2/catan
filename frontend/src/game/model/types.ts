@@ -65,6 +65,8 @@ export interface Tile {
 export interface Button {
     type: ButtonType;
     layout: UiLayout;
+    isHovered?: boolean;
+    isSelected?: boolean;
     //Todo add more if needed
 }
 
@@ -153,6 +155,10 @@ export interface PotentialMove {
     moveType: MoveType;
     location: Vertex | Edge;
     isValid: boolean;
+}
+
+export interface GhostEffect {
+    draw(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings): void;
 }
 
 export interface HUDEntities {

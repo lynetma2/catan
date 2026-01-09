@@ -1,8 +1,7 @@
 import type { GameStateHandler } from "./GameStateHandler";
-import type {Edge, GameState, LayoutSettings, Road} from "@/game/model/types.ts";
+import type {GameState, HUDEntities, LayoutSettings} from "@/game/model/types.ts";
 import {MoveType} from "@/game/model/enums.ts";
 import {HexLayoutService} from "@/game/service/layout/hexLayoutService.ts";
-import {RoadRender} from "@/game/service/renderers/roadRender.ts";
 import {BoardService} from "@/game/service/logic/boardService.ts";
 
 export class BuildRoadState implements GameStateHandler {
@@ -46,18 +45,7 @@ export class BuildRoadState implements GameStateHandler {
         game.inputState.potentialMove = undefined;
     }
 
-    draw(ctx: CanvasRenderingContext2D, game: GameState, layoutSettings: LayoutSettings): void {
-        const move = game.inputState.potentialMove;
-        if (move && move.moveType === MoveType.Road && move.location) {
-            ctx.save();
-            ctx.globalAlpha = 0.6;
-            // Color could be green if valid, red if invalid
-            const ghostRoad: Road = { 
-                edge: move.location as Edge, 
-                playerName: "Player 1" // Should come from ClientState
-            };
-            RoadRender.draw(ctx, layoutSettings, ghostRoad);
-            ctx.restore();
-        }
+    getHUDEntities(): HUDEntities | undefined {
+        return undefined; // Or return shared buttons if you extend BaseGameState
     }
 }

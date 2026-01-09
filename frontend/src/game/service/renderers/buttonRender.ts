@@ -74,7 +74,8 @@ export class ButtonRender {
         ctx.drawImage(img, layout.x, layout.y, layout.width, layout.height);
     }
 
-    private static drawBackground(ctx: CanvasRenderingContext2D, layout: UiLayout, style: ButtonStyle) {
+    private static drawBackground(ctx: CanvasRenderingContext2D, button: Button, style: ButtonStyle) {
+        const layout = button.layout;
         ctx.beginPath();
         // Draw a circle background slightly larger than the icon
         const path = this.getRectPath(layout);
@@ -82,6 +83,14 @@ export class ButtonRender {
         ctx.fillStyle = "#FFF";
         ctx.fill(path);
         
+        if (button.isHovered) {
+            ctx.lineWidth = 4 * layout.scale;
+            ctx.strokeStyle = "#FFD700"; // Gold selection
+            ctx.stroke(path);
+            return;
+        }
+
+        // Hover effect or default stroke
         if (style.strokeColor) {
             ctx.lineWidth = 3 * layout.scale;
             ctx.strokeStyle = style.strokeColor;
@@ -93,7 +102,13 @@ export class ButtonRender {
     public static draw(ctx: CanvasRenderingContext2D, button: Button) {
         const style = this.getLocalPlayerStyle(button);
 
-        this.drawBackground(ctx, button.layout, style);
+        // Simple scale effect on hover
+        if (button.isHovered) {
+            // Note: Modifying layout here might be jittery if not handled carefully in logic.
+            // Ideally, draw slightly larger without changing the hit-box, or use a transform.
+        }
+
+        this.drawBackground(ctx, button, style);
         this.drawIcon(ctx, button.layout, style);
 
     }
