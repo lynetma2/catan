@@ -85,8 +85,19 @@ export class ButtonRender {
         
         if (button.isHovered) {
             ctx.lineWidth = 4 * layout.scale;
+            const prevStyle = ctx.strokeStyle;
             ctx.strokeStyle = "#FFD700"; // Gold selection
             ctx.stroke(path);
+            ctx.strokeStyle = prevStyle;
+            return;
+        }
+
+        if (button.isSelected) {
+            ctx.lineWidth = 4 * layout.scale;
+            const prevStyle = ctx.strokeStyle;
+            ctx.strokeStyle = "green"; // Gold selection
+            ctx.stroke(path);
+            ctx.strokeStyle = prevStyle;
             return;
         }
 

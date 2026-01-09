@@ -1,10 +1,11 @@
 import type {GameState, LayoutSettings} from "@/game/model/types.ts";
 import {BaseGameState} from "@/game/state/BaseGameState.ts";
+import type {GameContext} from "@/game/state/GameStateHandler.ts";
 
 export class DefaultState extends BaseGameState {
     
-    onEnter(game: GameState, layoutSettings: LayoutSettings): void {
-        super.onEnter(game, layoutSettings);
+    onEnter(game: GameState, layoutSettings: LayoutSettings, context: GameContext): void {
+        super.onEnter(game, layoutSettings, context);
         // Default state might not have any selected buttons
     }
 

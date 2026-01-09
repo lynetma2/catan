@@ -6,10 +6,13 @@ import {AnimationService} from "@/game/service/animationService.ts";
 import {PingAnimation} from "@/game/animations/pingAnimation.ts";
 import {TEST_GAMESTATE, TEST_HUD} from "@/game/model/testGame.ts";
 import {defaultLayoutSettings} from "@/game/model/defaultLayoutSettings.ts";
-import type {GameStateHandler} from "@/game/state/GameStateHandler.ts";
+import type {GameContext, GameStateHandler} from "@/game/state/GameStateHandler.ts";
 import {DefaultState} from "@/game/state/DefaultState.ts"; // Hypothetical import
+import {ButtonType} from "@/game/model/enums.ts";
+import {BuildRoadState} from "@/game/state/BuildRoadState.ts";
+import {BuildSettlementState} from "@/game/state/BuildSettlementState.ts";
 
-export class GameLoop {
+export class GameLoop implements GameContext {
     MAX_FPS = 144;
     FRAME_INTERVAL_MS = 1000 / this.MAX_FPS;
 
@@ -68,7 +71,22 @@ export class GameLoop {
         }
         this.currentState = newState;
         // Pass layoutSettings so the new state can immediately snap to the mouse position
-        this.currentState.onEnter(this.game, this.layoutSettings);
+        this.currentState.onEnter(this.game, this.layoutSettings, this);
+    }
+
+    public handleButtonAction(type: ButtonType) {
+        // Centralized Transition Logic
+        switch (type) {
+            case ButtonType.putRoad:
+                this.setGameState(new BuildRoadState());
+                break;
+            case ButtonType.putSettlement:
+                this.setGameState(new BuildSettlementState());
+                break;
+            case ButtonType.endTurn:
+                // PlayerService.nextTurn(...)
+                break;
+        }
     }
 
     start(): void {
