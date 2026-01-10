@@ -9,7 +9,8 @@ import type {
     Button,
     HUDEntities,
     Vertex,
-    InputState
+    InputState,
+    HandCard
 } from "@/game/model/types.ts";
 import {BuildingType, MoveType} from "@/game/model/enums.ts";
 import {TileRender} from "@/game/service/renderers/tileRender.ts";
@@ -17,6 +18,7 @@ import {RoadRender} from "@/game/service/renderers/roadRender.ts";
 import {BuildingRender} from "@/game/service/renderers/buildingRender.ts";
 import {ButtonRender} from "@/game/service/renderers/buttonRender.ts";
 import type {GameStateHandler} from "@/game/state/GameStateHandler.ts";
+import {CardRender} from "@/game/service/renderers/cardRender.ts";
 
 
 export class RenderService {
@@ -70,6 +72,12 @@ export class RenderService {
         });
     }
 
+    public drawCards(cards: HandCard[]) {
+        cards.forEach(card => {
+            CardRender.draw(this.context, card);
+        });
+    }
+
     private drawGhost(layoutSettings: LayoutSettings, inputState: InputState) {
         const move = inputState.potentialMove;
         if (!move || !move.isValid) return; // Optional: Draw invalid moves in red
@@ -92,6 +100,7 @@ export class RenderService {
 
     private drawHUD(hudEntities: HUDEntities | undefined) {
         if (!hudEntities) return;
+        this.drawCards(hudEntities.cards);
         this.drawButtons(hudEntities.buttons);
     }
 

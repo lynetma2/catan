@@ -1,9 +1,9 @@
 import type {GameContext, GameStateHandler} from "@/game/state/GameStateHandler.ts";
-import type {Button, GameState, GhostEffect, HUDEntities, LayoutSettings} from "@/game/model/types.ts";
+import type {Button, GameState, GhostEffect, HandCard, HUDEntities, LayoutSettings} from "@/game/model/types.ts";
 import {TEST_HUD} from "@/game/model/testGame.ts";
-import {ButtonType} from "@/game/model/enums.ts";
+import {ButtonType, ResourceType} from "@/game/model/enums.ts";
 import {Logger} from "@/game/utils/Logger.ts";
-import {HUDLayoutService} from "@/game/service/layout/HUDLayoutService.ts";
+import {HUDLayoutService, type UiLayout} from "@/game/service/layout/HUDLayoutService.ts";
 
 export abstract class BaseGameState implements GameStateHandler {
     
@@ -15,16 +15,20 @@ export abstract class BaseGameState implements GameStateHandler {
         // Load shared buttons (e.g., from a config or the test HUD)
         // We clone them to ensure state (hover/select) is unique to this instance
         this.hudEntities = structuredClone(TEST_HUD);
+        this.hudEntities.cards = []; // Ensure cards are initialized empty
         this.context = context;
 
         // Recalculate Layouts based on current Viewport
         this.hudEntities.buttons.forEach(btn => {
-            btn.layout = HUDLayoutService.getLayout(
+            btn.layout = HUDLayoutService.getButtonLayout(
                 btn.type, 
                 layoutSettings.viewport.width, 
                 layoutSettings.viewport.height
             );
         });
+
+        // Generate Hand Cards based on local player resources
+        this.updateHandCards(game, layoutSettings);
 
         // Populate the map for O(1) access
         this.buttonMap.clear();
@@ -41,11 +45,22 @@ export abstract class BaseGameState implements GameStateHandler {
 
     onClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
         if (this.hudEntities) {
+            // 1. Check Buttons (Top Priority)
             // Iterate backwards (from Top to Bottom) to ensure we click the button visually on top
             for (let i = this.hudEntities.buttons.length - 1; i >= 0; i--) {
                 const btn = this.hudEntities.buttons[i];
                 if (this.isPointInButton(x, y, btn)) {
                     this.handleButtonClick(btn.type, game);
+                    return;
+                }
+            }
+
+            // 2. Check Cards
+            // Iterate backwards because cards overlap (last one is on top)
+            for (let i = this.hudEntities.cards.length - 1; i >= 0; i--) {
+                const card = this.hudEntities.cards[i];
+                if (this.isPointInLayout(x, y, card.layout)) {
+                    this.handleCardClick(card, game);
                     return;
                 }
             }
@@ -70,6 +85,25 @@ export abstract class BaseGameState implements GameStateHandler {
             if (button.isHovered) handled = true;
             if (wasHovered !== button.isHovered) stateChanged = true;
         });
+        
+        // Handle Card Hover
+        // We iterate backwards for hit testing to respect Z-order (top card first)
+        let cardHoverHandled = false;
+        for (let i = this.hudEntities.cards.length - 1; i >= 0; i--) {
+            const card = this.hudEntities.cards[i];
+            const wasHovered = card.isHovered;
+            
+            // Only allow one card to be hovered at a time (the top-most one under cursor)
+            if (!cardHoverHandled && this.isPointInLayout(x, y, card.layout)) {
+                card.isHovered = true;
+                cardHoverHandled = true;
+                handled = true;
+            } else {
+                card.isHovered = false;
+            }
+
+            if (wasHovered !== card.isHovered) stateChanged = true; // Trigger redraw if hover changed
+        }
 
         // Sort buttons if state changed to ensure Render Order: Normal < Selected < Hovered
         if (stateChanged) {
@@ -104,15 +138,23 @@ export abstract class BaseGameState implements GameStateHandler {
         });
     }
 
+    protected isPointInLayout(x: number, y: number, layout: UiLayout): boolean {
+        return x >= layout.x && x <= layout.x + layout.width &&
+               y >= layout.y && y <= layout.y + layout.height;
+    }
+
     protected isPointInButton(x: number, y: number, button: Button): boolean {
-        const l = button.layout;
-        return x >= l.x && x <= l.x + l.width &&
-               y >= l.y && y <= l.y + l.height;
+        return this.isPointInLayout(x, y, button.layout);
     }
 
     protected handleButtonClick(type: ButtonType, game: GameState) {
         console.log("Button Clicked:", type);
         this.context?.handleButtonAction(type);
+    }
+
+    protected handleCardClick(card: HandCard, game: GameState) {
+        console.log("Card Clicked:", card.resourceType);
+        card.isSelected = !card.isSelected;
     }
 
     protected setButtonSelectedState(type: ButtonType, isSelected: boolean) {
@@ -127,4 +169,34 @@ export abstract class BaseGameState implements GameStateHandler {
 
     protected abstract onMapMouseMove(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void;
 
+    protected updateHandCards(game: GameState, layoutSettings: LayoutSettings) {
+        // Find local player
+        const player = game.players.find(p => p.isLocal);
+        if (!player) return;
+
+        // Flatten resources into a list of cards
+        const resources: ResourceType[] = [];
+        Object.entries(player.inventory.resources).forEach(([res, count]) => {
+            for (let i = 0; i < count; i++) {
+                resources.push(res as ResourceType);
+            }
+        });
+
+        // Generate Layouts
+        this.hudEntities!.cards = resources.map((res, index) => {
+            const layout = HUDLayoutService.getHandCardLayout(
+                index,
+                resources.length,
+                layoutSettings.viewport.width,
+                layoutSettings.viewport.height
+            );
+
+            return {
+                resourceType: res,
+                layout: layout,
+                isHovered: false,
+                isSelected: false
+            };
+        });
+    }
 }

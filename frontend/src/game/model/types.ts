@@ -70,6 +70,13 @@ export interface Button {
     //Todo add more if needed
 }
 
+export interface HandCard {
+    resourceType: ResourceType;
+    layout: UiLayout;
+    isHovered: boolean;
+    isSelected: boolean;
+}
+
 export interface Board {
     buildings: Map<string, Building>;
     roads: Map<string, Road>;
@@ -77,18 +84,14 @@ export interface Board {
     robber: Hex;
 }
 
-export interface ResourceCollection {
-    wood: number;
-    brick: number;
-    sheep: number;
-    wheat: number;
-    ore: number;
-}
+export interface Inventory {
+    resources: Record<ResourceType, number>;
+    //TODO add later the development cards.
+};
 
 export interface Player {
     playerName: string;
-    resources: ResourceCollection;
-    //Todo add cards
+    inventory: Inventory;
     points: number;
     isActive: boolean;
     isLocal: boolean;
@@ -104,10 +107,10 @@ export interface GameState {
 }
 
 export interface Prices {
-    house: ResourceCollection;
-    city: ResourceCollection;
-    road: ResourceCollection;
-    developmentCard: ResourceCollection;
+    house: Record<ResourceType, number>;
+    city: Record<ResourceType, number>;
+    road: Record<ResourceType, number>;
+    developmentCard: Record<ResourceType, number>;
 }
 
 export interface MaxBuildings {
@@ -151,17 +154,11 @@ export interface ClientState {
     localPlayerId: string;
 }
 
-export interface PotentialMove {
-    moveType: MoveType;
-    location: Vertex | Edge;
-    isValid: boolean;
-}
-
 export interface GhostEffect {
     draw(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings): void;
 }
 
 export interface HUDEntities {
     buttons: Button[],
-    //TODO add more...
+    cards: HandCard[];
 }

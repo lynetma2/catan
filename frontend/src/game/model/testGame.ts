@@ -96,7 +96,15 @@ export const TEST_TILES: Map<string, Tile> = generateTestTiles();
 export const TEST_PLAYERS: Player[] = [
     {
         playerName: "Player 1",
-        resources: { wood: 0, brick: 0, sheep: 0, wheat: 0, ore: 0 },
+        inventory: {
+            resources: {
+                [ResourceType.Wood]: 2,
+                [ResourceType.Brick]: 3,
+                [ResourceType.Sheep]: 0,
+                [ResourceType.Wheat]: 0,
+                [ResourceType.Ore]: 0
+            }
+        },
         points: 0,
         isActive: true,
         isLocal: true,
@@ -104,7 +112,15 @@ export const TEST_PLAYERS: Player[] = [
     },
     {
         playerName: "Player 2",
-        resources: { wood: 0, brick: 0, sheep: 0, wheat: 0, ore: 0 },
+        inventory: {
+            resources: {
+                [ResourceType.Wood]: 0,
+                [ResourceType.Brick]: 0,
+                [ResourceType.Sheep]: 0,
+                [ResourceType.Wheat]: 0,
+                [ResourceType.Ore]: 0
+            }
+        },
         points: 0,
         isActive: false,
         isLocal: false,
@@ -112,7 +128,15 @@ export const TEST_PLAYERS: Player[] = [
     },
     {
         playerName: "Player 3",
-        resources: { wood: 0, brick: 0, sheep: 0, wheat: 0, ore: 0 },
+        inventory: {
+            resources: {
+                [ResourceType.Wood]: 0,
+                [ResourceType.Brick]: 0,
+                [ResourceType.Sheep]: 0,
+                [ResourceType.Wheat]: 0,
+                [ResourceType.Ore]: 0
+            }
+        },
         points: 0,
         isActive: false,
         isLocal: false,
@@ -207,5 +231,6 @@ export const DRAW_DEVELOPMENT_CARD: Button = {
 }
 
 export const TEST_HUD: HUDEntities = {
-    buttons: generateTestButtons()
+    buttons: generateTestButtons(),
+    cards: []
 }

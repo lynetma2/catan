@@ -4,7 +4,7 @@ import type {
     MaxBuildings,
     Player,
     Prices,
-    ResourceCollection,
+    Inventory,
     ValidationResult,
     Vertex
 } from "@/game/model/types.ts";
@@ -52,9 +52,9 @@ export class RuleService {
 
     //TODO add stuff related to trading.
 
-    private hasResources(player: Player, cost: ResourceCollection): boolean {
+    private hasResources(player: Player, cost: Inventory): boolean {
         return Object.entries(cost).every(([resource, price]) =>
-            player.resources[resource as keyof ResourceCollection] >= price
+            player.inventory[resource as keyof Inventory] >= price
         );
     }
 
