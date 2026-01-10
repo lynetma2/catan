@@ -55,6 +55,7 @@ export class GameLoop implements GameContext {
 
         // Create a copy of the settings so we can modify them (pan/zoom) without affecting the default constant
         this.layoutSettings = structuredClone(defaultLayoutSettings);
+        this.layoutSettings.viewport = { width: this.canvas.width, height: this.canvas.height };
 
         // Initialize default state
         this.setGameState(new DefaultState());

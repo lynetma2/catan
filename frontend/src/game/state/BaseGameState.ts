@@ -3,6 +3,7 @@ import type {Button, GameState, GhostEffect, HUDEntities, LayoutSettings} from "
 import {TEST_HUD} from "@/game/model/testGame.ts";
 import {ButtonType} from "@/game/model/enums.ts";
 import {Logger} from "@/game/utils/Logger.ts";
+import {HUDLayoutService} from "@/game/service/layout/HUDLayoutService.ts";
 
 export abstract class BaseGameState implements GameStateHandler {
     
@@ -15,6 +16,15 @@ export abstract class BaseGameState implements GameStateHandler {
         // We clone them to ensure state (hover/select) is unique to this instance
         this.hudEntities = structuredClone(TEST_HUD);
         this.context = context;
+
+        // Recalculate Layouts based on current Viewport
+        this.hudEntities.buttons.forEach(btn => {
+            btn.layout = HUDLayoutService.getLayout(
+                btn.type, 
+                layoutSettings.viewport.width, 
+                layoutSettings.viewport.height
+            );
+        });
 
         // Populate the map for O(1) access
         this.buttonMap.clear();

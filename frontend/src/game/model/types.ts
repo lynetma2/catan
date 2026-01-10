@@ -138,12 +138,12 @@ export interface LayoutSettings {
     roadWidth: number;
     cityRadius: number;
     settlementRadius: number;
+    viewport: { width: number, height: number };
 }
 
 export interface InputState {
     pressedKeys: Set<string>;
     mousePosition?: Point;
-    potentialMove?: PotentialMove;
 }
 
 export interface ClientState {

@@ -1,0 +1,63 @@
+{
+  "settings": {
+    "baseScale": 1.0,
+    "guiScaleStep": 400
+  },
+  "elements": {
+    "endTurn": {
+      "anchor": "BOTTOM_RIGHT",
+      "offset": {
+        "x": -40,
+        "y": -40
+      },
+      "size": {
+        "width": 40,
+        "height": 40
+      }
+    },
+    "putRoad": {
+      "anchor": "BOTTOM_RIGHT",
+      "offset": {
+        "x": -85,
+        "y": -40
+      },
+      "size": {
+        "width": 40,
+        "height": 40
+      }
+    },
+    "putSettlement": {
+      "anchor": "BOTTOM_RIGHT",
+      "offset": {
+        "x": -130,
+        "y": -40
+      },
+      "size": {
+        "width": 40,
+        "height": 40
+      }
+    },
+    "putCity": {
+      "anchor": "BOTTOM_RIGHT",
+      "offset": {
+        "x": -175,
+        "y": -40
+      },
+      "size": {
+        "width": 40,
+        "height": 40
+      }
+    },
+    "drawDevelopmentCard": {
+      "anchor": "BOTTOM_RIGHT",
+      "offset": {
+        "x": -220,
+        "y": -40
+      },
+      "size": {
+        "width": 40,
+        "height": 40
+      }
+    }
+  }
+}
