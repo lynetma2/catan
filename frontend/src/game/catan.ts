@@ -55,7 +55,10 @@ export class GameLoop implements GameContext {
 
         // Create a copy of the settings so we can modify them (pan/zoom) without affecting the default constant
         this.layoutSettings = structuredClone(defaultLayoutSettings);
-        this.layoutSettings.viewport = { width: this.canvas.width, height: this.canvas.height };
+        
+        // Initialize viewport and listener
+        this.handleResize();
+        window.addEventListener('resize', this.handleResize);
 
         // Initialize default state
         this.setGameState(new DefaultState());
@@ -105,6 +108,7 @@ export class GameLoop implements GameContext {
         }
         this.inputService.stop();
         this.animationService.clear();
+        window.removeEventListener('resize', this.handleResize);
     }
 
     update(): void {
@@ -123,6 +127,26 @@ export class GameLoop implements GameContext {
             this.animationService.draw(this.layoutSettings);
             this.update();
         });
+    }
+
+    private readonly handleResize = () => {
+        const parent = this.canvas.parentElement;
+        if (parent) {
+            this.canvas.width = parent.clientWidth;
+            this.canvas.height = parent.clientHeight;
+        } else {
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+        }
+
+        this.layoutSettings.viewport = {
+            width: this.canvas.width,
+            height: this.canvas.height
+        };
+
+        if (this.currentState) {
+            this.currentState.onResize(this.layoutSettings);
+        }
     }
 
     logicUpdate(): void {

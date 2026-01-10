@@ -28,9 +28,10 @@ function App() {
     )
 
     return (
-        <>
-            <canvas ref={canvasRef} width="1000" height="1000"></canvas>
-        </>
+        // Parent container with static size for now. Can be controlled via CSS later.
+        <div style={{width: '1000px', height: '1000px'}}>
+            <canvas ref={canvasRef} style={{display: 'block'}} />
+        </div>
     )
 }
 

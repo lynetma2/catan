@@ -18,17 +18,14 @@ export abstract class BaseGameState implements GameStateHandler {
         this.hudEntities.cards = []; // Ensure cards are initialized empty
         this.context = context;
 
-        // Recalculate Layouts based on current Viewport
-        this.hudEntities.buttons.forEach(btn => {
-            btn.layout = HUDLayoutService.getButtonLayout(
-                btn.type, 
-                layoutSettings.viewport.width, 
-                layoutSettings.viewport.height
-            );
-        });
-
         // Generate Hand Cards based on local player resources
         this.updateHandCards(game, layoutSettings);
+
+        // Generate Player Panels
+        this.updatePlayerPanels(game, layoutSettings);
+
+        // Recalculate Layouts based on current Viewport (Buttons, and refresh others)
+        this.recalculateLayout(layoutSettings);
 
         // Populate the map for O(1) access
         this.buttonMap.clear();
@@ -162,6 +159,33 @@ export abstract class BaseGameState implements GameStateHandler {
         if (button) button.isSelected = isSelected;
     }
 
+    onResize(layoutSettings: LayoutSettings): void {
+        this.recalculateLayout(layoutSettings);
+    }
+
+    protected recalculateLayout(layoutSettings: LayoutSettings) {
+        if (!this.hudEntities) return;
+
+        const width = layoutSettings.viewport.width;
+        const height = layoutSettings.viewport.height;
+
+        // 1. Buttons
+        this.hudEntities.buttons.forEach(btn => {
+            btn.layout = HUDLayoutService.getButtonLayout(btn.type, width, height);
+        });
+
+        // 2. Cards
+        const totalCards = this.hudEntities.cards.length;
+        this.hudEntities.cards.forEach((card, index) => {
+            card.layout = HUDLayoutService.getHandCardLayout(index, totalCards, width, height);
+        });
+
+        // 3. Player Panels
+        this.hudEntities.playerPanels.forEach((panel, index) => {
+            panel.layout = HUDLayoutService.getPlayerPanelLayout(index, width, height);
+        });
+    }
+
     // --- Abstract / Overridable methods for child classes ---
     
     // Child classes implement this instead of onClick to avoid re-implementing button logic
@@ -196,6 +220,21 @@ export abstract class BaseGameState implements GameStateHandler {
                 layout: layout,
                 isHovered: false,
                 isSelected: false
+            };
+        });
+    }
+
+    protected updatePlayerPanels(game: GameState, layoutSettings: LayoutSettings) {
+        this.hudEntities!.playerPanels = game.players.map((player, index) => {
+            const layout = HUDLayoutService.getPlayerPanelLayout(
+                index,
+                layoutSettings.viewport.width,
+                layoutSettings.viewport.height
+            );
+
+            return {
+                player: player,
+                layout: layout
             };
         });
     }

@@ -20,8 +20,6 @@ export class CardRender {
 
     public static draw(ctx: CanvasRenderingContext2D, card: HandCard) {
         const style = RESOURCE_STYLES[card.resourceType];
-        console.log("inside CardRender draw style: ", style);
-        console.log("inside CardRender card: ", card);
         
         // 1. Calculate Visual Position (Pop-up effect)
         let drawY = card.layout.y;

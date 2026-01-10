@@ -48,3 +48,15 @@ export enum ButtonType {
     endTurn = "EndTurn",
     waiting = "Waiting",
 }
+
+export enum Anchor {
+    TopLeft,
+    TopCenter,
+    TopRight,
+    MiddleLeft,
+    Center,
+    MiddleRight,
+    BottomLeft,
+    BottomCenter,
+    BottomRight
+}

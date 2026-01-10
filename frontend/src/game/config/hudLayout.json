@@ -7,8 +7,8 @@
     "endTurn": {
       "anchor": "BOTTOM_RIGHT",
       "offset": {
-        "x": -40,
-        "y": -40
+        "x": 0,
+        "y": 0
       },
       "size": {
         "width": 40,
@@ -18,8 +18,8 @@
     "putRoad": {
       "anchor": "BOTTOM_RIGHT",
       "offset": {
-        "x": -85,
-        "y": -40
+        "x": -45,
+        "y": 0
       },
       "size": {
         "width": 40,
@@ -29,8 +29,8 @@
     "putSettlement": {
       "anchor": "BOTTOM_RIGHT",
       "offset": {
-        "x": -130,
-        "y": -40
+        "x": -90,
+        "y": 0
       },
       "size": {
         "width": 40,
@@ -40,8 +40,8 @@
     "putCity": {
       "anchor": "BOTTOM_RIGHT",
       "offset": {
-        "x": -175,
-        "y": -40
+        "x": -135,
+        "y": 0
       },
       "size": {
         "width": 40,
@@ -51,8 +51,8 @@
     "drawDevelopmentCard": {
       "anchor": "BOTTOM_RIGHT",
       "offset": {
-        "x": -220,
-        "y": -40
+        "x": -180,
+        "y": 0
       },
       "size": {
         "width": 40,
@@ -74,6 +74,23 @@
       "spacing": -20,
       "hoverOffset": 15,
       "maxWidthRatio": 0.6
+    },
+    "playerOverview": {
+      "anchor": "TOP_LEFT",
+      "offset": {
+        "x": 20,
+        "y": 20
+      },
+      "panelSize": {
+        "width": 120,
+        "height": 34
+      },
+      "spacing": 4,
+      "internal": {
+        "padding": 4,
+        "fontSize": 10,
+        "iconSize": 12
+      }
     }
   }
 }

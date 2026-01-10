@@ -232,5 +232,6 @@ export const DRAW_DEVELOPMENT_CARD: Button = {
 
 export const TEST_HUD: HUDEntities = {
     buttons: generateTestButtons(),
-    cards: []
+    cards: [],
+    playerPanels: []
 }

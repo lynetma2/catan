@@ -17,6 +17,9 @@ export interface GameStateHandler {
     //Called when leaving the state
     onExit(game: GameState): void;
 
+    //Called when the window is resized
+    onResize(layoutSettings: LayoutSettings): void;
+
     // Expose UI elements for the RenderService to draw
     getHUDEntities(): HUDEntities | undefined;
 
