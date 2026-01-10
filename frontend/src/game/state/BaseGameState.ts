@@ -3,7 +3,7 @@ import type {Button, GameState, GhostEffect, HandCard, HUDEntities, LayoutSettin
 import {TEST_HUD} from "@/game/model/testGame.ts";
 import {ButtonType, ResourceType} from "@/game/model/enums.ts";
 import {Logger} from "@/game/utils/Logger.ts";
-import {HUDLayoutService, type UiLayout} from "@/game/service/layout/HUDLayoutService.ts";
+import {HUDLayoutService, type UiLayout} from "@/game/layout/HUDLayoutService.ts";
 
 export abstract class BaseGameState implements GameStateHandler {
     

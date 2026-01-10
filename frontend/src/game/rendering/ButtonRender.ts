@@ -1,6 +1,6 @@
 import type {Button} from "@/game/model/types.ts";
-import {BUTTON_STYLES, type ButtonStyle} from "@/game/theme/buttonStyles";
-import {type UiLayout} from "@/game/service/layout/HUDLayoutService.ts";
+import {BUTTON_STYLES, type ButtonStyle} from "@/game/theme/buttonStyles.ts";
+import {type UiLayout} from "@/game/layout/HUDLayoutService.ts";
 
 export class ButtonRender {
 

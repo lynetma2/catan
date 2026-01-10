@@ -1,6 +1,6 @@
 import {useEffect, useRef} from 'react'
 import './App.css'
-import {GameLoop} from "@/game/catan.ts";
+import {GameLoop} from "@/game/core/GameLoop.ts";
 import {Logger} from "@/game/utils/Logger.ts";
 
 function App() {

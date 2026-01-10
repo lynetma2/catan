@@ -14,13 +14,13 @@ import type {
     PlayerOverviewPanel
 } from "@/game/model/types.ts";
 import {BuildingType, MoveType} from "@/game/model/enums.ts";
-import {TileRender} from "@/game/service/renderers/tileRender.ts";
-import {RoadRender} from "@/game/service/renderers/roadRender.ts";
-import {BuildingRender} from "@/game/service/renderers/buildingRender.ts";
-import {ButtonRender} from "@/game/service/renderers/buttonRender.ts";
+import {TileRender} from "@/game/rendering/tileRender.ts";
+import {RoadRender} from "@/game/rendering/roadRender.ts";
+import {BuildingRender} from "@/game/rendering/buildingRender.ts";
+import {ButtonRender} from "@/game/rendering/buttonRender.ts";
 import type {GameStateHandler} from "@/game/state/GameStateHandler.ts";
-import {CardRender} from "@/game/service/renderers/cardRender.ts";
-import {PlayerOverviewRender} from "@/game/service/renderers/playerOverviewRender.ts";
+import {CardRender} from "@/game/rendering/cardRender.ts";
+import {PlayerOverviewRender} from "@/game/rendering/playerOverviewRender.ts";
 
 
 export class RenderService {

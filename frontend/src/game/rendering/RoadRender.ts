@@ -1,6 +1,6 @@
-import type {Edge, LayoutSettings, Road} from "@/game/model/types";
+import type {Edge, LayoutSettings, Road} from "@/game/model/types.ts";
 import type {RoadStyle} from "@/game/theme/roadStyles.ts";
-import {HexLayoutService} from "@/game/service/layout/hexLayoutService.ts";
+import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
 
 export class RoadRender {
     private static edgeToPath(layoutSettings: LayoutSettings, edge: Edge): Path2D {

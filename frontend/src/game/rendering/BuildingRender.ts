@@ -1,5 +1,5 @@
-import type {Building, LayoutSettings} from "@/game/model/types";
-import {HexLayoutService} from "@/game/service/layout/hexLayoutService.ts";
+import type {Building, LayoutSettings} from "@/game/model/types.ts";
+import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
 import {BUILDING_STYLES, type BuildingStyle} from "@/game/theme/buildingStyles.ts";
 import {BuildingType} from "@/game/model/enums.ts";
 

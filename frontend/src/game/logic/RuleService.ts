@@ -8,7 +8,7 @@ import type {
     ValidationResult,
     Vertex
 } from "@/game/model/types.ts";
-import type {BoardService} from "@/game/service/logic/boardService.ts";
+import type {BoardService} from "@/game/logic/boardService.ts";
 
 export class RuleService {
     private readonly PRICES: Prices = {

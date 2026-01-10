@@ -1,5 +1,5 @@
 import type {Hex, LayoutSettings, Point, Tile} from "@/game/model/types.ts";
-import {HexLayoutService} from "@/game/service/layout/hexLayoutService.ts";
+import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
 import {FIXED_STYLES, type FixedTileKind, RESOURCE_STYLES, type TileStyle} from "@/game/theme/tileStyles.ts";
 import {TileKind} from "@/game/model/enums.ts";
 import {Logger} from "@/game/utils/Logger.ts";

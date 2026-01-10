@@ -1,5 +1,5 @@
 import type { GameState } from "@/game/model/types.ts";
-import { PlayerService } from "@/game/service/logic/playerService.ts";
+import { PlayerService } from "@/game/logic/PlayerService.ts";
 
 export class ColorService {
 

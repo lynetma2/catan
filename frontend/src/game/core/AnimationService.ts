@@ -1,4 +1,4 @@
-import type {Animation} from "@/game/model/animation.ts";
+import type {Animation} from "@/game/model/Animation.ts";
 import type {LayoutSettings} from "@/game/model/types.ts";
 
 export class AnimationService {

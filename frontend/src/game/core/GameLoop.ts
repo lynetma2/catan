@@ -1,11 +1,11 @@
 //Main game loop file.
 import type {ClientState, GameState, HUDEntities, LayoutSettings} from "@/game/model/types.ts";
-import {RenderService} from "@/game/service/renderService.ts";
-import {InputService} from "@/game/service/inputService.ts";
-import {AnimationService} from "@/game/service/animationService.ts";
-import {PingAnimation} from "@/game/animations/pingAnimation.ts";
+import {RenderService} from "@/game/core/RenderService.ts";
+import {InputService} from "@/game/core/InputService.ts";
+import {AnimationService} from "@/game/core/AnimationService.ts";
+import {PingAnimation} from "@/game/animations/PingAnimation.ts";
 import {TEST_GAMESTATE, TEST_HUD} from "@/game/model/testGame.ts";
-import {WorldLayoutService} from "@/game/service/layout/WorldLayoutService.ts";
+import {WorldLayoutService} from "@/game/layout/WorldLayoutService.ts";
 import type {GameContext, GameStateHandler} from "@/game/state/GameStateHandler.ts";
 import {DefaultState} from "@/game/state/DefaultState.ts"; // Hypothetical import
 import {ButtonType} from "@/game/model/enums.ts";

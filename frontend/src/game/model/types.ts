@@ -7,7 +7,7 @@ import {
     VertexDirection
 } from "@/game/model/enums.ts";
 import type {PlayerStyle} from "@/game/theme/playerStyles.ts";
-import type {PlayerPanelLayout, UiLayout} from "@/game/service/layout/HUDLayoutService.ts";
+import type {PlayerPanelLayout, UiLayout} from "@/game/layout/HUDLayoutService.ts";
 
 export interface Point {
     x: number;

@@ -1,6 +1,6 @@
 import type {LayoutSettings, Orientation, Point, WorldRatios} from "@/game/model/types.ts";
 import worldLayout from "@/game/config/worldLayout.json";
-import {HexLayoutService} from "@/game/service/layout/hexLayoutService.ts";
+import {HexLayoutService} from "@/game/layout/hexLayoutService.ts";
 
 export class WorldLayoutService {
 
