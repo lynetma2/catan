@@ -1,12 +1,9 @@
 import type {Building, LayoutSettings} from "@/game/model/types";
 import {HexLayoutService} from "@/game/service/layout/hexLayoutService.ts";
 import {BUILDING_STYLES, type BuildingStyle} from "@/game/theme/buildingStyles.ts";
+import {BuildingType} from "@/game/model/enums.ts";
 
 export class BuildingRender {
-    //Todo make these sizes based on the current layoutSettings instead.
-    public static defaultBuildingHeight = 30;
-    public static defaultBuildingWidth = 30;
-
     private static imageCache: Map<string, HTMLImageElement> = new Map();
 
     private static getStyle(building: Building): BuildingStyle {
@@ -31,12 +28,19 @@ export class BuildingRender {
 
         if (!image.complete) return;
 
+        let scale = layoutSettings.ratios.settlementScale;
+        if (building.type === BuildingType.City) {
+            scale = layoutSettings.ratios.cityScale;
+        }
+
+        const size = layoutSettings.size.x * scale;
+
         ctx.beginPath();
         ctx.drawImage(image,
-            center.x - this.defaultBuildingWidth / 2,
-            center.y - this.defaultBuildingHeight / 2,
-            this.defaultBuildingWidth,
-            this.defaultBuildingHeight
+            center.x - size / 2,
+            center.y - size / 2,
+            size,
+            size
         );
         ctx.closePath();
     }

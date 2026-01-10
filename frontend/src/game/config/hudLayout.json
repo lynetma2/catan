@@ -15,6 +15,17 @@
         "height": 40
       }
     },
+    "waiting": {
+      "anchor": "BOTTOM_RIGHT",
+      "offset": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 40,
+        "height": 40
+      }
+    },
     "putRoad": {
       "anchor": "BOTTOM_RIGHT",
       "offset": {

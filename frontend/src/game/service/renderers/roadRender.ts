@@ -3,9 +3,6 @@ import type {RoadStyle} from "@/game/theme/roadStyles.ts";
 import {HexLayoutService} from "@/game/service/layout/hexLayoutService.ts";
 
 export class RoadRender {
-    //Used to translate coordinates into string keys.
-    public static defaultRoadWidth = 1;
-
     private static edgeToPath(layoutSettings: LayoutSettings, edge: Edge): Path2D {
         const polygon = HexLayoutService.edgePolygonCorners(layoutSettings, edge);
         const path = new Path2D();
@@ -28,7 +25,7 @@ export class RoadRender {
     public static draw(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, road: Road) {
         ctx.beginPath();
         ctx.fillStyle = this.getStyle(road).fillColor;
-        ctx.lineWidth = this.defaultRoadWidth;
+        ctx.lineWidth = layoutSettings.size.x * layoutSettings.ratios.roadWidth;
         ctx.stroke(this.edgeToPath(layoutSettings, road.edge));
         ctx.closePath();
     }

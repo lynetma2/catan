@@ -1,0 +1,27 @@
+{
+  "grid": {
+    "baseHexRadius": 60,
+    "orientation": "flat"
+  },
+  "elements": {
+    "road": {
+      "baseWidth": 8
+    },
+    "settlement": {
+      "baseScale": 30
+    },
+    "city": {
+      "baseScale": 40
+    },
+    "tile": {
+      "baseFontSize": 14,
+      "baseIconScale": 50,
+      "labelOffset": 20
+    }
+  },
+  "initialView": {
+    "targetVisibleHexes": 12,
+    "minHexRadius": 30,
+    "maxHexRadius": 100
+  }
+}

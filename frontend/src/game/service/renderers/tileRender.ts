@@ -6,10 +6,7 @@ import {Logger} from "@/game/utils/Logger.ts";
 
 export class TileRender {
     //Used to translate coordinates into string keys.
-    public static defaultIconHeightOffset = 15;
     public static defaultLabelColor = "#FFF";
-    public static defaultFontStyle = "10px Verdana, Arial, sans-serif";
-    public static defaultIconScale = 1.0;
 
     //Image cache (Performance enhancing)
     private static imageCache: Map<string, HTMLImageElement> = new Map();
@@ -94,16 +91,18 @@ export class TileRender {
         
         if (image instanceof HTMLImageElement && (!image.complete || image.naturalWidth === 0)) return;
 
-        const scale = style.iconScale ?? TileRender.defaultIconScale;
-        const iconWidth = (layoutSettings.size.x / 2) * scale;
-        const iconHeight = (layoutSettings.size.y / 2) * scale;
+        const baseScale = layoutSettings.ratios.tile.iconScale;
+        const styleScale = style.iconScale ?? 1.0;
+        const size = layoutSettings.size.x * baseScale * styleScale;
+        
+        const offset = layoutSettings.size.x * layoutSettings.ratios.tile.labelOffset;
 
         ctx.beginPath()
         ctx.drawImage(image, 
-            center.x - iconWidth, 
-            center.y - iconHeight - TileRender.defaultIconHeightOffset,
-            iconWidth * 2, 
-            iconHeight * 2
+            center.x - size / 2,
+            center.y - size / 2 - (offset / 2),
+            size,
+            size
         );
         ctx.closePath();
     }
@@ -117,12 +116,16 @@ export class TileRender {
 
     private static drawNumber(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, tile: Tile, style: TileStyle) {
         const center: Point = HexLayoutService.hexToPixel(layoutSettings, tile.hex);
-        const scale = style.iconScale ?? TileRender.defaultIconScale;
-        const iconHeight = (layoutSettings.size.y / 2) * scale;
+        
+        const fontSize = layoutSettings.size.x * layoutSettings.ratios.tile.fontSize;
+        const offset = layoutSettings.size.x * layoutSettings.ratios.tile.labelOffset;
+
         ctx.beginPath();
         ctx.fillStyle = style.labelColor ?? this.defaultLabelColor;
-        ctx.font = style.fontStyle ?? this.defaultFontStyle;
-        ctx.fillText(tile.dice?.toString() ?? "Error", center.x -10, center.y + iconHeight + 15);
+        ctx.font = `bold ${fontSize}px Verdana, Arial, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(tile.dice?.toString() ?? "Error", center.x, center.y + offset);
         ctx.closePath();
     }
 

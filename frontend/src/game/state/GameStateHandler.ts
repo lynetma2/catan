@@ -17,6 +17,9 @@ export interface GameStateHandler {
     //Called when leaving the state
     onExit(game: GameState): void;
 
+    //Called every frame to update state logic (e.g. checking for turn changes)
+    update(game: GameState, layoutSettings: LayoutSettings): void;
+
     //Called when the window is resized
     onResize(layoutSettings: LayoutSettings): void;
 

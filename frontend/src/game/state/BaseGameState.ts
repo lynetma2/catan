@@ -10,6 +10,7 @@ export abstract class BaseGameState implements GameStateHandler {
     protected hudEntities?: HUDEntities;
     protected context?: GameContext;
     protected buttonMap: Map<ButtonType, Button> = new Map();
+    private lastActivePlayerName: string | null = null;
 
     onEnter(game: GameState, layoutSettings: LayoutSettings, context: GameContext): void {
         // Load shared buttons (e.g., from a config or the test HUD)
@@ -17,6 +18,9 @@ export abstract class BaseGameState implements GameStateHandler {
         this.hudEntities = structuredClone(TEST_HUD);
         this.hudEntities.cards = []; // Ensure cards are initialized empty
         this.context = context;
+
+        // Generate Buttons based on context
+        this.generateButtons(game);
 
         // Generate Hand Cards based on local player resources
         this.updateHandCards(game, layoutSettings);
@@ -30,6 +34,9 @@ export abstract class BaseGameState implements GameStateHandler {
         // Populate the map for O(1) access
         this.buttonMap.clear();
         this.hudEntities.buttons.forEach(btn => this.buttonMap.set(btn.type, btn));
+
+        // Initialize tracker
+        this.lastActivePlayerName = game.players.find(p => p.isActive)?.playerName ?? null;
 
         Logger.info("onEnter BaseGameState called");
     }
@@ -163,6 +170,20 @@ export abstract class BaseGameState implements GameStateHandler {
         this.recalculateLayout(layoutSettings);
     }
 
+    update(game: GameState, layoutSettings: LayoutSettings): void {
+        const activePlayer = game.players.find(p => p.isActive);
+        const activeName = activePlayer?.playerName ?? null;
+
+        if (activeName !== this.lastActivePlayerName) {
+            this.lastActivePlayerName = activeName;
+            this.generateButtons(game);
+            this.recalculateLayout(layoutSettings);
+
+            this.buttonMap.clear();
+            this.hudEntities?.buttons.forEach(btn => this.buttonMap.set(btn.type, btn));
+        }
+    }
+
     protected recalculateLayout(layoutSettings: LayoutSettings) {
         if (!this.hudEntities) return;
 
@@ -237,5 +258,36 @@ export abstract class BaseGameState implements GameStateHandler {
                 layout: layout
             };
         });
+    }
+
+    protected generateButtons(game: GameState) {
+        const buttons: Button[] = [];
+
+        // 1. Always available (in this state)
+        buttons.push(this.createButton(ButtonType.putRoad));
+        buttons.push(this.createButton(ButtonType.putSettlement));
+        buttons.push(this.createButton(ButtonType.putCity));
+        buttons.push(this.createButton(ButtonType.drawDevelopmentCard));
+
+        // 2. Context Sensitive
+        const localPlayer = game.players.find(p => p.isLocal);
+        const activePlayer = game.players.find(p => p.isActive);
+
+        if (localPlayer && activePlayer && localPlayer.playerName === activePlayer.playerName) {
+            buttons.push(this.createButton(ButtonType.endTurn));
+        } else {
+            buttons.push(this.createButton(ButtonType.waiting));
+        }
+
+        this.hudEntities!.buttons = buttons;
+    }
+
+    private createButton(type: ButtonType): Button {
+        return {
+            type,
+            layout: { x: 0, y: 0, width: 0, height: 0 }, // Layout service will fix this in recalculateLayout
+            isHovered: false,
+            isSelected: false
+        };
     }
 }

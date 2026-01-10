@@ -54,6 +54,7 @@ export class PlayerOverviewRender {
         ctx.save();
         ctx.fillStyle = "#FFF"; // Text Color
         ctx.font = `bold ${fontSize}px Arial`;
+        ctx.textAlign = "left";
         ctx.textBaseline = "top";
 
         // 1. Player Name

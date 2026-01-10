@@ -5,7 +5,7 @@ import {InputService} from "@/game/service/inputService.ts";
 import {AnimationService} from "@/game/service/animationService.ts";
 import {PingAnimation} from "@/game/animations/pingAnimation.ts";
 import {TEST_GAMESTATE, TEST_HUD} from "@/game/model/testGame.ts";
-import {defaultLayoutSettings} from "@/game/model/defaultLayoutSettings.ts";
+import {WorldLayoutService} from "@/game/service/layout/WorldLayoutService.ts";
 import type {GameContext, GameStateHandler} from "@/game/state/GameStateHandler.ts";
 import {DefaultState} from "@/game/state/DefaultState.ts"; // Hypothetical import
 import {ButtonType} from "@/game/model/enums.ts";
@@ -53,11 +53,12 @@ export class GameLoop implements GameContext {
         this.inputService = new InputService(this.canvas);
         this.animationService = new AnimationService(this.canvas);
 
-        // Create a copy of the settings so we can modify them (pan/zoom) without affecting the default constant
-        this.layoutSettings = structuredClone(defaultLayoutSettings);
+        // Ensure canvas size is correct before calculating layout
+        this.updateCanvasSize();
         
-        // Initialize viewport and listener
-        this.handleResize();
+        // Create layout settings using the factory
+        this.layoutSettings = WorldLayoutService.getInitialLayout(this.canvas.width, this.canvas.height);
+
         window.addEventListener('resize', this.handleResize);
 
         // Initialize default state
@@ -117,6 +118,7 @@ export class GameLoop implements GameContext {
 
             if (deltaTimeMs >= this.FRAME_INTERVAL_MS) {
                 this.logicUpdate(); //Put logic updates here!
+                this.currentState.update(this.game, this.layoutSettings);
                 this.animationService.update(deltaTimeMs);
                 this.previousTimeMs = currentTimeMs - (deltaTimeMs % this.FRAME_INTERVAL_MS);
             }
@@ -129,7 +131,7 @@ export class GameLoop implements GameContext {
         });
     }
 
-    private readonly handleResize = () => {
+    private updateCanvasSize() {
         const parent = this.canvas.parentElement;
         if (parent) {
             this.canvas.width = parent.clientWidth;
@@ -138,6 +140,10 @@ export class GameLoop implements GameContext {
             this.canvas.width = window.innerWidth;
             this.canvas.height = window.innerHeight;
         }
+    }
+
+    private readonly handleResize = () => {
+        this.updateCanvasSize();
 
         this.layoutSettings.viewport = {
             width: this.canvas.width,

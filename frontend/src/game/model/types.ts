@@ -143,10 +143,19 @@ export interface LayoutSettings {
     size: Point;
     origin: Point;
     orientation: Orientation;
-    roadWidth: number;
-    cityRadius: number;
-    settlementRadius: number;
     viewport: { width: number, height: number };
+    ratios: WorldRatios;
+}
+
+export interface WorldRatios {
+    roadWidth: number;
+    settlementScale: number;
+    cityScale: number;
+    tile: {
+        iconScale: number;
+        fontSize: number;
+        labelOffset: number;
+    }
 }
 
 export interface InputState {
