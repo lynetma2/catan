@@ -11,6 +11,9 @@ import {DefaultState} from "@/game/state/DefaultState.ts"; // Hypothetical impor
 import {ButtonType} from "@/game/model/enums.ts";
 import {BuildRoadState} from "@/game/state/BuildRoadState.ts";
 import {BuildSettlementState} from "@/game/state/BuildSettlementState.ts";
+import {EventBus} from "@/game/core/EventBus.ts";
+import {GameEventProcessor} from "@/game/logic/GameEventProcessor.ts";
+import type {GameEvent} from "@/game/model/events.ts";
 
 export class GameLoop implements GameContext {
     MAX_FPS = 144;
@@ -19,7 +22,6 @@ export class GameLoop implements GameContext {
     private game: GameState;
     private hudEntities: HUDEntities;
     private clientState: ClientState;
-    private eventQueue;
     private physics;
     private inputSet;
     private profiler = null; //Dunno how to do this, but it is smart to have later on.
@@ -36,6 +38,7 @@ export class GameLoop implements GameContext {
     private readonly renderService: RenderService;
     private readonly inputService: InputService;
     private readonly animationService: AnimationService;
+    private readonly eventBus: EventBus;
 
     //Update this when changing the multiplayer implementation.
     constructor(canvas: HTMLCanvasElement) {
@@ -48,10 +51,10 @@ export class GameLoop implements GameContext {
 
         this.canvas = canvas;
         this.context = this.canvas.getContext('2d')!;
-        this.eventQueue = null;
         this.renderService = new RenderService(this.canvas);
         this.inputService = new InputService(this.canvas);
         this.animationService = new AnimationService(this.canvas);
+        this.eventBus = new EventBus();
 
         // Ensure canvas size is correct before calculating layout
         this.updateCanvasSize();
@@ -92,6 +95,10 @@ export class GameLoop implements GameContext {
                 // PlayerService.nextTurn(...)
                 break;
         }
+    }
+
+    public emitEvent(event: GameEvent): void {
+        this.eventBus.emit(event);
     }
 
     start(): void {
@@ -156,7 +163,10 @@ export class GameLoop implements GameContext {
     }
 
     logicUpdate(): void {
-
+        const events = this.eventBus.poll();
+        events.forEach(event => {
+            GameEventProcessor.process(this.game, event);
+        });
 
         //Update physics.
     }

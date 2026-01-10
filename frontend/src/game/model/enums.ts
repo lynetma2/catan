@@ -60,3 +60,12 @@ export enum Anchor {
     BottomCenter,
     BottomRight
 }
+
+export enum EventType {
+    BuildRoad = "BuildRoad",
+    BuildSettlement = "BuildSettlement",
+    BuildCity = "BuildCity",
+    BuyDevelopmentCard = "BuyDevelopmentCard",
+    EndTurn = "EndTurn",
+    RollDice = "RollDice"
+}

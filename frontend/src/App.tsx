@@ -19,7 +19,6 @@ function App() {
 
             Logger.info("UseEffect ran");
 
-
             return () => {
                 Logger.debug("return called");
                 gameLoopRef.current?.stop();
