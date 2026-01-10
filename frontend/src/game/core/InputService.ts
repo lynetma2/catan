@@ -10,10 +10,13 @@ export class InputService {
     public onMouseMove?: (x: number, y: number) => void;
     public onPan?: (dx: number, dy: number) => void;
     public onZoom?: (delta: number) => void;
+    public onKeyDown?: (key: string) => void;
+    public onKeyUp?: (key: string) => void;
 
     private isDragging: boolean = false;
     private lastX: number = 0;
     private lastY: number = 0;
+    private pressedKeys: Set<string> = new Set();
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -25,6 +28,9 @@ export class InputService {
         this.canvas.addEventListener('mouseup', this.onMouseUp);
         this.canvas.addEventListener('mouseleave', this.onMouseLeave);
         this.canvas.addEventListener('wheel', this.onWheel);
+
+        window.addEventListener('keydown', this.onKeyDownHandler);
+        window.addEventListener('keyup', this.onKeyUpHandler);
     }
 
     public stop(): void {
@@ -33,6 +39,9 @@ export class InputService {
         this.canvas.removeEventListener('mouseup', this.onMouseUp);
         this.canvas.removeEventListener('mouseleave', this.onMouseLeave);
         this.canvas.removeEventListener('wheel', this.onWheel);
+
+        window.removeEventListener('keydown', this.onKeyDownHandler);
+        window.removeEventListener('keyup', this.onKeyUpHandler);
     }
 
     private getMousePos(event: MouseEvent) {
@@ -97,32 +106,22 @@ export class InputService {
         }
     }
 
-    // --- STATIC LOGIC HANDLER ---
-    // This keeps the logic out of catan.ts, but allows catan.ts to inject the state.
-    public static handleMouseClick(gameState: GameState, x: number, y: number) {
-        Logger.debug({x, y}, `Logic processing click`);
+    private onKeyDownHandler = (event: KeyboardEvent) => {
+        this.pressedKeys.add(event.key);
+        if (this.onKeyDown) {
+            this.onKeyDown(event.key);
+        }
     }
 
-    public static handleMouseMovement(gameState: GameState, layoutSettings: LayoutSettings, x: number, y: number) {
-        gameState.inputState.mousePosition = {x, y};
-
-        // Example: If we are in the "Build Road" phase
-        // const isBuildingRoad = gameState.phase === GamePhase.BuildRoad; 
-        const isBuildingRoad = true; // Hardcoded for demo
-
-        if (isBuildingRoad) {
-            // 1. Snap: Calculate nearest edge
-            // const nearestEdge = HexLayoutService.getNearestEdge(layoutSettings, {x, y});
-            
-            // Mocking a result for demonstration
-            const nearestEdge = { q: 0, r: 0, direction: 1 }; 
-
-            gameState.inputState.potentialMove = {
-                moveType: MoveType.Road,
-                location: nearestEdge,
-                isValid: true // Check BoardService.canPlaceRoad(...) here
-            };
+    private onKeyUpHandler = (event: KeyboardEvent) => {
+        this.pressedKeys.delete(event.key);
+        if (this.onKeyUp) {
+            this.onKeyUp(event.key);
         }
+    }
+
+    public isKeyPressed(key: string): boolean {
+        return this.pressedKeys.has(key);
     }
 
     public static handleMousePan(layoutSettings: LayoutSettings, dx: number, dy: number) {

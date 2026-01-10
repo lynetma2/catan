@@ -14,6 +14,7 @@ export interface GameStateHandler {
     //Handle input specific to this phase/state
     onClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void;
     onMouseMove(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void;
+    onKeyDown(key: string, game: GameState, layoutSettings: LayoutSettings): void;
 
     //Called when leaving the state
     onExit(game: GameState): void;

@@ -177,6 +177,12 @@ export abstract class BaseGameState implements GameStateHandler {
         this.recalculateLayout(layoutSettings);
     }
 
+    onKeyDown(key: string, game: GameState, layoutSettings: LayoutSettings): void {
+        if (key === "Escape") {
+            this.returnToDefaultState();
+        }
+    }
+
     update(game: GameState, layoutSettings: LayoutSettings): void {
         // Update button availability based on current resources
         this.updateButtonStates(game);

@@ -221,6 +221,10 @@ export class GameLoop implements GameContext {
         this.inputService.onZoom = (delta) => {
             InputService.handleMouseZoom(this.layoutSettings, delta);
         };
+
+        this.inputService.onKeyDown = (key) => {
+            this.currentState.onKeyDown(key, this.game, this.layoutSettings);
+        };
     }
 
     //Ping system, should be introduced
