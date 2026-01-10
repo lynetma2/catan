@@ -6,7 +6,6 @@ export interface UiLayout {
     y: number;      // Center Y in pixels
     width: number;  // Width in pixels
     height: number; // Height in pixels
-    scale: number;  // Scale factor applied
 }
 
 type Anchor = "TOP_LEFT" | "TOP_CENTER" | "TOP_RIGHT" | 
@@ -47,7 +46,6 @@ export class HUDLayoutService {
             y: finalY,
             width: finalWidth,
             height: finalHeight,
-            scale: guiScale
         };
     }
 

@@ -1,7 +1,6 @@
-import type {Button, Hex, LayoutSettings, Point, Tile} from "@/game/model/types.ts";
-import {Logger} from "@/game/utils/Logger.ts";
+import type {Button} from "@/game/model/types.ts";
 import {BUTTON_STYLES, type ButtonStyle} from "@/game/theme/buttonStyles";
-import {type UiLayout, HUDLayoutService} from "@/game/service/layout/HUDLayoutService.ts";
+import {type UiLayout} from "@/game/service/layout/HUDLayoutService.ts";
 
 export class ButtonRender {
 
@@ -74,40 +73,39 @@ export class ButtonRender {
         ctx.drawImage(img, layout.x, layout.y, layout.width, layout.height);
     }
 
+    private static drawInnerStroke(ctx: CanvasRenderingContext2D, path: Path2D, color: string, width: number) {
+        ctx.save();
+        ctx.clip(path);
+        ctx.lineWidth = width * 2; // Double width because half is clipped
+        ctx.strokeStyle = color;
+        ctx.stroke(path);
+        ctx.restore();
+    }
+
     private static drawBackground(ctx: CanvasRenderingContext2D, button: Button, style: ButtonStyle) {
         const layout = button.layout;
-        ctx.beginPath();
-        // Draw a circle background slightly larger than the icon
         const path = this.getRectPath(layout);
 
         ctx.fillStyle = "#FFF";
         ctx.fill(path);
         
+        let strokeColor: string | undefined;
+        let strokeWidth = 0;
+
         if (button.isHovered) {
-            ctx.lineWidth = 4 * layout.scale;
-            const prevStyle = ctx.strokeStyle;
-            ctx.strokeStyle = "#FFD700"; // Gold selection
-            ctx.stroke(path);
-            ctx.strokeStyle = prevStyle;
-            return;
+            strokeWidth = 4;
+            strokeColor = "#FFD700"; // Gold selection
+        } else if (button.isSelected) {
+            strokeWidth = 4;
+            strokeColor = "green";
+        } else if (style.strokeColor) {
+            strokeWidth = 3;
+            strokeColor = style.strokeColor;
         }
 
-        if (button.isSelected) {
-            ctx.lineWidth = 4 * layout.scale;
-            const prevStyle = ctx.strokeStyle;
-            ctx.strokeStyle = "green"; // Gold selection
-            ctx.stroke(path);
-            ctx.strokeStyle = prevStyle;
-            return;
+        if (strokeColor && strokeWidth > 0) {
+            this.drawInnerStroke(ctx, path, strokeColor, strokeWidth);
         }
-
-        // Hover effect or default stroke
-        if (style.strokeColor) {
-            ctx.lineWidth = 3 * layout.scale;
-            ctx.strokeStyle = style.strokeColor;
-            ctx.stroke(path);
-        }
-        ctx.closePath();
     }
 
     public static draw(ctx: CanvasRenderingContext2D, button: Button) {
