@@ -1,33 +1,23 @@
-import type { GameStateHandler } from "./GameState";
-import type {Board, Building, GameState, InputState, LayoutSettings, Player, Road, Tile} from "@/game/model/types.ts";
+import {BaseGameState} from "@/game/state/BaseGameState.ts";
+import type {GameState, LayoutSettings} from "@/game/model/types.ts";
+import {ButtonType} from "@/game/model/enums.ts";
+import type {Button} from "@/game/model/types.ts";
 
+export class WaitingState extends BaseGameState {
 
-export class BuildRoadState implements GameStateHandler {
-    onEnter(game: GameState): void {
-        console.log("Entering BuildRoadState");
-        // Any specific setup when entering this state
+    // Override to only show the Waiting button/indicator
+    protected generateButtons(game: GameState) {
+        const buttons: Button[] = [];
+        buttons.push(this.createButton(ButtonType.waiting));
+        this.hudEntities!.buttons = buttons;
     }
 
-    onClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
-        // Handle click for building a road
-        console.log(`BuildRoadState: Clicked at ${x}, ${y}`);
-        // Logic to attempt placing a road at the potentialMove location
-        // If successful, transition to another state (e.g., MainGameState or next player's turn)
-        // If not, provide feedback and remain in this state
+    // Disable all map interactions
+    protected onMapClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
+        // Do nothing
     }
 
-    onMouseMove(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
-        // Update potential road placement on mouse move
-        console.log(`BuildRoadState: Clicked at ${x}, ${y}`);
-    }
-
-    onExit(game: GameState): void {
-        console.log("Exiting BuildRoadState");
-        // Clean up any state-specific elements
-        game.inputState.potentialMove = undefined; // Clear potential move
-    }
-
-    draw(ctx: CanvasRenderingContext2D, game: GameState, layoutSettings: LayoutSettings): void {
-        console.log("Drawing BuildRoadState");
+    protected onMapMouseMove(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
+        // Do nothing
     }
 }

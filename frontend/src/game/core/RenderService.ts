@@ -11,7 +11,7 @@ import type {
     Vertex,
     InputState,
     HandCard,
-    PlayerOverviewPanel
+    PlayerOverviewPanel, GhostEffect
 } from "@/game/model/types.ts";
 import {BuildingType, MoveType} from "@/game/model/enums.ts";
 import {TileRender} from "@/game/rendering/tileRender.ts";
@@ -86,24 +86,11 @@ export class RenderService {
         });
     }
 
-    private drawGhost(layoutSettings: LayoutSettings, inputState: InputState) {
-        const move = inputState.potentialMove;
-        if (!move || !move.isValid) return; // Optional: Draw invalid moves in red
-
-        this.context.save();
-        this.context.globalAlpha = 0.6; // Ghost transparency
-
-        if (move.moveType === MoveType.Road) {
-            const road: Road = {
-                edge: move.location as Edge,
-                playerName: "Player 1" // TODO: Use ClientState to get local player color
-            };
-            RoadRender.draw(this.context, layoutSettings, road);
-        } 
-        // Add other ghost types here (Settlement, City) as needed
-        // else if (move.moveType === MoveType.Settlement) { ... }
-
-        this.context.restore();
+    private drawGhosts(layoutSettings: LayoutSettings, ghosts: GhostEffect[] | undefined) {
+        if (!ghosts) return;
+        ghosts.forEach(ghost => {
+            ghost.draw(this.context, layoutSettings);
+        });
     }
 
     private drawHUD(hudEntities: HUDEntities | undefined) {
@@ -134,6 +121,8 @@ export class RenderService {
 
         //Draw the dices
         //drawDices(this.canvas, this.dices, 670, 830);
+
+        this.drawGhosts(layoutSettings, state.getGhostEffects());
 
         //Add animations if needed.
     }

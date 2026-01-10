@@ -24,9 +24,31 @@ export class RoadRender {
 
     public static draw(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, road: Road) {
         ctx.beginPath();
-        ctx.fillStyle = this.getStyle(road).fillColor;
+        ctx.strokeStyle = this.getStyle(road).fillColor;
         ctx.lineWidth = layoutSettings.size.x * layoutSettings.ratios.roadWidth;
         ctx.stroke(this.edgeToPath(layoutSettings, road.edge));
+        ctx.closePath();
+    }
+
+    public static drawGhostIndicator(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, edge: Edge, color: string) {
+        const corners = HexLayoutService.edgePolygonCorners(layoutSettings, edge);
+        // Calculate center of the edge (average of the two endpoints)
+        const centerX = (corners[0].x + corners[1].x) / 2;
+        const centerY = (corners[0].y + corners[1].y) / 2;
+        const radius = layoutSettings.size.x * 0.15; // 15% of hex size
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    public static drawGhostPreview(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, edge: Edge, color: string) {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = layoutSettings.size.x * layoutSettings.ratios.roadWidth;
+        ctx.stroke(this.edgeToPath(layoutSettings, edge));
         ctx.closePath();
     }
 }

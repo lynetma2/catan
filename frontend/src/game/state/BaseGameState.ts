@@ -4,13 +4,14 @@ import {TEST_HUD} from "@/game/model/testGame.ts";
 import {ButtonType, ResourceType} from "@/game/model/enums.ts";
 import {Logger} from "@/game/utils/Logger.ts";
 import {HUDLayoutService, type UiLayout} from "@/game/layout/HUDLayoutService.ts";
+import {GameRuleService} from "@/game/logic/GameRuleService.ts";
 
 export abstract class BaseGameState implements GameStateHandler {
     
     protected hudEntities?: HUDEntities;
     protected context?: GameContext;
     protected buttonMap: Map<ButtonType, Button> = new Map();
-    private lastActivePlayerName: string | null = null;
+    protected triggerButton?: ButtonType;
 
     onEnter(game: GameState, layoutSettings: LayoutSettings, context: GameContext): void {
         // Load shared buttons (e.g., from a config or the test HUD)
@@ -35,8 +36,10 @@ export abstract class BaseGameState implements GameStateHandler {
         this.buttonMap.clear();
         this.hudEntities.buttons.forEach(btn => this.buttonMap.set(btn.type, btn));
 
-        // Initialize tracker
-        this.lastActivePlayerName = game.players.find(p => p.isActive)?.playerName ?? null;
+        //Making the concrete class selected.
+        if (this.triggerButton) {
+            this.setButtonSelectedState(this.triggerButton, true);
+        }
 
         Logger.info("onEnter BaseGameState called");
     }
@@ -123,8 +126,8 @@ export abstract class BaseGameState implements GameStateHandler {
         return this.hudEntities;
     }
 
-    getGhostEffects(): GhostEffect[] {
-        throw new Error("Method not implemented.");
+    getGhostEffects(): GhostEffect[] | undefined {
+        return undefined;
     }
 
     // --- Helpers ---
@@ -152,6 +155,10 @@ export abstract class BaseGameState implements GameStateHandler {
     }
 
     protected handleButtonClick(type: ButtonType, game: GameState) {
+        if (this.triggerButton === type) {
+            this.returnToDefaultState();
+            return;
+        }
         console.log("Button Clicked:", type);
         this.context?.handleButtonAction(type);
     }
@@ -171,17 +178,8 @@ export abstract class BaseGameState implements GameStateHandler {
     }
 
     update(game: GameState, layoutSettings: LayoutSettings): void {
-        const activePlayer = game.players.find(p => p.isActive);
-        const activeName = activePlayer?.playerName ?? null;
-
-        if (activeName !== this.lastActivePlayerName) {
-            this.lastActivePlayerName = activeName;
-            this.generateButtons(game);
-            this.recalculateLayout(layoutSettings);
-
-            this.buttonMap.clear();
-            this.hudEntities?.buttons.forEach(btn => this.buttonMap.set(btn.type, btn));
-        }
+        // Update button availability based on current resources
+        this.updateButtonStates(game);
     }
 
     protected recalculateLayout(layoutSettings: LayoutSettings) {
@@ -280,14 +278,45 @@ export abstract class BaseGameState implements GameStateHandler {
         }
 
         this.hudEntities!.buttons = buttons;
+        
+        // Apply rules immediately
+        this.updateButtonStates(game);
     }
 
-    private createButton(type: ButtonType): Button {
+    protected updateButtonStates(game: GameState) {
+        const localPlayer = game.players.find(p => p.isLocal);
+        const playerId = localPlayer?.playerName ?? "";
+
+        if (!this.hudEntities) return;
+
+        this.hudEntities.buttons.forEach(btn => {
+            switch (btn.type) {
+                case ButtonType.putRoad:
+                    btn.isDisabled = !GameRuleService.canBuildRoad(game, playerId);
+                    break;
+                case ButtonType.putSettlement:
+                    btn.isDisabled = !GameRuleService.canBuildSettlement(game, playerId);
+                    break;
+                case ButtonType.putCity:
+                    btn.isDisabled = !GameRuleService.canBuildCity(game, playerId);
+                    break;
+                case ButtonType.drawDevelopmentCard:
+                    btn.isDisabled = !GameRuleService.canBuyDevelopmentCard(game, playerId);
+                    break;
+            }
+        });
+    }
+
+    protected createButton(type: ButtonType): Button {
         return {
             type,
             layout: { x: 0, y: 0, width: 0, height: 0 }, // Layout service will fix this in recalculateLayout
             isHovered: false,
             isSelected: false
         };
+    }
+
+    protected returnToDefaultState(): void {
+        this.context?.switchToDefaultState();
     }
 }

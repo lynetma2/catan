@@ -111,14 +111,21 @@ export class ButtonRender {
     public static draw(ctx: CanvasRenderingContext2D, button: Button) {
         const style = this.getLocalPlayerStyle(button);
 
+        ctx.save();
+
+        if (button.isDisabled) {
+            ctx.globalAlpha = 0.5;
+        }
+
         // Simple scale effect on hover
-        if (button.isHovered) {
+        if (button.isHovered && !button.isDisabled) {
             // Note: Modifying layout here might be jittery if not handled carefully in logic.
             // Ideally, draw slightly larger without changing the hit-box, or use a transform.
         }
 
         this.drawBackground(ctx, button, style);
         this.drawIcon(ctx, button.layout, style);
-
+        
+        ctx.restore();
     }
 }

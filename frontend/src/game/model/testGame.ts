@@ -71,9 +71,9 @@ export const generateTestTiles = (): Map<string, Tile> => {
 
 export const generateTestBuildings = (): Map<string, Building> => {
     const buildings = new Map<string, Building>();
-    buildings.set("q0r0dEast", {
+    buildings.set("q0r0dWest", {
         vertex: { q: 0, r: 0, direction: VertexDirection.West },
-        type: BuildingType.City,
+        type: BuildingType.Settlement,
         playerName: "Player 1"
     });
     return buildings;
@@ -95,11 +95,11 @@ export const TEST_PLAYERS: Player[] = [
         playerName: "Player 1",
         inventory: {
             resources: {
-                [ResourceType.Wood]: 2,
-                [ResourceType.Brick]: 3,
-                [ResourceType.Sheep]: 0,
-                [ResourceType.Wheat]: 0,
-                [ResourceType.Ore]: 0
+                [ResourceType.Wood]: 5,
+                [ResourceType.Brick]: 5,
+                [ResourceType.Sheep]: 5,
+                [ResourceType.Wheat]: 5,
+                [ResourceType.Ore]: 5
             }
         },
         points: 0,

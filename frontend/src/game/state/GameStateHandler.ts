@@ -4,6 +4,7 @@ import type {ButtonType} from "@/game/model/enums.ts";
 export interface GameContext {
     setGameState(state: GameStateHandler): void;
     handleButtonAction(type: ButtonType): void;
+    switchToDefaultState(): void;
 }
 
 export interface GameStateHandler {
@@ -27,5 +28,5 @@ export interface GameStateHandler {
     getHUDEntities(): HUDEntities | undefined;
 
     //TODO add the ability to expose a ghost effect structure. (e.g. road, settlement, city, robber)
-    getGhostEffects(): GhostEffect[];
+    getGhostEffects(): GhostEffect[] | undefined;
 }

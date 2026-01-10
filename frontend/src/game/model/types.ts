@@ -67,6 +67,7 @@ export interface Button {
     layout: UiLayout;
     isHovered?: boolean;
     isSelected?: boolean;
+    isDisabled?: boolean;
     //Todo add more if needed
 }
 

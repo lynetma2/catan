@@ -1,33 +1,63 @@
-import type { GameStateHandler } from "./GameState";
-import type {Board, Building, GameState, InputState, LayoutSettings, Player, Road, Tile} from "@/game/model/types.ts";
+import type {GameContext} from "./GameStateHandler";
+import type {GameState, GhostEffect, LayoutSettings} from "@/game/model/types.ts";
+import {BaseGameState} from "@/game/state/BaseGameState.ts";
+import {ButtonType} from "@/game/model/enums.ts";
+import {BoardService} from "@/game/logic/BoardService.ts";
+import {KeyService} from "@/game/utils/KeyService.ts";
+import {CityGhost} from "@/game/rendering/ghosts/CityGhost.ts";
+import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
 
+export class BuildCityState extends BaseGameState {
+    protected triggerButton = ButtonType.putCity;
+    private ghosts: Map<string, GhostEffect> = new Map();
+    private activeGhost: GhostEffect | undefined;
+    private activeGhostKey: string | undefined;
 
-export class BuildRoadState implements GameStateHandler {
-    onEnter(game: GameState): void {
-        console.log("Entering BuildRoadState");
-        // Any specific setup when entering this state
+    onEnter(game: GameState, layoutSettings: LayoutSettings, context: GameContext): void {
+        super.onEnter(game, layoutSettings, context);
+        
+        const localPlayer = game.players.find(p => p.isLocal);
+        if (localPlayer) {
+            const validVertices = BoardService.getValidCityVertices(game.board, localPlayer.playerName);
+            
+            this.ghosts.clear();
+            validVertices.forEach(vertex => {
+                this.ghosts.set(KeyService.vertexToKey(vertex), new CityGhost(vertex));
+            });
+        }
     }
 
-    onClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
-        // Handle click for building a road
-        console.log(`BuildRoadState: Clicked at ${x}, ${y}`);
-        // Logic to attempt placing a road at the potentialMove location
-        // If successful, transition to another state (e.g., MainGameState or next player's turn)
-        // If not, provide feedback and remain in this state
+    protected onMapClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
+        // Handle map clicks (e.g. selecting a tile)
     }
 
-    onMouseMove(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
-        // Update potential road placement on mouse move
-        console.log(`BuildRoadState: Clicked at ${x}, ${y}`);
+    protected onMapMouseMove(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
+        const nearestVertex = HexLayoutService.getNearestVertex(layoutSettings, {x, y});
+        const key = KeyService.vertexToKey(nearestVertex);
+
+        if (this.ghosts.has(key)) {
+            const localPlayer = game.players.find(p => p.isLocal);
+            if (localPlayer) {
+                this.activeGhost = new CityGhost(nearestVertex, localPlayer.style.fillColor, 'preview');
+                this.activeGhostKey = key;
+            }
+        } else {
+            this.activeGhost = undefined;
+            this.activeGhostKey = undefined;
+        }
     }
 
-    onExit(game: GameState): void {
-        console.log("Exiting BuildRoadState");
-        // Clean up any state-specific elements
-        game.inputState.potentialMove = undefined; // Clear potential move
-    }
+    getGhostEffects(): GhostEffect[] | undefined {
+        const effects: GhostEffect[] = [];
+        this.ghosts.forEach((ghost, key) => {
+            if (key !== this.activeGhostKey) {
+                effects.push(ghost);
+            }
+        });
 
-    draw(ctx: CanvasRenderingContext2D, game: GameState, layoutSettings: LayoutSettings): void {
-        console.log("Drawing BuildRoadState");
+        if (this.activeGhost) {
+            effects.push(this.activeGhost);
+        }
+        return effects;
     }
 }

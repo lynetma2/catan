@@ -14,6 +14,9 @@ import {BuildSettlementState} from "@/game/state/BuildSettlementState.ts";
 import {EventBus} from "@/game/core/EventBus.ts";
 import {GameEventProcessor} from "@/game/logic/GameEventProcessor.ts";
 import type {GameEvent} from "@/game/model/events.ts";
+import {WaitingState} from "@/game/state/WaitingState.ts";
+import {GameRuleService} from "@/game/logic/GameRuleService.ts";
+import {BuildCityState} from "@/game/state/BuildCityState.ts";
 
 export class GameLoop implements GameContext {
     MAX_FPS = 144;
@@ -30,6 +33,7 @@ export class GameLoop implements GameContext {
     private readonly context: CanvasRenderingContext2D;
     private animationFrameId: number | null = null;
     private readonly layoutSettings: LayoutSettings;
+    private lastActivePlayerName: string | null = null;
 
     // The State Pattern: Holds the current behavior
     private currentState: GameStateHandler;
@@ -64,8 +68,11 @@ export class GameLoop implements GameContext {
 
         window.addEventListener('resize', this.handleResize);
 
-        // Initialize default state
-        this.setGameState(new DefaultState());
+        // Initialize state based on turn
+        this.lastActivePlayerName = this.game.players.find(p => p.isActive)?.playerName ?? null;
+        const isMyTurn = this.lastActivePlayerName === this.clientState.localPlayerId;
+        
+        this.setGameState(isMyTurn ? new DefaultState() : new WaitingState());
 
         this.initializeInputHandlers();
 
@@ -84,12 +91,23 @@ export class GameLoop implements GameContext {
 
     public handleButtonAction(type: ButtonType) {
         // Centralized Transition Logic
+        const playerId = this.clientState.localPlayerId;
+
         switch (type) {
             case ButtonType.putRoad:
-                this.setGameState(new BuildRoadState());
+                if (GameRuleService.canBuildRoad(this.game, playerId)) {
+                    this.setGameState(new BuildRoadState());
+                }
                 break;
             case ButtonType.putSettlement:
-                this.setGameState(new BuildSettlementState());
+                if (GameRuleService.canBuildSettlement(this.game, playerId)) {
+                    this.setGameState(new BuildSettlementState());
+                }
+                break;
+            case ButtonType.putCity:
+                if (GameRuleService.canBuildCity(this.game, playerId)) {
+                    this.setGameState(new BuildCityState());
+                }
                 break;
             case ButtonType.endTurn:
                 // PlayerService.nextTurn(...)
@@ -97,8 +115,8 @@ export class GameLoop implements GameContext {
         }
     }
 
-    public emitEvent(event: GameEvent): void {
-        this.eventBus.emit(event);
+    public switchToDefaultState() {
+        this.setGameState(new DefaultState());
     }
 
     start(): void {
@@ -167,6 +185,17 @@ export class GameLoop implements GameContext {
         events.forEach(event => {
             GameEventProcessor.process(this.game, event);
         });
+
+        // Check for turn change to enforce State Transitions
+        const activePlayer = this.game.players.find(p => p.isActive);
+        const activeName = activePlayer?.playerName ?? null;
+
+        if (activeName !== this.lastActivePlayerName) {
+            this.lastActivePlayerName = activeName;
+            const isMyTurn = activeName === this.clientState.localPlayerId;
+            
+            this.setGameState(isMyTurn ? new DefaultState() : new WaitingState());
+        }
 
         //Update physics.
     }

@@ -117,4 +117,69 @@ export class HexLayoutService {
         corners.push({x: center.x + offset.x, y: center.y + offset.y})
         return corners;
     }
+
+    public static getNearestEdge(layoutSettings: LayoutSettings, p: Point): Edge {
+        const hex = this.pixelToHexRounded(layoutSettings, p);
+        const corners = this.hexPolygonCorners(layoutSettings, hex);
+
+        let minDist = Number.MAX_VALUE;
+        let closestIndex = -1;
+
+        for (let i = 0; i < 6; i++) {
+            const p1 = corners[i];
+            const p2 = corners[(i + 1) % 6];
+            const dist = this.distToSegment(p, p1, p2);
+            if (dist < minDist) {
+                minDist = dist;
+                closestIndex = i;
+            }
+        }
+
+        const {q, r} = hex;
+        switch (closestIndex) {
+            case 0: return { q, r, direction: EdgeDirection.East };
+            case 1: return { q, r, direction: EdgeDirection.North };
+            case 2: return { q, r, direction: EdgeDirection.West };
+            case 3: return { q: q - 1, r: r + 1, direction: EdgeDirection.East };
+            case 4: return { q, r: r + 1, direction: EdgeDirection.North };
+            case 5: return { q: q + 1, r, direction: EdgeDirection.West };
+            default: return { q, r, direction: EdgeDirection.North };
+        }
+    }
+
+    public static getNearestVertex(layoutSettings: LayoutSettings, p: Point): Vertex {
+        const hex = this.pixelToHexRounded(layoutSettings, p);
+        const corners = this.hexPolygonCorners(layoutSettings, hex);
+
+        let minDist = Number.MAX_VALUE;
+        let closestIndex = -1;
+
+        for (let i = 0; i < 6; i++) {
+            const dist = Math.sqrt((p.x - corners[i].x) ** 2 + (p.y - corners[i].y) ** 2);
+            if (dist < minDist) {
+                minDist = dist;
+                closestIndex = i;
+            }
+        }
+
+        const {q, r} = hex;
+        // Map hex corners to canonical vertices (East/West) based on board topology
+        switch (closestIndex) {
+            case 0: return { q, r, direction: VertexDirection.East };
+            case 1: return { q: q + 1, r: r - 1, direction: VertexDirection.West };
+            case 2: return { q: q - 1, r, direction: VertexDirection.East };
+            case 3: return { q, r, direction: VertexDirection.West };
+            case 4: return { q: q - 1, r: r + 1, direction: VertexDirection.East };
+            case 5: return { q: q + 1, r, direction: VertexDirection.West };
+            default: return { q, r, direction: VertexDirection.East };
+        }
+    }
+
+    private static distToSegment(p: Point, v: Point, w: Point): number {
+        const l2 = (v.x - w.x) ** 2 + (v.y - w.y) ** 2;
+        if (l2 === 0) return Math.sqrt((p.x - v.x) ** 2 + (p.y - v.y) ** 2);
+        let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+        t = Math.max(0, Math.min(1, t));
+        return Math.sqrt((p.x - (v.x + t * (w.x - v.x))) ** 2 + (p.y - (v.y + t * (w.y - v.y))) ** 2);
+    }
 }
