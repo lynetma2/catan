@@ -75,8 +75,17 @@ export class RenderService {
     }
 
     public drawCards(cards: HandCard[]) {
+        // Draw non-hovered cards first
         cards.forEach(card => {
-            CardRender.draw(this.context, card);
+            if (!card.isHovered) {
+                CardRender.draw(this.context, card);
+            }
+        });
+        // Draw hovered cards on top
+        cards.forEach(card => {
+            if (card.isHovered) {
+                CardRender.draw(this.context, card);
+            }
         });
     }
 

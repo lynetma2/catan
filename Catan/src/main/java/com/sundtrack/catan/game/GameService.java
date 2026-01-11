@@ -1,8 +1,8 @@
 package com.sundtrack.catan.game;
 
-import com.sundtrack.catan.game.entity.Game;
+import com.sundtrack.catan.game.model.Game;
+import com.sundtrack.catan.game.dto.events.GameEvent;
 import com.sundtrack.catan.lobby.Lobby;
-import com.sundtrack.catan.game.Events.GameEvent;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;

@@ -2,8 +2,8 @@ import { Anchor, ButtonType } from "@/game/model/enums.ts";
 import layoutConfigRaw from "@/game/config/hudLayout.json";
 
 export interface UiLayout {
-    x: number;      // Center X in pixels
-    y: number;      // Center Y in pixels
+    x: number;      // Top left X in pixels
+    y: number;      // Top left Y in pixels
     width: number;  // Width in pixels
     height: number; // Height in pixels
 }

@@ -9,7 +9,7 @@ export class ColorService {
      */
     public static getActivePlayerColor(gameState: GameState): string {
         const activePlayer = PlayerService.getActivePlayer(gameState);
-        return activePlayer?.color ?? "#FFFFFF"; 
+        return activePlayer?.color ?? "#FFFFFF";
     }
 
     public static getEntityColor(gameState: GameState, ownerId: string): string {

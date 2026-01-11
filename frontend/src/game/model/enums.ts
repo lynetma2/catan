@@ -67,5 +67,6 @@ export enum EventType {
     BuildCity = "BuildCity",
     BuyDevelopmentCard = "BuyDevelopmentCard",
     EndTurn = "EndTurn",
-    RollDice = "RollDice"
+    RollDice = "RollDice",
+    TransferResources = "TransferResources"
 }

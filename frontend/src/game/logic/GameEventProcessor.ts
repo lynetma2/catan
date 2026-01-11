@@ -6,12 +6,15 @@ import type {
     BuyDevelopmentCardEvent,
     EndTurnEvent,
     GameEvent,
-    RollDiceEvent
+    RollDiceEvent,
+    TransferResourcesEvent
 } from "@/game/model/events.ts";
 import type {GameState} from "@/game/model/types.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
 import {BuildingType} from "@/game/model/enums.ts";
 import {Logger} from "@/game/utils/Logger.ts";
+import {PlayerService} from "@/game/logic/PlayerService.ts";
+import {ResourceType} from "@/game/model/enums.ts";
 
 type EventHandler<T extends GameEvent> = (state: GameState, event: T) => void;
 
@@ -53,6 +56,48 @@ export class GameEventProcessor {
         },
         [EventType.BuyDevelopmentCard]: (state, event: BuyDevelopmentCardEvent) => {
             Logger.warn("BuyDevelopmentCard not implemented yet");
+        },
+        [EventType.TransferResources]: (state, event: TransferResourcesEvent) => {
+            // 1. Remove from Source
+            if (event.fromPlayerId !== "Bank") {
+                const fromPlayer = PlayerService.getPlayer(state, event.fromPlayerId);
+                if (fromPlayer) {
+                    if (event.resources) {
+                        // We know exactly what was removed
+                        Object.entries(event.resources).forEach(([res, amount]) => {
+                            const type = res as ResourceType;
+                            const current = fromPlayer.inventory.resources[type] || 0;
+                            const toRemove = amount as number;
+                            
+                            // If we have enough known resources, remove them
+                            // If not, we assume the rest came from the hidden pile
+                            if (current >= toRemove) {
+                                fromPlayer.inventory.resources[type] = current - toRemove;
+                            } else {
+                                fromPlayer.inventory.resources[type] = 0;
+                                fromPlayer.inventory.hiddenCount -= (toRemove - current);
+                            }
+                        });
+                    } else if (event.count) {
+                        // Blind remove (e.g. someone stole from them, and we don't know what)
+                        fromPlayer.inventory.hiddenCount -= event.count;
+                    }
+                }
+            }
+
+            // 2. Add to Target
+            if (event.toPlayerId !== "Bank") {
+                const toPlayer = PlayerService.getPlayer(state, event.toPlayerId);
+                if (toPlayer) {
+                    if (event.resources) {
+                        Object.entries(event.resources).forEach(([res, count]) => {
+                            toPlayer.inventory.resources[res as ResourceType] += (count as number);
+                        });
+                    } else if (event.count) {
+                        toPlayer.inventory.hiddenCount += event.count;
+                    }
+                }
+            }
         }
     };
 

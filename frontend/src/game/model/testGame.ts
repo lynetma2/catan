@@ -100,7 +100,8 @@ export const TEST_PLAYERS: Player[] = [
                 [ResourceType.Sheep]: 5,
                 [ResourceType.Wheat]: 5,
                 [ResourceType.Ore]: 5
-            }
+            },
+            hiddenCount: 0
         },
         points: 0,
         isActive: true,
@@ -116,7 +117,8 @@ export const TEST_PLAYERS: Player[] = [
                 [ResourceType.Sheep]: 0,
                 [ResourceType.Wheat]: 0,
                 [ResourceType.Ore]: 0
-            }
+            },
+            hiddenCount: 0
         },
         points: 0,
         isActive: false,
@@ -132,7 +134,8 @@ export const TEST_PLAYERS: Player[] = [
                 [ResourceType.Sheep]: 0,
                 [ResourceType.Wheat]: 0,
                 [ResourceType.Ore]: 0
-            }
+            },
+            hiddenCount: 0
         },
         points: 0,
         isActive: false,

@@ -1,5 +1,5 @@
 import {EventType} from "@/game/model/enums.ts";
-import type {Edge, Vertex} from "@/game/model/types.ts";
+import type {Edge, ResourceCollection, Vertex} from "@/game/model/types.ts";
 
 export interface GameEventBase {
     type: EventType;
@@ -33,10 +33,19 @@ export interface RollDiceEvent extends GameEventBase {
     type: EventType.RollDice;
 }
 
+export interface TransferResourcesEvent extends GameEventBase {
+    type: EventType.TransferResources;
+    fromPlayerId: string | "Bank";
+    toPlayerId: string | "Bank";
+    resources?: Partial<ResourceCollection>; // If visible to the client
+    count?: number; // If the type is hidden (or total count)
+}
+
 export type GameEvent =
     | BuildRoadEvent
     | BuildSettlementEvent
     | BuildCityEvent
     | BuyDevelopmentCardEvent
     | EndTurnEvent
-    | RollDiceEvent;
+    | RollDiceEvent
+    | TransferResourcesEvent;

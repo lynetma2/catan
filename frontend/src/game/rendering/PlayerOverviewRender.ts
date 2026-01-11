@@ -64,7 +64,8 @@ export class PlayerOverviewRender {
         const statsY = y + padding + fontSize + (padding / 2);
         
         // Calculate Total Cards
-        const totalCards = Object.values(player.inventory.resources).reduce((a, b) => a + b, 0);
+        const knownCards = Object.values(player.inventory.resources).reduce((a, b) => a + b, 0);
+        const totalCards = knownCards + player.inventory.hiddenCount;
 
         // Helper to draw icon + text
         let currentX = x + padding;

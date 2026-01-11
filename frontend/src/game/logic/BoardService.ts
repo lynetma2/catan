@@ -98,6 +98,60 @@ export class BoardService {
         board.robber = hex;
     }
 
+    public static canPlaceRoad(board: Board, edge: Edge, playerId: string): boolean {
+        if (this.hasRoad(board, edge)) return false;
+
+        const vertices = this.getEdgeVertices(edge);
+        for (const v of vertices) {
+            // Check for own building
+            if (this.hasBuilding(board, v)) {
+                const building = board.buildings.get(KeyService.vertexToKey(v));
+                if (building?.playerName === playerId) return true;
+            }
+
+            // Check for own connected road
+            const adjacentEdges = this.getAdjacentEdges(v);
+            for (const adj of adjacentEdges) {
+                if (KeyService.edgeToKey(adj) === KeyService.edgeToKey(edge)) continue;
+
+                if (this.hasRoad(board, adj)) {
+                    const road = board.roads.get(KeyService.edgeToKey(adj));
+                    if (road?.playerName === playerId) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static canPlaceSettlement(board: Board, vertex: Vertex, playerId: string): boolean {
+        if (this.hasBuilding(board, vertex)) return false;
+
+        const adjacentEdges = this.getAdjacentEdges(vertex);
+        // Distance rule
+        for (const edge of adjacentEdges) {
+            const neighbors = this.getEdgeVertices(edge);
+            for (const n of neighbors) {
+                if (this.hasBuilding(board, n)) return false;
+            }
+        }
+
+        // Connection rule (must connect to own road)
+        for (const edge of adjacentEdges) {
+            if (this.hasRoad(board, edge)) {
+                const road = board.roads.get(KeyService.edgeToKey(edge));
+                if (road?.playerName === playerId) return true;
+            }
+        }
+        return false;
+    }
+
+    public static canPlaceCity(board: Board, vertex: Vertex, playerId: string): boolean {
+        const key = KeyService.vertexToKey(vertex);
+        const building = board.buildings.get(key);
+        if (!building) return false;
+        return building.type === BuildingType.Settlement && building.playerName === playerId;
+    }
+
     private static getAdjacentEdges(vertex: Vertex): Edge[] {
         const edges: Edge[] = [];
         const vq = vertex.q;

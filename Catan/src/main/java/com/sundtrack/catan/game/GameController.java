@@ -2,10 +2,10 @@ package com.sundtrack.catan.game;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sundtrack.catan.game.entity.Game;
+import com.sundtrack.catan.game.model.Game;
+import com.sundtrack.catan.game.dto.events.GameEvent;
 import com.sundtrack.catan.lobby.LobbyMessages;
 import com.sundtrack.catan.lobby.LobbyService;
-import com.sundtrack.catan.game.Events.GameEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;

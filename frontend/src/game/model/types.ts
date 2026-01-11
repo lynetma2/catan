@@ -90,10 +90,13 @@ export interface Board {
     robber: Hex;
 }
 
+export type ResourceCollection = Record<ResourceType, number>;
+
 export interface Inventory {
-    resources: Record<ResourceType, number>;
+    resources: ResourceCollection;
+    hiddenCount: number; // Cards held by the player that are unknown to the local client
     //TODO add later the development cards.
-};
+}
 
 export interface Player {
     playerName: string;

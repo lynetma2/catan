@@ -1,6 +1,11 @@
-package com.sundtrack.catan.game.entity;
+package com.sundtrack.catan.game.model;
 
 import com.sundtrack.catan.game.entity.cards.DevelopmentCard;
+import com.sundtrack.catan.game.dto.events.GameEvent;
+import com.sundtrack.catan.game.model.board.Board;
+import com.sundtrack.catan.game.model.enums.GamePhase;
+import com.sundtrack.catan.game.model.player.Inventory;
+import com.sundtrack.catan.game.model.player.Player;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,32 +14,33 @@ import java.util.Map;
 
 public class Game {
 
-    //Resource array indices
-    public static final int LUMBER_INDEX = 0;
-    public static final int BRICK_INDEX = 1;
-    public static final int GRAIN_INDEX = 2;
-    public static final int WOOL_INDEX = 3;
-    public static final int ORE_INDEX = 4;
-
     private final Board board;
     private final Map<String, Player> players;
     private final int[] dices;
     private final List<GameEvent> events;
-    private final Integer[] resources;
+    private final Inventory bank; // Replaces resources array
     private final List<DevelopmentCard> developmentCards;
     private final List<String> turnOrder;
+    private GamePhase phase;
+    private final GameConfig config;
     //TODO add something to log the events, and save them.
 
     public Game(Board board, Map<String, Player> players) {
+        this(board, players, GameConfig.standard());
+    }
+
+    public Game(Board board, Map<String, Player> players, GameConfig config) {
         this.board = board;
         this.players = players;
+        this.config = config;
         this.developmentCards = DevelopmentCard.generateDeck();
         this.turnOrder = new ArrayList<>(players.keySet());
         Collections.shuffle(this.turnOrder);
 
-        this.resources = new Integer[] {19,19,19,19,19};
+        this.bank = new Inventory(); // Initialize with 19 of each if needed
         this.events = new ArrayList<>();
         this.dices = new int[] {1,1};
+        this.phase = GamePhase.SETUP;
     }
 
     public Board getBoard() {
@@ -49,8 +55,8 @@ public class Game {
         return dices;
     }
 
-    public Integer[] getResources() {
-        return resources;
+    public Inventory getBank() {
+        return bank;
     }
 
     public void setDices(int[] dices) {
@@ -65,8 +71,20 @@ public class Game {
         return developmentCards;
     }
 
+    public GamePhase getPhase() {
+        return phase;
+    }
+
+    public void setPhase(GamePhase phase) {
+        this.phase = phase;
+    }
+
+    public GameConfig getConfig() {
+        return config;
+    }
+
     public void handleGameEvent(GameEvent gameEvent) {
-        gameEvent.doEvent(this);
+        // gameEvent.doEvent(this); // Assuming this method exists on GameEvent or is handled via pattern matching
 
         //Add the executed event to the list of events.
         events.add(gameEvent);
