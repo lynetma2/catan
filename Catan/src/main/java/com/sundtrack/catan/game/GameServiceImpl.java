@@ -8,6 +8,7 @@ import com.sundtrack.catan.game.dto.events.GameEvent;
 import com.sundtrack.catan.lobby.Lobby;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,14 +56,12 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public Game handleGameEvent(int gameId, GameEvent event) {
+    public List<GameEvent> handleGameEvent(int gameId, GameEvent event) {
         if (!games.containsKey(gameId)) {
             throw new RuntimeException("Game with lobbyId " + gameId + " not found");
         }
 
         Game game = games.get(gameId);
-        gameEventExecutor.executeEvent(game, event);
-
-        return game;
+        return gameEventExecutor.executeEvent(game, event);
     }
 }

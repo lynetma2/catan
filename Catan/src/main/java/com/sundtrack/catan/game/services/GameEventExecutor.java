@@ -13,8 +13,11 @@ import com.sundtrack.catan.game.model.player.Inventory;
 import com.sundtrack.catan.game.model.player.Player;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Service
 public class GameEventExecutor {
@@ -26,23 +29,27 @@ public class GameEventExecutor {
         this.boardService = boardService;
     }
 
-    public void executeEvent(Game game, GameEvent event) {
+    public List<GameEvent> executeEvent(Game game, GameEvent event) {
+        List<GameEvent> consequences = new ArrayList<>();
+
         // Pattern matching switch (Java 17+)
         switch (event) {
-            case BuildRoadEventDTO e -> handleBuildRoad(game, e);
-            case BuildSettlementEventDTO e -> handleBuildSettlement(game, e);
-            case BuildCityEventDTO e -> handleBuildCity(game, e);
-            case RollDiceEventDTO e -> handleRollDice(game, e);
-            case EndTurnEventDTO e -> handleEndTurn(game, e);
-            case BuyDevelopmentCardEventDTO e -> handleBuyDevelopmentCard(game, e);
-            case TransferResourcesEventDTO e -> handleTransferResources(game, e);
+            case BuildRoadEventDTO e -> consequences.addAll(handleBuildRoad(game, e));
+            case BuildSettlementEventDTO e -> consequences.addAll(handleBuildSettlement(game, e));
+            case BuildCityEventDTO e -> consequences.addAll(handleBuildCity(game, e));
+            case RollDiceEventDTO e -> consequences.addAll(handleRollDice(game, e));
+            case EndTurnEventDTO e -> consequences.addAll(handleEndTurn(game, e));
+            case BuyDevelopmentCardEventDTO e -> consequences.addAll(handleBuyDevelopmentCard(game, e));
+            case TransferResourcesEventDTO e -> consequences.addAll(handleTransferResources(game, e));
         }
 
         // Add the executed event to the history
-        game.handleGameEvent(event);
+        consequences.forEach(game::handleGameEvent);
+
+        return consequences;
     }
 
-    private void handleBuildRoad(Game game, BuildRoadEventDTO event) {
+    private List<GameEvent> handleBuildRoad(Game game, BuildRoadEventDTO event) {
         Player player = getPlayer(game, event.playerId());
         Inventory inv = player.getInventory();
 
@@ -57,9 +64,15 @@ public class GameEventExecutor {
 
         // 3. Deduct Resources
         inv.removeResources(game.getConfig().roadCost());
+
+        // 4. Generate Consequences
+        return List.of(
+                createPaymentEvent(event.playerId(), game.getConfig().roadCost()),
+                event // The confirmation of the build
+        );
     }
 
-    private void handleBuildSettlement(Game game, BuildSettlementEventDTO event) {
+    private List<GameEvent> handleBuildSettlement(Game game, BuildSettlementEventDTO event) {
         Player player = getPlayer(game, event.playerId());
         Inventory inv = player.getInventory();
 
@@ -74,9 +87,14 @@ public class GameEventExecutor {
 
         // 3. Deduct Resources
         inv.removeResources(game.getConfig().settlementCost());
+
+        return List.of(
+                createPaymentEvent(event.playerId(), game.getConfig().settlementCost()),
+                event
+        );
     }
 
-    private void handleBuildCity(Game game, BuildCityEventDTO event) {
+    private List<GameEvent> handleBuildCity(Game game, BuildCityEventDTO event) {
         Player player = getPlayer(game, event.playerId());
         Inventory inv = player.getInventory();
 
@@ -87,16 +105,24 @@ public class GameEventExecutor {
         boardService.upgradeBuilding(game.getBoard(), mapVertex(event.vertex()), event.playerId());
 
         inv.removeResources(game.getConfig().cityCost());
+
+        return List.of(
+                createPaymentEvent(event.playerId(), game.getConfig().cityCost()),
+                event
+        );
     }
 
-    private void handleRollDice(Game game, RollDiceEventDTO event) {
+    private List<GameEvent> handleRollDice(Game game, RollDiceEventDTO event) {
+        List<GameEvent> events = new ArrayList<>();
+
         int d1 = random.nextInt(6) + 1;
         int d2 = random.nextInt(6) + 1;
         game.setDices(new int[]{d1, d2});
+        events.add(event); // Add the roll event first
 
         Map<String, Inventory> distributed = boardService.distributeResources(game.getBoard(), game.getDices(), game.getPlayers());
 
-        // Merge distributed resources into player inventories
+        // Merge distributed resources into player inventories and generate events
         distributed.forEach((playerId, inventory) -> {
             Player player = game.getPlayers().get(playerId);
             if (player != null) {
@@ -104,19 +130,34 @@ public class GameEventExecutor {
                     if (count > 0) player.addResource(type, count);
                 });
             }
+            if (!inventory.getResources().isEmpty()) {
+                // Convert internal resources to DTO resources
+                Map<ResourceTypeDTO, Integer> resourcesDTO = inventory.getResources().entrySet().stream()
+                        .filter(e -> e.getValue() > 0)
+                        .collect(Collectors.toMap(e -> mapResourceType(e.getKey()), Map.Entry::getValue));
+
+                if (!resourcesDTO.isEmpty()) {
+                    events.add(new TransferResourcesEventDTO("Server", "Bank", playerId, resourcesDTO, resourcesDTO.values().stream().reduce(0, Integer::sum)));
+                }
+            }
         });
+
+        return events;
     }
 
-    private void handleEndTurn(Game game, EndTurnEventDTO event) {
+    private List<GameEvent> handleEndTurn(Game game, EndTurnEventDTO event) {
         // TODO: Implement turn rotation logic
+        return List.of(event);
     }
 
-    private void handleBuyDevelopmentCard(Game game, BuyDevelopmentCardEventDTO event) {
+    private List<GameEvent> handleBuyDevelopmentCard(Game game, BuyDevelopmentCardEventDTO event) {
         // TODO: Implement dev card logic
+        return List.of(event);
     }
 
-    private void handleTransferResources(Game game, TransferResourcesEventDTO event) {
+    private List<GameEvent> handleTransferResources(Game game, TransferResourcesEventDTO event) {
         // TODO: Implement trade logic
+        return List.of(event);
     }
 
     // --- Helpers ---
@@ -139,5 +180,30 @@ public class GameEventExecutor {
     private VertexCoordinates mapVertex(VertexCoordinatesDTO dto) {
         VertexCoordinates.Direction dir = dto.getDirection() == VertexCoordinatesDTO.VertexDirectionDTO.EAST ? VertexCoordinates.Direction.EAST : VertexCoordinates.Direction.WEST;
         return new VertexCoordinates(dto.getQ(), dto.getR(), dir);
+    }
+
+    private ResourceTypeDTO mapResourceType(com.sundtrack.catan.game.model.enums.ResourceType type) {
+        return switch (type) {
+            case WOOD -> ResourceTypeDTO.WOOD;
+            case BRICK -> ResourceTypeDTO.BRICK;
+            case SHEEP -> ResourceTypeDTO.SHEEP;
+            case WHEAT -> ResourceTypeDTO.WHEAT;
+            case ORE -> ResourceTypeDTO.ORE;
+        };
+    }
+
+    private TransferResourcesEventDTO createPaymentEvent(String playerId, Map<com.sundtrack.catan.game.model.enums.ResourceType, Integer> cost) {
+        Map<ResourceTypeDTO, Integer> costDTO = cost.entrySet().stream()
+                .collect(Collectors.toMap(e -> mapResourceType(e.getKey()), Map.Entry::getValue));
+        
+        int totalCount = cost.values().stream().reduce(0, Integer::sum);
+
+        return new TransferResourcesEventDTO(
+                "Server",
+                playerId,
+                "Bank",
+                costDTO,
+                totalCount
+        );
     }
 }

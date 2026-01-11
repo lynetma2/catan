@@ -3,7 +3,7 @@ package com.sundtrack.catan.lobby;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sundtrack.catan.game.GameService;
-import com.sundtrack.catan.game.entity.Game;
+import com.sundtrack.catan.game.model.Game;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
