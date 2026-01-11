@@ -1,10 +1,12 @@
 import type {GameState, GhostEffect, HUDEntities, LayoutSettings} from "@/game/model/types.ts";
 import type {ButtonType} from "@/game/model/enums.ts";
+import type {GameEvent} from "@/game/model/events.ts";
 
 export interface GameContext {
     setGameState(state: GameStateHandler): void;
     handleButtonAction(type: ButtonType): void;
     switchToDefaultState(): void;
+    emitEvent(event: GameEvent): void;
 }
 
 export interface GameStateHandler {

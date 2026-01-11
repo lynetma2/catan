@@ -17,6 +17,9 @@ import type {GameEvent} from "@/game/model/events.ts";
 import {WaitingState} from "@/game/state/WaitingState.ts";
 import {GameRuleService} from "@/game/logic/GameRuleService.ts";
 import {BuildCityState} from "@/game/state/BuildCityState.ts";
+import {NetworkService} from "@/game/networking/NetworkService.ts";
+import gameConfig from "@/game/config/gameConfig.json";
+
 
 export class GameLoop implements GameContext {
     MAX_FPS = 144;
@@ -43,6 +46,7 @@ export class GameLoop implements GameContext {
     private readonly inputService: InputService;
     private readonly animationService: AnimationService;
     private readonly eventBus: EventBus;
+    private readonly networkService?: NetworkService;
 
     //Update this when changing the multiplayer implementation.
     constructor(canvas: HTMLCanvasElement) {
@@ -59,6 +63,13 @@ export class GameLoop implements GameContext {
         this.inputService = new InputService(this.canvas);
         this.animationService = new AnimationService(this.canvas);
         this.eventBus = new EventBus();
+
+        if (gameConfig.gameMode === "multiplayer") {
+            this.networkService = new NetworkService(gameConfig.lobbyId, (event) => {
+                this.eventBus.emit(event);
+            });
+            this.networkService.connect();
+        }
 
         // Ensure canvas size is correct before calculating layout
         this.updateCanvasSize();
@@ -135,6 +146,7 @@ export class GameLoop implements GameContext {
         this.inputService.stop();
         this.animationService.clear();
         window.removeEventListener('resize', this.handleResize);
+        this.networkService?.disconnect();
     }
 
     update(): void {

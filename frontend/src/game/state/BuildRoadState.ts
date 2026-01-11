@@ -1,11 +1,12 @@
 import type {GameContext} from "./GameStateHandler";
 import type {GameState, GhostEffect, LayoutSettings} from "@/game/model/types.ts";
 import {BaseGameState} from "@/game/state/BaseGameState.ts";
-import {ButtonType} from "@/game/model/enums.ts";
+import {ButtonType, EventType} from "@/game/model/enums.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
 import {RoadGhost} from "@/game/rendering/ghosts/RoadGhost.ts";
 import {KeyService} from "@/game/utils/KeyService.ts";
 import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
+import type {BuildRoadEvent} from "@/game/model/events.ts";
 
 export class BuildRoadState extends BaseGameState {
     protected triggerButton = ButtonType.putRoad;
@@ -28,7 +29,21 @@ export class BuildRoadState extends BaseGameState {
     }
 
     protected onMapClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
-        // Handle map clicks (e.g. selecting a tile)
+        const nearestEdge = HexLayoutService.getNearestEdge(layoutSettings, {x, y});
+        const key = KeyService.edgeToKey(nearestEdge);
+
+        if (this.ghosts.has(key)) {
+            const localPlayer = game.players.find(p => p.isLocal);
+            if (localPlayer) {
+                const event: BuildRoadEvent = {
+                    type: EventType.BuildRoad,
+                    playerId: localPlayer.playerName,
+                    edge: nearestEdge
+                };
+                this.context?.emitEvent(event);
+                this.returnToDefaultState();
+            }
+        }
     }
 
     protected onMapMouseMove(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
