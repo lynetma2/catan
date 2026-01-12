@@ -1,11 +1,12 @@
 import type {GameContext} from "./GameStateHandler";
 import type {GameState, GhostEffect, LayoutSettings} from "@/game/model/types.ts";
 import {BaseGameState} from "@/game/state/BaseGameState.ts";
-import {ButtonType} from "@/game/model/enums.ts";
+import {ButtonType, EventType} from "@/game/model/enums.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
 import {KeyService} from "@/game/utils/KeyService.ts";
 import {SettlementGhost} from "@/game/rendering/ghosts/SettlementGhost.ts";
 import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
+import type {BuildSettlementEvent} from "@/game/model/events.ts";
 
 export class BuildSettlementState extends BaseGameState {
     protected triggerButton = ButtonType.putSettlement;
@@ -28,7 +29,21 @@ export class BuildSettlementState extends BaseGameState {
     }
 
     protected onMapClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
-        // Handle map clicks (e.g. selecting a tile)
+        const nearestVertex = HexLayoutService.getNearestVertex(layoutSettings, {x, y});
+        const key = KeyService.vertexToKey(nearestVertex);
+
+        if (this.ghosts.has(key)) {
+            const localPlayer = game.players.find(p => p.isLocal);
+            if (localPlayer) {
+                const event: BuildSettlementEvent = {
+                    type: EventType.BuildSettlement,
+                    playerId: localPlayer.playerName,
+                    vertex: nearestVertex
+                };
+                this.context?.emitEvent(event);
+                this.returnToDefaultState();
+            }
+        }
     }
 
     protected onMapMouseMove(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {

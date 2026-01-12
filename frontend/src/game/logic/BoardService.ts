@@ -13,14 +13,15 @@ export class BoardService {
     }
 
     public static hasHouse(board: Board, vertex: Vertex): boolean {
-        if (board.buildings.has(KeyService.vertexToKey(vertex))) {
-            return board.buildings.get(KeyService.vertexToKey(vertex))?.type == BuildingType.Settlement;
+        const key = KeyService.vertexToKey(vertex);
+        if (board.buildings.has(key)) {
+            return board.buildings.get(key)?.type == BuildingType.Settlement;
         }
         return false;
     }
 
     public static hasRobber(board: Board, hex: Hex): boolean {
-        return board.robber == hex;
+        return KeyService.hexToKey(board.robber) === KeyService.hexToKey(hex);
     }
 
     public static hasRoadConnectionTo(board: Board, vertex: Vertex, player: Player): boolean {
@@ -91,7 +92,7 @@ export class BoardService {
     }
 
     public static putRoad(board: Board, road: Road): void {
-        board.roads.set(road.edge.toKey(), road);
+        board.roads.set(KeyService.edgeToKey(road.edge), road);
     }
 
     public static moveRobber(board: Board, hex: Hex): void {

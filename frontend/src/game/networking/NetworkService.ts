@@ -1,5 +1,6 @@
 import {Client} from "@stomp/stompjs";
-import type {GameEvent} from "@/game/model/events.ts";
+import type {GameErrorEvent, GameEvent} from "@/game/model/events.ts";
+import {EventType} from "@/game/model/enums.ts";
 import {Logger} from "@/game/utils/Logger.ts";
 
 export class NetworkService {
@@ -34,6 +35,13 @@ export class NetworkService {
     public sendEvent(event: GameEvent) {
         if (!this.client.connected) {
             Logger.warn("Cannot send event: Not connected");
+            this.onEventReceived({
+                type: EventType.Error,
+                playerId: event.playerId,
+                code: "CONNECTION_ERROR",
+                message: "Not connected to server. Please check your internet connection.",
+                originalEventType: event.type
+            } as GameErrorEvent);
             return;
         }
         

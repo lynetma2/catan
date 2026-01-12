@@ -186,6 +186,10 @@ export abstract class BaseGameState implements GameStateHandler {
     update(game: GameState, layoutSettings: LayoutSettings): void {
         // Update button availability based on current resources
         this.updateButtonStates(game);
+
+        // Sync HUD with GameState to reflect inventory changes
+        this.updateHandCards(game, layoutSettings);
+        this.updatePlayerPanels(game, layoutSettings);
     }
 
     protected recalculateLayout(layoutSettings: LayoutSettings) {

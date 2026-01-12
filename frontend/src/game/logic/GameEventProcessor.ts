@@ -49,8 +49,13 @@ export class GameEventProcessor {
             }
         },
         [EventType.RollDice]: (state, event: RollDiceEvent) => {
-            const d1 = Math.floor(Math.random() * 6) + 1;
-            const d2 = Math.floor(Math.random() * 6) + 1;
+            let d1, d2;
+            if (event.dice) {
+                [d1, d2] = event.dice;
+            } else {
+                d1 = Math.floor(Math.random() * 6) + 1;
+                d2 = Math.floor(Math.random() * 6) + 1;
+            }
             state.dices = [d1, d2];
             Logger.info({dices: state.dices}, "Dice Rolled");
         },

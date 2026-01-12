@@ -15,6 +15,11 @@ export class DefaultState extends BaseGameState {
         super.onEnter(game, layoutSettings, context);
     }
 
+    update(game: GameState, layoutSettings: LayoutSettings): void {
+        super.update(game, layoutSettings);
+
+    }
+
     protected onMapClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
         // Handle map clicks (e.g. selecting a tile)
     }

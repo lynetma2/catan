@@ -4,21 +4,33 @@ import {RenderService} from "@/game/core/RenderService.ts";
 import {InputService} from "@/game/core/InputService.ts";
 import {AnimationService} from "@/game/core/AnimationService.ts";
 import {PingAnimation} from "@/game/animations/PingAnimation.ts";
-import {TEST_GAMESTATE, TEST_HUD} from "@/game/model/testGame.ts";
+import {TEST_HUD} from "@/game/model/testGame.ts";
 import {WorldLayoutService} from "@/game/layout/WorldLayoutService.ts";
 import type {GameContext, GameStateHandler} from "@/game/state/GameStateHandler.ts";
 import {DefaultState} from "@/game/state/DefaultState.ts"; // Hypothetical import
-import {ButtonType} from "@/game/model/enums.ts";
+import {ButtonType, EventType} from "@/game/model/enums.ts";
 import {BuildRoadState} from "@/game/state/BuildRoadState.ts";
 import {BuildSettlementState} from "@/game/state/BuildSettlementState.ts";
 import {EventBus} from "@/game/core/EventBus.ts";
 import {GameEventProcessor} from "@/game/logic/GameEventProcessor.ts";
-import type {GameEvent} from "@/game/model/events.ts";
+import type {GameErrorEvent, GameEvent, InitializeGameEvent} from "@/game/model/events.ts";
 import {WaitingState} from "@/game/state/WaitingState.ts";
 import {GameRuleService} from "@/game/logic/GameRuleService.ts";
 import {BuildCityState} from "@/game/state/BuildCityState.ts";
 import {NetworkService} from "@/game/networking/NetworkService.ts";
 import gameConfig from "@/game/config/gameConfig.json";
+import {HotseatController} from "@/game/core/HotseatController.ts";
+import {LoadingState} from "@/game/state/LoadingState.ts";
+import {PlayerService} from "@/game/logic/PlayerService.ts";
+
+// Minimal empty state to satisfy TypeScript before the real game loads
+const EMPTY_GAME: GameState = {
+    board: { tiles: [], ports: [], roads: [], buildings: [] },
+    players: [],
+    bank: { resources: { Brick: 0, Wood: 0, Sheep: 0, Wheat: 0, Ore: 0 } as any, developmentCards: [] },
+    dices: [1, 1],
+    turn: 0
+};
 
 
 export class GameLoop implements GameContext {
@@ -47,10 +59,11 @@ export class GameLoop implements GameContext {
     private readonly animationService: AnimationService;
     private readonly eventBus: EventBus;
     private readonly networkService?: NetworkService;
+    private readonly hotseatController?: HotseatController;
 
     //Update this when changing the multiplayer implementation.
     constructor(canvas: HTMLCanvasElement) {
-        this.game = TEST_GAMESTATE;
+        this.game = EMPTY_GAME;
         this.hudEntities = TEST_HUD;
 
         // Initialize ClientState. For Hotseat, we start as "Player 1".
@@ -69,6 +82,10 @@ export class GameLoop implements GameContext {
                 this.eventBus.emit(event);
             });
             this.networkService.connect();
+        } else {
+            this.hotseatController = new HotseatController((event) => {
+                this.eventBus.emit(event);
+            });
         }
 
         // Ensure canvas size is correct before calculating layout
@@ -79,11 +96,8 @@ export class GameLoop implements GameContext {
 
         window.addEventListener('resize', this.handleResize);
 
-        // Initialize state based on turn
-        this.lastActivePlayerName = this.game.players.find(p => p.isActive)?.playerName ?? null;
-        const isMyTurn = this.lastActivePlayerName === this.clientState.localPlayerId;
-        
-        this.setGameState(isMyTurn ? new DefaultState() : new WaitingState());
+        // Start in Loading State
+        this.setGameState(new LoadingState());
 
         this.initializeInputHandlers();
 
@@ -102,7 +116,7 @@ export class GameLoop implements GameContext {
 
     public handleButtonAction(type: ButtonType) {
         // Centralized Transition Logic
-        const playerId = this.clientState.localPlayerId;
+        const playerId = PlayerService.getCurrentLocalPlayerId(this.game, this.clientState, !!this.hotseatController);
 
         switch (type) {
             case ButtonType.putRoad:
@@ -121,7 +135,10 @@ export class GameLoop implements GameContext {
                 }
                 break;
             case ButtonType.endTurn:
-                // PlayerService.nextTurn(...)
+                this.emitEvent({
+                    type: EventType.EndTurn,
+                    playerId: playerId
+                });
                 break;
         }
     }
@@ -130,12 +147,31 @@ export class GameLoop implements GameContext {
         this.setGameState(new DefaultState());
     }
 
+    public emitEvent(event: GameEvent): void {
+        if (this.networkService) {
+            this.networkService.sendEvent(event);
+        } else if (this.hotseatController) {
+            this.hotseatController.handleEvent(this.game, event);
+        } else {
+            this.eventBus.emit(event);
+        }
+    }
+
     start(): void {
         //Initialize input event listener.
         this.inputService.start();
-        //Initialize the rest.
+        
+        // Request the initial game state
+        this.init();
+        
         //Start the loop.
         this.update();
+    }
+
+    private init() {
+        if (this.hotseatController) {
+            this.hotseatController.requestInitialState();
+        }
     }
 
     stop(): void {
@@ -195,7 +231,31 @@ export class GameLoop implements GameContext {
     logicUpdate(): void {
         const events = this.eventBus.poll();
         events.forEach(event => {
-            GameEventProcessor.process(this.game, event);
+            if (event.type === EventType.Error) {
+                const error = event as GameErrorEvent;
+                console.warn(`[Game Error] ${error.code}: ${error.message}`);
+                // TODO: Hook this up to a Toast/Notification service
+            } else if (event.type === EventType.InitializeGame) {
+                const initEvent = event as InitializeGameEvent;
+                this.game = initEvent.gameState;
+                
+                // Assign styles to players
+                this.game.players.forEach((p, index) => {
+                    p.style = PlayerService.getStyle(index);
+                });
+
+                // Determine initial turn state
+                this.lastActivePlayerName = this.game.players.find(p => p.isActive)?.playerName ?? null;
+
+                PlayerService.syncLocalPlayerIdentity(this.game, this.clientState, !!this.hotseatController);
+
+                const isMyTurn = this.lastActivePlayerName === PlayerService.getCurrentLocalPlayerId(this.game, this.clientState, !!this.hotseatController);
+                
+                this.setGameState(isMyTurn ? new DefaultState() : new WaitingState());
+                console.log("Game Initialized via Event");
+            } else {
+                GameEventProcessor.process(this.game, event);
+            }
         });
 
         // Check for turn change to enforce State Transitions
@@ -204,7 +264,10 @@ export class GameLoop implements GameContext {
 
         if (activeName !== this.lastActivePlayerName) {
             this.lastActivePlayerName = activeName;
-            const isMyTurn = activeName === this.clientState.localPlayerId;
+
+            PlayerService.syncLocalPlayerIdentity(this.game, this.clientState, !!this.hotseatController);
+
+            const isMyTurn = activeName === PlayerService.getCurrentLocalPlayerId(this.game, this.clientState, !!this.hotseatController);
             
             this.setGameState(isMyTurn ? new DefaultState() : new WaitingState());
         }

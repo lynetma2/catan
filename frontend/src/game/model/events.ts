@@ -1,5 +1,5 @@
 import {EventType} from "@/game/model/enums.ts";
-import type {Edge, ResourceCollection, Vertex} from "@/game/model/types.ts";
+import type {Edge, GameState, ResourceCollection, Vertex} from "@/game/model/types.ts";
 
 export interface GameEventBase {
     type: EventType;
@@ -31,6 +31,7 @@ export interface EndTurnEvent extends GameEventBase {
 
 export interface RollDiceEvent extends GameEventBase {
     type: EventType.RollDice;
+    dice?: [number, number];
 }
 
 export interface TransferResourcesEvent extends GameEventBase {
@@ -41,6 +42,18 @@ export interface TransferResourcesEvent extends GameEventBase {
     count?: number; // If the type is hidden (or total count)
 }
 
+export interface GameErrorEvent extends GameEventBase {
+    type: EventType.Error;
+    code: string; // e.g. "INSUFFICIENT_RESOURCES", "CONNECTION_LOST"
+    message: string; // User-facing message
+    originalEventType?: EventType; // The event that caused the error
+}
+
+export interface InitializeGameEvent extends GameEventBase {
+    type: EventType.InitializeGame;
+    gameState: GameState;
+}
+
 export type GameEvent =
     | BuildRoadEvent
     | BuildSettlementEvent
@@ -48,4 +61,7 @@ export type GameEvent =
     | BuyDevelopmentCardEvent
     | EndTurnEvent
     | RollDiceEvent
-    | TransferResourcesEvent;
+    | TransferResourcesEvent
+    | GameErrorEvent
+    | InitializeGameEvent;
+    | GameErrorEvent;
