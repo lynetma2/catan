@@ -106,7 +106,7 @@ export const TEST_PLAYERS: Player[] = [
         points: 0,
         isActive: true,
         isLocal: true,
-        style: { fillColor: "#e74c3c" }
+        style: { fillColor: "#e74c3c", strokeColor: "#c0392b" }
     },
     {
         playerName: "Player 2",
@@ -123,7 +123,7 @@ export const TEST_PLAYERS: Player[] = [
         points: 0,
         isActive: false,
         isLocal: false,
-        style: { fillColor: "#3498db" }
+        style: { fillColor: "#3498db", strokeColor: "#2980b9" }
     },
     {
         playerName: "Player 3",
@@ -140,7 +140,7 @@ export const TEST_PLAYERS: Player[] = [
         points: 0,
         isActive: false,
         isLocal: false,
-        style: { fillColor: "#2ecc71" }
+        style: { fillColor: "#2ecc71", strokeColor: "#27ae60" }
     }
 ]
 
