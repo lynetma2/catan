@@ -1,3 +1,3 @@
 export interface RoadStyle {
-    fillColor: string;
+    strokeStyle: string;
 }

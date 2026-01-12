@@ -1,6 +1,7 @@
-import type {Edge, LayoutSettings, Road} from "@/game/model/types.ts";
+import type {Edge, GameState, LayoutSettings, Road} from "@/game/model/types.ts";
 import type {RoadStyle} from "@/game/theme/roadStyles.ts";
 import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
+import {PlayerService} from "@/game/logic/PlayerService.ts";
 
 export class RoadRender {
     private static edgeToPath(layoutSettings: LayoutSettings, edge: Edge): Path2D {
@@ -15,16 +16,17 @@ export class RoadRender {
         return path;
     }
 
-    private static getStyle(road: Road): RoadStyle {
+    private static getStyle(road: Road, game: GameState): RoadStyle {
         //Somehow obtain information about the player color. TODO fix this.
+        const playerStyle = PlayerService.getPlayerStyle(game, road.playerName);
         return {
-            fillColor: "#4895EF"
-        }
+            strokeStyle: playerStyle.strokeColor
+        };
     }
 
-    public static draw(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, road: Road) {
+    public static draw(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, road: Road, game: GameState) {
         ctx.beginPath();
-        ctx.strokeStyle = this.getStyle(road).fillColor;
+        ctx.strokeStyle = this.getStyle(road, game).strokeStyle;
         ctx.lineWidth = layoutSettings.size.x * layoutSettings.ratios.roadWidth;
         ctx.stroke(this.edgeToPath(layoutSettings, road.edge));
         ctx.closePath();

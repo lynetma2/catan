@@ -4,6 +4,7 @@ import settlementIcon from '@/assets/settlement.svg';
 
 export interface BuildingStyle {
     imageSrc: string;
+    fillColor?: string;
 }
 
 export const BUILDING_STYLES: Record<BuildingType, BuildingStyle> = {

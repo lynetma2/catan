@@ -1,14 +1,20 @@
-import type {Building, LayoutSettings, Vertex} from "@/game/model/types.ts";
+import type {Building, GameState, LayoutSettings, Vertex} from "@/game/model/types.ts";
 import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
 import {BUILDING_STYLES, type BuildingStyle} from "@/game/theme/buildingStyles.ts";
 import {BuildingType} from "@/game/model/enums.ts";
+import {PlayerService} from "@/game/logic/PlayerService.ts";
 
 export class BuildingRender {
     private static imageCache: Map<string, HTMLImageElement> = new Map();
+    private static coloredImageCache: Map<string, HTMLCanvasElement> = new Map();
 
-    private static getStyle(building: Building): BuildingStyle {
+    private static getStyle(building: Building, game: GameState): BuildingStyle {
         //Somehow obtain information about the player color. TODO fix this.
-        return BUILDING_STYLES[building.type];
+        const playerStyle = PlayerService.getPlayerStyle(game, building.playerName);
+        return {
+            imageSrc: BUILDING_STYLES[building.type].imageSrc,
+            fillColor: playerStyle.fillColor,
+        };
     }
 
     private static getIcon(style: BuildingStyle) {
@@ -21,12 +27,46 @@ export class BuildingRender {
         return this.imageCache.get(src)!;
     }
 
-    public static draw(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, building: Building) {
-        const center = HexLayoutService.vertexPolygonCorners(layoutSettings, building.vertex)[0];
-        const style = this.getStyle(building);
-        const image = this.getIcon(style);
+    private static getColoredIcon(style: BuildingStyle): HTMLImageElement | HTMLCanvasElement {
+        const rawImage = this.getIcon(style);
 
-        if (!image.complete) return;
+        // If no color is specified, or image isn't loaded yet, return the raw image
+        if (!style.fillColor || !rawImage.complete || rawImage.naturalWidth === 0) {
+            return rawImage;
+        }
+
+        // Create a unique key for the cache
+        const cacheKey = `${style.imageSrc}-${style.fillColor}`;
+
+        if (!this.coloredImageCache.has(cacheKey)) {
+            // Create an offscreen canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = rawImage.naturalWidth;
+            canvas.height = rawImage.naturalHeight;
+            const ctx = canvas.getContext('2d');
+
+            if (ctx) {
+                // 1. Draw the original icon
+                ctx.drawImage(rawImage, 0, 0);
+
+                // 2. Change composite mode to keep the alpha (shape) but replace the color
+                ctx.globalCompositeOperation = 'source-in';
+                ctx.fillStyle = style.fillColor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                this.coloredImageCache.set(cacheKey, canvas);
+            }
+        }
+
+        return this.coloredImageCache.get(cacheKey) ?? rawImage;
+    }
+
+    public static draw(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, building: Building, game: GameState) {
+        const center = HexLayoutService.vertexPolygonCorners(layoutSettings, building.vertex)[0];
+        const style = this.getStyle(building, game);
+        const image = this.getColoredIcon(style);
+
+        if (image instanceof HTMLImageElement && !image.complete) return;
 
         let scale = layoutSettings.ratios.settlementScale;
         if (building.type === BuildingType.City) {
@@ -59,10 +99,10 @@ export class BuildingRender {
     public static drawGhostPreview(ctx: CanvasRenderingContext2D, layoutSettings: LayoutSettings, vertex: Vertex, color: string, type: BuildingType = BuildingType.Settlement) {
         const center = HexLayoutService.vertexPolygonCorners(layoutSettings, vertex)[0];
         // Use icon for preview
-        const style = BUILDING_STYLES[type];
-        const image = this.getIcon(style);
+        const style = { ...BUILDING_STYLES[type], fillColor: color };
+        const image = this.getColoredIcon(style);
 
-        if (!image.complete) return;
+        if (image instanceof HTMLImageElement && !image.complete) return;
 
         let scale = layoutSettings.ratios.settlementScale;
         if (type === BuildingType.City) {

@@ -39,6 +39,11 @@ export class PlayerService {
         return this.STYLES[index % this.STYLES.length];
     }
 
+    public static getPlayerStyle(game: GameState, playerId: string) {
+        const player = this.getPlayer(game, playerId);
+        return player ? player.style : this.STYLES[0];
+    }
+
     public static getPlayer(game: GameState, playerId: string) {
         return game.players.find(p => p.playerName === playerId);
     }

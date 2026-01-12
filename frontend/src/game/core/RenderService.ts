@@ -32,10 +32,10 @@ export class RenderService {
         this.context = canvas.getContext('2d') as CanvasRenderingContext2D;
     }
 
-    private drawBoard(layoutSettings: LayoutSettings, board: Board) {
-        this.drawTiles(layoutSettings, board.tiles);
-        this.drawRoads(layoutSettings, board.roads);
-        this.drawBuildings(layoutSettings, board.buildings);
+    private drawBoard(layoutSettings: LayoutSettings, game: GameState) {
+        this.drawTiles(layoutSettings, game.board.tiles);
+        this.drawRoads(layoutSettings, game);
+        this.drawBuildings(layoutSettings, game);
     }
 
     private drawTiles(layoutSettings: LayoutSettings, tiles: Map<string, Tile>) {
@@ -44,15 +44,15 @@ export class RenderService {
         })
     }
 
-    private drawRoads(layoutSettings: LayoutSettings, roads: Map<string, Road>) {
-        roads.forEach(road => {
-            RoadRender.draw(this.context, layoutSettings, road);
+    private drawRoads(layoutSettings: LayoutSettings, game: GameState) {
+        game.board.roads.forEach(road => {
+            RoadRender.draw(this.context, layoutSettings, road, game);
         })
     }
 
-    private drawBuildings(layoutSettings: LayoutSettings, buildings: Map<string, Building>) {
-        buildings.forEach(building => {
-            BuildingRender.draw(this.context, layoutSettings, building);
+    private drawBuildings(layoutSettings: LayoutSettings, game: GameState) {
+        game.board.buildings.forEach(building => {
+            BuildingRender.draw(this.context, layoutSettings, building, game);
         })
     }
 
@@ -114,7 +114,7 @@ export class RenderService {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         //Draw board
-        this.drawBoard(layoutSettings, game.board);
+        this.drawBoard(layoutSettings, game);
 
         //Draw Ghosts (Data-Driven)
         //this.drawGhost(layoutSettings, game.inputState);
