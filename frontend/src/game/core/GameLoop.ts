@@ -29,7 +29,8 @@ const EMPTY_GAME: GameState = {
     players: [],
     bank: { resources: { Brick: 0, Wood: 0, Sheep: 0, Wheat: 0, Ore: 0 } as any, developmentCards: [] },
     dices: [1, 1],
-    turn: 0
+    turn: 0,
+    hasRolledDice: false
 };
 
 

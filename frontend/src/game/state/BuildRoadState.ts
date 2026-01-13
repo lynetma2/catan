@@ -1,5 +1,5 @@
 import type {GameContext} from "./GameStateHandler";
-import type {GameState, GhostEffect, LayoutSettings} from "@/game/model/types.ts";
+import type {Edge, GameState, GhostEffect, LayoutSettings} from "@/game/model/types.ts";
 import {BaseGameState} from "@/game/state/BaseGameState.ts";
 import {ButtonType, EventType} from "@/game/model/enums.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
@@ -14,6 +14,7 @@ export class BuildRoadState extends BaseGameState {
     private ghosts: Map<string, GhostEffect> = new Map();
     private activeGhost: GhostEffect | undefined;
     private activeGhostKey: string | undefined;
+    private hoveredEdge: Edge | undefined;
 
     onEnter(game: GameState, layoutSettings: LayoutSettings, context: GameContext): void {
         super.onEnter(game, layoutSettings, context);
@@ -30,16 +31,13 @@ export class BuildRoadState extends BaseGameState {
     }
 
     protected onMapClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
-        const nearestEdge = HexLayoutService.getNearestEdge(layoutSettings, {x, y});
-        const key = KeyService.edgeToKey(nearestEdge);
-
-        if (this.ghosts.has(key)) {
+        if (this.hoveredEdge) {
             const localPlayer = game.players.find(p => p.isLocal);
             if (localPlayer) {
                 const event: BuildRoadEvent = {
                     type: EventType.BuildRoad,
                     playerId: localPlayer.playerName,
-                    edge: nearestEdge
+                    edge: this.hoveredEdge
                 };
                 this.context?.emitEvent(event);
                 this.returnToDefaultState();
@@ -56,10 +54,12 @@ export class BuildRoadState extends BaseGameState {
             if (localPlayer) {
                 this.activeGhost = new RoadGhost(nearestEdge, localPlayer.style.fillColor, 'preview');
                 this.activeGhostKey = key;
+                this.hoveredEdge = nearestEdge;
             }
         } else {
             this.activeGhost = undefined;
             this.activeGhostKey = undefined;
+            this.hoveredEdge = undefined;
         }
     }
     

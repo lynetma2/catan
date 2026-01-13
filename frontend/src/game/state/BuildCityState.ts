@@ -1,5 +1,5 @@
 import type {GameContext} from "./GameStateHandler";
-import type {GameState, GhostEffect, LayoutSettings} from "@/game/model/types.ts";
+import type {GameState, GhostEffect, LayoutSettings, Vertex} from "@/game/model/types.ts";
 import {BaseGameState} from "@/game/state/BaseGameState.ts";
 import {ButtonType, EventType} from "@/game/model/enums.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
@@ -13,6 +13,7 @@ export class BuildCityState extends BaseGameState {
     private ghosts: Map<string, GhostEffect> = new Map();
     private activeGhost: GhostEffect | undefined;
     private activeGhostKey: string | undefined;
+    private hoveredVertex: Vertex | undefined;
 
     onEnter(game: GameState, layoutSettings: LayoutSettings, context: GameContext): void {
         super.onEnter(game, layoutSettings, context);
@@ -29,16 +30,13 @@ export class BuildCityState extends BaseGameState {
     }
 
     protected onMapClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
-        const nearestVertex = HexLayoutService.getNearestVertex(layoutSettings, {x, y});
-        const key = KeyService.vertexToKey(nearestVertex);
-
-        if (this.ghosts.has(key)) {
+        if (this.hoveredVertex) {
             const localPlayer = game.players.find(p => p.isLocal);
             if (localPlayer) {
                 const event: BuildCityEvent = {
                     type: EventType.BuildCity,
                     playerId: localPlayer.playerName,
-                    vertex: nearestVertex
+                    vertex: this.hoveredVertex
                 };
                 this.context?.emitEvent(event);
                 this.returnToDefaultState();
@@ -55,10 +53,12 @@ export class BuildCityState extends BaseGameState {
             if (localPlayer) {
                 this.activeGhost = new CityGhost(nearestVertex, localPlayer.style.fillColor, 'preview');
                 this.activeGhostKey = key;
+                this.hoveredVertex = nearestVertex;
             }
         } else {
             this.activeGhost = undefined;
             this.activeGhostKey = undefined;
+            this.hoveredVertex = undefined;
         }
     }
 

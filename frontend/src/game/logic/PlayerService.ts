@@ -4,12 +4,12 @@ import type {PlayerStyle} from "@/game/theme/playerStyles.ts";
 export class PlayerService {
     // Centralized palette for player styles.
     private static readonly STYLES: PlayerStyle[] = [
-        { fillColor: "#ef5350", strokeColor: "#b71c1c" }, // Red
-        { fillColor: "#42a5f5", strokeColor: "#0d47a1" }, // Blue
-        { fillColor: "#ffa726", strokeColor: "#e65100" }, // Orange
-        { fillColor: "#fcfcfc", strokeColor: "#9e9e9e" }, // White
-        { fillColor: "#ab47bc", strokeColor: "#4a148c" }, // Purple
-        { fillColor: "#26a69a", strokeColor: "#004d40" }, // Teal
+        { fillColor: "#ef5350", strokeColor: "#ef5350" }, // Red
+        { fillColor: "#42a5f5", strokeColor: "#42a5f5" }, // Blue
+        { fillColor: "#ffa726", strokeColor: "#ffa726" }, // Orange
+        { fillColor: "#fcfcfc", strokeColor: "#fcfcfc" }, // White
+        { fillColor: "#ab47bc", strokeColor: "#ab47bc" }, // Purple
+        { fillColor: "#26a69a", strokeColor: "#26a69a" }, // Teal
     ];
 
     /**

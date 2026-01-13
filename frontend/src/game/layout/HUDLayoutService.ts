@@ -72,6 +72,13 @@ interface PlayerOverviewConfig {
     }
 }
 
+interface DiceConfig {
+    anchor: AnchorString;
+    offset: { x: number; y: number };
+    size: number;
+    spacing: number;
+}
+
 interface LayoutConfig {
     settings: {
         baseScale: number;
@@ -81,6 +88,7 @@ interface LayoutConfig {
     containers: {
         playerHand: PlayerHandConfig;
         playerOverview: PlayerOverviewConfig;
+        dice: DiceConfig;
     };
 }
 
@@ -214,6 +222,36 @@ export class HUDLayoutService {
                 iconSize: config.internal.iconSize * guiScale
             }
         };
+    }
+
+    public static getDiceLayout(canvasWidth: number, canvasHeight: number): UiLayout[] {
+        const config = layoutConfig.containers.dice;
+        if (!config) {
+            return [];
+        }
+
+        const guiScale = this.getGuiScale(canvasWidth);
+
+        const size = config.size * guiScale;
+        const spacing = config.spacing * guiScale;
+
+        // Total width of 2 dice + spacing
+        const totalWidth = (size * 2) + spacing;
+        const totalHeight = size;
+
+        const anchor = STRING_TO_ANCHOR[config.anchor];
+        const anchorPos = this.getAnchorCoordinates(anchor, canvasWidth, canvasHeight);
+
+        // Shift origin so the dice block aligns with the anchor
+        const originShift = this.getOriginShift(anchor, totalWidth, totalHeight);
+
+        const startX = anchorPos.x + (config.offset.x * guiScale) + originShift.x;
+        const startY = anchorPos.y + (config.offset.y * guiScale) + originShift.y;
+
+        return [
+            { x: startX, y: startY, width: size, height: size },
+            { x: startX + size + spacing, y: startY, width: size, height: size }
+        ];
     }
 
     public static getButtonLayout(buttonType: ButtonType, canvasWidth: number, canvasHeight: number): UiLayout {

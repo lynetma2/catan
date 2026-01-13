@@ -113,6 +113,7 @@ export interface GameState {
     dices: number[];
     phase: GamePhase;
     inputState: InputState;
+    hasRolledDice: boolean;
 }
 
 export interface Prices {

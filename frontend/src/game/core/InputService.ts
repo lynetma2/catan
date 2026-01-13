@@ -16,6 +16,8 @@ export class InputService {
     private isDragging: boolean = false;
     private lastX: number = 0;
     private lastY: number = 0;
+    private totalDragDistance: number = 0;
+    private readonly DRAG_THRESHOLD = 5;
     private pressedKeys: Set<string> = new Set();
 
     constructor(canvas: HTMLCanvasElement) {
@@ -54,6 +56,7 @@ export class InputService {
 
     private onMouseDown = (event: MouseEvent) => {
         this.isDragging = false;
+        this.totalDragDistance = 0;
         const {x, y} = this.getMousePos(event);
         this.lastX = x;
         this.lastY = y;
@@ -75,7 +78,10 @@ export class InputService {
 
             // If we moved, it's a drag
             if (dx !== 0 || dy !== 0) {
-                this.isDragging = true;
+                this.totalDragDistance += Math.hypot(dx, dy);
+                if (this.totalDragDistance > this.DRAG_THRESHOLD) {
+                    this.isDragging = true;
+                }
                 if (this.onPan) {
                     this.onPan(dx, dy);
                 }

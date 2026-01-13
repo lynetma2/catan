@@ -113,6 +113,11 @@ export class HotseatController {
     }
 
     private handleRollDice(game: GameState, event: RollDiceEvent) {
+        if (game.hasRolledDice) {
+            this.emitError(event, "ALREADY_ROLLED", "You have already rolled the dice this turn.");
+            return;
+        }
+
         const d1 = Math.floor(Math.random() * 6) + 1;
         const d2 = Math.floor(Math.random() * 6) + 1;
         

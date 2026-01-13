@@ -21,6 +21,8 @@ import {ButtonRender} from "@/game/rendering/buttonRender.ts";
 import type {GameStateHandler} from "@/game/state/GameStateHandler.ts";
 import {CardRender} from "@/game/rendering/cardRender.ts";
 import {PlayerOverviewRender} from "@/game/rendering/playerOverviewRender.ts";
+import {DiceRender} from "@/game/rendering/DiceRender.ts";
+import {HUDLayoutService} from "@/game/layout/HUDLayoutService.ts";
 
 
 export class RenderService {
@@ -56,9 +58,13 @@ export class RenderService {
         })
     }
 
-    // private drawDices(dices: [number]) {
-    //
-    // }
+    private drawDices(dices: number[]) {
+        const layouts = HUDLayoutService.getDiceLayout(this.canvas.width, this.canvas.height);
+        if (layouts.length >= 2 && dices.length >= 2) {
+            DiceRender.draw(this.context, layouts[0].x, layouts[0].y, layouts[0].width, dices[0]);
+            DiceRender.draw(this.context, layouts[1].x, layouts[1].y, layouts[1].width, dices[1]);
+        }
+    }
 
     // private drawBankCards(cards: [number]) {
     //
@@ -129,7 +135,7 @@ export class RenderService {
         //drawBankCards(this.canvas, this.resources, this.developmentCards, 800, currentY);
 
         //Draw the dices
-        //drawDices(this.canvas, this.dices, 670, 830);
+        this.drawDices(game.dices);
 
         this.drawGhosts(layoutSettings, state.getGhostEffects());
 

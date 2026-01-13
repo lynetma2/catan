@@ -47,6 +47,7 @@ export class GameEventProcessor {
                 const nextIndex = (currentIndex + 1) % state.players.length;
                 state.players[nextIndex].isActive = true;
             }
+            state.hasRolledDice = false;
         },
         [EventType.RollDice]: (state, event: RollDiceEvent) => {
             let d1, d2;
@@ -57,6 +58,7 @@ export class GameEventProcessor {
                 d2 = Math.floor(Math.random() * 6) + 1;
             }
             state.dices = [d1, d2];
+            state.hasRolledDice = true;
             Logger.info({dices: state.dices}, "Dice Rolled");
         },
         [EventType.BuyDevelopmentCard]: (state, event: BuyDevelopmentCardEvent) => {

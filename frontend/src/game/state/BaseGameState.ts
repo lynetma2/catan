@@ -229,11 +229,16 @@ export abstract class BaseGameState implements GameStateHandler {
 
         // Flatten resources into a list of cards
         const resources: ResourceType[] = [];
-        Object.entries(player.inventory.resources).forEach(([res, count]) => {
+        
+        // Use deterministic order (Enum values) to prevent cards jumping around
+        Object.values(ResourceType).forEach(res => {
+            const count = player.inventory.resources[res] || 0;
             for (let i = 0; i < count; i++) {
-                resources.push(res as ResourceType);
+                resources.push(res);
             }
         });
+
+        const oldCards = this.hudEntities?.cards || [];
 
         // Generate Layouts
         this.hudEntities!.cards = resources.map((res, index) => {
@@ -244,11 +249,24 @@ export abstract class BaseGameState implements GameStateHandler {
                 layoutSettings.viewport.height
             );
 
+            // Preserve state from previous frame
+            let isHovered = false;
+            let isSelected = false;
+
+            if (index < oldCards.length) {
+                const oldCard = oldCards[index];
+                // Only preserve if the card type hasn't changed at this index
+                if (oldCard.resourceType === res) {
+                    isHovered = oldCard.isHovered;
+                    isSelected = oldCard.isSelected;
+                }
+            }
+
             return {
                 resourceType: res,
                 layout: layout,
-                isHovered: false,
-                isSelected: false
+                isHovered: isHovered,
+                isSelected: isSelected
             };
         });
     }
