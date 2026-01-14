@@ -152,7 +152,7 @@ export const TEST_BOARD: Board = {
     buildings: TEST_BUILDINGS,
     roads: TEST_ROADS,
     tiles: TEST_TILES,
-    robber: { q: 2, r: 0 } // Desert location based on generation order
+    robber: { q: 0, r: 0 } // Desert location based on generation order
 }
 
 export const INITIAL_INPUT: InputState = {

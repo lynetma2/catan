@@ -1,4 +1,4 @@
-import type {GameState} from "@/game/model/types.ts";
+import type {GameState, Hex} from "@/game/model/types.ts";
 import {PlayerService} from "@/game/logic/PlayerService.ts";
 import gameRules from "@/game/config/gameRules.json";
 import {BuildingType, ResourceType} from "@/game/model/enums.ts";
@@ -26,6 +26,20 @@ export class GameRuleService {
     public static canBuyDevelopmentCard(game: GameState, playerId: string): boolean {
         if (!this.hasResources(game, playerId, gameRules.costs.developmentCard)) return false;
         return true;
+    }
+
+    public static canMoveRobber(game: GameState, targetHex: Hex): boolean {
+        const currentRobber = game.board.robber;
+        
+        // 1. Cannot place on the same spot
+        if (targetHex.q === currentRobber.q && targetHex.r === currentRobber.r) {
+            return false;
+        }
+
+        // 2. Must be a valid tile (exists on board)
+        const s = -targetHex.q - targetHex.r;
+        const key = `q${targetHex.q}r${targetHex.r}s${s}`;
+        return game.board.tiles.has(key);
     }
 
     private static hasResources(game: GameState, playerId: string, cost: Record<string, number>): boolean {

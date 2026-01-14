@@ -1,5 +1,5 @@
 import {EventType} from "@/game/model/enums.ts";
-import type {Edge, GameState, ResourceCollection, Vertex} from "@/game/model/types.ts";
+import type {Edge, GameState, Hex, ResourceCollection, Vertex} from "@/game/model/types.ts";
 
 export interface GameEventBase {
     type: EventType;
@@ -54,6 +54,26 @@ export interface InitializeGameEvent extends GameEventBase {
     gameState: GameState;
 }
 
+export interface MoveRobberEvent extends GameEventBase {
+    type: EventType.MoveRobber;
+    hex: Hex;
+}
+
+export interface RobberTriggeredEvent extends GameEventBase {
+    type: EventType.RobberTriggered;
+}
+
+export interface StealResourceEvent extends GameEventBase {
+    type: EventType.StealResource;
+    targetPlayerId: string;
+    resource?: string; // Optional (if known/chosen), otherwise random
+}
+
+export interface DiscardResourcesEvent extends GameEventBase {
+    type: EventType.DiscardResources;
+    resources: Record<string, number>;
+}
+
 export type GameEvent =
     | BuildRoadEvent
     | BuildSettlementEvent
@@ -63,5 +83,8 @@ export type GameEvent =
     | RollDiceEvent
     | TransferResourcesEvent
     | GameErrorEvent
-    | InitializeGameEvent;
-    | GameErrorEvent;
+    | InitializeGameEvent
+    | MoveRobberEvent
+    | RobberTriggeredEvent
+    | StealResourceEvent
+    | DiscardResourcesEvent;

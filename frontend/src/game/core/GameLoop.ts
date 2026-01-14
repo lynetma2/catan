@@ -9,19 +9,16 @@ import {WorldLayoutService} from "@/game/layout/WorldLayoutService.ts";
 import type {GameContext, GameStateHandler} from "@/game/state/GameStateHandler.ts";
 import {DefaultState} from "@/game/state/DefaultState.ts"; // Hypothetical import
 import {ButtonType, EventType} from "@/game/model/enums.ts";
-import {BuildRoadState} from "@/game/state/BuildRoadState.ts";
-import {BuildSettlementState} from "@/game/state/BuildSettlementState.ts";
 import {EventBus} from "@/game/core/EventBus.ts";
 import {GameEventProcessor} from "@/game/logic/GameEventProcessor.ts";
 import type {GameErrorEvent, GameEvent, InitializeGameEvent} from "@/game/model/events.ts";
 import {WaitingState} from "@/game/state/WaitingState.ts";
-import {GameRuleService} from "@/game/logic/GameRuleService.ts";
-import {BuildCityState} from "@/game/state/BuildCityState.ts";
 import {NetworkService} from "@/game/networking/NetworkService.ts";
 import gameConfig from "@/game/config/gameConfig.json";
 import {HotseatController} from "@/game/core/HotseatController.ts";
 import {LoadingState} from "@/game/state/LoadingState.ts";
 import {PlayerService} from "@/game/logic/PlayerService.ts";
+import {StateTransitionService} from "@/game/state/StateTransitionService.ts";
 
 // Minimal empty state to satisfy TypeScript before the real game loads
 const EMPTY_GAME: GameState = {
@@ -118,29 +115,12 @@ export class GameLoop implements GameContext {
     public handleButtonAction(type: ButtonType) {
         // Centralized Transition Logic
         const playerId = PlayerService.getCurrentLocalPlayerId(this.game, this.clientState, !!this.hotseatController);
-
-        switch (type) {
-            case ButtonType.putRoad:
-                if (GameRuleService.canBuildRoad(this.game, playerId)) {
-                    this.setGameState(new BuildRoadState());
-                }
-                break;
-            case ButtonType.putSettlement:
-                if (GameRuleService.canBuildSettlement(this.game, playerId)) {
-                    this.setGameState(new BuildSettlementState());
-                }
-                break;
-            case ButtonType.putCity:
-                if (GameRuleService.canBuildCity(this.game, playerId)) {
-                    this.setGameState(new BuildCityState());
-                }
-                break;
-            case ButtonType.endTurn:
-                this.emitEvent({
-                    type: EventType.EndTurn,
-                    playerId: playerId
-                });
-                break;
+        
+        const nextState = StateTransitionService.getNextStateFromButton(type, this.game, playerId);
+        if (nextState) {
+            this.setGameState(nextState);
+        } else if (type === ButtonType.endTurn) {
+            this.emitEvent({ type: EventType.EndTurn, playerId: playerId });
         }
     }
 
@@ -256,23 +236,26 @@ export class GameLoop implements GameContext {
                 console.log("Game Initialized via Event");
             } else {
                 GameEventProcessor.process(this.game, event);
+                
+                // Handle Side Effects of Turn Change (specifically for Hotseat identity sync)
+                if (event.type === EventType.EndTurn) {
+                    const activePlayer = this.game.players.find(p => p.isActive);
+                    this.lastActivePlayerName = activePlayer?.playerName ?? null;
+                    PlayerService.syncLocalPlayerIdentity(this.game, this.clientState, !!this.hotseatController);
+                }
+                
+                // Check if this event triggers a state change (e.g. Robber, EndTurn)
+                const localId = PlayerService.getCurrentLocalPlayerId(this.game, this.clientState, !!this.hotseatController);
+                const activePlayer = this.game.players.find(p => p.isActive);
+                const isMyTurn = activePlayer?.playerName === localId;
+                
+                const nextState = StateTransitionService.getNextStateFromEvent(event, this.game, localId, isMyTurn);
+                if (nextState) {
+                    this.setGameState(nextState);
+                }
             }
         });
-
-        // Check for turn change to enforce State Transitions
-        const activePlayer = this.game.players.find(p => p.isActive);
-        const activeName = activePlayer?.playerName ?? null;
-
-        if (activeName !== this.lastActivePlayerName) {
-            this.lastActivePlayerName = activeName;
-
-            PlayerService.syncLocalPlayerIdentity(this.game, this.clientState, !!this.hotseatController);
-
-            const isMyTurn = activeName === PlayerService.getCurrentLocalPlayerId(this.game, this.clientState, !!this.hotseatController);
-            
-            this.setGameState(isMyTurn ? new DefaultState() : new WaitingState());
-        }
-
+        
         //Update physics.
     }
 

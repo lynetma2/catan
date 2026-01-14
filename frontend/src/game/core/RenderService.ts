@@ -23,6 +23,7 @@ import {CardRender} from "@/game/rendering/cardRender.ts";
 import {PlayerOverviewRender} from "@/game/rendering/playerOverviewRender.ts";
 import {DiceRender} from "@/game/rendering/DiceRender.ts";
 import {HUDLayoutService} from "@/game/layout/HUDLayoutService.ts";
+import {RobberRender} from "@/game/rendering/RobberRender.ts";
 
 
 export class RenderService {
@@ -36,6 +37,7 @@ export class RenderService {
 
     private drawBoard(layoutSettings: LayoutSettings, game: GameState) {
         this.drawTiles(layoutSettings, game.board.tiles);
+        this.drawRobber(layoutSettings, game);
         this.drawRoads(layoutSettings, game);
         this.drawBuildings(layoutSettings, game);
     }
@@ -73,6 +75,9 @@ export class RenderService {
     // private drawPlayers(players: Map<string, Player>) {
     //
     // }
+    private drawRobber(layoutSettings: LayoutSettings, game: GameState) {
+        RobberRender.draw(this.context, layoutSettings, game.board.robber);
+    }
 
     public drawButtons(buttons: Button[]) {
         buttons.forEach(button => {

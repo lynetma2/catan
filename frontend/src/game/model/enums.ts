@@ -70,5 +70,9 @@ export enum EventType {
     RollDice = "RollDice",
     TransferResources = "TransferResources",
     InitializeGame = "InitializeGame",
+    MoveRobber = "MoveRobber",
+    RobberTriggered = "RobberTriggered",
+    StealResource = "StealResource",
+    DiscardResources = "DiscardResources",
     Error = "Error"
 }

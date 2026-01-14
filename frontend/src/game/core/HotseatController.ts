@@ -7,6 +7,7 @@ import type {
     GameErrorEvent,
     InitializeGameEvent,
     RollDiceEvent,
+    RobberTriggeredEvent,
     TransferResourcesEvent
 } from "@/game/model/events.ts";
 import {EventType, ResourceType} from "@/game/model/enums.ts";
@@ -15,6 +16,7 @@ import {GameRuleService} from "@/game/logic/GameRuleService.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
 import gameRules from "@/game/config/gameRules.json";
 import {TEST_GAMESTATE} from "@/game/model/testGame.ts";
+import {ResourceService} from "@/game/logic/ResourceService.ts";
 
 export class HotseatController {
     private emit: (event: GameEvent) => void;
@@ -126,6 +128,21 @@ export class HotseatController {
             dice: [d1, d2]
         };
         this.emit(response);
+
+        const total = d1 + d2;
+        
+        // Check for Robber (7)
+        if (total === 7) {
+            const robberEvent: RobberTriggeredEvent = {
+                type: EventType.RobberTriggered,
+                playerId: event.playerId
+            };
+            this.emit(robberEvent);
+        } else {
+            // Distribute Resources
+            const transfers = ResourceService.calculateDistribution(game, total);
+            transfers.forEach(t => this.emit(t));
+        }
     }
 
     private emitTransfer(from: string, to: string, resources: Record<string, number>) {
