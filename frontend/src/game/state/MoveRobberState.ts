@@ -5,6 +5,7 @@ import {GameRuleService} from "@/game/logic/GameRuleService.ts";
 import {EventType} from "@/game/model/enums.ts";
 import type {MoveRobberEvent} from "@/game/model/events.ts";
 import {RobberGhost} from "@/game/rendering/ghosts/RobberGhost.ts";
+import {ActionValidator} from "@/game/logic/ActionValidator.ts";
 
 export class MoveRobberState extends BaseGameState {
     private hoveredHex: Hex | undefined;
@@ -24,6 +25,10 @@ export class MoveRobberState extends BaseGameState {
         if (this.isValidHover && this.hoveredHex) {
             const localPlayer = game.players.find(p => p.isLocal);
             if (localPlayer) {
+                if (!ActionValidator.canPerformAction(game, localPlayer.playerName, EventType.MoveRobber)) {
+                    return;
+                }
+
                 const event: MoveRobberEvent = {
                     type: EventType.MoveRobber,
                     playerId: localPlayer.playerName,

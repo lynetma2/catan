@@ -10,6 +10,7 @@ import {SettlementGhost} from "@/game/rendering/ghosts/SettlementGhost.ts";
 import {RoadGhost} from "@/game/rendering/ghosts/RoadGhost.ts";
 import {ButtonType, EventType} from "@/game/model/enums.ts";
 import type {BuildCityEvent, BuildRoadEvent, BuildSettlementEvent} from "@/game/model/events.ts";
+import {ActionValidator} from "@/game/logic/ActionValidator.ts";
 
 type SmartAction = 
     | { type: EventType.BuildCity | EventType.BuildSettlement, vertex: Vertex }
@@ -28,13 +29,11 @@ export class DefaultState extends BaseGameState {
     }
 
     protected generateButtons(game: GameState) {
-        const buttons: Button[] = [];
-        buttons.push(this.createButton(ButtonType.putRoad));
-        buttons.push(this.createButton(ButtonType.putSettlement));
-        buttons.push(this.createButton(ButtonType.putCity));
-        buttons.push(this.createButton(ButtonType.drawDevelopmentCard));
-        buttons.push(this.createButton(ButtonType.endTurn));
-        this.hudEntities!.buttons = buttons;
+        const localPlayer = game.players.find(p => p.isLocal);
+        if (localPlayer) {
+            const validButtons = ActionValidator.getValidButtons(game, localPlayer.playerName);
+            this.hudEntities!.buttons = validButtons.map(type => this.createButton(type));
+        }
     }
 
     protected onMapClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
@@ -47,7 +46,7 @@ export class DefaultState extends BaseGameState {
 
         if (clickedDice) {
             const localPlayer = game.players.find(p => p.isLocal);
-            if (localPlayer && !game.hasRolledDice) {
+            if (localPlayer && ActionValidator.canPerformAction(game, localPlayer.playerName, EventType.RollDice)) {
                 this.context?.emitEvent({
                     type: EventType.RollDice,
                     playerId: localPlayer.playerName
@@ -85,12 +84,14 @@ export class DefaultState extends BaseGameState {
 
         if (distV < snapDist) {
             // Priority: City > Settlement
-            if (GameRuleService.canBuildCity(game, playerId) && BoardService.canPlaceCity(game.board, nearestVertex, playerId)) {
+            if (ActionValidator.canPerformAction(game, playerId, EventType.BuildCity) &&
+                BoardService.canPlaceCity(game.board, nearestVertex, playerId)) {
                 this.activeGhost = new CityGhost(nearestVertex, localPlayer.style.fillColor, 'preview');
                 this.hoveredAction = { type: EventType.BuildCity, vertex: nearestVertex };
                 return;
             }
-            if (GameRuleService.canBuildSettlement(game, playerId) && BoardService.canPlaceSettlement(game.board, nearestVertex, playerId)) {
+            if (ActionValidator.canPerformAction(game, playerId, EventType.BuildSettlement) &&
+                BoardService.canPlaceSettlement(game.board, nearestVertex, playerId)) {
                 this.activeGhost = new SettlementGhost(nearestVertex, localPlayer.style.fillColor, 'preview');
                 this.hoveredAction = { type: EventType.BuildSettlement, vertex: nearestVertex };
                 return;
@@ -107,7 +108,8 @@ export class DefaultState extends BaseGameState {
         const distE = Math.hypot(x - edgeCenter.x, y - edgeCenter.y);
 
         if (distE < snapDist) {
-            if (GameRuleService.canBuildRoad(game, playerId) && BoardService.canPlaceRoad(game.board, nearestEdge, playerId)) {
+            if (ActionValidator.canPerformAction(game, playerId, EventType.BuildRoad) &&
+                BoardService.canPlaceRoad(game.board, nearestEdge, playerId)) {
                 this.activeGhost = new RoadGhost(nearestEdge, localPlayer.style.fillColor, 'preview');
                 this.hoveredAction = { type: EventType.BuildRoad, edge: nearestEdge };
                 return;

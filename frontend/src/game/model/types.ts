@@ -6,6 +6,7 @@ import {
     TileKind,
     VertexDirection
 } from "@/game/model/enums.ts";
+import type {EventType} from "@/game/model/enums.ts";
 import type {PlayerStyle} from "@/game/theme/playerStyles.ts";
 import type {PlayerPanelLayout, UiLayout} from "@/game/layout/HUDLayoutService.ts";
 
@@ -107,13 +108,15 @@ export interface Player {
     style: PlayerStyle;
 }
 
+export type PhaseConfig = Record<GamePhase, EventType[]>;
+
 export interface GameState {
     board: Board;
     players: Player[];
     dices: number[];
     phase: GamePhase;
+    phaseConfig: PhaseConfig;
     inputState: InputState;
-    hasRolledDice: boolean;
 }
 
 export interface Prices {

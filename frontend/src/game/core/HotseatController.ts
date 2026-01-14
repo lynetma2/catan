@@ -10,13 +10,15 @@ import type {
     RobberTriggeredEvent,
     TransferResourcesEvent
 } from "@/game/model/events.ts";
-import {EventType, ResourceType} from "@/game/model/enums.ts";
+import {EventType, GamePhase, ResourceType} from "@/game/model/enums.ts";
 import type {GameState} from "@/game/model/types.ts";
 import {GameRuleService} from "@/game/logic/GameRuleService.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
 import gameRules from "@/game/config/gameRules.json";
 import {TEST_GAMESTATE} from "@/game/model/testGame.ts";
 import {ResourceService} from "@/game/logic/ResourceService.ts";
+import {ActionValidator} from "@/game/logic/ActionValidator.ts";
+import {DEFAULT_PHASE_CONFIG} from "@/game/config/defaultPhaseConfig.ts";
 
 export class HotseatController {
     private emit: (event: GameEvent) => void;
@@ -29,12 +31,23 @@ export class HotseatController {
         const event: InitializeGameEvent = {
             type: EventType.InitializeGame,
             playerId: "Server",
-            gameState: TEST_GAMESTATE // In the future, this comes from MapGenerator
+            gameState: {
+                ...TEST_GAMESTATE,
+                phase: GamePhase.Setup_Settlement,
+                phaseConfig: DEFAULT_PHASE_CONFIG,
+                // Remove hasRolledDice if it exists in TEST_GAMESTATE, or ignore it
+            }
         };
         this.emit(event);
     }
 
     public handleEvent(game: GameState, event: GameEvent) {
+        // 1. Validate Phase
+        if (!ActionValidator.isActionAllowed(game.phase, event.type, game.phaseConfig)) {
+            this.emitError(event, "ACTION_NOT_ALLOWED", `Action ${event.type} is not allowed in phase ${game.phase}`);
+            return;
+        }
+
         switch (event.type) {
             case EventType.BuildRoad:
                 this.handleBuildRoad(game, event as BuildRoadEvent);
@@ -73,6 +86,14 @@ export class HotseatController {
 
         this.emitTransfer(event.playerId, "Bank", gameRules.costs.road);
         this.emit(event);
+        
+        // Auto-End turn during Setup Phase after placing a road
+        if (game.phase === GamePhase.Setup_Road) {
+            this.emit({
+                type: EventType.EndTurn,
+                playerId: event.playerId
+            });
+        }
     }
 
     private handleBuildSettlement(game: GameState, event: BuildSettlementEvent) {
@@ -115,11 +136,6 @@ export class HotseatController {
     }
 
     private handleRollDice(game: GameState, event: RollDiceEvent) {
-        if (game.hasRolledDice) {
-            this.emitError(event, "ALREADY_ROLLED", "You have already rolled the dice this turn.");
-            return;
-        }
-
         const d1 = Math.floor(Math.random() * 6) + 1;
         const d2 = Math.floor(Math.random() * 6) + 1;
         

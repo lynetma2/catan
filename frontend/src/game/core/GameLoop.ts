@@ -19,6 +19,8 @@ import {HotseatController} from "@/game/core/HotseatController.ts";
 import {LoadingState} from "@/game/state/LoadingState.ts";
 import {PlayerService} from "@/game/logic/PlayerService.ts";
 import {StateTransitionService} from "@/game/state/StateTransitionService.ts";
+import {GamePhase} from "@/game/model/enums.ts";
+import {DEFAULT_PHASE_CONFIG} from "@/game/config/defaultPhaseConfig.ts";
 
 // Minimal empty state to satisfy TypeScript before the real game loads
 const EMPTY_GAME: GameState = {
@@ -27,7 +29,9 @@ const EMPTY_GAME: GameState = {
     bank: { resources: { Brick: 0, Wood: 0, Sheep: 0, Wheat: 0, Ore: 0 } as any, developmentCards: [] },
     dices: [1, 1],
     turn: 0,
-    hasRolledDice: false
+    phase: GamePhase.Setup_Settlement,
+    phaseConfig: DEFAULT_PHASE_CONFIG,
+    inputState: { pressedKeys: new Set() }
 };
 
 

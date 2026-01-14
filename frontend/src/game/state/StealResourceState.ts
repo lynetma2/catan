@@ -4,6 +4,7 @@ import {ResourceService} from "@/game/logic/ResourceService.ts";
 import {EventType} from "@/game/model/enums.ts";
 import type {StealResourceEvent} from "@/game/model/events.ts";
 import {DefaultState} from "@/game/state/DefaultState.ts";
+import {ActionValidator} from "@/game/logic/ActionValidator.ts";
 
 export class StealResourceState extends BaseGameState {
     private readonly robberHex: Hex;
@@ -66,6 +67,10 @@ export class StealResourceState extends BaseGameState {
     public executeSteal(targetPlayerId: string) {
         const localPlayer = this.game?.players.find(p => p.isLocal);
         if (localPlayer) {
+            if (!ActionValidator.canPerformAction(this.game!, localPlayer.playerName, EventType.StealResource)) {
+                return;
+            }
+
             const event: StealResourceEvent = {
                 type: EventType.StealResource,
                 playerId: localPlayer.playerName,

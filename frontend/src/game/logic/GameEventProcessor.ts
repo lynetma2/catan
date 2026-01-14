@@ -1,4 +1,4 @@
-import {EventType} from "@/game/model/enums.ts";
+import {EventType, GamePhase} from "@/game/model/enums.ts";
 import type {
     BuildCityEvent,
     BuildRoadEvent,
@@ -34,6 +34,10 @@ export class GameEventProcessor {
                 type: BuildingType.Settlement,
                 playerName: event.playerId
             });
+            
+            if (state.phase === GamePhase.Setup_Settlement) {
+                state.phase = GamePhase.Setup_Road;
+            }
         },
         [EventType.BuildCity]: (state, event: BuildCityEvent) => {
             BoardService.putBuilding(state.board, {
@@ -49,13 +53,26 @@ export class GameEventProcessor {
                 const nextIndex = (currentIndex + 1) % state.players.length;
                 state.players[nextIndex].isActive = true;
             }
-            state.hasRolledDice = false;
+            
+            // Determine next phase based on game progress
+            // Simple logic: If turn count is low, we are in setup. 
+            // (Assuming 2 rounds of setup for N players = 2 * N turns)
+            const totalSetupTurns = state.players.length * 2;
+            
+            if (state.turn < totalSetupTurns) {
+                state.phase = GamePhase.Setup_Settlement;
+            } else {
+                state.phase = GamePhase.PreRoll;
+            }
+            state.turn++;
         },
         [EventType.MoveRobber]: (state, event: MoveRobberEvent) => {
             state.board.robber = event.hex;
+            state.phase = GamePhase.Stealing;
         },
         [EventType.RobberTriggered]: (state, event: RobberTriggeredEvent) => {
             // No state change needed, but handler exists to suppress warning
+            // Phase change usually handled by RollDice logic or Knight card logic
         },
         [EventType.RollDice]: (state, event: RollDiceEvent) => {
             let d1, d2;
@@ -66,8 +83,14 @@ export class GameEventProcessor {
                 d2 = Math.floor(Math.random() * 6) + 1;
             }
             state.dices = [d1, d2];
-            state.hasRolledDice = true;
             Logger.info({dices: state.dices}, "Dice Rolled");
+            
+            if (d1 + d2 === 7) {
+                // TODO: Check for discarding threshold here
+                state.phase = GamePhase.RobberPlacement;
+            } else {
+                state.phase = GamePhase.Main;
+            }
         },
         [EventType.BuyDevelopmentCard]: (state, event: BuyDevelopmentCardEvent) => {
             Logger.warn("BuyDevelopmentCard not implemented yet");
@@ -113,6 +136,10 @@ export class GameEventProcessor {
                     }
                 }
             }
+        },
+        [EventType.StealResource]: (state, event) => {
+            // After stealing, we go back to main phase
+            state.phase = GamePhase.Main;
         }
     };
 

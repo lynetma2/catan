@@ -30,8 +30,14 @@ export enum TileKind {
 }
 
 export enum GamePhase {
-    Setup = "Setup",
-    Default = "Default",
+    Setup_Settlement = "Setup_Settlement",
+    Setup_Road = "Setup_Road",
+    PreRoll = "PreRoll",
+    Main = "Main",
+    Discarding = "Discarding",
+    RobberPlacement = "RobberPlacement",
+    Stealing = "Stealing",
+    Waiting = "Waiting"
 }
 
 export enum MoveType {

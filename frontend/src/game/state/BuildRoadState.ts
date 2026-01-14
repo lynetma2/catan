@@ -8,6 +8,7 @@ import {KeyService} from "@/game/utils/KeyService.ts";
 import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
 import type {BuildRoadEvent} from "@/game/model/events.ts";
 import {PlayerService} from "@/game/logic/PlayerService.ts";
+import {ActionValidator} from "@/game/logic/ActionValidator.ts";
 
 export class BuildRoadState extends BaseGameState {
     protected triggerButton = ButtonType.putRoad;
@@ -34,6 +35,10 @@ export class BuildRoadState extends BaseGameState {
         if (this.hoveredEdge) {
             const localPlayer = game.players.find(p => p.isLocal);
             if (localPlayer) {
+                if (!ActionValidator.canPerformAction(game, localPlayer.playerName, EventType.BuildRoad)) {
+                    return;
+                }
+
                 const event: BuildRoadEvent = {
                     type: EventType.BuildRoad,
                     playerId: localPlayer.playerName,
