@@ -17,6 +17,7 @@ import {
     VertexDirection
 } from "@/game/model/enums.ts";
 import {DEFAULT_PHASE_CONFIG} from "@/game/config/defaultPhaseConfig.ts";
+import {DeckService} from "@/game/logic/DeckService.ts";
 
 
 export const generateTestTiles = (): Map<string, Tile> => {
@@ -97,11 +98,11 @@ export const TEST_PLAYERS: Player[] = [
         playerName: "Player 1",
         inventory: {
             resources: {
-                [ResourceType.Wood]: 5,
-                [ResourceType.Brick]: 5,
-                [ResourceType.Sheep]: 5,
-                [ResourceType.Wheat]: 5,
-                [ResourceType.Ore]: 5
+                [ResourceType.Wood]: 0,
+                [ResourceType.Brick]: 0,
+                [ResourceType.Sheep]: 0,
+                [ResourceType.Wheat]: 0,
+                [ResourceType.Ore]: 0
             },
             hiddenCount: 0
         },

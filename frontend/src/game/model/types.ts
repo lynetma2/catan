@@ -2,6 +2,7 @@ import {
     BuildingType, ButtonType,
     EdgeDirection,
     GamePhase, MoveType,
+    type DevelopmentCardType,
     type ResourceType,
     TileKind,
     VertexDirection
@@ -96,7 +97,7 @@ export type ResourceCollection = Record<ResourceType, number>;
 export interface Inventory {
     resources: ResourceCollection;
     hiddenCount: number; // Cards held by the player that are unknown to the local client
-    //TODO add later the development cards.
+    developmentCards: DevelopmentCardType[];
 }
 
 export interface Player {
@@ -114,6 +115,7 @@ export interface GameState {
     board: Board;
     players: Player[];
     dices: number[];
+    deck: DevelopmentCardType[];
     turn: number;
     hasRolledDice?: boolean;
     phase: GamePhase;

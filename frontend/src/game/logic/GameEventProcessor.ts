@@ -64,7 +64,7 @@ export class GameEventProcessor {
             playerName: event.playerId
         });
 
-        if (state.phase === GamePhase.SetupSettlement) {
+        if (state.phase === GamePhase.SetupRoad) {
             state.phase = GamePhase.FinishSetupBuild;
         }
     }
@@ -96,6 +96,8 @@ export class GameEventProcessor {
 
         this.updateGamePhase(state, totalSetupTurns);
         this.updateActivePlayer(state, totalPlayers, totalSetupTurns);
+        
+        Logger.info({ turn: state.turn, phase: state.phase }, "Turn Ended. New State:");
     }
 
     private static updateGamePhase(state: GameState, totalSetupTurns: number) {
@@ -121,9 +123,16 @@ export class GameEventProcessor {
             // Main Game: Round Robin
             nextPlayerIndex = (state.turn - totalSetupTurns) % totalPlayers;
         }
+        
+        // Safety check to prevent undefined active player
+        if (Number.isNaN(nextPlayerIndex) || nextPlayerIndex < 0 || nextPlayerIndex >= totalPlayers) {
+            Logger.error({ nextPlayerIndex, totalPlayers, turn: state.turn }, "Invalid next player index calculated. Defaulting to 0.");
+            nextPlayerIndex = 0;
+        }
 
         if (state.players[nextPlayerIndex]) {
             state.players[nextPlayerIndex].isActive = true;
+            Logger.debug({ player: state.players[nextPlayerIndex].playerName }, "New Active Player");
         }
     }
 

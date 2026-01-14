@@ -29,6 +29,14 @@ export enum TileKind {
     DessertTile = "DessertTile"
 }
 
+export enum DevelopmentCardType {
+    Knight = "Knight",
+    VictoryPoint = "VictoryPoint",
+    RoadBuilding = "RoadBuilding",
+    YearOfPlenty = "YearOfPlenty",
+    Monopoly = "Monopoly"
+}
+
 export enum GamePhase {
     SetupSettlement = "SetupSettlement",
     SetupRoad = "SetupRoad",

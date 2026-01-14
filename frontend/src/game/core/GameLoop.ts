@@ -224,6 +224,11 @@ export class GameLoop implements GameContext {
                 const initEvent = event as InitializeGameEvent;
                 this.game = initEvent.gameState;
                 
+                // Ensure turn is a number (handle missing property from JSON/Test state)
+                if (typeof this.game.turn !== 'number') {
+                    this.game.turn = 0;
+                }
+                
                 // Assign styles to players
                 this.game.players.forEach((p, index) => {
                     p.style = PlayerService.getStyle(index);
@@ -245,13 +250,19 @@ export class GameLoop implements GameContext {
                 if (event.type === EventType.EndTurn) {
                     const activePlayer = this.game.players.find(p => p.isActive);
                     this.lastActivePlayerName = activePlayer?.playerName ?? null;
+                    console.log(`[GameLoop] Turn Ended. New Active Player: ${this.lastActivePlayerName}`);
                     PlayerService.syncLocalPlayerIdentity(this.game, this.clientState, !!this.hotseatController);
                 }
                 
                 // Check if this event triggers a state change (e.g. Robber, EndTurn)
                 const localId = PlayerService.getCurrentLocalPlayerId(this.game, this.clientState, !!this.hotseatController);
                 const activePlayer = this.game.players.find(p => p.isActive);
-                const isMyTurn = activePlayer?.playerName === localId;
+                
+                let isMyTurn = activePlayer?.playerName === localId;
+                // In Hotseat, if there is an active player, it is always "my turn" because the device is passed.
+                if (this.hotseatController && activePlayer) {
+                    isMyTurn = true;
+                }
                 
                 const nextState = StateTransitionService.getNextStateFromEvent(event, this.game, localId, isMyTurn);
                 if (nextState) {

@@ -1,4 +1,4 @@
-import {EventType} from "@/game/model/enums.ts";
+import {EventType, ResourceType, VertexDirection, EdgeDirection, DevelopmentCardType} from "@/game/model/enums.ts";
 import type {Edge, GameState, Hex, ResourceCollection, Vertex} from "@/game/model/types.ts";
 
 export interface GameEventBase {
@@ -23,6 +23,7 @@ export interface BuildCityEvent extends GameEventBase {
 
 export interface BuyDevelopmentCardEvent extends GameEventBase {
     type: EventType.BuyDevelopmentCard;
+    cardType?: DevelopmentCardType;
 }
 
 export interface EndTurnEvent extends GameEventBase {
