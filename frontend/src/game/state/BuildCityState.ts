@@ -3,10 +3,11 @@ import type {GameState, GhostEffect, LayoutSettings, Vertex} from "@/game/model/
 import {BaseGameState} from "@/game/state/BaseGameState.ts";
 import {ButtonType, EventType} from "@/game/model/enums.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
-import {KeyService} from "@/game/utils/KeyService.ts";
 import {CityGhost} from "@/game/rendering/ghosts/CityGhost.ts";
+import {KeyService} from "@/game/utils/KeyService.ts";
 import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
 import type {BuildCityEvent} from "@/game/model/events.ts";
+import {ActionValidator} from "@/game/logic/ActionValidator.ts";
 
 export class BuildCityState extends BaseGameState {
     protected triggerButton = ButtonType.putCity;
@@ -20,6 +21,7 @@ export class BuildCityState extends BaseGameState {
         
         const localPlayer = game.players.find(p => p.isLocal);
         if (localPlayer) {
+            // Assuming BoardService has this method
             const validVertices = BoardService.getValidCityVertices(game.board, localPlayer.playerName);
             
             this.ghosts.clear();
@@ -33,6 +35,10 @@ export class BuildCityState extends BaseGameState {
         if (this.hoveredVertex) {
             const localPlayer = game.players.find(p => p.isLocal);
             if (localPlayer) {
+                if (!ActionValidator.canPerformAction(game, localPlayer.playerName, EventType.BuildCity)) {
+                    return;
+                }
+
                 const event: BuildCityEvent = {
                     type: EventType.BuildCity,
                     playerId: localPlayer.playerName,
@@ -61,7 +67,7 @@ export class BuildCityState extends BaseGameState {
             this.hoveredVertex = undefined;
         }
     }
-
+    
     getGhostEffects(): GhostEffect[] | undefined {
         const effects: GhostEffect[] = [];
         this.ghosts.forEach((ghost, key) => {

@@ -38,13 +38,18 @@ export class ActionValidator {
         }
     }
 
-    public static getValidButtons(game: GameState, playerId: string): ButtonType[] {
-        const buttons: ButtonType[] = [];
-        if (this.canPerformAction(game, playerId, EventType.BuildRoad)) buttons.push(ButtonType.putRoad);
-        if (this.canPerformAction(game, playerId, EventType.BuildSettlement)) buttons.push(ButtonType.putSettlement);
-        if (this.canPerformAction(game, playerId, EventType.BuildCity)) buttons.push(ButtonType.putCity);
-        if (this.canPerformAction(game, playerId, EventType.BuyDevelopmentCard)) buttons.push(ButtonType.drawDevelopmentCard);
-        if (this.canPerformAction(game, playerId, EventType.EndTurn)) buttons.push(ButtonType.endTurn);
-        return buttons;
+    public static getButtonStates(game: GameState, playerId: string): { type: ButtonType, isDisabled: boolean }[] {
+        const actions = [
+            { type: ButtonType.putRoad, event: EventType.BuildRoad },
+            { type: ButtonType.putSettlement, event: EventType.BuildSettlement },
+            { type: ButtonType.putCity, event: EventType.BuildCity },
+            { type: ButtonType.drawDevelopmentCard, event: EventType.BuyDevelopmentCard },
+            { type: ButtonType.endTurn, event: EventType.EndTurn }
+        ];
+
+        return actions.map(action => ({
+            type: action.type,
+            isDisabled: !this.canPerformAction(game, playerId, action.event)
+        }));
     }
 }

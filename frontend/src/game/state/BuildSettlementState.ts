@@ -3,10 +3,11 @@ import type {GameState, GhostEffect, LayoutSettings, Vertex} from "@/game/model/
 import {BaseGameState} from "@/game/state/BaseGameState.ts";
 import {ButtonType, EventType} from "@/game/model/enums.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
-import {KeyService} from "@/game/utils/KeyService.ts";
 import {SettlementGhost} from "@/game/rendering/ghosts/SettlementGhost.ts";
+import {KeyService} from "@/game/utils/KeyService.ts";
 import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
 import type {BuildSettlementEvent} from "@/game/model/events.ts";
+import {ActionValidator} from "@/game/logic/ActionValidator.ts";
 
 export class BuildSettlementState extends BaseGameState {
     protected triggerButton = ButtonType.putSettlement;
@@ -20,6 +21,7 @@ export class BuildSettlementState extends BaseGameState {
         
         const localPlayer = game.players.find(p => p.isLocal);
         if (localPlayer) {
+            // Assuming BoardService has this method, similar to getValidRoadEdges
             const validVertices = BoardService.getValidSettlementVertices(game.board, localPlayer.playerName);
             
             this.ghosts.clear();
@@ -33,6 +35,10 @@ export class BuildSettlementState extends BaseGameState {
         if (this.hoveredVertex) {
             const localPlayer = game.players.find(p => p.isLocal);
             if (localPlayer) {
+                if (!ActionValidator.canPerformAction(game, localPlayer.playerName, EventType.BuildSettlement)) {
+                    return;
+                }
+
                 const event: BuildSettlementEvent = {
                     type: EventType.BuildSettlement,
                     playerId: localPlayer.playerName,
@@ -61,7 +67,7 @@ export class BuildSettlementState extends BaseGameState {
             this.hoveredVertex = undefined;
         }
     }
-
+    
     getGhostEffects(): GhostEffect[] | undefined {
         const effects: GhostEffect[] = [];
         this.ghosts.forEach((ghost, key) => {

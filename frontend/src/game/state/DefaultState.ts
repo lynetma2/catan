@@ -31,8 +31,16 @@ export class DefaultState extends BaseGameState {
     protected generateButtons(game: GameState) {
         const localPlayer = game.players.find(p => p.isLocal);
         if (localPlayer) {
-            const validButtons = ActionValidator.getValidButtons(game, localPlayer.playerName);
-            this.hudEntities!.buttons = validButtons.map(type => this.createButton(type));
+            const buttons: Button[] = [];
+            const buttonStates = ActionValidator.getButtonStates(game, localPlayer.playerName);
+
+            buttonStates.forEach(state => {
+                const btn = this.createButton(state.type);
+                btn.isDisabled = state.isDisabled;
+                buttons.push(btn);
+            });
+
+            this.hudEntities!.buttons = buttons;
         }
     }
 
