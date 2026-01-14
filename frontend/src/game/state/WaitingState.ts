@@ -1,9 +1,9 @@
-import {BaseGameState} from "@/game/state/BaseGameState.ts";
+import {GameplayState} from "@/game/state/GameplayState.ts";
 import type {GameState, LayoutSettings} from "@/game/model/types.ts";
 import {ButtonType} from "@/game/model/enums.ts";
 import type {Button} from "@/game/model/types.ts";
 
-export class WaitingState extends BaseGameState {
+export class WaitingState extends GameplayState {
 
     // Override to only show the Waiting button/indicator
     protected generateButtons(game: GameState) {

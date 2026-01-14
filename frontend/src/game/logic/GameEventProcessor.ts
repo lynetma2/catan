@@ -1,4 +1,4 @@
-import {EventType, GamePhase} from "@/game/model/enums.ts";
+import {BuildingType, EventType, GamePhase, ResourceType} from "@/game/model/enums.ts";
 import type {
     BuildCityEvent,
     BuildRoadEvent,
@@ -13,143 +13,192 @@ import type {
 } from "@/game/model/events.ts";
 import type {GameState} from "@/game/model/types.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
-import {BuildingType} from "@/game/model/enums.ts";
 import {Logger} from "@/game/utils/Logger.ts";
 import {PlayerService} from "@/game/logic/PlayerService.ts";
-import {ResourceType} from "@/game/model/enums.ts";
-
-type EventHandler<T extends GameEvent> = (state: GameState, event: T) => void;
 
 export class GameEventProcessor {
-    private static handlers: Partial<Record<EventType, EventHandler<any>>> = {
-        [EventType.BuildRoad]: (state, event: BuildRoadEvent) => {
-            BoardService.putRoad(state.board, {
-                edge: event.edge,
-                playerName: event.playerId
-            });
-        },
-        [EventType.BuildSettlement]: (state, event: BuildSettlementEvent) => {
-            BoardService.putBuilding(state.board, {
-                vertex: event.vertex,
-                type: BuildingType.Settlement,
-                playerName: event.playerId
-            });
-            
-            if (state.phase === GamePhase.Setup_Settlement) {
-                state.phase = GamePhase.Setup_Road;
-            }
-        },
-        [EventType.BuildCity]: (state, event: BuildCityEvent) => {
-            BoardService.putBuilding(state.board, {
-                vertex: event.vertex,
-                type: BuildingType.City,
-                playerName: event.playerId
-            });
-        },
-        [EventType.EndTurn]: (state, event: EndTurnEvent) => {
-            const currentIndex = state.players.findIndex(p => p.isActive);
-            if (currentIndex !== -1) {
-                state.players[currentIndex].isActive = false;
-                const nextIndex = (currentIndex + 1) % state.players.length;
-                state.players[nextIndex].isActive = true;
-            }
-            
-            // Determine next phase based on game progress
-            // Simple logic: If turn count is low, we are in setup. 
-            // (Assuming 2 rounds of setup for N players = 2 * N turns)
-            const totalSetupTurns = state.players.length * 2;
-            
-            if (state.turn < totalSetupTurns) {
-                state.phase = GamePhase.Setup_Settlement;
-            } else {
-                state.phase = GamePhase.PreRoll;
-            }
-            state.turn++;
-        },
-        [EventType.MoveRobber]: (state, event: MoveRobberEvent) => {
-            state.board.robber = event.hex;
-            state.phase = GamePhase.Stealing;
-        },
-        [EventType.RobberTriggered]: (state, event: RobberTriggeredEvent) => {
-            // No state change needed, but handler exists to suppress warning
-            // Phase change usually handled by RollDice logic or Knight card logic
-        },
-        [EventType.RollDice]: (state, event: RollDiceEvent) => {
-            let d1, d2;
-            if (event.dice) {
-                [d1, d2] = event.dice;
-            } else {
-                d1 = Math.floor(Math.random() * 6) + 1;
-                d2 = Math.floor(Math.random() * 6) + 1;
-            }
-            state.dices = [d1, d2];
-            Logger.info({dices: state.dices}, "Dice Rolled");
-            
-            if (d1 + d2 === 7) {
-                // TODO: Check for discarding threshold here
-                state.phase = GamePhase.RobberPlacement;
-            } else {
-                state.phase = GamePhase.Main;
-            }
-        },
-        [EventType.BuyDevelopmentCard]: (state, event: BuyDevelopmentCardEvent) => {
-            Logger.warn("BuyDevelopmentCard not implemented yet");
-        },
-        [EventType.TransferResources]: (state, event: TransferResourcesEvent) => {
-            // 1. Remove from Source
-            if (event.fromPlayerId !== "Bank") {
-                const fromPlayer = PlayerService.getPlayer(state, event.fromPlayerId);
-                if (fromPlayer) {
-                    if (event.resources) {
-                        // We know exactly what was removed
-                        Object.entries(event.resources).forEach(([res, amount]) => {
-                            const type = res as ResourceType;
-                            const current = fromPlayer.inventory.resources[type] || 0;
-                            const toRemove = amount as number;
-                            
-                            // If we have enough known resources, remove them
-                            // If not, we assume the rest came from the hidden pile
-                            if (current >= toRemove) {
-                                fromPlayer.inventory.resources[type] = current - toRemove;
-                            } else {
-                                fromPlayer.inventory.resources[type] = 0;
-                                fromPlayer.inventory.hiddenCount -= (toRemove - current);
-                            }
-                        });
-                    } else if (event.count) {
-                        // Blind remove (e.g. someone stole from them, and we don't know what)
-                        fromPlayer.inventory.hiddenCount -= event.count;
-                    }
-                }
-            }
-
-            // 2. Add to Target
-            if (event.toPlayerId !== "Bank") {
-                const toPlayer = PlayerService.getPlayer(state, event.toPlayerId);
-                if (toPlayer) {
-                    if (event.resources) {
-                        Object.entries(event.resources).forEach(([res, count]) => {
-                            toPlayer.inventory.resources[res as ResourceType] += (count as number);
-                        });
-                    } else if (event.count) {
-                        toPlayer.inventory.hiddenCount += event.count;
-                    }
-                }
-            }
-        },
-        [EventType.StealResource]: (state, event) => {
-            // After stealing, we go back to main phase
-            state.phase = GamePhase.Main;
-        }
-    };
 
     public static process(state: GameState, event: GameEvent) {
-        const handler = this.handlers[event.type];
-        if (handler) {
-            handler(state, event);
-            Logger.debug({ type: event.type }, "Processed Event");
-        } else {
-            Logger.warn({ type: event.type }, "No handler for event type");
+        Logger.debug({ type: event.type }, "Processing Event");
+
+        switch (event.type) {
+            case EventType.BuildRoad:
+                this.handleBuildRoad(state, event as BuildRoadEvent);
+                break;
+            case EventType.BuildSettlement:
+                this.handleBuildSettlement(state, event as BuildSettlementEvent);
+                break;
+            case EventType.BuildCity:
+                this.handleBuildCity(state, event as BuildCityEvent);
+                break;
+            case EventType.EndTurn:
+                this.handleEndTurn(state, event as EndTurnEvent);
+                break;
+            case EventType.MoveRobber:
+                this.handleMoveRobber(state, event as MoveRobberEvent);
+                break;
+            case EventType.RobberTriggered:
+                // No state change needed
+                break;
+            case EventType.RollDice:
+                this.handleRollDice(state, event as RollDiceEvent);
+                break;
+            case EventType.BuyDevelopmentCard:
+                this.handleBuyDevelopmentCard(state, event as BuyDevelopmentCardEvent);
+                break;
+            case EventType.TransferResources:
+                this.handleTransferResources(state, event as TransferResourcesEvent);
+                break;
+            case EventType.StealResource:
+                this.handleStealResource(state);
+                break;
+            default:
+                Logger.warn({ type: event.type }, "No handler for event type");
+                break;
         }
+    }
+
+    private static handleBuildRoad(state: GameState, event: BuildRoadEvent) {
+        BoardService.putRoad(state.board, {
+            edge: event.edge,
+            playerName: event.playerId
+        });
+
+        if (state.phase === GamePhase.SetupSettlement) {
+            state.phase = GamePhase.FinishSetupBuild;
+        }
+    }
+
+    private static handleBuildSettlement(state: GameState, event: BuildSettlementEvent) {
+        BoardService.putBuilding(state.board, {
+            vertex: event.vertex,
+            type: BuildingType.Settlement,
+            playerName: event.playerId
+        });
+
+        if (state.phase === GamePhase.SetupSettlement) {
+            state.phase = GamePhase.SetupRoad;
+        }
+    }
+
+    private static handleBuildCity(state: GameState, event: BuildCityEvent) {
+        BoardService.putBuilding(state.board, {
+            vertex: event.vertex,
+            type: BuildingType.City,
+            playerName: event.playerId
+        });
+    }
+
+    private static handleEndTurn(state: GameState, event: EndTurnEvent) {
+        state.turn++;
+        const totalPlayers = state.players.length;
+        const totalSetupTurns = totalPlayers * 2;
+
+        this.updateGamePhase(state, totalSetupTurns);
+        this.updateActivePlayer(state, totalPlayers, totalSetupTurns);
+    }
+
+    private static updateGamePhase(state: GameState, totalSetupTurns: number) {
+        if (state.turn < totalSetupTurns) {
+            state.phase = GamePhase.SetupSettlement;
+        } else {
+            state.phase = GamePhase.PreRoll;
+        }
+    }
+
+    private static updateActivePlayer(state: GameState, totalPlayers: number, totalSetupTurns: number) {
+        state.players.forEach(p => p.isActive = false);
+        let nextPlayerIndex = 0;
+
+        if (state.turn < totalSetupTurns) {
+            // Setup Phase: Snake Draft (1-2-3-3-2-1)
+            if (state.turn < totalPlayers) {
+                nextPlayerIndex = state.turn;
+            } else {
+                nextPlayerIndex = (2 * totalPlayers - 1) - state.turn;
+            }
+        } else {
+            // Main Game: Round Robin
+            nextPlayerIndex = (state.turn - totalSetupTurns) % totalPlayers;
+        }
+
+        if (state.players[nextPlayerIndex]) {
+            state.players[nextPlayerIndex].isActive = true;
+        }
+    }
+
+    private static handleMoveRobber(state: GameState, event: MoveRobberEvent) {
+        state.board.robber = event.hex;
+        state.phase = GamePhase.Stealing;
+    }
+
+    private static handleRollDice(state: GameState, event: RollDiceEvent) {
+        let d1, d2;
+        if (event.dice) {
+            [d1, d2] = event.dice;
+        } else {
+            d1 = Math.floor(Math.random() * 6) + 1;
+            d2 = Math.floor(Math.random() * 6) + 1;
+        }
+        state.dices = [d1, d2];
+        Logger.info({dices: state.dices}, "Dice Rolled");
+
+        if (d1 + d2 === 7) {
+            state.phase = GamePhase.RobberPlacement;
+        } else {
+            state.phase = GamePhase.Main;
+        }
+    }
+
+    private static handleBuyDevelopmentCard(state: GameState, event: BuyDevelopmentCardEvent) {
+        Logger.warn("BuyDevelopmentCard not implemented yet");
+    }
+
+    private static handleTransferResources(state: GameState, event: TransferResourcesEvent) {
+        if (event.fromPlayerId !== "Bank") {
+            this.updatePlayerResources(state, event.fromPlayerId, event.resources, event.count, false);
+        }
+        if (event.toPlayerId !== "Bank") {
+            this.updatePlayerResources(state, event.toPlayerId, event.resources, event.count, true);
+        }
+    }
+
+    private static updatePlayerResources(
+        state: GameState,
+        playerId: string,
+        resources: Record<string, number> | undefined,
+        count: number | undefined,
+        isAdding: boolean
+    ) {
+        const player = PlayerService.getPlayer(state, playerId);
+        if (!player) return;
+
+        if (resources) {
+            Object.entries(resources).forEach(([res, amount]) => {
+                const type = res as ResourceType;
+                const val = amount as number;
+                if (isAdding) {
+                    player.inventory.resources[type] += val;
+                } else {
+                    const current = player.inventory.resources[type] || 0;
+                    if (current >= val) {
+                        player.inventory.resources[type] = current - val;
+                    } else {
+                        player.inventory.resources[type] = 0;
+                        player.inventory.hiddenCount -= (val - current);
+                    }
+                }
+            });
+        } else if (count) {
+            if (isAdding) {
+                player.inventory.hiddenCount += count;
+            } else {
+                player.inventory.hiddenCount -= count;
+            }
+        }
+    }
+
+    private static handleStealResource(state: GameState) {
+        state.phase = GamePhase.Main;
     }
 }

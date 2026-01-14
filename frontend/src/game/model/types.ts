@@ -114,6 +114,8 @@ export interface GameState {
     board: Board;
     players: Player[];
     dices: number[];
+    turn: number;
+    hasRolledDice?: boolean;
     phase: GamePhase;
     phaseConfig: PhaseConfig;
     inputState: InputState;

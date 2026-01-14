@@ -1,6 +1,6 @@
 import type {GameContext} from "./GameStateHandler";
 import type {GameState, GhostEffect, LayoutSettings, Vertex} from "@/game/model/types.ts";
-import {BaseGameState} from "@/game/state/BaseGameState.ts";
+import {GameplayState} from "@/game/state/GameplayState.ts";
 import {ButtonType, EventType} from "@/game/model/enums.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
 import {CityGhost} from "@/game/rendering/ghosts/CityGhost.ts";
@@ -9,7 +9,7 @@ import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
 import type {BuildCityEvent} from "@/game/model/events.ts";
 import {ActionValidator} from "@/game/logic/ActionValidator.ts";
 
-export class BuildCityState extends BaseGameState {
+export class BuildCityState extends GameplayState {
     protected triggerButton = ButtonType.putCity;
     private ghosts: Map<string, GhostEffect> = new Map();
     private activeGhost: GhostEffect | undefined;

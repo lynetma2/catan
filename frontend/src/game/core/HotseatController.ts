@@ -14,11 +14,9 @@ import {EventType, GamePhase, ResourceType} from "@/game/model/enums.ts";
 import type {GameState} from "@/game/model/types.ts";
 import {GameRuleService} from "@/game/logic/GameRuleService.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
-import gameRules from "@/game/config/gameRules.json";
 import {TEST_GAMESTATE} from "@/game/model/testGame.ts";
 import {ResourceService} from "@/game/logic/ResourceService.ts";
 import {ActionValidator} from "@/game/logic/ActionValidator.ts";
-import {DEFAULT_PHASE_CONFIG} from "@/game/config/defaultPhaseConfig.ts";
 
 export class HotseatController {
     private emit: (event: GameEvent) => void;
@@ -31,12 +29,7 @@ export class HotseatController {
         const event: InitializeGameEvent = {
             type: EventType.InitializeGame,
             playerId: "Server",
-            gameState: {
-                ...TEST_GAMESTATE,
-                phase: GamePhase.Setup_Settlement,
-                phaseConfig: DEFAULT_PHASE_CONFIG,
-                // Remove hasRolledDice if it exists in TEST_GAMESTATE, or ignore it
-            }
+            gameState: TEST_GAMESTATE
         };
         this.emit(event);
     }
@@ -65,6 +58,10 @@ export class HotseatController {
                 this.handleRollDice(game, event as RollDiceEvent);
                 break;
             case EventType.EndTurn:
+                if (!GameRuleService.canEndTurn(game, event.playerId)) {
+                    this.emitError(event, "CANNOT_END_TURN", "You must complete your actions (e.g. place a road) before ending your turn.");
+                    return;
+                }
                 this.emit(event);
                 break;
             default:
@@ -84,16 +81,8 @@ export class HotseatController {
             return;
         }
 
-        this.emitTransfer(event.playerId, "Bank", gameRules.costs.road);
+        this.processCost(game, event.playerId, EventType.BuildRoad);
         this.emit(event);
-        
-        // Auto-End turn during Setup Phase after placing a road
-        if (game.phase === GamePhase.Setup_Road) {
-            this.emit({
-                type: EventType.EndTurn,
-                playerId: event.playerId
-            });
-        }
     }
 
     private handleBuildSettlement(game: GameState, event: BuildSettlementEvent) {
@@ -101,13 +90,20 @@ export class HotseatController {
             this.emitError(event, "INSUFFICIENT_RESOURCES", "Not enough resources to build a settlement.");
             return;
         }
-        if (!BoardService.canPlaceSettlement(game.board, event.vertex, event.playerId)) {
+        const checkConnection = game.phase !== GamePhase.SetupSettlement;
+        if (!BoardService.canPlaceSettlement(game.board, event.vertex, event.playerId, checkConnection)) {
             this.emitError(event, "INVALID_PLACEMENT", "Cannot place a settlement here.");
             return;
         }
 
-        this.emitTransfer(event.playerId, "Bank", gameRules.costs.settlement);
+        this.processCost(game, event.playerId, EventType.BuildSettlement);
         this.emit(event);
+
+        // Handle Setup Phase Resource Granting
+        if (GameRuleService.shouldDistributeSetupResources(game)) {
+            const resources = BoardService.getResourcesForVertex(game.board, event.vertex);
+            this.emitTransfer("Bank", event.playerId, resources);
+        }
     }
 
     private handleBuildCity(game: GameState, event: BuildCityEvent) {
@@ -120,7 +116,7 @@ export class HotseatController {
             return;
         }
 
-        this.emitTransfer(event.playerId, "Bank", gameRules.costs.city);
+        this.processCost(game, event.playerId, EventType.BuildCity);
         this.emit(event);
     }
 
@@ -131,7 +127,7 @@ export class HotseatController {
         }
         // Note: Add deck empty check here if/when DeckService exists
 
-        this.emitTransfer(event.playerId, "Bank", gameRules.costs.developmentCard);
+        this.processCost(game, event.playerId, EventType.BuyDevelopmentCard);
         this.emit(event);
     }
 
@@ -158,6 +154,13 @@ export class HotseatController {
             // Distribute Resources
             const transfers = ResourceService.calculateDistribution(game, total);
             transfers.forEach(t => this.emit(t));
+        }
+    }
+
+    private processCost(game: GameState, playerId: string, eventType: EventType) {
+        const cost = GameRuleService.getActionCost(game, eventType);
+        if (Object.keys(cost).length > 0) {
+            this.emitTransfer(playerId, "Bank", cost);
         }
     }
 

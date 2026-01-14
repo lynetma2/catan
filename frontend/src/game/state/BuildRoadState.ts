@@ -1,6 +1,6 @@
 import type {GameContext} from "./GameStateHandler";
 import type {Edge, GameState, GhostEffect, LayoutSettings} from "@/game/model/types.ts";
-import {BaseGameState} from "@/game/state/BaseGameState.ts";
+import {GameplayState} from "@/game/state/GameplayState.ts";
 import {ButtonType, EventType} from "@/game/model/enums.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
 import {RoadGhost} from "@/game/rendering/ghosts/RoadGhost.ts";
@@ -10,7 +10,7 @@ import type {BuildRoadEvent} from "@/game/model/events.ts";
 import {PlayerService} from "@/game/logic/PlayerService.ts";
 import {ActionValidator} from "@/game/logic/ActionValidator.ts";
 
-export class BuildRoadState extends BaseGameState {
+export class BuildRoadState extends GameplayState {
     protected triggerButton = ButtonType.putRoad;
     private ghosts: Map<string, GhostEffect> = new Map();
     private activeGhost: GhostEffect | undefined;

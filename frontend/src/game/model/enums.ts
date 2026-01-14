@@ -30,8 +30,9 @@ export enum TileKind {
 }
 
 export enum GamePhase {
-    Setup_Settlement = "Setup_Settlement",
-    Setup_Road = "Setup_Road",
+    SetupSettlement = "SetupSettlement",
+    SetupRoad = "SetupRoad",
+    FinishSetupBuild = "FinishSetupBuild",
     PreRoll = "PreRoll",
     Main = "Main",
     Discarding = "Discarding",

@@ -1,5 +1,5 @@
 import type {Button, Edge, GameState, GhostEffect, LayoutSettings, Vertex} from "@/game/model/types.ts";
-import {BaseGameState} from "@/game/state/BaseGameState.ts";
+import {GameplayState} from "@/game/state/GameplayState.ts";
 import type {GameContext} from "@/game/state/GameStateHandler.ts";
 import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
 import {GameRuleService} from "@/game/logic/GameRuleService.ts";
@@ -8,7 +8,7 @@ import {BoardService} from "@/game/logic/BoardService.ts";
 import {CityGhost} from "@/game/rendering/ghosts/CityGhost.ts";
 import {SettlementGhost} from "@/game/rendering/ghosts/SettlementGhost.ts";
 import {RoadGhost} from "@/game/rendering/ghosts/RoadGhost.ts";
-import {ButtonType, EventType} from "@/game/model/enums.ts";
+import {ButtonType, EventType, GamePhase} from "@/game/model/enums.ts";
 import type {BuildCityEvent, BuildRoadEvent, BuildSettlementEvent} from "@/game/model/events.ts";
 import {ActionValidator} from "@/game/logic/ActionValidator.ts";
 
@@ -16,7 +16,7 @@ type SmartAction =
     | { type: EventType.BuildCity | EventType.BuildSettlement, vertex: Vertex }
     | { type: EventType.BuildRoad, edge: Edge };
 
-export class DefaultState extends BaseGameState {
+export class DefaultState extends GameplayState {
     private activeGhost: GhostEffect | undefined;
     private hoveredAction: SmartAction | undefined;
     
@@ -26,22 +26,6 @@ export class DefaultState extends BaseGameState {
 
     update(game: GameState, layoutSettings: LayoutSettings): void {
         super.update(game, layoutSettings);
-    }
-
-    protected generateButtons(game: GameState) {
-        const localPlayer = game.players.find(p => p.isLocal);
-        if (localPlayer) {
-            const buttons: Button[] = [];
-            const buttonStates = ActionValidator.getButtonStates(game, localPlayer.playerName);
-
-            buttonStates.forEach(state => {
-                const btn = this.createButton(state.type);
-                btn.isDisabled = state.isDisabled;
-                buttons.push(btn);
-            });
-
-            this.hudEntities!.buttons = buttons;
-        }
     }
 
     protected onMapClick(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void {
@@ -98,8 +82,9 @@ export class DefaultState extends BaseGameState {
                 this.hoveredAction = { type: EventType.BuildCity, vertex: nearestVertex };
                 return;
             }
+            const checkConnection = game.phase !== GamePhase.SetupSettlement;
             if (ActionValidator.canPerformAction(game, playerId, EventType.BuildSettlement) &&
-                BoardService.canPlaceSettlement(game.board, nearestVertex, playerId)) {
+                BoardService.canPlaceSettlement(game.board, nearestVertex, playerId, checkConnection)) {
                 this.activeGhost = new SettlementGhost(nearestVertex, localPlayer.style.fillColor, 'preview');
                 this.hoveredAction = { type: EventType.BuildSettlement, vertex: nearestVertex };
                 return;

@@ -1,30 +1,74 @@
 import type {GameState, Hex} from "@/game/model/types.ts";
 import {PlayerService} from "@/game/logic/PlayerService.ts";
 import gameRules from "@/game/config/gameRules.json";
-import {BuildingType, ResourceType} from "@/game/model/enums.ts";
+import {BuildingType, EventType, GamePhase, ResourceType} from "@/game/model/enums.ts";
 
 export class GameRuleService {
 
+    public static getActionCost(game: GameState, eventType: EventType): Record<string, number> {
+        // During Setup, everything is free
+        if (game.phase === GamePhase.SetupSettlement || game.phase === GamePhase.SetupRoad) {
+            return {};
+        }
+
+        // Standard Costs
+        switch (eventType) {
+            case EventType.BuildRoad: return gameRules.costs.road;
+            case EventType.BuildSettlement: return gameRules.costs.settlement;
+            case EventType.BuildCity: return gameRules.costs.city;
+            case EventType.BuyDevelopmentCard: return gameRules.costs.developmentCard;
+            default: return {};
+        }
+    }
+
+    public static shouldDistributeSetupResources(game: GameState): boolean {
+        // In standard Catan snake draft (1-2-3-3-2-1), players get resources 
+        // for the settlement placed in the second round of setup.
+        // Assuming 2 setup rounds:
+        const totalPlayers = game.players.length;
+        return game.phase === GamePhase.SetupSettlement && game.turn >= totalPlayers;
+    }
+
     public static canBuildRoad(game: GameState, playerId: string): boolean {
-        if (!this.hasResources(game, playerId, gameRules.costs.road)) return false;
+        // Setup Phase Limits: Max 1 road per setup turn
+        if (game.phase === GamePhase.SetupRoad) {
+            const roadCount = this.getPlayerRoadCount(game, playerId);
+            const expected = game.turn < game.players.length ? 1 : 2;
+            if (roadCount >= expected) return false;
+        }
+
+        if (!this.hasResources(game, playerId, this.getActionCost(game, EventType.BuildRoad))) return false;
         if (this.getPlayerRoadCount(game, playerId) >= gameRules.limits.road) return false;
         return true;
     }
 
     public static canBuildSettlement(game: GameState, playerId: string): boolean {
-        if (!this.hasResources(game, playerId, gameRules.costs.settlement)) return false;
+        if (!this.hasResources(game, playerId, this.getActionCost(game, EventType.BuildSettlement))) return false;
         if (this.getPlayerBuildingCount(game, playerId, BuildingType.Settlement) >= gameRules.limits.settlement) return false;
         return true;
     }
 
     public static canBuildCity(game: GameState, playerId: string): boolean {
-        if (!this.hasResources(game, playerId, gameRules.costs.city)) return false;
+        if (!this.hasResources(game, playerId, this.getActionCost(game, EventType.BuildCity))) return false;
         if (this.getPlayerBuildingCount(game, playerId, BuildingType.City) >= gameRules.limits.city) return false;
         return true;
     }
 
     public static canBuyDevelopmentCard(game: GameState, playerId: string): boolean {
-        if (!this.hasResources(game, playerId, gameRules.costs.developmentCard)) return false;
+        if (!this.hasResources(game, playerId, this.getActionCost(game, EventType.BuyDevelopmentCard))) return false;
+        return true;
+    }
+
+    public static canEndTurn(game: GameState, playerId: string): boolean {
+        if (game.phase === GamePhase.SetupRoad) {
+            const roadCount = this.getPlayerRoadCount(game, playerId);
+            // In setup, you must place your road before ending turn
+            const expected = game.turn < game.players.length ? 1 : 2;
+            return roadCount >= expected;
+        }
+        // In Setup_Settlement, you cannot end turn (must build settlement)
+        if (game.phase === GamePhase.SetupSettlement) return false;
+        
         return true;
     }
 

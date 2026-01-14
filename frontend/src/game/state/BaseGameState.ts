@@ -1,10 +1,9 @@
 import type {GameContext, GameStateHandler} from "@/game/state/GameStateHandler.ts";
 import type {Button, GameState, GhostEffect, HandCard, HUDEntities, LayoutSettings} from "@/game/model/types.ts";
 import {TEST_HUD} from "@/game/model/testGame.ts";
-import {ButtonType, ResourceType} from "@/game/model/enums.ts";
+import {ButtonType} from "@/game/model/enums.ts";
 import {Logger} from "@/game/utils/Logger.ts";
 import {HUDLayoutService, type UiLayout} from "@/game/layout/HUDLayoutService.ts";
-import {GameRuleService} from "@/game/logic/GameRuleService.ts";
 
 export abstract class BaseGameState implements GameStateHandler {
     
@@ -223,116 +222,19 @@ export abstract class BaseGameState implements GameStateHandler {
     protected abstract onMapMouseMove(x: number, y: number, game: GameState, layoutSettings: LayoutSettings): void;
 
     protected updateHandCards(game: GameState, layoutSettings: LayoutSettings) {
-        // Find local player
-        const player = game.players.find(p => p.isLocal);
-        if (!player) return;
-
-        // Flatten resources into a list of cards
-        const resources: ResourceType[] = [];
-        
-        // Use deterministic order (Enum values) to prevent cards jumping around
-        Object.values(ResourceType).forEach(res => {
-            const count = player.inventory.resources[res] || 0;
-            for (let i = 0; i < count; i++) {
-                resources.push(res);
-            }
-        });
-
-        const oldCards = this.hudEntities?.cards || [];
-
-        // Generate Layouts
-        this.hudEntities!.cards = resources.map((res, index) => {
-            const layout = HUDLayoutService.getHandCardLayout(
-                index,
-                resources.length,
-                layoutSettings.viewport.width,
-                layoutSettings.viewport.height
-            );
-
-            // Preserve state from previous frame
-            let isHovered = false;
-            let isSelected = false;
-
-            if (index < oldCards.length) {
-                const oldCard = oldCards[index];
-                // Only preserve if the card type hasn't changed at this index
-                if (oldCard.resourceType === res) {
-                    isHovered = oldCard.isHovered;
-                    isSelected = oldCard.isSelected;
-                }
-            }
-
-            return {
-                resourceType: res,
-                layout: layout,
-                isHovered: isHovered,
-                isSelected: isSelected
-            };
-        });
+        // Override in subclass
     }
 
     protected updatePlayerPanels(game: GameState, layoutSettings: LayoutSettings) {
-        this.hudEntities!.playerPanels = game.players.map((player, index) => {
-            const layout = HUDLayoutService.getPlayerPanelLayout(
-                index,
-                layoutSettings.viewport.width,
-                layoutSettings.viewport.height
-            );
-
-            return {
-                player: player,
-                layout: layout
-            };
-        });
+        // Override in subclass
     }
 
     protected generateButtons(game: GameState) {
-        const buttons: Button[] = [];
-
-        // 1. Always available (in this state)
-        buttons.push(this.createButton(ButtonType.putRoad));
-        buttons.push(this.createButton(ButtonType.putSettlement));
-        buttons.push(this.createButton(ButtonType.putCity));
-        buttons.push(this.createButton(ButtonType.drawDevelopmentCard));
-
-        // 2. Context Sensitive
-        const localPlayer = game.players.find(p => p.isLocal);
-        const activePlayer = game.players.find(p => p.isActive);
-
-        if (localPlayer && activePlayer && localPlayer.playerName === activePlayer.playerName) {
-            buttons.push(this.createButton(ButtonType.endTurn));
-        } else {
-            buttons.push(this.createButton(ButtonType.waiting));
-        }
-
-        this.hudEntities!.buttons = buttons;
-        
-        // Apply rules immediately
-        this.updateButtonStates(game);
+        // Override in subclass
     }
 
     protected updateButtonStates(game: GameState) {
-        const localPlayer = game.players.find(p => p.isLocal);
-        const playerId = localPlayer?.playerName ?? "";
-
-        if (!this.hudEntities) return;
-
-        this.hudEntities.buttons.forEach(btn => {
-            switch (btn.type) {
-                case ButtonType.putRoad:
-                    btn.isDisabled = !GameRuleService.canBuildRoad(game, playerId);
-                    break;
-                case ButtonType.putSettlement:
-                    btn.isDisabled = !GameRuleService.canBuildSettlement(game, playerId);
-                    break;
-                case ButtonType.putCity:
-                    btn.isDisabled = !GameRuleService.canBuildCity(game, playerId);
-                    break;
-                case ButtonType.drawDevelopmentCard:
-                    btn.isDisabled = !GameRuleService.canBuyDevelopmentCard(game, playerId);
-                    break;
-            }
-        });
+        // Override in subclass
     }
 
     protected createButton(type: ButtonType): Button {

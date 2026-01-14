@@ -16,6 +16,8 @@ import {
     TileKind,
     VertexDirection
 } from "@/game/model/enums.ts";
+import {DEFAULT_PHASE_CONFIG} from "@/game/config/defaultPhaseConfig.ts";
+
 
 export const generateTestTiles = (): Map<string, Tile> => {
     const map = new Map<string, Tile>();
@@ -71,20 +73,20 @@ export const generateTestTiles = (): Map<string, Tile> => {
 
 export const generateTestBuildings = (): Map<string, Building> => {
     const buildings = new Map<string, Building>();
-    buildings.set("q0r0dWest", {
-        vertex: { q: 0, r: 0, direction: VertexDirection.West },
-        type: BuildingType.Settlement,
-        playerName: "Player 1"
-    });
+    // buildings.set("q0r0dWest", {
+    //     vertex: { q: 0, r: 0, direction: VertexDirection.West },
+    //     type: BuildingType.Settlement,
+    //     playerName: "Player 1"
+    // });
     return buildings;
 }
 
 export const generateTestRoad = (): Map<string, Road> => {
     const roads = new Map<string, Road>();
-    roads.set("q0r0dEast", {
-        edge: { q: 0, r: 0, direction: EdgeDirection.East },
-        playerName: "Player 1"
-    });
+    // roads.set("q0r0dEast", {
+    //     edge: { q: 0, r: 0, direction: EdgeDirection.East },
+    //     playerName: "Player 1"
+    // });
     return roads;
 }
 
@@ -164,7 +166,8 @@ export const TEST_GAMESTATE: GameState = {
     board: TEST_BOARD,
     players: TEST_PLAYERS,
     dices: [1, 1],
-    phase: GamePhase.Setup,
+    phase: GamePhase.SetupSettlement,
+    phaseConfig: DEFAULT_PHASE_CONFIG,
     inputState: INITIAL_INPUT
 };
 

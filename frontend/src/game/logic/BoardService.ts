@@ -1,5 +1,5 @@
-import type {Board, Building, Edge, Hex, Player, Road, Vertex} from "@/game/model/types.ts";
-import {BuildingType, EdgeDirection, VertexDirection} from "@/game/model/enums.ts";
+import type {Board, Building, Edge, Hex, Player, Road, Tile, Vertex} from "@/game/model/types.ts";
+import {BuildingType, EdgeDirection, ResourceType, TileKind, VertexDirection} from "@/game/model/enums.ts";
 import {KeyService} from "@/game/utils/KeyService.ts";
 
 export class BoardService {
@@ -53,13 +53,22 @@ export class BoardService {
         return Array.from(validEdges.values()).filter(e => !this.hasRoad(board, e));
     }
 
-    public static getValidSettlementVertices(board: Board, playerId: string): Vertex[] {
+    public static getValidSettlementVertices(board: Board, playerId: string, checkConnection: boolean = true): Vertex[] {
         const candidateVertices = new Map<string, Vertex>();
 
         // 1. Find all vertices connected to player's roads
-        for (const road of board.roads.values()) {
-            if (road.playerName === playerId) {
-                const vertices = this.getEdgeVertices(road.edge);
+
+        if (checkConnection) {
+            for (const road of board.roads.values()) {
+                if (road.playerName === playerId) {
+                    const vertices = this.getEdgeVertices(road.edge);
+                    vertices.forEach(v => candidateVertices.set(KeyService.vertexToKey(v), v));
+                }
+            }
+        } else {
+            // 1.b Find all the vertices on the board (from tiles)
+            for (const tile of board.tiles.values()) {
+                const vertices = this.getHexVertices(tile.hex);
                 vertices.forEach(v => candidateVertices.set(KeyService.vertexToKey(v), v));
             }
         }
@@ -85,6 +94,22 @@ export class BoardService {
             }
         }
         return validVertices;
+    }
+
+    public static getResourcesForVertex(board: Board, vertex: Vertex): Record<ResourceType, number> {
+        const resources: Record<string, number> = {};
+        
+        // A brute-force check against all tiles is fast enough (19 tiles)
+        // and safer than complex coordinate math without a strict grid system doc.
+        board.tiles.forEach(tile => {
+            if (tile.tileKind === TileKind.ResourceTile && tile.resourceType) {
+                if (this.isVertexOnHex(vertex, tile.hex)) {
+                    resources[tile.resourceType] = (resources[tile.resourceType] || 0) + 1;
+                }
+            }
+        });
+        
+        return resources as Record<ResourceType, number>;
     }
 
     public static putBuilding(board: Board, building: Building): void {
@@ -124,7 +149,7 @@ export class BoardService {
         return false;
     }
 
-    public static canPlaceSettlement(board: Board, vertex: Vertex, playerId: string): boolean {
+    public static canPlaceSettlement(board: Board, vertex: Vertex, playerId: string, checkConnection: boolean = true): boolean {
         if (this.hasBuilding(board, vertex)) return false;
 
         const adjacentEdges = this.getAdjacentEdges(vertex);
@@ -137,13 +162,16 @@ export class BoardService {
         }
 
         // Connection rule (must connect to own road)
-        for (const edge of adjacentEdges) {
-            if (this.hasRoad(board, edge)) {
-                const road = board.roads.get(KeyService.edgeToKey(edge));
-                if (road?.playerName === playerId) return true;
+        if (checkConnection) {
+            for (const edge of adjacentEdges) {
+                if (this.hasRoad(board, edge)) {
+                    const road = board.roads.get(KeyService.edgeToKey(edge));
+                    if (road?.playerName === playerId) return true;
+                }
             }
+            return false;
         }
-        return false;
+        return true;
     }
 
     public static canPlaceCity(board: Board, vertex: Vertex, playerId: string): boolean {
@@ -151,6 +179,38 @@ export class BoardService {
         const building = board.buildings.get(key);
         if (!building) return false;
         return building.type === BuildingType.Settlement && building.playerName === playerId;
+    }
+
+    private static isVertexOnHex(vertex: Vertex, hex: Hex): boolean {
+        // Check if the vertex coordinate matches any of the 6 corners of the hex
+        // Based on the coordinate system implied by getEdgeVertices:
+        // East Vertex of (q,r)
+        if (vertex.q === hex.q && vertex.r === hex.r && vertex.direction === VertexDirection.East) return true;
+        // West Vertex of (q,r)
+        if (vertex.q === hex.q && vertex.r === hex.r && vertex.direction === VertexDirection.West) return true;
+        
+        // Neighbors' vertices that touch this hex:
+        // Top-Right: West of (q+1, r-1)
+        if (vertex.q === hex.q + 1 && vertex.r === hex.r - 1 && vertex.direction === VertexDirection.West) return true;
+        // Bottom-Right: West of (q+1, r)
+        if (vertex.q === hex.q + 1 && vertex.r === hex.r && vertex.direction === VertexDirection.West) return true;
+        // Bottom-Left: East of (q-1, r+1)
+        if (vertex.q === hex.q - 1 && vertex.r === hex.r + 1 && vertex.direction === VertexDirection.East) return true;
+        // Top-Left: East of (q-1, r)
+        if (vertex.q === hex.q - 1 && vertex.r === hex.r && vertex.direction === VertexDirection.East) return true;
+
+        return false;
+    }
+
+    private static getHexVertices(hex: Hex): Vertex[] {
+        return [
+            {q: hex.q, r: hex.r, direction: VertexDirection.East},
+            {q: hex.q, r: hex.r, direction: VertexDirection.West},
+            {q: hex.q+1, r: hex.r-1, direction: VertexDirection.West},
+            {q: hex.q+1, r: hex.r, direction: VertexDirection.West},
+            {q: hex.q-1, r: hex.r+1, direction: VertexDirection.East},
+            {q: hex.q-1, r: hex.r, direction: VertexDirection.East}
+        ]
     }
 
     private static getAdjacentEdges(vertex: Vertex): Edge[] {

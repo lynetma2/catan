@@ -29,7 +29,9 @@ export class ActionValidator {
             case EventType.BuyDevelopmentCard:
                 return GameRuleService.canBuyDevelopmentCard(game, playerId);
             case EventType.RollDice:
+                return true;
             case EventType.EndTurn:
+                return GameRuleService.canEndTurn(game, playerId);
             case EventType.MoveRobber:
             case EventType.StealResource:
                 return true; // No resource cost for these, phase check is sufficient

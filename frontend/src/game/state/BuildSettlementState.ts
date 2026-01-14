@@ -1,7 +1,7 @@
 import type {GameContext} from "./GameStateHandler";
 import type {GameState, GhostEffect, LayoutSettings, Vertex} from "@/game/model/types.ts";
-import {BaseGameState} from "@/game/state/BaseGameState.ts";
-import {ButtonType, EventType} from "@/game/model/enums.ts";
+import {GameplayState} from "@/game/state/GameplayState.ts";
+import {ButtonType, EventType, GamePhase} from "@/game/model/enums.ts";
 import {BoardService} from "@/game/logic/BoardService.ts";
 import {SettlementGhost} from "@/game/rendering/ghosts/SettlementGhost.ts";
 import {KeyService} from "@/game/utils/KeyService.ts";
@@ -9,7 +9,7 @@ import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
 import type {BuildSettlementEvent} from "@/game/model/events.ts";
 import {ActionValidator} from "@/game/logic/ActionValidator.ts";
 
-export class BuildSettlementState extends BaseGameState {
+export class BuildSettlementState extends GameplayState {
     protected triggerButton = ButtonType.putSettlement;
     private ghosts: Map<string, GhostEffect> = new Map();
     private activeGhost: GhostEffect | undefined;
@@ -21,8 +21,9 @@ export class BuildSettlementState extends BaseGameState {
         
         const localPlayer = game.players.find(p => p.isLocal);
         if (localPlayer) {
-            // Assuming BoardService has this method, similar to getValidRoadEdges
-            const validVertices = BoardService.getValidSettlementVertices(game.board, localPlayer.playerName);
+            // In Setup phase, we don't need a road connection
+            const checkConnection = game.phase !== GamePhase.SetupSettlement;
+            const validVertices = BoardService.getValidSettlementVertices(game.board, localPlayer.playerName, checkConnection);
             
             this.ghosts.clear();
             validVertices.forEach(vertex => {
