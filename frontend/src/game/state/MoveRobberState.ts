@@ -4,7 +4,7 @@ import {HexLayoutService} from "@/game/layout/HexLayoutService.ts";
 import {GameRuleService} from "@/game/logic/GameRuleService.ts";
 import {EventType} from "@/game/model/enums.ts";
 import type {MoveRobberEvent} from "@/game/model/events.ts";
-import {RobberRender} from "@/game/rendering/RobberRender.ts";
+import {RobberGhost} from "@/game/rendering/ghosts/RobberGhost.ts";
 
 export class MoveRobberState extends BaseGameState {
     private hoveredHex: Hex | undefined;
@@ -39,13 +39,7 @@ export class MoveRobberState extends BaseGameState {
     // Custom render to show the "Ghost" Robber
     getGhostEffects(): GhostEffect[] | undefined {
         if (this.hoveredHex && this.isValidHover) {
-            return [{
-                render: (ctx, layout) => {
-                    ctx.globalAlpha = 0.5; // Ghostly transparency
-                    RobberRender.draw(ctx, layout, this.hoveredHex!);
-                    ctx.globalAlpha = 1.0;
-                }
-            }];
+            return [new RobberGhost(this.hoveredHex)];
         }
         return undefined;
     }

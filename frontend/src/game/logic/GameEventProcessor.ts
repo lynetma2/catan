@@ -6,6 +6,8 @@ import type {
     BuyDevelopmentCardEvent,
     EndTurnEvent,
     GameEvent,
+    MoveRobberEvent,
+    RobberTriggeredEvent,
     RollDiceEvent,
     TransferResourcesEvent
 } from "@/game/model/events.ts";
@@ -48,6 +50,12 @@ export class GameEventProcessor {
                 state.players[nextIndex].isActive = true;
             }
             state.hasRolledDice = false;
+        },
+        [EventType.MoveRobber]: (state, event: MoveRobberEvent) => {
+            state.board.robber = event.hex;
+        },
+        [EventType.RobberTriggered]: (state, event: RobberTriggeredEvent) => {
+            // No state change needed, but handler exists to suppress warning
         },
         [EventType.RollDice]: (state, event: RollDiceEvent) => {
             let d1, d2;
