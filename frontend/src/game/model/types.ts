@@ -178,6 +178,7 @@ export interface InputState {
 export interface ClientState {
     // The ID of the player currently controlled by this client instance.
     localPlayerId: string;
+    layoutSettings: LayoutSettings;
 }
 
 export interface GhostEffect {

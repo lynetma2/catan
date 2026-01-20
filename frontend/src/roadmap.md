@@ -41,3 +41,12 @@
 16. **Replay System**: Record and replay game sessions.
 17. **Chat System**: In-game communication between players.
 18. **Ping System**: As requested, a non-verbal communication system.
+
+
+# Phase / Tool system
+Phases: WaitingPhase, MainTurnPhase, InputRequestPhase (Server side input requests).
+Tools: SelectVertexTool, SelectEdgeTool, SelectHexTool, SelectPlayerTool, ResourcePickerTool, TradeBuilderTool.
+
+
+
+
