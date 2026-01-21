@@ -22,3 +22,16 @@ export interface Phase {
     //Methods needed for rendering
     getGhostEffects(): GhostEffect[];
 }
+
+export interface ActionPhase {
+    //All buttons allowed.
+}
+
+export interface WaitingPhase {
+    //Only hovering allowed
+    //For now nothing allowed in this phase.
+}
+
+export interface ForcedPhase {
+    //Only the current action allowed so all buttons should be disabled
+}

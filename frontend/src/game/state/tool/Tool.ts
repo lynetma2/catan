@@ -14,3 +14,37 @@ export interface Tool {
 
     getGhostEffects(): GhostEffect[] | undefined;
 }
+
+
+export interface SelectEdgeTool {
+
+}
+
+export interface SelectVertexTool {
+
+}
+
+export interface SelectHexTool {
+
+}
+
+//This might be harder because it relies on a lot of UI to make a player clickable
+//But we try it anyway
+export interface SelectPlayerTool {
+
+}
+
+export interface DiscardCardsTool {
+
+}
+
+export interface ChooseResourcesTool {
+
+}
+
+export interface RollDiceTool {
+
+}
+
+
+//Hardest part going to be the priority on the tools, when there are more than one tool!
