@@ -1,12 +1,18 @@
 import {InputManager} from "@/game/core/Input/InputManager.ts";
 import {FrameQueue} from "@/game/core/FrameQueue.ts";
 import {EventBus} from "@/game/core/EventBus.ts";
+import type {HUD} from "@/game/hud/HUD.ts";
+import type {HudRenderer} from "@/game/rendering/HUDRenderer.ts";
+import type {SharedState} from "@/game/core/SharedState.ts";
 
 export class Game {
     //private world: World;
-    //private hud: HUD;
+    private hud: HUD;
+    private sharedState: SharedState;
     private animationFrameId: number | null = null;
     private previousTimeMs: number = 0;
+
+    private readonly hudRenderer: HudRenderer;
 
     // These are now readonly and guaranteed to exist after construction
     private readonly inputManager: InputManager;
@@ -22,10 +28,13 @@ export class Game {
 
         // Systems get the queue to push events, and the bus to subscribe
         //this.world = new World(this.bus, this.frameQueue);
-        //this.hud = new HUD(this.bus, this.frameQueue);
+        this.hud = new HUD(this.bus, this.frameQueue, this.sharedState);
+
+        //Renders
+        this.hudRenderer = new HudRenderer(this.canvas, this.sharedState);
 
         this.inputManager = new InputManager(canvas);
-        // this.inputManager.register(this.hud);   // priority 10
+        this.inputManager.register(this.hud);   // priority 10
         // this.inputManager.register(this.world); // priority 0
     }
 
@@ -52,12 +61,12 @@ export class Game {
 
                 // 2. Update systems
                 // this.world.update();
-                // this.hud.update();
+                this.hud.update();
 
                 this.previousTimeMs = currentTimeMs - (deltaTimeMs % this.FRAME_INTERVAL_MS);
             }
 
-            //this.renderService.draw(this.layoutSettings, this.game, this.currentState);
+            this.hudRenderer.render(this.hud.getState());
 
             // Draw animations on top of the board
             //this.animationService.draw(this.layoutSettings);
