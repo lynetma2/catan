@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { InputManager } from './InputManager';
 import type { InputLayer } from '@/game/core/Input/types';
+import { MouseButton } from '@/game/core/Input/InputEvent';
 
 describe('InputManager', () => {
     let canvas: HTMLCanvasElement;
@@ -99,7 +100,7 @@ describe('InputManager', () => {
 
         expect(layer.handleInput).toHaveBeenCalledWith(expect.objectContaining({
             type: 'click',
-            button: 'right',
+            button: MouseButton.Right,
         }));
 
         // Test Middle Click (button 1)
@@ -107,7 +108,7 @@ describe('InputManager', () => {
 
         expect(layer.handleInput).toHaveBeenCalledWith(expect.objectContaining({
             type: 'click',
-            button: 'middle',
+            button: MouseButton.Middle,
         }));
     });
 

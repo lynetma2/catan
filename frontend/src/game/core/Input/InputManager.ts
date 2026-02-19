@@ -1,4 +1,4 @@
-import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
+import {MouseButton, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import type {InputLayer} from "@/game/core/Input/types.ts";
 
@@ -51,17 +51,17 @@ export class InputManager {
      * @throws Error if an unsupported button type is detected.
      */
     private onClick(e: MouseEvent) {
-        let buttonType: "left" | "middle" | "right";
+        let buttonType: MouseButton;
 
         switch (e.button) {
             case 0:
-                buttonType = "left";
+                buttonType = MouseButton.Left;
                 break;
             case 1:
-                buttonType = "middle";
-                break
+                buttonType = MouseButton.Middle;
+                break;
             case 2:
-                buttonType = "right";
+                buttonType = MouseButton.Right;
                 break;
             default:
                 throw new Error("Unsupported button type " + e.button);

@@ -2,6 +2,21 @@
 
 import type {Vec2} from "@/game/utils/Vec2.ts";
 
+export enum MouseButton {
+    Left = 'left',
+    Right = 'right',
+    Middle = 'middle',
+}
+
+// Only the keys that the game actually cares about
+export enum GameKey {
+    Escape = "escape",
+    Enter = "enter",
+    R = "r",
+    B = "b",
+    C = "c",
+}
+
 export type NormalizedInputEvent =
     | MouseMoveEvent
     | MouseClickEvent
@@ -19,19 +34,19 @@ interface MouseMoveEvent {
 interface MouseClickEvent {
     type: 'click';
     screenPos: Vec2;
-    button: 'left' | 'right' | 'middle';
+    button: MouseButton;
 }
 
 interface MouseDownEvent {
     type: 'mousedown';
     screenPos: Vec2;
-    button: 'left' | 'right' | 'middle';
+    button: MouseButton;
 }
 
 interface MouseUpEvent {
     type: 'mouseup';
     screenPos: Vec2;
-    button: 'left' | 'right' | 'middle';
+    button: MouseButton;
 }
 
 interface WheelEvent {
@@ -50,5 +65,3 @@ interface KeyUpEvent {
     key: GameKey;
 }
 
-// Only the keys that the game actually cares about
-export type GameKey = 'escape' | 'enter' | 'r' | 'b' | 'c';
