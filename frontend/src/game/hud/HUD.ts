@@ -1,136 +1,142 @@
 // hud/HUD.ts
-import { EventBus }       from '../core/EventBus';
-import { FrameQueue }     from '../core/FrameQueue';
-import { SharedState }    from '../core/SharedState';
-import { InputLayer }     from '../core/InputManager';
-import { NormalizedInputEvent } from '../types/InputEvent';
-import { HudState, PanelState } from '../types/HudState';
-import { EventPayloads }  from '../events/GameEventTypes';
-import { HudEventType }   from '../events/HudEvents';
-import { ResourcePanel }  from './panels/ResourcePanel';
-import { BuildPanel }     from './panels/BuildPanel';
-import { Vec2 }           from '../types/Vec2';
+import { type EventBus }             from '@/game/core/EventBus';
+import { type FrameQueue }           from '@/game/core/FrameQueue';
+import { type SharedState }          from '@/game/core/SharedState';
+import { type ResolutionManager,
+    type Resolution }           from '@/game/core/ResolutionManager';
+import { type InputLayer }           from '@/game/core/Input/InputManager';
+import { type NormalizedInputEvent } from '@/game/types/InputEvent';
+import { type HudState,
+    type HudBounds,
+    type Toast }                from '@/game/types/HudState';
+import { type EventPayloads }        from '@/game/events/GameEventTypes';
+import { BuildPanel }                from './panels/BuildPanel';
+import { ResourcePanel }             from './panels/ResourcePanel';
+import { containsPoint }             from '@/game/types/Rect';
+import { hudLayout }                 from './HudLayout';
 
 export class HUD implements InputLayer {
-    priority = 10;
+    readonly priority = 10;
 
-    private state: HudState = {
-        toast:     null,
-        buildMode: null,
-        panels: {
-            resource: { visible: true },
-            build:    { visible: true, selectedPiece: null },
-        }
-    };
+    private buildMode:  HudState['buildMode'] = null;
+    private toast:      Toast | null          = null;
+    private bounds:     HudBounds;
 
-    // Sub-panels — each owns its own local UI state
-    private resourcePanel: ResourcePanel;
-    private buildPanel:    BuildPanel;
+    private readonly buildPanel:    BuildPanel;
+    private readonly resourcePanel: ResourcePanel;
 
     constructor(
-        private bus:        EventBus,
-        private frameQueue: FrameQueue,
-        private shared:     SharedState
+        private readonly bus:        EventBus,
+        private readonly frameQueue: FrameQueue,
+        private readonly shared:     SharedState,
+        private readonly resolution: ResolutionManager,
     ) {
-        this.resourcePanel = new ResourcePanel(shared);
         this.buildPanel    = new BuildPanel(frameQueue);
+        this.resourcePanel = new ResourcePanel(shared);
+
+        // Resolve initial bounds
+        this.bounds = this.resolveBounds(resolution.get());
+
+        // Re-resolve on resize
+        resolution.onChange(r => {
+            this.bounds = this.resolveBounds(r);
+        });
 
         this.subscribeToEvents();
     }
 
-    // ─── Subscriptions ───────────────────────────────────────────────
+    // ─── Subscriptions ────────────────────────────────────────────────
 
     private subscribeToEvents() {
-        this.bus.on('BUILD_MODE_ENTERED', e => this.onBuildModeEntered(e.payload));
-        this.bus.on('BUILD_MODE_EXITED',  () => this.onBuildModeExited());
-        this.bus.on('BUILD_REJECTED',     e => this.onBuildRejected(e.payload));
-        this.bus.on('BUILD_PLACED',       e => this.onBuildPlaced(e.payload));
-        this.bus.on('RESOURCES_GRANTED',  e => this.onResourcesGranted(e.payload));
-        this.bus.on('TURN_STARTED',       e => this.onTurnStarted(e.payload));
+        this.bus.on('BUILD_MODE_ENTERED', e => {
+            this.buildMode = e.payload.pieceType;
+        });
+        this.bus.on('BUILD_MODE_EXITED', () => {
+            this.buildMode = null;
+            this.buildPanel.clearSelection();
+        });
+        this.bus.on('BUILD_REJECTED', e => {
+            const messages: Record<string, string> = {
+                NO_ADJACENT_ROAD:       'Must be connected to a road',
+                INSUFFICIENT_RESOURCES: 'Not enough resources',
+                SPOT_OCCUPIED:          'Already occupied',
+                DISTANCE_RULE_VIOLATED: 'Too close to another settlement',
+                NOT_YOUR_TURN:          'Not your turn',
+                WRONG_PHASE:            'Cannot build right now',
+            };
+            this.showToast(messages[e.payload.reason] ?? 'Cannot build here', 'error');
+        });
+        this.bus.on('BUILD_PLACED', e => {
+            this.showToast(`${e.payload.pieceType} placed!`, 'success');
+            this.buildMode = null;
+            this.buildPanel.clearSelection();
+        });
+        this.bus.on('RESOURCES_GRANTED', e => {
+            if (e.payload.playerId === this.shared.localPlayerId) {
+                this.showToast('Resources received!', 'info');
+            }
+        });
+        this.bus.on('TURN_STARTED', e => {
+            const isLocal = e.payload.playerId === this.shared.localPlayerId;
+            this.showToast(isLocal ? 'Your turn!' : `Player ${e.payload.playerId}'s turn`, 'info');
+        });
     }
 
-    private onBuildModeEntered(payload: EventPayloads['BUILD_MODE_ENTERED']) {
-        this.state.buildMode = payload.pieceType;
-        this.state.panels.build.selectedPiece = payload.pieceType;
-    }
-
-    private onBuildModeExited() {
-        this.state.buildMode = null;
-        this.state.panels.build.selectedPiece = null;
-    }
-
-    private onBuildRejected(payload: EventPayloads['BUILD_REJECTED']) {
-        const messages: Record<string, string> = {
-            NO_ADJACENT_ROAD:       'Must be connected to a road',
-            INSUFFICIENT_RESOURCES: 'Not enough resources',
-            SPOT_OCCUPIED:          'Already occupied',
-        };
-        this.showToast(messages[payload.reason] ?? 'Cannot build here', 'error');
-    }
-
-    private onBuildPlaced(payload: EventPayloads['BUILD_PLACED']) {
-        this.showToast(`${payload.pieceType} placed!`, 'success');
-        this.onBuildModeExited();
-    }
-
-    private onResourcesGranted(payload: EventPayloads['RESOURCES_GRANTED']) {
-        if (payload.playerId === this.shared.localPlayerId) {
-            this.showToast('Resources received!', 'info');
-        }
-    }
-
-    private onTurnStarted(payload: EventPayloads['TURN_STARTED']) {
-        const isLocalPlayer = payload.playerId === this.shared.localPlayerId;
-        this.showToast(isLocalPlayer ? 'Your turn!' : `Player ${payload.playerId}'s turn`, 'info');
-    }
-
-    // ─── Input ───────────────────────────────────────────────────────
+    // ─── Input ────────────────────────────────────────────────────────
 
     handleInput(event: NormalizedInputEvent): boolean {
-        // Forward to panels in order — first one to consume stops propagation
-        if (this.state.panels.build.visible) {
+        // Keyboard events have no position — forward directly
+        if (event.type === 'keydown' || event.type === 'keyup') {
+            return this.buildPanel.handleInput(event);
+        }
+
+        // Positional events — only forward if inside a panel's bounds
+        if (containsPoint(this.bounds.build, event.screenPos)) {
             if (this.buildPanel.handleInput(event)) return true;
         }
-        if (this.state.panels.resource.visible) {
+        if (containsPoint(this.bounds.resource, event.screenPos)) {
             if (this.resourcePanel.handleInput(event)) return true;
         }
+
         return false;
     }
 
-    // ─── Update ──────────────────────────────────────────────────────
+    // ─── Update ───────────────────────────────────────────────────────
 
-    update() {
-        this.tickToast();
+    update(deltaTimeMs: number) {
+        this.tickToast(deltaTimeMs);
     }
 
-    private tickToast() {
-        if (!this.state.toast) return;
-        this.state.toast.remainingMs -= 16; // ~1 frame at 60fps
-        if (this.state.toast.remainingMs <= 0) {
-            this.state.toast = null;
-        }
-    }
-
-    // ─── State ───────────────────────────────────────────────────────
+    // ─── State ────────────────────────────────────────────────────────
 
     getState(): HudState {
         return {
-            buildMode: this.state.buildMode,
-            toast:     this.state.toast,
+            buildMode: this.buildMode,
+            toast:     this.toast,
+            bounds:    this.bounds,
             panels: {
-                resource: this.state.panels.resource,
-                build:    this.buildPanel.getState(),  // panel speaks for itself
+                build:    this.buildPanel.getState(),
+                resource: this.resourcePanel.getState(),
             }
         };
     }
 
-    // ─── Helpers ─────────────────────────────────────────────────────
+    // ─── Private ──────────────────────────────────────────────────────
 
-    private push<T extends HudEventType>(type: T, payload: EventPayloads[T]) {
-        this.frameQueue.push({ type, payload, source: 'hud' });
+    private resolveBounds(r: Resolution): HudBounds {
+        return {
+            build:    hudLayout.resolve({ anchorX: 'left',  anchorY: 'top',    offsetX: 20, offsetY: 20,  width: 200, height: 260 }, r),
+            resource: hudLayout.resolve({ anchorX: 'left',  anchorY: 'bottom', offsetX: 20, offsetY: 20,  width: 200, height: 180 }, r),
+        };
     }
 
-    private showToast(message: string, kind: 'error' | 'info' | 'success') {
-        this.state.toast = { message, kind, remainingMs: 2500 };
+    private tickToast(deltaTimeMs: number) {
+        if (!this.toast) return;
+        this.toast.remainingMs -= deltaTimeMs;
+        if (this.toast.remainingMs <= 0) this.toast = null;
+    }
+
+    private showToast(message: string, kind: Toast['kind']) {
+        this.toast = { message, kind, remainingMs: 2500 };
     }
 }

@@ -1,40 +1,60 @@
 import {InputManager} from "@/game/core/Input/InputManager.ts";
 import {FrameQueue} from "@/game/core/FrameQueue.ts";
 import {EventBus} from "@/game/core/EventBus.ts";
-import type {HUD} from "@/game/hud/HUD.ts";
-import type {HudRenderer} from "@/game/rendering/hud/HUDRenderer.ts";
-import type {SharedState} from "@/game/core/SharedState.ts";
+import {HUD} from "@/game/hud/HUD.ts";
+import {HudRenderer} from "@/game/rendering/hud/HUDRenderer.ts";
+import {SharedState} from "@/game/core/SharedState.ts";
+import {ResolutionManager} from "@/game/core/ResolutionManager.ts";
+import {Camera} from "@/game/core/Camera.ts";
+import {layout} from "@/game/utils/HexGeometry/Layout.ts";
 
 export class Game {
-    //private world: World;
-    private hud: HUD;
+    private readonly bus: EventBus
+    private readonly frameQueue: FrameQueue;
     private sharedState: SharedState;
+
+    private readonly resolution: ResolutionManager;
+    private readonly camera: Camera;
+
+    private readonly hud: HUD;
+    private readonly hudRenderer: HudRenderer;
+    private readonly inputManager: InputManager;
+
+    //private readonly world: World;
+    //private readonly worldRenderer: WorldRenderer;
+
     private animationFrameId: number | null = null;
     private previousTimeMs: number = 0;
-
-    private readonly hudRenderer: HudRenderer;
-
-    // These are now readonly and guaranteed to exist after construction
-    private readonly inputManager: InputManager;
-    private readonly bus: EventBus;
-    private readonly frameQueue: FrameQueue;
 
     private readonly MAX_FPS = 144;
     private readonly FRAME_INTERVAL_MS = 1000 / this.MAX_FPS;
 
     constructor(private readonly canvas: HTMLCanvasElement) {
-        this.bus = new EventBus();
-        this.frameQueue = new FrameQueue();
+        // ── 1. Infrastructure ──────────────────────────────────────────
+        this.bus         = new EventBus();
+        this.frameQueue  = new FrameQueue();
+        this.sharedState = new SharedState();
+        this.resolution  = new ResolutionManager(canvas);
 
-        // Systems get the queue to push events, and the bus to subscribe
-        //this.world = new World(this.bus, this.frameQueue);
-        this.hud = new HUD(this.bus, this.frameQueue, this.sharedState);
+        // ── 2. Camera ──────────────────────────────────────────────────
+        this.camera = new Camera(
+            layout.pointy,
+            48,               // hex radius in CSS pixels
+            this.resolution,
+        );
 
-        //Renders
-        this.hudRenderer = new HudRenderer(this.canvas, this.sharedState);
+        // ── 3. Systems ─────────────────────────────────────────────────
+        this.hud = new HUD(this.bus, this.frameQueue, this.sharedState, this.resolution);
+        // this.world = new World(this.bus, this.frameQueue, this.sharedState, this.camera);
 
+        // ── 4. Renderers ───────────────────────────────────────────────
+        const ctx = canvas.getContext('2d')!;
+        this.hudRenderer = new HudRenderer(ctx, this.sharedState, this.resolution);
+        // this.worldRenderer = new WorldRenderer(ctx, this.camera);
+
+        // ── 5. Input ───────────────────────────────────────────────────
         this.inputManager = new InputManager(canvas);
-        this.inputManager.register(this.hud);   // priority 10
+        this.inputManager.register(this.hud);  // priority 10
         // this.inputManager.register(this.world); // priority 0
     }
 
@@ -49,6 +69,7 @@ export class Game {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
+        this.resolution.destroy();
     }
 
     // Arrow function automatically binds 'this', preventing context loss
@@ -61,10 +82,14 @@ export class Game {
 
                 // 2. Update systems
                 // this.world.update();
-                this.hud.update();
+                this.hud.update(deltaTimeMs);
 
                 this.previousTimeMs = currentTimeMs - (deltaTimeMs % this.FRAME_INTERVAL_MS);
             }
+
+            const ctx = this.canvas.getContext("2d")!;
+            const r = this.resolution.get();
+            ctx.clearRect(0, 0, r.cssWidth, r.cssHeight);
 
             this.hudRenderer.render(this.hud.getState());
 

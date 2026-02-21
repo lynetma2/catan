@@ -1,15 +1,23 @@
 // hud/panels/ResourcePanel.ts
-import { SharedState }   from '../../core/SharedState';
-import { NormalizedInputEvent } from '../../types/InputEvent';
-import { Rect }          from '../../types/Rect';
+import { type SharedState }          from '@/game/core/SharedState';
+import { type NormalizedInputEvent } from '@/game/types/InputEvent';
 
-export const RESOURCE_PANEL_BOUNDS: Rect = { x: 20, y: 300, width: 200, height: 180 };
+export interface ResourcePanelState {
+    visible: boolean;
+}
 
 export class ResourcePanel {
-    constructor(private shared: SharedState) {}
+    private state: ResourcePanelState = {
+        visible: true,
+    };
+
+    constructor(private readonly shared: SharedState) {}
 
     handleInput(_event: NormalizedInputEvent): boolean {
-        // Resource panel is display-only for now
-        return false;
+        return false; // display-only for now
+    }
+
+    getState(): Readonly<ResourcePanelState> {
+        return this.state;
     }
 }
