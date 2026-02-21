@@ -1,153 +1,129 @@
 // rendering/hud/BuildPanelRenderer.ts
-import { type CanvasRenderingContext2D } from 'dom';
-import { type BuildPanelState }  from '@/game/hud/panels/BuildPanel';
-import { type SharedState }      from '@/game/core/SharedState';
-import { type Rect }             from '@/game/types/Rect';
-import { type Resources,
-    type PieceType }        from '@/game/types/Player';
-
-const PIECES: PieceType[] = ['road', 'settlement', 'city'];
-
-const PIECE_COSTS: Record<PieceType, Partial<Resources>> = {
-    road:       { wood: 1, brick: 1 },
-    settlement: { wood: 1, brick: 1, wool: 1, wheat: 1 },
-    city:       { wheat: 2, ore: 3 },
-};
-
-const PIECE_COLORS: Record<PieceType, string> = {
-    road:       '#c07a3a',
-    settlement: '#4a90d9',
-    city:       '#7b5ea7',
-};
-
-const RESOURCE_COLORS: Record<keyof Resources, string> = {
-    wood:  '#4a7c59',
-    brick: '#c0522a',
-    wool:  '#a8c070',
-    wheat: '#d4a843',
-    ore:   '#8a8a9a',
-};
-
-const CARD_HEIGHT  = 52;
-const CARD_SPACING = 8;
-const CARD_OFFSET  = 44;
+import { type BuildPanelState, type Button } from '@/game/hud/panels/BuildPanel';
+import { type Rect }                         from '@/game/utils/Rect';
+import {BUTTON_STYLES, type ButtonStyle} from './ButtonStyles';
+import {type ButtonTheme, DEFAULT_HUD_THEME, DEFAULT_THEME} from "@/game/rendering/theme/theme.ts";
+import {drawPanelChrome} from "@/game/rendering/hud/panelChrome.ts";
 
 export class BuildPanelRenderer {
+    private readonly imageCache = new Map<string, HTMLImageElement>();
+
     constructor(
-        private readonly ctx:    CanvasRenderingContext2D,
-        private readonly shared: SharedState,
+        private readonly ctx:   CanvasRenderingContext2D,
+        private readonly theme: ButtonTheme = DEFAULT_THEME,
     ) {}
 
     render(state: BuildPanelState, bounds: Rect) {
-        this.drawPanelChrome(bounds, 'Build');
-
-        PIECES.forEach((piece, i) => {
-            const cardBounds = this.cardBounds(bounds, i);
-            const player     = this.shared.localPlayer;
-            const affordable = player
-                ? this.canAfford(player.resources, PIECE_COSTS[piece])
-                : false;
-
-            this.drawCard(
-                cardBounds,
-                piece,
-                state.hoveredButton  === piece,
-                state.selectedButton === piece,
-                affordable
-            );
-        });
+        drawPanelChrome(this.ctx, bounds, "Build", DEFAULT_HUD_THEME.panel);
+        state.buttons.forEach(button => this.drawButton(button));
     }
 
-    private cardBounds(panelBounds: Rect, index: number): Rect {
-        return {
-            x:      panelBounds.x + 8,
-            y:      panelBounds.y + CARD_OFFSET + index * (CARD_HEIGHT + CARD_SPACING),
-            width:  panelBounds.width - 16,
-            height: CARD_HEIGHT,
-        };
-    }
+    // ─── Button ───────────────────────────────────────────────────────
 
-    private drawCard(
-        bounds:     Rect,
-        piece:      PieceType,
-        hovered:    boolean,
-        selected:   boolean,
-        affordable: boolean
-    ) {
-        const { ctx } = this;
-        const { x, y, width, height } = bounds;
+    private drawButton(button: Button) {
+        const style        = BUTTON_STYLES[button.type];
+        const { ctx, theme } = this;
+        const { x, y, width, height } = button.bounds;
 
         ctx.save();
-        ctx.beginPath();
-        ctx.roundRect(x, y, width, height, 6);
 
-        if (selected) {
-            ctx.fillStyle   = PIECE_COLORS[piece] + 'cc';
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth   = 2;
-        } else if (hovered && affordable) {
-            ctx.fillStyle   = 'rgba(255,255,255,0.15)';
-            ctx.strokeStyle = PIECE_COLORS[piece];
-            ctx.lineWidth   = 1.5;
-        } else {
-            ctx.fillStyle   = affordable ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.3)';
-            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-            ctx.lineWidth   = 1;
-        }
+        // ── Background fill ──
+        ctx.beginPath();
+        ctx.roundRect(x, y, width, height, theme.defaults.borderRadius);
+        ctx.fillStyle = style.fillColor;
         ctx.fill();
+
+        // ── State overlay ──
+        // Composited on top of fill so the base color still shows through
+        const overlay = this.resolveOverlay(button);
+        if (overlay) {
+            ctx.beginPath();
+            ctx.roundRect(x, y, width, height, theme.defaults.borderRadius);
+            ctx.fillStyle = overlay;
+            ctx.fill();
+        }
+
+        // ── Stroke ──
+        // Per-button override wins, otherwise state-driven, then theme default
+        ctx.beginPath();
+        ctx.roundRect(x, y, width, height, theme.defaults.borderRadius);
+        ctx.strokeStyle = this.resolveStroke(button, style);
+        ctx.lineWidth   = theme.defaults.strokeWidth;
         ctx.stroke();
 
-        // Color swatch
-        ctx.beginPath();
-        ctx.roundRect(x + 10, y + 10, 32, 32, 4);
-        ctx.fillStyle = affordable ? PIECE_COLORS[piece] : PIECE_COLORS[piece] + '55';
-        ctx.fill();
+        // ── Icon ──
+        this.drawIcon(button, style);
 
-        // Label
-        ctx.font         = 'bold 13px monospace';
-        ctx.fillStyle    = affordable ? '#ffffff' : '#888888';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(piece.charAt(0).toUpperCase() + piece.slice(1), x + 52, y + 18);
+        // ── Label ──
+        this.drawLabel(button, style);
 
-        // Cost pips
-        let iconX       = x + 52;
-        const iconY     = y + 36;
-        for (const [resource, amount] of Object.entries(PIECE_COSTS[piece])) {
+        // ── Disabled opacity applied last ──
+        if (button.isDisabled) {
+            ctx.globalAlpha = theme.defaults.disabledOpacity;
             ctx.beginPath();
-            ctx.arc(iconX + 5, iconY, 5, 0, Math.PI * 2);
-            ctx.fillStyle = RESOURCE_COLORS[resource as keyof Resources];
+            ctx.roundRect(x, y, width, height, theme.defaults.borderRadius);
+            ctx.fillStyle = 'transparent';
             ctx.fill();
-            ctx.font      = '10px monospace';
-            ctx.fillStyle = '#ccc';
-            ctx.fillText(String(amount), iconX + 13, iconY + 1);
-            iconX += 28;
         }
 
         ctx.restore();
     }
 
-    private drawPanelChrome(bounds: Rect, title: string) {
-        const { ctx }              = this;
-        const { x, y, width, height } = bounds;
+    // ─── Resolution helpers ───────────────────────────────────────────
 
-        ctx.save();
-        ctx.beginPath();
-        ctx.roundRect(x, y, width, height, 8);
-        ctx.fillStyle   = 'rgba(10, 12, 20, 0.82)';
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-        ctx.lineWidth   = 1;
-        ctx.fill();
-        ctx.stroke();
+    private resolveOverlay(button: Button): string | null {
+        const { states } = this.theme;
+        if (button.isSelected) return states.selected.fillOverlay;
+        if (button.isHovered)  return states.hovered.fillOverlay;
+        if (button.isDisabled) return states.disabled.fillOverlay;
+        return null;
+    }
+
+    private resolveStroke(button: Button, style: ButtonStyle): string {
+        // Priority: per-button override → state-driven → theme default
+        if (style.strokeColor)        return style.strokeColor;
+        if (button.isSelected)        return this.theme.states.selected.strokeColor;
+        if (button.isHovered)         return this.theme.states.hovered.strokeColor;
+        return this.theme.defaults.strokeColor;
+    }
+
+    // ─── Icon ─────────────────────────────────────────────────────────
+
+    private drawIcon(button: Button, style: ButtonStyle) {
+        const image = this.getImage(style.imageSrc);
+        if (!image.complete) return;
+
+        const { x, y, width, height } = button.bounds;
+        const scale      = style.iconScale ?? 0.5;
+        const iconSize   = Math.min(width, height) * scale;
+        const offsetY    = style.iconHeightOffset ?? 0;
+        const iconX      = x + (width  - iconSize) / 2;
+        const iconY      = y + (height - iconSize) / 2 + offsetY;
+
+        this.ctx.drawImage(image, iconX, iconY, iconSize, iconSize);
+    }
+
+    private getImage(src: string): HTMLImageElement {
+        if (!this.imageCache.has(src)) {
+            const img   = new Image();
+            img.src     = src;
+            this.imageCache.set(src, img);
+        }
+        return this.imageCache.get(src)!;
+    }
+
+    // ─── Label ────────────────────────────────────────────────────────
+
+    private drawLabel(button: Button, style: ButtonStyle) {
+        const { ctx }          = this;
+        const { x, y, width, height } = button.bounds;
 
         ctx.font         = 'bold 11px monospace';
-        ctx.fillStyle    = 'rgba(255,255,255,0.35)';
-        ctx.textBaseline = 'top';
-        ctx.fillText(title.toUpperCase(), x + 12, y + 12);
-        ctx.restore();
-    }
-
-    private canAfford(resources: Resources, cost: Partial<Resources>): boolean {
-        return (Object.keys(cost) as (keyof Resources)[])
-            .every(k => resources[k] >= (cost[k] ?? 0));
+        ctx.fillStyle    = button.isDisabled
+            ? 'rgba(255,255,255,0.4)'
+            : 'rgba(255,255,255,0.9)';
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(style.label, x + width / 2, y + height - 6);
     }
 }
