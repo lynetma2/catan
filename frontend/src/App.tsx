@@ -29,6 +29,7 @@ function App() {
         // Parent container with static size for now. Can be controlled via CSS later.
         <div style={{width: '1000px', height: '1000px'}}>
             <canvas
+                tabIndex={0}
                 ref={canvasRef}
                 style={{ display: 'block', width: '100%', height: '100%' }}
             />

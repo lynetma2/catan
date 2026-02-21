@@ -6,7 +6,7 @@ export class SharedState {
     currentPlayerId: string | null = null;
 
     constructor() {
-        this.localPlayerId = "player-2";
+        this.localPlayerId = "player-1";
         this.currentPlayerId = "player-1";
     }
 

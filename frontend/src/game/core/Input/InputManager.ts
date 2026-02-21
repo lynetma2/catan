@@ -1,4 +1,4 @@
-import {MouseButton, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
+import {GameKey, MouseButton, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import type {InputLayer} from "@/game/core/Input/types.ts";
 
@@ -21,6 +21,7 @@ export class InputManager {
         // All DOM listeners live here and nowhere else
         canvas.addEventListener('mousemove', e => this.onMouseMove(e));
         canvas.addEventListener('click',     e => this.onClick(e));
+        canvas.addEventListener('keydown', e => this.onKeyDown(e));
     }
 
     /**
@@ -68,6 +69,21 @@ export class InputManager {
         }
 
         this.dispatch({ type: 'click', screenPos: this.toCanvasPos(e), button: buttonType });
+    }
+
+    private onKeyDown(e: KeyboardEvent) {
+        // we convert the incoming key to lowercase to ensure a match.
+        const pressedKey = e.key.toLowerCase();
+        const isGameKey: boolean = Object.values(GameKey).includes(pressedKey as GameKey);
+
+        console.log("Key pressed: " + pressedKey + "")
+
+        if (isGameKey) {
+            this.dispatch({ type: 'keydown', key: pressedKey as GameKey });
+        } else {
+            // Ignore or log keys that aren't part of the game controls
+            console.log(`Unmapped key pressed: ${e.key}`);
+        }
     }
 
     /**

@@ -134,11 +134,6 @@ export class BuildPanel {
             }))
             .filter(b => !b.isHidden);
 
-        console.log("Current BuildPanel State:", {
-            buttons: buttons,
-            bounds: derivePanelBounds(buttons),
-        });
-
         return {
             buttons: buttons,
             bounds: derivePanelBounds(buttons),  // ← derived, not configured
