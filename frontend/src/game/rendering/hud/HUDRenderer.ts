@@ -1,10 +1,10 @@
 // rendering/HudRenderer.ts
 import { HudState }       from '../types/HudState';
-import { SharedState }    from '../core/SharedState';
-import { BuildPanel, BUILD_PANEL_BOUNDS }       from '../hud/panels/BuildPanel';
-import { RESOURCE_PANEL_BOUNDS } from '../hud/panels/ResourcePanel';
-import { Resources }      from '../types/Player';
-import { PieceType }      from '../types/Player';
+import { SharedState }    from '../../core/SharedState.ts';
+import { BuildPanel, BUILD_PANEL_BOUNDS }       from '../../hud/panels/BuildPanel.ts';
+import { RESOURCE_PANEL_BOUNDS } from '../../hud/panels/ResourcePanel.ts';
+import { Resources }      from '../../types/Player.ts';
+import { PieceType }      from '../../types/Player.ts';
 
 const PIECES: PieceType[] = ['road', 'settlement', 'city'];
 

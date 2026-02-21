@@ -2,7 +2,7 @@ import {InputManager} from "@/game/core/Input/InputManager.ts";
 import {FrameQueue} from "@/game/core/FrameQueue.ts";
 import {EventBus} from "@/game/core/EventBus.ts";
 import type {HUD} from "@/game/hud/HUD.ts";
-import type {HudRenderer} from "@/game/rendering/HUDRenderer.ts";
+import type {HudRenderer} from "@/game/rendering/hud/HUDRenderer.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 
 export class Game {

@@ -100,7 +100,6 @@ export class HUD implements InputLayer {
     // ─── Update ──────────────────────────────────────────────────────
 
     update() {
-        this.state.hoveredPiece = this.buildPanel.getHovered(); // pulled in during update
         this.tickToast();
     }
 
