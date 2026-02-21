@@ -5,6 +5,11 @@ export class SharedState {
     localPlayerId: string | null = null;
     currentPlayerId: string | null = null;
 
+    constructor() {
+        this.localPlayerId = "player-2";
+        this.currentPlayerId = "player-1";
+    }
+
     get localPlayer(): Player | null {
         if (!this.localPlayerId) return null;
         return this.players.get(this.localPlayerId) ?? null;

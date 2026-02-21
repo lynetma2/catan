@@ -25,7 +25,7 @@ export class HudRenderer {
     }
 
     render(state: HudState) {
-        this.buildPanelRenderer.render(state.panels.build, state.bounds.build);
+        this.buildPanelRenderer.render(state.panels.build);
         if (state.toast) this.toastRenderer.render(state.toast, this.resolution);
     }
 }

@@ -4,16 +4,10 @@ import type {Rect} from "@/game/utils/Rect.ts";
 
 export interface HudState {
     toast:     Toast | null;
-    bounds:    HudBounds;
     panels: {
         resource: ResourcePanelState;
         build:    BuildPanelState;
     };
-}
-
-export interface HudBounds {
-    build:    Rect;
-    resource: Rect;
 }
 
 export interface ResourcePanelState {

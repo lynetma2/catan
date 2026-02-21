@@ -1,12 +1,11 @@
 import {useEffect, useRef} from 'react'
 import './App.css'
-import {GameLoop} from "@/game/core/GameLoop.ts";
-import {Logger} from "@/game/utils/Logger.ts";
+import {Game} from "@/game/core/Game.ts";
 
 function App() {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const gameLoopRef = useRef<GameLoop>(null);
+    const gameLoopRef = useRef<Game>(null);
 
     useEffect(() => {
 
@@ -14,14 +13,14 @@ function App() {
             if (!canvas) {
                 return;
             }
-            gameLoopRef.current = new GameLoop(canvas);
+            gameLoopRef.current = new Game(canvas);
             gameLoopRef.current.start();
 
-            Logger.info("UseEffect ran");
+            console.info("UseEffect ran");
 
             return () => {
-                Logger.debug("return called");
-                gameLoopRef.current?.stop();
+                console.debug("return called");
+                gameLoopRef.current?.destroy();
             };
         }, []
     )
@@ -29,7 +28,10 @@ function App() {
     return (
         // Parent container with static size for now. Can be controlled via CSS later.
         <div style={{width: '1000px', height: '1000px'}}>
-            <canvas ref={canvasRef} style={{display: 'block'}} />
+            <canvas
+                ref={canvasRef}
+                style={{ display: 'block', width: '100%', height: '100%' }}
+            />
         </div>
     )
 }

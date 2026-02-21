@@ -7,6 +7,7 @@ import {SharedState} from "@/game/core/SharedState.ts";
 import {ResolutionManager} from "@/game/core/ResolutionManager.ts";
 import {Camera} from "@/game/core/Camera.ts";
 import {layout} from "@/game/utils/HexGeometry/Layout.ts";
+import {DEFAULT_HUD_THEME} from "@/game/rendering/theme/theme.ts";
 
 export class Game {
     private readonly bus: EventBus
@@ -49,7 +50,7 @@ export class Game {
 
         // ── 4. Renderers ───────────────────────────────────────────────
         const ctx = canvas.getContext('2d')!;
-        this.hudRenderer = new HudRenderer(ctx, this.sharedState, this.resolution);
+        this.hudRenderer = new HudRenderer(ctx, this.resolution, DEFAULT_HUD_THEME);
         // this.worldRenderer = new WorldRenderer(ctx, this.camera);
 
         // ── 5. Input ───────────────────────────────────────────────────

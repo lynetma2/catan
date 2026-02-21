@@ -5,13 +5,9 @@ import { type NormalizedInputEvent } from '@/game/core/Input/InputEvent';
 import { type Rect }                 from '@/game/utils/Rect';
 import { type Vec2 }                 from '@/game/utils/Vec2';
 import { containsPoint }             from '@/game/utils/Rect';
-import { ButtonType }                from '@/game/hud/types';
-
-export const BUILD_PANEL_BOUNDS: Rect = { x: 20, y: 20, width: 200, height: 260 };
-
-const CARD_HEIGHT  = 52;
-const CARD_SPACING = 8;
-const CARD_OFFSET  = 44;
+import {Anchor, ButtonType} from '@/game/hud/types';
+import {BUTTON_CONFIGS, derivePanelBounds, hudLayout, type PanelConfig} from "@/game/hud/HudLayout.ts";
+import type {ResolutionManager} from "@/game/core/ResolutionManager.ts";
 
 export interface Button {
     type:       ButtonType;
@@ -23,6 +19,7 @@ export interface Button {
 }
 
 export interface BuildPanelState {
+    bounds: Rect;
     buttons: Button[];
 }
 
@@ -36,6 +33,15 @@ const ALL_BUTTONS: ButtonType[] = [
     ButtonType.waiting,
 ];
 
+const PANEL_CONFIG: PanelConfig = {
+    anchorX: Anchor.Right,
+    anchorY: Anchor.Bottom,
+    offsetX: 20,
+    offsetY: 20,
+    width:   200,
+    height:  260,
+};
+
 export class BuildPanel {
     // Only the interactive state is stored — visibility is derived
     private hoveredButton:  ButtonType | null = null;
@@ -44,6 +50,7 @@ export class BuildPanel {
     constructor(
         private readonly frameQueue:   FrameQueue,
         private readonly sharedState:  SharedState,
+        private readonly resolution:   ResolutionManager,
     ) {}
 
     // ─── Input ────────────────────────────────────────────────────────
@@ -59,8 +66,9 @@ export class BuildPanel {
             if (!button) return false;
 
             // Don't act on hidden or disabled buttons
-            const state = this.resolveButton(button, ALL_BUTTONS.indexOf(button));
-            if (state.isHidden || state.isDisabled) return false;
+            const isMyTurn = this.sharedState.isLocalPlayersTurn;
+            if (this.isButtonHidden(button, isMyTurn))   return false;
+            if (this.isButtonDisabled(button, isMyTurn)) return false;
 
             this.handleButtonClick(button);
             return true;
@@ -112,26 +120,28 @@ export class BuildPanel {
     // ─── State ────────────────────────────────────────────────────────
 
     getState(): BuildPanelState {
-        return {
-            buttons: ALL_BUTTONS
-                .map((type, i) => this.resolveButton(type, i))
-                .filter(b => !b.isHidden)  // renderer never sees hidden buttons
-        };
-    }
+        const isMyTurn = this.sharedState.isLocalPlayersTurn;
+        const r        = this.resolution.get();
 
-    // Derives the full button state from stored interaction state + SharedState
-    private resolveButton(type: ButtonType, index: number): Button {
-        const isMyTurn  = this.sharedState.isLocalPlayersTurn;
-        const isHidden  = this.isButtonHidden(type, isMyTurn);
-        const isDisabled = this.isButtonDisabled(type, isMyTurn);
+        const buttons = ALL_BUTTONS
+            .map(type => ({
+                type,
+                bounds:     hudLayout.resolve(BUTTON_CONFIGS[type], r),
+                isHovered:  this.hoveredButton  === type,
+                isSelected: this.selectedButton === type,
+                isDisabled: this.isButtonDisabled(type, isMyTurn),
+                isHidden:   this.isButtonHidden(type, isMyTurn),
+            }))
+            .filter(b => !b.isHidden);
+
+        console.log("Current BuildPanel State:", {
+            buttons: buttons,
+            bounds: derivePanelBounds(buttons),
+        });
 
         return {
-            type,
-            bounds:     this.cardBounds(index),
-            isHovered:  this.hoveredButton  === type,
-            isSelected: this.selectedButton === type,
-            isDisabled,
-            isHidden,
+            buttons: buttons,
+            bounds: derivePanelBounds(buttons),  // ← derived, not configured
         };
     }
 
@@ -158,16 +168,11 @@ export class BuildPanel {
         }
     }
 
-    private cardBounds(index: number): Rect {
-        return {
-            x:      BUILD_PANEL_BOUNDS.x + 8,
-            y:      BUILD_PANEL_BOUNDS.y + CARD_OFFSET + index * (CARD_HEIGHT + CARD_SPACING),
-            width:  BUILD_PANEL_BOUNDS.width - 16,
-            height: CARD_HEIGHT,
-        };
-    }
-
     private buttonAtPos(pos: Vec2): ButtonType | null {
-        return ALL_BUTTONS.find((_, i) => containsPoint(this.cardBounds(i), pos)) ?? null;
+        const r = this.resolution.get();
+        return ALL_BUTTONS.find(type => {
+            if (this.isButtonHidden(type, this.sharedState.isLocalPlayersTurn)) return false;
+            return containsPoint(hudLayout.resolve(BUTTON_CONFIGS[type], r), pos);
+        }) ?? null;
     }
 }

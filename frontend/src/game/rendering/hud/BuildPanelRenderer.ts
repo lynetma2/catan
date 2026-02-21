@@ -13,8 +13,8 @@ export class BuildPanelRenderer {
         private readonly theme: ButtonTheme = DEFAULT_THEME,
     ) {}
 
-    render(state: BuildPanelState, bounds: Rect) {
-        drawPanelChrome(this.ctx, bounds, "Build", DEFAULT_HUD_THEME.panel);
+    render(state: BuildPanelState) {
+        drawPanelChrome(this.ctx, state.bounds, "Build", DEFAULT_HUD_THEME.panel);
         state.buttons.forEach(button => this.drawButton(button));
     }
 
