@@ -51,8 +51,8 @@ export class BuildPanelRenderer {
             this.drawCard(
                 cardBounds,
                 piece,
-                state.hoveredPiece  === piece,
-                state.selectedPiece === piece,
+                state.hoveredButton  === piece,
+                state.selectedButton === piece,
                 affordable
             );
         });

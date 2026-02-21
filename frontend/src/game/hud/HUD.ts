@@ -8,14 +8,13 @@ import { BuildPanel }                from './panels/BuildPanel';
 import { ResourcePanel }             from './panels/ResourcePanel';
 import { hudLayout }                 from './HudLayout';
 import type {InputLayer} from "@/game/core/Input/types.ts";
-import type {HudBounds, HudState, Toast} from "@/game/hud/types.ts";
+import {Anchor, type HudBounds, type HudState, type Toast} from "@/game/hud/types.ts";
 import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {containsPoint} from "@/game/utils/Rect.ts";
 
 export class HUD implements InputLayer {
     readonly priority = 10;
 
-    private buildMode:  HudState['buildMode'] = null;
     private toast:      Toast | null          = null;
     private bounds:     HudBounds;
 
@@ -28,7 +27,7 @@ export class HUD implements InputLayer {
         private readonly shared:     SharedState,
         private readonly resolution: ResolutionManager,
     ) {
-        this.buildPanel    = new BuildPanel(frameQueue);
+        this.buildPanel    = new BuildPanel(frameQueue, shared);
         this.resourcePanel = new ResourcePanel(shared);
 
         // Resolve initial bounds
@@ -110,7 +109,6 @@ export class HUD implements InputLayer {
 
     getState(): HudState {
         return {
-            buildMode: this.buildMode,
             toast:     this.toast,
             bounds:    this.bounds,
             panels: {
@@ -124,8 +122,8 @@ export class HUD implements InputLayer {
 
     private resolveBounds(r: Resolution): HudBounds {
         return {
-            build:    hudLayout.resolve({ anchorX: 'left',  anchorY: 'top',    offsetX: 20, offsetY: 20,  width: 200, height: 260 }, r),
-            resource: hudLayout.resolve({ anchorX: 'left',  anchorY: 'bottom', offsetX: 20, offsetY: 20,  width: 200, height: 180 }, r),
+            build:    hudLayout.resolve({ anchorX: Anchor.Left,  anchorY: Anchor.Top,    offsetX: 20, offsetY: 20,  width: 200, height: 260 }, r),
+            resource: hudLayout.resolve({ anchorX: Anchor.Left,  anchorY: Anchor.Bottom, offsetX: 20, offsetY: 20,  width: 200, height: 180 }, r),
         };
     }
 

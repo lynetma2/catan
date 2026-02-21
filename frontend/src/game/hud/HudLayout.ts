@@ -1,10 +1,11 @@
 // hud/HudLayout.ts
-import { type Rect }       from '@/game/types/Rect';
-import { type Resolution } from '@/game/core/ResolutionManager';
+import {type Resolution} from '@/game/core/ResolutionManager';
+import {Anchor} from "@/game/hud/types.ts";
+import type {Rect} from "@/game/utils/Rect.ts";
 
 export interface PanelConfig {
-    anchorX: 'left' | 'right' | 'center';
-    anchorY: 'top'  | 'bottom' | 'center';
+    anchorX: Anchor.Left | Anchor.Right | Anchor.Center;
+    anchorY: Anchor.Top  | Anchor.Bottom | Anchor.Center;
     offsetX: number;
     offsetY: number;
     width:   number;
@@ -30,17 +31,17 @@ export const hudLayout = {
 
     resolveX: (anchor: PanelConfig['anchorX'], offset: number, width: number, r: Resolution): number => {
         switch (anchor) {
-            case 'left':   return offset;
-            case 'right':  return r.cssWidth  - width  - offset;
-            case 'center': return r.cssWidth  / 2      - width  / 2 + offset;
+            case Anchor.Left:   return offset;
+            case Anchor.Right:  return r.cssWidth  - width  - offset;
+            case Anchor.Center: return r.cssWidth  / 2      - width  / 2 + offset;
         }
     },
 
     resolveY: (anchor: PanelConfig['anchorY'], offset: number, height: number, r: Resolution): number => {
         switch (anchor) {
-            case 'top':    return offset;
-            case 'bottom': return r.cssHeight - height - offset;
-            case 'center': return r.cssHeight / 2      - height / 2 + offset;
+            case Anchor.Top:    return offset;
+            case Anchor.Bottom: return r.cssHeight - height - offset;
+            case Anchor.Center: return r.cssHeight / 2      - height / 2 + offset;
         }
     },
 };
