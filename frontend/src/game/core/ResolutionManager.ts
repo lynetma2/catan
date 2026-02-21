@@ -51,13 +51,14 @@ export class ResolutionManager {
     }
 
     private apply(r: Resolution) {
-        // Set the actual pixel buffer size
+        // Setting canvas dimensions resets the transform automatically
+        // so ctx.scale after this is always fresh — no accumulation
         this.canvas.width  = r.pixelWidth;
         this.canvas.height = r.pixelHeight;
 
-        // Scale context so 1 unit = 1 CSS pixel everywhere in game code
         const ctx = this.canvas.getContext('2d')!;
-        ctx.scale(r.dpr, r.dpr);
+        ctx.setTransform(r.dpr, 0, 0, r.dpr, 0, 0);  // ← setTransform instead of scale
+        // setTransform replaces rather than multiplies — no accumulation on re-apply
     }
 
     private observe(): ResizeObserver {

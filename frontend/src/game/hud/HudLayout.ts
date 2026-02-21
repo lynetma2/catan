@@ -27,15 +27,20 @@ export const hudLayout = {
         const scale  = hudLayout.scaleFor(r);
         const width  = config.width  * scale;
         const height = config.height * scale;
-
         const x = hudLayout.resolveX(config.anchorX, config.offsetX, width,  r);
         const y = hudLayout.resolveY(config.anchorY, config.offsetY, height, r);
+        return { x, y, width, height };
+    },
 
+    // For buttons — fixed pixel size, no scaling
+    resolveFixed: (config: ButtonConfig, r: Resolution): Rect => {
+        const { width, height } = config;  // use size as-is
+        const x = hudLayout.resolveX(config.anchorX, config.offsetX, width,  r);
+        const y = hudLayout.resolveY(config.anchorY, config.offsetY, height, r);
         return { x, y, width, height };
     },
 
     scaleFor: (r: Resolution): number => {
-        // Scales panels gently with screen width — clamped between 0.75 and 1.5
         return Math.min(1.5, Math.max(0.75, r.cssWidth / 1280));
     },
 
@@ -55,8 +60,8 @@ export const hudLayout = {
     },
 };
 
-const BUTTON_SIZE    = 100;
-const BUTTON_PADDING = 10;
+const BUTTON_SIZE    = 80;
+const BUTTON_PADDING = 5;
 
 // Base distance from the right/bottom edge.
 // Set to BUTTON_PADDING * 2 to match your original -20 offset.

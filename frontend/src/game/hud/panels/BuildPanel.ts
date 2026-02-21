@@ -5,7 +5,7 @@ import { type NormalizedInputEvent } from '@/game/core/Input/InputEvent';
 import { type Rect }                 from '@/game/utils/Rect';
 import { type Vec2 }                 from '@/game/utils/Vec2';
 import { containsPoint }             from '@/game/utils/Rect';
-import {Anchor, ButtonType} from '@/game/hud/types';
+import {ButtonType} from '@/game/hud/types';
 import {BUTTON_CONFIGS, derivePanelBounds, hudLayout, type PanelConfig} from "@/game/hud/HudLayout.ts";
 import type {ResolutionManager} from "@/game/core/ResolutionManager.ts";
 
@@ -32,15 +32,6 @@ const ALL_BUTTONS: ButtonType[] = [
     ButtonType.endTurn,
     ButtonType.waiting,
 ];
-
-const PANEL_CONFIG: PanelConfig = {
-    anchorX: Anchor.Right,
-    anchorY: Anchor.Bottom,
-    offsetX: 20,
-    offsetY: 20,
-    width:   200,
-    height:  260,
-};
 
 export class BuildPanel {
     // Only the interactive state is stored — visibility is derived
@@ -126,13 +117,18 @@ export class BuildPanel {
         const buttons = ALL_BUTTONS
             .map(type => ({
                 type,
-                bounds:     hudLayout.resolve(BUTTON_CONFIGS[type], r),
+                bounds:     hudLayout.resolveFixed(BUTTON_CONFIGS[type], r),
                 isHovered:  this.hoveredButton  === type,
                 isSelected: this.selectedButton === type,
                 isDisabled: this.isButtonDisabled(type, isMyTurn),
                 isHidden:   this.isButtonHidden(type, isMyTurn),
             }))
             .filter(b => !b.isHidden);
+
+        console.log("Current State: ", {
+            buttons: buttons,
+            bounds: derivePanelBounds(buttons),
+        });
 
         return {
             buttons: buttons,
