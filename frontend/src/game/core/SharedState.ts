@@ -1,5 +1,4 @@
-// core/SharedState.ts
-import { Player } from '../types/Player';
+import type {Player} from '../types/Player';
 
 export class SharedState {
     players: Map<string, Player> = new Map();

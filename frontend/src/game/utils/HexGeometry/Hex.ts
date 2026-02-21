@@ -14,6 +14,16 @@ export interface Hex {
 }
 
 /**
+ * Internal helper to instantiate Hex objects and safely normalize -0 to +0.
+ * This guarantees no -0 values ever leak out of the math functions.
+ */
+const makeHex = (q: number, r: number, s: number): Hex => ({
+    q: q === 0 ? 0 : q,
+    r: r === 0 ? 0 : r,
+    s: s === 0 ? 0 : s
+});
+
+/**
  * Utility functions for working with Hex coordinates.
  *
  * All operations are immutable — they return new Hex objects
@@ -28,53 +38,38 @@ export const hex = {
         if (Math.round(q + r + s) !== 0) {
             throw new Error("q + r + s must be 0");
         }
-        return { q, r, s };
+        return makeHex(q, r, s);
     },
 
     /**
      * Adds two hex coordinates together.
      */
-    add: (a: Hex, b: Hex): Hex => ({
-        q: a.q + b.q,
-        r: a.r + b.r,
-        s: a.s + b.s
-    }),
+    add: (a: Hex, b: Hex): Hex =>
+        makeHex(a.q + b.q, a.r + b.r, a.s + b.s),
 
     /**
      * Subtracts hex b from hex a.
      */
-    subtract: (a: Hex, b: Hex): Hex => ({
-        q: a.q - b.q,
-        r: a.r - b.r,
-        s: a.s - b.s
-    }),
+    subtract: (a: Hex, b: Hex): Hex =>
+        makeHex(a.q - b.q, a.r - b.r, a.s - b.s),
 
     /**
      * Scales a hex coordinate by a scalar value.
      */
-    scale: (h: Hex, k: number): Hex => ({
-        q: h.q * k,
-        r: h.r * k,
-        s: h.s * k
-    }),
+    scale: (h: Hex, k: number): Hex =>
+        makeHex(h.q * k, h.r * k, h.s * k),
 
     /**
      * Rotates a hex coordinate 60 degrees to the left (counter-clockwise).
      */
-    rotateLeft: (h: Hex): Hex => ({
-        q: -h.s,
-        r: -h.q,
-        s: -h.r
-    }),
+    rotateLeft: (h: Hex): Hex =>
+        makeHex(-h.s, -h.q, -h.r),
 
     /**
      * Rotates a hex coordinate 60 degrees to the right (clockwise).
      */
-    rotateRight: (h: Hex): Hex => ({
-        q: -h.r,
-        r: -h.s,
-        s: -h.q
-    }),
+    rotateRight: (h: Hex): Hex =>
+        makeHex(-h.r, -h.s, -h.q),
 
     /** Pre-calculated standard directional vectors (0-5) */
     directions: [
@@ -138,17 +133,18 @@ export const hex = {
             si = -qi - ri;
         }
 
-        return { q: qi, r: ri, s: si };
+        return makeHex(qi, ri, si);
     },
 
     /**
      * Performs linear interpolation between two hexes.
      */
-    lerp: (a: Hex, b: Hex, t: number): Hex => ({
-        q: a.q * (1.0 - t) + b.q * t,
-        r: a.r * (1.0 - t) + b.r * t,
-        s: a.s * (1.0 - t) + b.s * t
-    }),
+    lerp: (a: Hex, b: Hex, t: number): Hex =>
+        makeHex(
+            a.q * (1.0 - t) + b.q * t,
+            a.r * (1.0 - t) + b.r * t,
+            a.s * (1.0 - t) + b.s * t
+        ),
 
     /**
      * Draws a line between two hexes and returns all hexes intersected.
@@ -157,8 +153,8 @@ export const hex = {
         const N = hex.distance(a, b);
 
         // Nudge to prevent lines from perfectly overlapping hex boundaries (avoids zig-zags)
-        const a_nudge = { q: a.q + 1e-06, r: a.r + 1e-06, s: a.s - 2e-06 };
-        const b_nudge = { q: b.q + 1e-06, r: b.r + 1e-06, s: b.s - 2e-06 };
+        const a_nudge = makeHex(a.q + 1e-06, a.r + 1e-06, a.s - 2e-06);
+        const b_nudge = makeHex(b.q + 1e-06, b.r + 1e-06, b.s - 2e-06);
 
         const results: Hex[] = [];
         const step = 1.0 / Math.max(N, 1);

@@ -4,16 +4,13 @@ import { type FrameQueue }           from '@/game/core/FrameQueue';
 import { type SharedState }          from '@/game/core/SharedState';
 import { type ResolutionManager,
     type Resolution }           from '@/game/core/ResolutionManager';
-import { type InputLayer }           from '@/game/core/Input/InputManager';
-import { type NormalizedInputEvent } from '@/game/types/InputEvent';
-import { type HudState,
-    type HudBounds,
-    type Toast }                from '@/game/types/HudState';
-import { type EventPayloads }        from '@/game/events/GameEventTypes';
 import { BuildPanel }                from './panels/BuildPanel';
 import { ResourcePanel }             from './panels/ResourcePanel';
-import { containsPoint }             from '@/game/types/Rect';
 import { hudLayout }                 from './HudLayout';
+import type {InputLayer} from "@/game/core/Input/types.ts";
+import type {HudBounds, HudState, Toast} from "@/game/hud/types.ts";
+import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
+import {containsPoint} from "@/game/utils/Rect.ts";
 
 export class HUD implements InputLayer {
     readonly priority = 10;
@@ -48,6 +45,7 @@ export class HUD implements InputLayer {
     // ─── Subscriptions ────────────────────────────────────────────────
 
     private subscribeToEvents() {
+        /*
         this.bus.on('BUILD_MODE_ENTERED', e => {
             this.buildMode = e.payload.pieceType;
         });
@@ -80,6 +78,7 @@ export class HUD implements InputLayer {
             const isLocal = e.payload.playerId === this.shared.localPlayerId;
             this.showToast(isLocal ? 'Your turn!' : `Player ${e.payload.playerId}'s turn`, 'info');
         });
+        */
     }
 
     // ─── Input ────────────────────────────────────────────────────────

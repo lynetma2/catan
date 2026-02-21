@@ -13,6 +13,8 @@ export interface OffsetCoord {
     row: number;
 }
 
+const cleanZero = (n: number) => (n === 0 ? 0 : n);
+
 /**
  * Utility functions for Offset Coordinates.
  * * "qoffset" refers to offsetting columns (flat-topped hexes).
@@ -54,7 +56,11 @@ export const offsetCoord = {
         const q = h.col;
         const r = h.row - (h.col + offset * parity) / 2;
         const s = -q - r;
-        return { q, r, s };
+        return {
+            q: cleanZero(q),
+            r: cleanZero(r),
+            s: cleanZero(s)
+        }
     },
 
     /**
@@ -81,7 +87,11 @@ export const offsetCoord = {
         const q = h.col - (h.row + offset * parity) / 2;
         const r = h.row;
         const s = -q - r;
-        return { q, r, s };
+        return {
+            q: cleanZero(q),
+            r: cleanZero(r),
+            s: cleanZero(s)
+        }
     },
 
     /**

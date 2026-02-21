@@ -9,6 +9,9 @@ export interface DoubledCoord {
     row: number;
 }
 
+const cleanZero = (n: number) => (n === 0 ? 0 : n);
+
+
 /**
  * Utility functions for working with Doubled Coordinates.
  * * "qdoubled" is used for flat-topped hexes (columns are doubled).
@@ -36,7 +39,11 @@ export const doubledCoord = {
         const q = h.col;
         const r = (h.row - h.col) / 2;
         const s = -q - r;
-        return { q, r, s };
+        return {
+            q: cleanZero(q),
+            r: cleanZero(r),
+            s: cleanZero(s)
+        }
     },
 
     /**
@@ -55,6 +62,10 @@ export const doubledCoord = {
         const q = (h.col - h.row) / 2;
         const r = h.row;
         const s = -q - r;
-        return { q, r, s };
+        return {
+            q: cleanZero(q),
+            r: cleanZero(r),
+            s: cleanZero(s)
+        }
     }
 };
