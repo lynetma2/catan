@@ -7,6 +7,7 @@ import type {ResourcePanelState} from "@/game/hud/panels/resource/types.ts";
 import type {Resource} from "@/game/core/types.ts";
 import {resolveResourceCards, resolveResourcePanelBounds} from "@/game/hud/panels/resource/ResourcePanelLayout.ts";
 import {containsPoint} from "@/game/utils/Rect.ts";
+import type {Vec2} from "@/game/utils/Vec2.ts";
 
 export class ResourcePanel {
     private hoveredCardId: string | null = null;
@@ -20,19 +21,7 @@ export class ResourcePanel {
     handleInput(event: NormalizedInputEvent): boolean {
         if (event.type !== 'mousemove') return false;
 
-        const r     = this.resolution.get();
-        const cards = resolveResourceCards(
-            this.getResources(),
-            this.hoveredCardId,
-            r
-        );
-
-        // Reverse so top-rendered card wins on overlap
-        const hit = [...cards].reverse().find(c =>
-            containsPoint(c.bounds, event.screenPos)
-        );
-
-        this.hoveredCardId = hit?.uid ?? null;
+        this.hoveredCardId = this.cardAtPos(event.screenPos);
         return this.hoveredCardId !== null;
     }
 
@@ -60,5 +49,20 @@ export class ResourcePanel {
 
     private getResources(): Resource[] {
         return this.shared.localPlayer?.resources ?? [];
+    }
+
+    private cardAtPos(pos: Vec2): string | null {
+        const r         = this.resolution.get();
+        const resources = this.getResources();
+
+        // Resolve cards without any hover state — base positions only
+        const cards = resolveResourceCards(resources, null, r);
+
+        // Reverse so top-rendered card wins on overlap
+        const hit = [...cards].reverse().find(c =>
+            containsPoint(c.bounds, pos)
+        );
+
+        return hit?.uid ?? null;
     }
 }

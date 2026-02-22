@@ -1,3 +1,5 @@
+import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
+
 export interface Player {
     id: string;
     name: string;
@@ -19,4 +21,13 @@ export interface Resource {
     uid: string
 }
 
-export type ResourcesComputed = Record<ResourceType, number>;
+export enum PieceType {
+    Road = "road",
+    Settlement = "settlement",
+    City = "city"
+}
+
+export type BuildTarget =
+    | { kind: 'vertex'; vertex: Vertex }
+    | { kind: 'edge';   edge:   Edge   }
+    | { kind: 'hex';    hex:    Hex    };

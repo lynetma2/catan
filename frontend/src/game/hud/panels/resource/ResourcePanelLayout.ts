@@ -1,17 +1,18 @@
 // hud/panels/resource/ResourcePanelLayout.ts
-import { type Resolution }        from '@/game/core/ResolutionManager';
-import { type ResourceCard }      from './types';
-import { type Resource }          from '@/game/core/types';
+import { type Resolution }             from '@/game/core/ResolutionManager';
+import { type ResourceCard }           from './types';
+import { type Resource }               from '@/game/core/types';
 import { hudLayout, type PanelConfig } from '@/game/hud/HudLayout';
-import { Anchor }                 from '@/game/hud/types';
+import { Anchor }                      from '@/game/hud/types';
+import { type Rect }                   from '@/game/utils/Rect';
 
-// ─── Panel config — single source of truth for size and position ──────
+// ─── Panel config ─────────────────────────────────────────────────────
 
 const PANEL_CONFIG: PanelConfig = {
     anchorX: Anchor.Center,
     anchorY: Anchor.Bottom,
     offsetX: 0,
-    offsetY: -130,
+    offsetY: -20,
     width:   500,
     height:  110,
 };
@@ -24,11 +25,11 @@ const CARD_CONFIG = {
     overlap:     20,
     hoverLift:   20,
     fanDistance: 35,
-};
+} as const;
 
 // ─── Exports ──────────────────────────────────────────────────────────
 
-export function resolveResourcePanelBounds(r: Resolution) {
+export function resolveResourcePanelBounds(r: Resolution): Rect {
     return hudLayout.resolve(PANEL_CONFIG, r);
 }
 
@@ -39,39 +40,51 @@ export function resolveResourceCards(
 ): ResourceCard[] {
     if (resources.length === 0) return [];
 
-    const panelBounds = resolveResourcePanelBounds(r);
-    const count       = resources.length;
-    const spacing     = resolveSpacing(count, panelBounds.width);
-    const totalWidth  = CARD_CONFIG.width + (count - 1) * spacing;
+    const panelBounds  = resolveResourcePanelBounds(r);
+    const count        = resources.length;
+    const spacing      = resolveSpacing(count, panelBounds.width);
+    const totalWidth   = CARD_CONFIG.width + (count - 1) * spacing;
 
-    // Center cards within panel
-    const startX = panelBounds.x + panelBounds.width  / 2 - totalWidth / 2;
-
-    // Align to bottom of panel — hover lift moves cards upward within panel
+    const startX = panelBounds.x + panelBounds.width / 2 - totalWidth / 2;
     const baseY  = panelBounds.y + panelBounds.height - CARD_CONFIG.height;
 
     const hoveredIndex = hoveredId !== null
         ? resources.findIndex(res => res.uid === hoveredId)
         : -1;
 
-    return resources.map((resource, i): ResourceCard => {
-        const offset = resolveCardOffset(i, hoveredIndex, count);
-        return {
-            resourceType: resource.resourceType,
-            uid:          resource.uid,
-            isHovered:    resource.uid === hoveredId,
-            isSelected:   false,
-            bounds: {
-                x:      startX + i * spacing + offset.x,
-                y:      baseY  + offset.y,
-                width:  CARD_CONFIG.width,
-                height: CARD_CONFIG.height,
-            }
-        };
-    });
+    return resources.map((resource, i) =>
+        resolveCard(resource, i, startX, baseY, spacing, hoveredIndex, count)
+    );
 }
 
-// ─── Private helpers ──────────────────────────────────────────────────
+// ─── Private — card ───────────────────────────────────────────────────
+
+function resolveCard(
+    resource:     Resource,
+    index:        number,
+    startX:       number,
+    baseY:        number,
+    spacing:      number,
+    hoveredIndex: number,
+    total:        number,
+): ResourceCard {
+    const offset = resolveCardOffset(index, hoveredIndex, total);
+
+    return {
+        resourceType: resource.resourceType,
+        uid:          resource.uid,
+        isHovered:    index === hoveredIndex,
+        isSelected:   false,
+        bounds: {
+            x:      startX + index * spacing + offset.x,
+            y:      baseY  + offset.y,
+            width:  CARD_CONFIG.width,
+            height: CARD_CONFIG.height,
+        },
+    };
+}
+
+// ─── Private — spacing ────────────────────────────────────────────────
 
 function resolveSpacing(count: number, panelWidth: number): number {
     const naturalSpacing = CARD_CONFIG.width - CARD_CONFIG.overlap;
@@ -79,9 +92,10 @@ function resolveSpacing(count: number, panelWidth: number): number {
 
     if (naturalWidth <= panelWidth) return naturalSpacing;
 
-    // Compress spacing so all cards fit within panel width
     return (panelWidth - CARD_CONFIG.width) / Math.max(count - 1, 1);
 }
+
+// ─── Private — offsets ────────────────────────────────────────────────
 
 function resolveCardOffset(
     index:        number,

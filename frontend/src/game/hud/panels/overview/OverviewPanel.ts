@@ -4,7 +4,7 @@ import { type SharedState }          from '@/game/core/SharedState';
 import { type NormalizedInputEvent } from '@/game/core/Input/InputEvent';
 import { type ResolutionManager,
     type Resolution }           from '@/game/core/ResolutionManager';
-import { type EventPayloads }        from '@/game/events/GameEventTypes';
+import {type EventPayloads, GameEventType} from '@/game/events/GameEventTypes';
 import type {PlayerOverviewEntry, PlayerOverviewState} from "@/game/hud/panels/overview/types.ts";
 import {resolveOverviewPanelBounds, resolvePlayerRows} from "@/game/hud/panels/overview/OverviewPanelLayout.ts";
 
@@ -24,30 +24,30 @@ export class PlayerOverviewPanel {
 
     private subscribeToEvents() {
         // Snapshot — full state on load/reload
-        this.bus.on('GAME_STATE_LOADED', e => this.onGameStateLoaded(e.payload));
+        this.bus.on(GameEventType.GAME_STATE_LOADED, e => this.onGameStateLoaded(e.payload));
 
         // Structural — fires once at game start
-        this.bus.on('GAME_STARTED', e => this.onGameStarted(e.payload));
+        this.bus.on(GameEventType.GAME_STARTED, e => this.onGameStarted(e.payload));
 
         // Turn tracking
-        this.bus.on('TURN_STARTED', e => this.onTurnStarted(e.payload));
+        this.bus.on(GameEventType.TURN_STARTED, e => this.onTurnStarted(e.payload));
 
         // Resource changes
-        this.bus.on('RESOURCES_GRANTED', e => this.onResourcesGranted(e.payload));
-        this.bus.on('RESOURCES_SPENT',   e => this.onResourcesSpent(e.payload));
+        this.bus.on(GameEventType.RESOURCES_GRANTED, e => this.onResourcesGranted(e.payload));
+        this.bus.on(GameEventType.RESOURCES_SPENT,   e => this.onResourcesSpent(e.payload));
 
         // Building
-        this.bus.on('BUILD_PLACED', e => this.onBuildPlaced(e.payload));
+        this.bus.on(GameEventType.BUILD_PLACED, e => this.onBuildPlaced(e.payload));
 
         // Special cards
-        this.bus.on('LONGEST_ROAD_CHANGED', e => this.onLongestRoadChanged(e.payload));
-        this.bus.on('LARGEST_ARMY_CHANGED', e => this.onLargestArmyChanged(e.payload));
-        this.bus.on('VICTORY_POINTS_CHANGED', e => this.onVictoryPointsChanged(e.payload));
+        this.bus.on(GameEventType.LONGEST_ROAD_CHANGED, e => this.onLongestRoadChanged(e.payload));
+        this.bus.on(GameEventType.LARGEST_ARMY_CHANGED, e => this.onLargestArmyChanged(e.payload));
+        this.bus.on(GameEventType.VICTORY_POINTS_CHANGED, e => this.onVictoryPointsChanged(e.payload));
     }
 
     // ─── Event handlers ───────────────────────────────────────────────
 
-    private onGameStarted(payload: EventPayloads['GAME_STARTED']) {
+    private onGameStarted(payload: EventPayloads[GameEventType.GAME_STARTED]) {
         payload.players.forEach(p => {
             this.players.set(p.id, {
                 playerId:       p.id,
@@ -64,47 +64,47 @@ export class PlayerOverviewPanel {
         });
     }
 
-    private onTurnStarted(payload: EventPayloads['TURN_STARTED']) {
+    private onTurnStarted(payload: EventPayloads[GameEventType.TURN_STARTED]) {
         this.players.forEach((p, id) => {
             p.isCurrentTurn = id === payload.playerId;
         });
     }
 
-    private onResourcesGranted(payload: EventPayloads['RESOURCES_GRANTED']) {
+    private onResourcesGranted(payload: EventPayloads[GameEventType.RESOURCES_GRANTED]) {
         const player = this.players.get(payload.playerId);
         if (player) player.cardCount += payload.amount;
     }
 
-    private onResourcesSpent(payload: EventPayloads['RESOURCES_SPENT']) {
+    private onResourcesSpent(payload: EventPayloads[GameEventType.RESOURCES_SPENT]) {
         const player = this.players.get(payload.playerId);
         if (player) player.cardCount = Math.max(0, player.cardCount - payload.amount);
     }
 
-    private onBuildPlaced(payload: EventPayloads['BUILD_PLACED']) {
+    private onBuildPlaced(payload: EventPayloads[GameEventType.BUILD_PLACED]) {
         const player = this.players.get(payload.playerId);
         if (!player) return;
         if (payload.pieceType === 'settlement') player.victoryPoints++;
         if (payload.pieceType === 'city')       player.victoryPoints += 2;
     }
 
-    private onLongestRoadChanged(payload: EventPayloads['LONGEST_ROAD_CHANGED']) {
+    private onLongestRoadChanged(payload: EventPayloads[GameEventType.LONGEST_ROAD_CHANGED]) {
         this.players.forEach((p, id) => {
             p.hasLongestRoad = id === payload.playerId;
         });
     }
 
-    private onLargestArmyChanged(payload: EventPayloads['LARGEST_ARMY_CHANGED']) {
+    private onLargestArmyChanged(payload: EventPayloads[GameEventType.LARGEST_ARMY_CHANGED]) {
         this.players.forEach((p, id) => {
             p.hasLargestArmy = id === payload.playerId;
         });
     }
 
-    private onVictoryPointsChanged(payload: EventPayloads['VICTORY_POINTS_CHANGED']) {
+    private onVictoryPointsChanged(payload: EventPayloads[GameEventType.VICTORY_POINTS_CHANGED]) {
         const player = this.players.get(payload.playerId);
         if (player) player.victoryPoints = payload.points;
     }
 
-    private onGameStateLoaded(payload: EventPayloads['GAME_STATE_LOADED']) {
+    private onGameStateLoaded(payload: EventPayloads[GameEventType.GAME_STATE_LOADED]) {
         // Rebuild entire state from snapshot — wipes any previous state
         this.players.clear();
         payload.players.forEach(p => {

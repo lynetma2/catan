@@ -1,14 +1,15 @@
-
 // The buttons that always exist — visibility/disabled derived at runtime
 import {ButtonType} from "@/game/hud/types.ts";
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 import type {ResolutionManager} from "@/game/core/ResolutionManager.ts";
-import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
+import {GameKey, InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import type {BuildPanelState} from "@/game/hud/panels/build/types.ts";
 import {BUTTON_CONFIGS, derivePanelBounds, hudLayout} from "@/game/hud/HudLayout.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import {containsPoint} from "@/game/utils/Rect.ts";
+import {GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
+import {PieceType} from "@/game/core/types.ts";
 
 const ALL_BUTTONS: ButtonType[] = [
     ButtonType.putRoad,
@@ -33,12 +34,12 @@ export class BuildPanel {
     // ─── Input ────────────────────────────────────────────────────────
 
     handleInput(event: NormalizedInputEvent): boolean {
-        if (event.type === 'mousemove') {
+        if (event.type === InputType.MouseMove) {
             this.hoveredButton = this.buttonAtPos(event.screenPos);
             return this.hoveredButton !== null;
         }
 
-        if (event.type === 'click') {
+        if (event.type === InputType.MouseClick) {
             const button = this.buttonAtPos(event.screenPos);
             if (!button) return false;
 
@@ -51,14 +52,10 @@ export class BuildPanel {
             return true;
         }
 
-        if (event.type === 'keydown' && event.key === 'escape') {
+        if (event.type === InputType.KeyDown && event.key === GameKey.Escape) {
             if (this.selectedButton) {
                 this.clearSelection();
-                this.frameQueue.push({
-                    type:    'BUILD_MODE_EXITED',
-                    payload: {},
-                    source:  'hud'
-                });
+                this.exitBuildMode();
                 return true;
             }
         }
@@ -69,22 +66,28 @@ export class BuildPanel {
     private handleButtonClick(button: ButtonType) {
         switch (button) {
             case ButtonType.putRoad:
+                this.handleBuildMode(button, PieceType.Road);
+                break;
             case ButtonType.putSettlement:
+                this.handleBuildMode(button, PieceType.Settlement);
+                break;
             case ButtonType.putCity:
+                this.handleBuildMode(button, PieceType.City);
+                break;
             case ButtonType.drawDevelopmentCard:
                 this.selectedButton = button;
                 this.frameQueue.push({
-                    type:    'BUILD_MODE_ENTERED',
-                    payload: { pieceType: button },
-                    source:  'hud'
+                    type:    GameEventType.DRAW_DEVELOPMENT_CARD_REQUESTED,
+                    payload: { playerId: this.sharedState.localPlayerId! },
+                    source:  GameEventSource.Hud
                 });
                 break;
 
             case ButtonType.endTurn:
                 this.frameQueue.push({
-                    type:    'END_TURN_REQUESTED',
+                    type:    GameEventType.END_TURN_REQUESTED,
                     payload: {},
-                    source:  'hud'
+                    source:  GameEventSource.Hud
                 });
                 break;
         }
@@ -146,5 +149,31 @@ export class BuildPanel {
             if (this.isButtonHidden(type, this.sharedState.isLocalPlayersTurn)) return false;
             return containsPoint(hudLayout.resolveFixed(BUTTON_CONFIGS[type], r), pos);
         }) ?? null;
+    }
+
+    private handleBuildMode(ButtonType: ButtonType, pieceType: PieceType) {
+        if (this.selectedButton == ButtonType) {
+            this.clearSelection();
+            this.exitBuildMode();
+        } else {
+            this.selectedButton = ButtonType;
+            this.enterBuildMode(pieceType);
+        }
+    }
+
+    private enterBuildMode(pieceType: PieceType) {
+        this.frameQueue.push({
+            type: GameEventType.BUILD_MODE_ENTERED,
+            payload: { pieceType: pieceType },
+            source:  GameEventSource.Hud
+        });
+    }
+
+    private exitBuildMode() {
+        this.frameQueue.push({
+            type:    GameEventType.BUILD_MODE_EXITED,
+            payload: {},
+            source: GameEventSource.Hud
+        });
     }
 }

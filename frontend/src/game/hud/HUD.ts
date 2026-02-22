@@ -10,6 +10,7 @@ import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {containsPoint} from "@/game/utils/Rect.ts";
 import {ResourcePanel} from "@/game/hud/panels/resource/ResourcePanel.ts";
 import {PlayerOverviewPanel} from "@/game/hud/panels/overview/OverviewPanel.ts";
+import {GameEventType} from "@/game/events/GameEventTypes.ts";
 
 export class HUD implements InputLayer {
     readonly priority = 10;
@@ -22,9 +23,9 @@ export class HUD implements InputLayer {
 
     constructor(
         private readonly bus:        EventBus,
-        private readonly frameQueue: FrameQueue,
         private readonly shared:     SharedState,
-        private readonly resolution: ResolutionManager,
+        frameQueue: FrameQueue,
+        resolution: ResolutionManager,
     ) {
         this.buildPanel    = new BuildPanel(frameQueue, shared, resolution);
         this.resourcePanel = new ResourcePanel(shared, resolution);
@@ -36,38 +37,30 @@ export class HUD implements InputLayer {
     // ─── Subscriptions ────────────────────────────────────────────────
 
     private subscribeToEvents() {
-        // this.bus.on('BUILD_MODE_ENTERED', e => {
-        //     this.buildMode = e.payload.pieceType;
-        // });
-        // this.bus.on('BUILD_MODE_EXITED', () => {
-        //     this.buildMode = null;
-        //     this.buildPanel.clearSelection();
-        // });
-        // this.bus.on('BUILD_REJECTED', e => {
-        //     const messages: Record<string, string> = {
-        //         NO_ADJACENT_ROAD:       'Must be connected to a road',
-        //         INSUFFICIENT_RESOURCES: 'Not enough resources',
-        //         SPOT_OCCUPIED:          'Already occupied',
-        //         DISTANCE_RULE_VIOLATED: 'Too close to another settlement',
-        //         NOT_YOUR_TURN:          'Not your turn',
-        //         WRONG_PHASE:            'Cannot build right now',
-        //     };
-        //     this.showToast(messages[e.payload.reason] ?? 'Cannot build here', 'error');
-        // });
-        // this.bus.on('BUILD_PLACED', e => {
-        //     this.showToast(`${e.payload.pieceType} placed!`, 'success');
-        //     this.buildMode = null;
-        //     this.buildPanel.clearSelection();
-        // });
-        // this.bus.on('RESOURCES_GRANTED', e => {
-        //     if (e.payload.playerId === this.shared.localPlayerId) {
-        //         this.showToast('Resources received!', 'info');
-        //     }
-        // });
-        // this.bus.on('TURN_STARTED', e => {
-        //     const isLocal = e.payload.playerId === this.shared.localPlayerId;
-        //     this.showToast(isLocal ? 'Your turn!' : `Player ${e.payload.playerId}'s turn`, 'info');
-        // });
+        this.bus.on(GameEventType.BUILD_REJECTED, e => {
+            const messages: Record<string, string> = {
+                NO_ADJACENT_ROAD:       'Must be connected to a road',
+                INSUFFICIENT_RESOURCES: 'Not enough resources',
+                SPOT_OCCUPIED:          'Already occupied',
+                DISTANCE_RULE_VIOLATED: 'Too close to another settlement',
+                NOT_YOUR_TURN:          'Not your turn',
+                WRONG_PHASE:            'Cannot build right now',
+            };
+            this.showToast(messages[e.payload.reason] ?? 'Cannot build here', 'error');
+        });
+        this.bus.on(GameEventType.BUILD_PLACED, e => {
+            this.showToast(`${e.payload.pieceType} placed!`, 'success');
+            this.buildPanel.clearSelection();
+        });
+        this.bus.on(GameEventType.RESOURCES_GRANTED, e => {
+            if (e.payload.playerId === this.shared.localPlayerId) {
+                this.showToast('Resources received!', 'info');
+            }
+        });
+        this.bus.on(GameEventType.TURN_STARTED, e => {
+            const isLocal = e.payload.playerId === this.shared.localPlayerId;
+            this.showToast(isLocal ? 'Your turn!' : `Player ${e.payload.playerId}'s turn`, 'info');
+        });
     }
 
     // ─── Input ────────────────────────────────────────────────────────
