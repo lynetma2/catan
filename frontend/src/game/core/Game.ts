@@ -8,6 +8,10 @@ import {ResolutionManager} from "@/game/core/ResolutionManager.ts";
 import {Camera} from "@/game/core/Camera.ts";
 import {layout} from "@/game/utils/HexGeometry/Layout.ts";
 import {DEFAULT_HUD_THEME} from "@/game/rendering/theme/theme.ts";
+import {DEFAULT_OVERVIEW_THEME} from "@/game/rendering/hud/overview/PlayerOverviewTheme.ts";
+import {createTestGameState} from "@/game/tools/testData.ts";
+
+const DEV_MODE = import.meta.env.DEV;
 
 export class Game {
     private readonly bus: EventBus
@@ -57,6 +61,10 @@ export class Game {
         this.inputManager = new InputManager(canvas);
         this.inputManager.register(this.hud);  // priority 10
         // this.inputManager.register(this.world); // priority 0
+
+        if (DEV_MODE) {
+            this.loadTestData();
+        }
     }
 
     public start() {
@@ -98,5 +106,22 @@ export class Game {
             //this.animationService.draw(this.layoutSettings);
             
             this.animationFrameId = requestAnimationFrame(this.loop);
+    }
+
+    private loadTestData() {
+        // Allow swapping scenarios from browser console: window.loadScenario(2)
+        (window as any).loadScenario = (playerCount: 2 | 3 | 4) => {
+            this.frameQueue.push({
+                type:    'GAME_STATE_LOADED',
+                payload: createTestGameState(playerCount),
+                source:  'network'
+            });
+        };
+
+        this.frameQueue.push({
+            type:    'GAME_STATE_LOADED',
+            payload: createTestGameState(4),
+            source:  'network'
+        });
     }
 }

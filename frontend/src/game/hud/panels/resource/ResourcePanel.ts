@@ -44,11 +44,6 @@ export class ResourcePanel {
             r
         );
 
-        console.log("Current Resource Panel State: ", {
-            bounds: resolveResourcePanelBounds(r),
-            resourceCards: cards,
-        });
-
         return {
             bounds: resolveResourcePanelBounds(r),
             resourceCards: cards,

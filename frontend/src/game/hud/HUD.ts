@@ -9,6 +9,7 @@ import {type HudState, type Toast} from "@/game/hud/types.ts";
 import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {containsPoint} from "@/game/utils/Rect.ts";
 import {ResourcePanel} from "@/game/hud/panels/resource/ResourcePanel.ts";
+import {PlayerOverviewPanel} from "@/game/hud/panels/overview/OverviewPanel.ts";
 
 export class HUD implements InputLayer {
     readonly priority = 10;
@@ -17,6 +18,7 @@ export class HUD implements InputLayer {
 
     private readonly buildPanel:    BuildPanel;
     private readonly resourcePanel: ResourcePanel;
+    private readonly overviewPanel: PlayerOverviewPanel;
 
     constructor(
         private readonly bus:        EventBus,
@@ -26,6 +28,7 @@ export class HUD implements InputLayer {
     ) {
         this.buildPanel    = new BuildPanel(frameQueue, shared, resolution);
         this.resourcePanel = new ResourcePanel(shared, resolution);
+        this.overviewPanel = new PlayerOverviewPanel(bus, shared, resolution);
 
         this.subscribeToEvents();
     }
@@ -100,6 +103,7 @@ export class HUD implements InputLayer {
             panels: {
                 build:    this.buildPanel.getState(),
                 resource: this.resourcePanel.getState(),
+                overview: this.overviewPanel.getState(),
             }
         };
     }

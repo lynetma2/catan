@@ -2,12 +2,14 @@
 import { type BuildPanelState } from './panels/build/BuildPanel.ts';
 import type {Rect} from "@/game/utils/Rect.ts";
 import type {ResourcePanelState} from "@/game/hud/panels/resource/types.ts";
+import type {PlayerOverviewState} from "@/game/hud/panels/overview/types.ts";
 
 export interface HudState {
     toast:     Toast | null;
     panels: {
         resource: ResourcePanelState;
         build:    BuildPanelState;
+        overview: PlayerOverviewState;
     };
 }
 
