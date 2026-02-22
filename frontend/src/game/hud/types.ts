@@ -1,6 +1,7 @@
 // types/HudState.ts
-import { type BuildPanelState } from '../hud/panels/BuildPanel';
+import { type BuildPanelState } from './panels/build/BuildPanel.ts';
 import type {Rect} from "@/game/utils/Rect.ts";
+import type {ResourcePanelState} from "@/game/hud/panels/resource/types.ts";
 
 export interface HudState {
     toast:     Toast | null;
@@ -8,10 +9,6 @@ export interface HudState {
         resource: ResourcePanelState;
         build:    BuildPanelState;
     };
-}
-
-export interface ResourcePanelState {
-    visible: boolean;
 }
 
 export interface Toast {

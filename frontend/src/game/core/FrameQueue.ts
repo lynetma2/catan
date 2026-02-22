@@ -11,6 +11,7 @@ export class FrameQueue {
     flush(bus: EventBus) {
         const events = this.queue.splice(0); // drain atomically
         for (const event of events) {
+            console.log("Emitting event from framequeue: ", event);
             bus.emit(event);
         }
     }

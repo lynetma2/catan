@@ -1,36 +1,22 @@
-// hud/panels/BuildPanel.ts
-import { type FrameQueue }           from '@/game/core/FrameQueue';
-import { type SharedState }          from '@/game/core/SharedState';
-import { type NormalizedInputEvent } from '@/game/core/Input/InputEvent';
-import { type Rect }                 from '@/game/utils/Rect';
-import { type Vec2 }                 from '@/game/utils/Vec2';
-import { containsPoint }             from '@/game/utils/Rect';
-import {ButtonType} from '@/game/hud/types';
-import {BUTTON_CONFIGS, derivePanelBounds, hudLayout, type PanelConfig} from "@/game/hud/HudLayout.ts";
-import type {ResolutionManager} from "@/game/core/ResolutionManager.ts";
-
-export interface Button {
-    type:       ButtonType;
-    bounds:     Rect;
-    isHovered:  boolean;
-    isSelected: boolean;
-    isDisabled: boolean;
-    isHidden:   boolean;
-}
-
-export interface BuildPanelState {
-    bounds: Rect;
-    buttons: Button[];
-}
 
 // The buttons that always exist — visibility/disabled derived at runtime
+import {ButtonType} from "@/game/hud/types.ts";
+import type {FrameQueue} from "@/game/core/FrameQueue.ts";
+import type {SharedState} from "@/game/core/SharedState.ts";
+import type {ResolutionManager} from "@/game/core/ResolutionManager.ts";
+import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
+import type {BuildPanelState} from "@/game/hud/panels/build/types.ts";
+import {BUTTON_CONFIGS, derivePanelBounds, hudLayout} from "@/game/hud/HudLayout.ts";
+import type {Vec2} from "@/game/utils/Vec2.ts";
+import {containsPoint} from "@/game/utils/Rect.ts";
+
 const ALL_BUTTONS: ButtonType[] = [
     ButtonType.putRoad,
     ButtonType.putSettlement,
     ButtonType.putCity,
     ButtonType.drawDevelopmentCard,
     ButtonType.endTurn,
-    ButtonType.waiting,
+    ButtonType.waiting
 ];
 
 export class BuildPanel {
@@ -125,11 +111,6 @@ export class BuildPanel {
             }))
             .filter(b => !b.isHidden);
 
-        console.log("Current State: ", {
-            buttons: buttons,
-            bounds: derivePanelBounds(buttons),
-        });
-
         return {
             buttons: buttons,
             bounds: derivePanelBounds(buttons),  // ← derived, not configured
@@ -163,7 +144,7 @@ export class BuildPanel {
         const r = this.resolution.get();
         return ALL_BUTTONS.find(type => {
             if (this.isButtonHidden(type, this.sharedState.isLocalPlayersTurn)) return false;
-            return containsPoint(hudLayout.resolve(BUTTON_CONFIGS[type], r), pos);
+            return containsPoint(hudLayout.resolveFixed(BUTTON_CONFIGS[type], r), pos);
         }) ?? null;
     }
 }

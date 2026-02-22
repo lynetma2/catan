@@ -1,9 +1,8 @@
 // rendering/hud/BuildPanelRenderer.ts
-import { type BuildPanelState, type Button } from '@/game/hud/panels/BuildPanel';
-import { type Rect }                         from '@/game/utils/Rect';
-import {BUTTON_STYLES, type ButtonStyle} from './ButtonStyles';
 import {type ButtonTheme, DEFAULT_HUD_THEME, DEFAULT_THEME} from "@/game/rendering/theme/theme.ts";
 import {drawPanelChrome} from "@/game/rendering/hud/panelChrome.ts";
+import type {BuildPanelState, Button} from "@/game/hud/panels/build/types.ts";
+import {BUTTON_STYLES, type ButtonStyle} from "@/game/rendering/theme/ButtonTheme.ts";
 
 export class BuildPanelRenderer {
     private readonly imageCache = new Map<string, HTMLImageElement>();

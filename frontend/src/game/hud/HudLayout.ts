@@ -2,7 +2,7 @@
 import {type Resolution} from '@/game/core/ResolutionManager';
 import {Anchor, ButtonType} from "@/game/hud/types.ts";
 import type {Rect} from "@/game/utils/Rect.ts";
-import type {Button} from "@/game/hud/panels/BuildPanel.ts";
+import type {Button} from "@/game/hud/panels/build/types.ts";
 
 export interface PanelConfig {
     anchorX: Anchor.Left | Anchor.Right | Anchor.Center;

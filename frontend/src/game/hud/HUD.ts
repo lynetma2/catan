@@ -3,12 +3,12 @@ import { type EventBus }             from '@/game/core/EventBus';
 import { type FrameQueue }           from '@/game/core/FrameQueue';
 import { type SharedState }          from '@/game/core/SharedState';
 import { type ResolutionManager}           from '@/game/core/ResolutionManager';
-import { BuildPanel }                from './panels/BuildPanel';
+import { BuildPanel }                from './panels/build/BuildPanel.ts';
 import type {InputLayer} from "@/game/core/Input/types.ts";
 import {type HudState, type Toast} from "@/game/hud/types.ts";
 import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {containsPoint} from "@/game/utils/Rect.ts";
-import {ResourcePanel} from "@/game/hud/panels/ResourcePanel.ts";
+import {ResourcePanel} from "@/game/hud/panels/resource/ResourcePanel.ts";
 
 export class HUD implements InputLayer {
     readonly priority = 10;
@@ -25,7 +25,7 @@ export class HUD implements InputLayer {
         private readonly resolution: ResolutionManager,
     ) {
         this.buildPanel    = new BuildPanel(frameQueue, shared, resolution);
-        this.resourcePanel = new ResourcePanel(shared, resolution.get());
+        this.resourcePanel = new ResourcePanel(shared, resolution);
 
         this.subscribeToEvents();
     }
