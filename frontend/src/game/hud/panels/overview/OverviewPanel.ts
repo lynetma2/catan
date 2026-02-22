@@ -35,6 +35,7 @@ export class PlayerOverviewPanel {
         // Resource changes
         this.bus.on(GameEventType.RESOURCES_GRANTED, e => this.onResourcesGranted(e.payload));
         this.bus.on(GameEventType.RESOURCES_SPENT,   e => this.onResourcesSpent(e.payload));
+        this.bus.on(GameEventType.OPPONENT_CARD_COUNT_CHANGED, e => this.onOpponentCardCountChanged(e.payload));
 
         // Building
         this.bus.on(GameEventType.BUILD_PLACED, e => this.onBuildPlaced(e.payload));
@@ -72,7 +73,7 @@ export class PlayerOverviewPanel {
 
     private onResourcesGranted(payload: EventPayloads[GameEventType.RESOURCES_GRANTED]) {
         const player = this.players.get(payload.playerId);
-        if (player) player.cardCount += payload.amount;
+        if (player) player.cardCount += payload.resources.length;
     }
 
     private onResourcesSpent(payload: EventPayloads[GameEventType.RESOURCES_SPENT]) {
@@ -121,6 +122,11 @@ export class PlayerOverviewPanel {
                 isCurrentTurn:  p.id === payload.currentPlayerId,
             });
         });
+    }
+
+    private onOpponentCardCountChanged(payload: EventPayloads[GameEventType.OPPONENT_CARD_COUNT_CHANGED]) {
+        const player = this.players.get(payload.playerId);
+        if (player) player.cardCount = payload.cardCount
     }
 
     // ─── Input ────────────────────────────────────────────────────────

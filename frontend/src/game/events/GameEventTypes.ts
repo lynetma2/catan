@@ -46,6 +46,7 @@ export enum GameEventType {
     TURN_STARTED              = 'TURN_STARTED',
     VICTORY_POINTS_CHANGED    = 'VICTORY_POINTS_CHANGED',
     GAME_STARTED              = 'GAME_STARTED',
+    OPPONENT_CARD_COUNT_CHANGED = 'OPPONENT_CARD_COUNT_CHANGED',
 }
 
 // 2. Map the payloads using the GameEventType enum
@@ -66,6 +67,7 @@ export interface EventPayloads {
     [GameEventType.PLAYER_DISCONNECTED]:        { playerId: string };
     [GameEventType.PLAYER_JOINED]:              { playerId: string; name: string };
     [GameEventType.RESOURCES_GRANTED]:          { playerId: string; resources: Resource[] };
+    [GameEventType.OPPONENT_CARD_COUNT_CHANGED]:{ playerId: string; cardCount: number };
     [GameEventType.RESOURCES_SPENT]:            { playerId: string; amount: number };
     [GameEventType.TOAST_REQUESTED]:            { message: string; kind: 'error' | 'info' | 'success' };
     [GameEventType.TURN_ENDED]:                 { playerId: string };
