@@ -35,7 +35,7 @@ export class SharedState {
         return this.players.get(this.localPlayerId) ?? null;
     }
 
-    get localPlayerResources(): Resources | null {
+    get localPlayerResources(): Resource[] | null {
         if (!this.localPlayer) return null;
         return this.localPlayer.resources;
     }

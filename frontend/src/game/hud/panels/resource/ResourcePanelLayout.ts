@@ -9,7 +9,7 @@ import { type Rect }                   from '@/game/utils/Rect';
 // ─── Panel config ─────────────────────────────────────────────────────
 
 const PANEL_CONFIG: PanelConfig = {
-    anchorX: Anchor.Center,
+    anchorX: Anchor.Left,
     anchorY: Anchor.Bottom,
     offsetX: 0,
     offsetY: -20,

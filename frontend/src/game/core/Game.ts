@@ -8,8 +8,8 @@ import {ResolutionManager} from "@/game/core/ResolutionManager.ts";
 import {Camera} from "@/game/core/Camera.ts";
 import {layout} from "@/game/utils/HexGeometry/Layout.ts";
 import {DEFAULT_HUD_THEME} from "@/game/rendering/theme/theme.ts";
-import {DEFAULT_OVERVIEW_THEME} from "@/game/rendering/hud/overview/PlayerOverviewTheme.ts";
 import {createTestGameState} from "@/game/tools/testData.ts";
+import {GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
 
 const DEV_MODE = import.meta.env.DEV;
 
@@ -49,7 +49,7 @@ export class Game {
         );
 
         // ── 3. Systems ─────────────────────────────────────────────────
-        this.hud = new HUD(this.bus, this.frameQueue, this.sharedState, this.resolution);
+        this.hud = new HUD(this.bus, this.sharedState, this.frameQueue, this.resolution);
         // this.world = new World(this.bus, this.frameQueue, this.sharedState, this.camera);
 
         // ── 4. Renderers ───────────────────────────────────────────────
@@ -112,16 +112,16 @@ export class Game {
         // Allow swapping scenarios from browser console: window.loadScenario(2)
         (window as any).loadScenario = (playerCount: 2 | 3 | 4) => {
             this.frameQueue.push({
-                type:    'GAME_STATE_LOADED',
+                type:    GameEventType.GAME_STATE_LOADED,
                 payload: createTestGameState(playerCount),
-                source:  'network'
+                source:  GameEventSource.Network
             });
         };
 
         this.frameQueue.push({
-            type:    'GAME_STATE_LOADED',
+            type:    GameEventType.GAME_STATE_LOADED,
             payload: createTestGameState(4),
-            source:  'network'
+            source:  GameEventSource.Network
         });
     }
 }
