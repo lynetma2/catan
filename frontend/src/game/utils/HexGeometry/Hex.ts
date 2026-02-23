@@ -164,5 +164,22 @@ export const hex = {
         }
 
         return results;
+    },
+
+    neighbors: (h: Hex) => {
+        return hex.directions.map((_, dir) => hex.neighbor(h, dir));
+    },
+
+    areAdjacent: (a: Hex, b: Hex) => hex.distance(a, b) === 1,
+
+    equals: (a: Hex, b: Hex) => a.q === b.q && a.r === b.r,
+
+    /** Serializes a Hex to a string (e.g., "0,1,-1") for map keys */
+    toString: (h: Hex): string => `${h.q},${h.r},${h.s}`,
+
+    /** Deserializes a string back into a Hex object */
+    fromString: (str: string): Hex => {
+        const [q, r, s] = str.split(',').map(Number);
+        return makeHex(q, r, s);
     }
 };

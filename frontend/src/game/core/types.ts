@@ -1,4 +1,6 @@
 import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
+import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
+import type {Edge} from "@/game/utils/HexGeometry/Edge.ts";
 
 export interface Player {
     id: string;
@@ -27,7 +29,159 @@ export enum PieceType {
     City = "city"
 }
 
+export enum BuildTargetKind {
+    Vertex = 'vertex',
+    Edge = 'edge',
+    Hex = 'hex',
+}
+
 export type BuildTarget =
-    | { kind: 'vertex'; vertex: Vertex }
-    | { kind: 'edge';   edge:   Edge   }
-    | { kind: 'hex';    hex:    Hex    };
+    | { kind: BuildTargetKind.Vertex; vertex: Vertex }
+    | { kind: BuildTargetKind.Edge;   edge:   Edge   }
+    | { kind: BuildTargetKind.Hex;    hex:    Hex    };
+
+export interface PlacedPiece {
+    playerId:  string;
+    pieceType: PieceType;
+}
+
+export interface PlacementState {
+    vertices: { vertex: Vertex; piece: PlacedPiece }[];
+    edges:    { edge:   Edge;   piece: PlacedPiece }[];
+}
+
+export enum TileType {
+    Forest = 'forest',
+    Hills = 'hills',
+    Pasture = 'pasture',
+    Fields = 'fields',
+    Mountains = 'mountains',
+    Desert = 'desert',
+    Sea = 'sea',
+}
+
+// 1. Let's make an enum for 'kind' to stay consistent!
+export enum TileKind {
+    Land = 'land',
+    Desert = 'desert',
+    Sea = 'sea',
+}
+
+export type LandTileType = Exclude<TileType, TileType.Desert | TileType.Sea>;
+
+export type PortResource = ResourceType | 'any';
+
+interface BaseTile {
+    hex:       Hex;
+    hasRobber: boolean;
+}
+
+export interface LandTile extends BaseTile {
+    kind:   TileKind.Land;
+    type:   LandTileType;
+    number: number;
+}
+
+export interface DesertTile extends BaseTile {
+    kind: TileKind.Desert;
+    type: TileType.Desert;
+}
+
+export interface SeaTile extends BaseTile {
+    kind:     TileKind.Sea;
+    type:     TileType.Sea;
+    isPort:   boolean;
+    portType: PortResource | null; // Prevents accidental 'desert' or 'sea' ports!
+}
+
+export type Tile = LandTile | DesertTile | SeaTile;
+
+export interface HexGridState {
+    tiles: Tile[];
+}
+
+export interface TileSnapshot {
+    hex:       Hex;
+    kind:      TileKind;
+    type:      TileType;
+    number:    number | null;
+    hasRobber: boolean;
+    isPort:    boolean;
+    portType:  PortResource | null;
+}
+
+export interface PlacementSnapshot {
+    roads:       { edge:   Edge;   playerId: string }[];
+    settlements: { vertex: Vertex; playerId: string }[];
+    cities:      { vertex: Vertex; playerId: string }[];
+}
+
+export interface PlayerSnapshot {
+    id:             string;
+    name:           string;
+    color:          string;
+    resources:      Resource[];
+    devCards:       DevCardSnapshot[];
+    victoryPoints:  number;
+    cardCount:      number;
+    hasLongestRoad: boolean;
+    hasLargestArmy: boolean;
+    usedRobbers:    number;
+}
+
+export interface DevCardSnapshot {
+    uid:  string;
+    type: DevCardType;
+    used: boolean;
+}
+
+export interface GameSnapshot {
+    players:         PlayerSnapshot[];
+    tiles:           TileSnapshot[];
+    placements:      PlacementSnapshot;
+    currentPhase:    GamePhase;
+    currentPlayerId: string;
+    turnNumber:      number;
+}
+
+export enum GamePhase {
+    /** initial placement — settlement */
+    SetupPlaceSettlement = 'setup_place_settlement',
+
+    /** initial placement — road after settlement */
+    SetupPlaceRoad = 'setup_place_road',
+
+    /** waiting to roll dice */
+    PreRoll = 'pre_roll',
+
+    /** dice rolled, can build/trade */
+    PostRoll = 'post_roll',
+
+    /** 7 rolled or knight played — must move robber */
+    RobberPlacement = 'robber_placement',
+
+    /** robber placed — must choose player to steal from */
+    RobberSteal = 'robber_steal',
+
+    /** active trade offer in progress */
+    Trading = 'trading',
+
+    /** game over */
+    End = 'end',
+}
+
+export enum DevCardType {
+    Knight = 'knight',
+    RoadBuilding = 'roadBuilding',
+    YearOfPlenty = 'yearOfPlenty',
+    Monopoly = 'monopoly',
+    VictoryPoint = 'victoryPoint',
+}
+
+export const TileToResourceMap: Record<LandTileType, ResourceType> = {
+    [TileType.Forest]: ResourceType.Lumber,
+    [TileType.Hills]: ResourceType.Brick,
+    [TileType.Pasture]: ResourceType.Wool,
+    [TileType.Fields]: ResourceType.Grain,
+    [TileType.Mountains]: ResourceType.Ore,
+};
