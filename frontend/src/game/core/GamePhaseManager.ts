@@ -3,16 +3,7 @@ import { type EventBus }    from '@/game/core/EventBus';
 import { type SharedState } from '@/game/core/SharedState';
 import { type EventPayloads } from '@/game/events/GameEventTypes';
 import { GameEventType }    from '@/game/events/GameEventTypes';
-
-export enum GamePhase {
-    SetupPlaceSettlement = 'setup_place_settlement',
-    SetupPlaceRoad       = 'setup_place_road',
-    PreRoll              = 'pre_roll',
-    PostRoll             = 'post_roll',
-    RobberPlacement      = 'robber_placement',
-    RobberSteal          = 'robber_steal',
-    End                  = 'end',
-}
+import {GamePhase} from "@/game/core/types.ts";
 
 export class GamePhaseManager {
 
