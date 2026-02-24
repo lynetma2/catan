@@ -1,23 +1,18 @@
-// world/systems/BuildSystem.ts
-import { type EventBus }             from '@/game/core/EventBus.ts';
-import { type FrameQueue }           from '@/game/core/FrameQueue.ts';
-import { type SharedState }          from '@/game/core/SharedState.ts';
-import { type GamePhaseManager }     from '@/game/core/GamePhaseManager';
-import { type BuildContextFactory }  from '@/game/rules/BuildRules';
-import { type EventPayloads }        from '@/game/events/GameEventTypes.ts';
-import { GameEventType,
-    GameEventSource }           from '@/game/events/GameEventTypes.ts';
-import { PIECE_COSTS }               from '@/game/rules/BuildRules';
+import type {EventBus} from "@/game/core/EventBus.ts";
+import type {FrameQueue} from "@/game/core/FrameQueue.ts";
+import type {SharedState} from "@/game/core/SharedState.ts";
+import type {BuildValidator} from "@/game/world/systems/build/BuildValidator.ts";
+import {type EventPayloads, GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
 import type {PieceType} from "@/game/core/types.ts";
-import {buildRules} from "@/game/world/systems/build/BuildRules.ts";
+import {PIECE_COSTS} from "@/game/world/systems/build/BuildRules.ts";
 
 export class BuildSystem {
     constructor(
-        private readonly bus:            EventBus,
-        private readonly frameQueue:     FrameQueue,
-        private readonly shared:         SharedState,
-        private readonly gamePhase:      GamePhaseManager,
-        private readonly buildContext:   BuildContextFactory,
+        private readonly bus:           EventBus,
+        private readonly frameQueue:    FrameQueue,
+        private readonly shared:        SharedState,
+        private readonly gamePhase:     GamePhaseManager,
+        private readonly buildValidator: BuildValidator,
     ) {
         this.subscribeToEvents();
     }
@@ -25,28 +20,26 @@ export class BuildSystem {
     // ─── Subscriptions ────────────────────────────────────────────────
 
     private subscribeToEvents() {
-        this.bus.on(GameEventType.BuildPlacementRequested, e => this.onBuildRequested(e.payload));
+        this.bus.on(GameEventType.BUILD_PLACEMENT_REQUESTED, e => this.onBuildRequested(e.payload));
     }
 
     // ─── Event handlers ───────────────────────────────────────────────
 
     private onBuildRequested(
-        payload: EventPayloads[GameEventType.BuildPlacementRequested]
+        payload: EventPayloads[GameEventType.BUILD_PLACEMENT_REQUESTED]
     ) {
         const playerId = this.shared.localPlayerId;
         if (!playerId) return;
 
-        // Build context is created fresh — reads live state at validation time
-        const reason = buildRules.validate(
+        const reason = this.buildValidator.validate(
             payload.pieceType,
             payload.target,
             playerId,
-            this.buildContext()
         );
 
         if (reason) {
             this.frameQueue.push({
-                type:    GameEventType.BuildRejected,
+                type:    GameEventType.BUILD_REJECTED,
                 payload: { pieceType: payload.pieceType, reason },
                 source:  GameEventSource.World,
             });
@@ -54,9 +47,9 @@ export class BuildSystem {
         }
 
         // Validation passed — fire placement and resource deduction atomically
-        // Both land in the same FrameQueue flush so state is always consistent
+        // TODO update this when connecting to the backend!
         this.frameQueue.push({
-            type:    GameEventType.BuildPlaced,
+            type:    GameEventType.BUILD_PLACED,
             payload: {
                 pieceType: payload.pieceType,
                 target:    payload.target,
@@ -67,7 +60,7 @@ export class BuildSystem {
 
         if (!this.gamePhase.isSetupPhase()) {
             this.frameQueue.push({
-                type:    GameEventType.ResourcesSpent,
+                type:    GameEventType.RESOURCES_SPENT,
                 payload: {
                     playerId,
                     amount: this.totalCost(payload.pieceType),
@@ -76,14 +69,13 @@ export class BuildSystem {
             });
         }
 
-        // Advance setup phase after placement
         if (this.gamePhase.isSetupPhase()) {
             this.advanceSetupPhase();
         }
     }
 
     // ─── Setup phase ──────────────────────────────────────────────────
-
+    // TODO handle phase advancements.
     private advanceSetupPhase() {
         switch (this.gamePhase.getCurrentPhase()) {
             case 'setup_place_settlement':

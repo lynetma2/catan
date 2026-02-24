@@ -1,11 +1,28 @@
-// rules/BuildRules.ts
-import { type Vertex } from '@/game/utils/HexGeometry/Vertex';
-import { type Edge }   from '@/game/utils/HexGeometry/Edge';
-import { type BuildTarget } from '@/game/types/BuildTarget';
+
+
+// ─── Piece types ──────────────────────────────────────────────────────
+
+import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
+import type {Edge} from "@/game/utils/HexGeometry/Edge.ts";
+import type {BuildTarget} from "@/game/core/types.ts";
+
+export type PieceType = 'road' | 'settlement' | 'city';
+
+export type ResourceCost = {
+    wood:  number;
+    brick: number;
+    wool:  number;
+    wheat: number;
+    ore:   number;
+};
+
+export const PIECE_COSTS: Record<PieceType, Partial<ResourceCost>> = {
+    road:       { wood: 1, brick: 1 },
+    settlement: { wood: 1, brick: 1, wool: 1, wheat: 1 },
+    city:       { wheat: 2, ore: 3 },
+};
 
 // ─── Query interfaces ─────────────────────────────────────────────────
-// Pure interfaces — no imports from game systems
-// Assembled by World, satisfied by Board + SharedState + GamePhaseManager
 
 export interface BoardQuery {
     isValidVertex:               (vertex: Vertex)                   => boolean;
@@ -36,41 +53,7 @@ export interface BuildContext {
     gamePhase: GamePhaseQuery;
 }
 
-// Factory — called fresh on each validation so queries read live state
-export type BuildContextFactory = () => BuildContext;
-
-// ─── Piece costs ──────────────────────────────────────────────────────
-
-export type PieceType = 'road' | 'settlement' | 'city';
-
-export type ResourceCost = {
-    wood:  number;
-    brick: number;
-    wool:  number;
-    wheat: number;
-    ore:   number;
-};
-
-export const PIECE_COSTS: Record<PieceType, Partial<ResourceCost>> = {
-    road:       { wood: 1, brick: 1 },
-    settlement: { wood: 1, brick: 1, wool: 1, wheat: 1 },
-    city:       { wheat: 2, ore: 3 },
-};
-
-// ─── Rejection reasons ────────────────────────────────────────────────
-
-export type BuildRejectionReason =
-    | 'NOT_YOUR_TURN'
-    | 'WRONG_PHASE'
-    | 'INSUFFICIENT_RESOURCES'
-    | 'SPOT_OCCUPIED'
-    | 'INVALID_LOCATION'
-    | 'NO_ADJACENT_ROAD'
-    | 'DISTANCE_RULE_VIOLATED'
-    | 'NO_SETTLEMENT_TO_UPGRADE';
-
 // ─── Pure validation ──────────────────────────────────────────────────
-// No imports from game systems — only interfaces and types above
 
 export const buildRules = {
 
@@ -80,18 +63,15 @@ export const buildRules = {
         playerId:  string,
         ctx:       BuildContext,
     ): BuildRejectionReason | null => {
-        // Phase checks first — cheapest to compute
-        if (!ctx.gamePhase.isPlayersTurn(playerId))           return 'NOT_YOUR_TURN';
+        if (!ctx.gamePhase.isPlayersTurn(playerId))       return 'NOT_YOUR_TURN';
         if (!ctx.gamePhase.isBuildingPhase() &&
-            !ctx.gamePhase.isSetupPhase())                    return 'WRONG_PHASE';
+            !ctx.gamePhase.isSetupPhase())                return 'WRONG_PHASE';
 
-        // Resource check — setup phase is free
         if (!ctx.gamePhase.isSetupPhase()) {
             if (!ctx.player.canAfford(playerId, PIECE_COSTS[pieceType]))
                 return 'INSUFFICIENT_RESOURCES';
         }
 
-        // Piece-specific board checks
         switch (pieceType) {
             case 'settlement': return buildRules.validateSettlement(target, playerId, ctx);
             case 'city':       return buildRules.validateCity(target, playerId, ctx);
@@ -104,12 +84,12 @@ export const buildRules = {
         playerId: string,
         ctx:      BuildContext,
     ): BuildRejectionReason | null => {
-        if (target.kind !== 'vertex')                              return 'INVALID_LOCATION';
-        if (!ctx.board.isValidVertex(target.vertex))               return 'INVALID_LOCATION';
-        if (ctx.board.isVertexOccupied(target.vertex))             return 'SPOT_OCCUPIED';
-        if (!ctx.board.respectsDistanceRule(target.vertex))        return 'DISTANCE_RULE_VIOLATED';
+        if (target.kind !== 'vertex')                            return 'INVALID_LOCATION';
+        if (!ctx.board.isValidVertex(target.vertex))             return 'INVALID_LOCATION';
+        if (ctx.board.isVertexOccupied(target.vertex))           return 'SPOT_OCCUPIED';
+        if (!ctx.board.respectsDistanceRule(target.vertex))      return 'DISTANCE_RULE_VIOLATED';
         if (!ctx.gamePhase.isSetupPhase() &&
-            !ctx.board.hasAdjacentRoad(target.vertex, playerId))   return 'NO_ADJACENT_ROAD';
+            !ctx.board.hasAdjacentRoad(target.vertex, playerId)) return 'NO_ADJACENT_ROAD';
         return null;
     },
 
@@ -118,9 +98,9 @@ export const buildRules = {
         playerId: string,
         ctx:      BuildContext,
     ): BuildRejectionReason | null => {
-        if (target.kind !== 'vertex')                              return 'INVALID_LOCATION';
-        if (!ctx.board.isValidVertex(target.vertex))               return 'INVALID_LOCATION';
-        if (!ctx.board.hasOwnSettlement(target.vertex, playerId))  return 'NO_SETTLEMENT_TO_UPGRADE';
+        if (target.kind !== 'vertex')                             return 'INVALID_LOCATION';
+        if (!ctx.board.isValidVertex(target.vertex))              return 'INVALID_LOCATION';
+        if (!ctx.board.hasOwnSettlement(target.vertex, playerId)) return 'NO_SETTLEMENT_TO_UPGRADE';
         return null;
     },
 
@@ -129,10 +109,10 @@ export const buildRules = {
         playerId: string,
         ctx:      BuildContext,
     ): BuildRejectionReason | null => {
-        if (target.kind !== 'edge')                                          return 'INVALID_LOCATION';
-        if (!ctx.board.isValidEdge(target.edge))                             return 'INVALID_LOCATION';
-        if (ctx.board.isEdgeOccupied(target.edge))                           return 'SPOT_OCCUPIED';
-        if (!ctx.board.hasAdjacentRoadOrSettlement(target.edge, playerId))   return 'NO_ADJACENT_ROAD';
+        if (target.kind !== 'edge')                                        return 'INVALID_LOCATION';
+        if (!ctx.board.isValidEdge(target.edge))                           return 'INVALID_LOCATION';
+        if (ctx.board.isEdgeOccupied(target.edge))                         return 'SPOT_OCCUPIED';
+        if (!ctx.board.hasAdjacentRoadOrSettlement(target.edge, playerId)) return 'NO_ADJACENT_ROAD';
         return null;
     },
 };
