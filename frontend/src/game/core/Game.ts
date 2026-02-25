@@ -8,8 +8,11 @@ import {ResolutionManager} from "@/game/core/ResolutionManager.ts";
 import {Camera} from "@/game/core/Camera.ts";
 import {layout} from "@/game/utils/HexGeometry/Layout.ts";
 import {DEFAULT_HUD_THEME} from "@/game/rendering/theme/theme.ts";
-import {createTestGameState} from "@/game/tools/testData.ts";
+import {createTestGameState, TEST_SCENARIOS} from "@/game/tools/testData.ts";
 import {GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
+import {World} from "@/game/world/World.ts";
+import {WorldRenderer} from "@/game/rendering/world/WorldRenderer.ts";
+import type {GameSnapshot} from "@/game/core/types.ts";
 
 const DEV_MODE = import.meta.env.DEV;
 
@@ -25,8 +28,8 @@ export class Game {
     private readonly hudRenderer: HudRenderer;
     private readonly inputManager: InputManager;
 
-    //private readonly world: World;
-    //private readonly worldRenderer: WorldRenderer;
+    private readonly world: World;
+    private readonly worldRenderer: WorldRenderer;
 
     private animationFrameId: number | null = null;
     private previousTimeMs: number = 0;
@@ -50,17 +53,17 @@ export class Game {
 
         // ── 3. Systems ─────────────────────────────────────────────────
         this.hud = new HUD(this.bus, this.sharedState, this.frameQueue, this.resolution);
-        // this.world = new World(this.bus, this.frameQueue, this.sharedState, this.camera);
+        this.world = new World(this.bus, this.frameQueue, this.sharedState, this.camera);
 
         // ── 4. Renderers ───────────────────────────────────────────────
         const ctx = canvas.getContext('2d')!;
         this.hudRenderer = new HudRenderer(ctx, this.resolution, DEFAULT_HUD_THEME);
-        // this.worldRenderer = new WorldRenderer(ctx, this.camera);
+        this.worldRenderer = new WorldRenderer(ctx, this.camera);
 
         // ── 5. Input ───────────────────────────────────────────────────
         this.inputManager = new InputManager(canvas);
         this.inputManager.register(this.hud);  // priority 10
-        // this.inputManager.register(this.world); // priority 0
+        this.inputManager.register(this.world); // priority 0
 
         if (DEV_MODE) {
             this.loadTestData();
@@ -90,7 +93,7 @@ export class Game {
                 this.frameQueue.flush(this.bus);
 
                 // 2. Update systems
-                // this.world.update();
+                this.world.update(deltaTimeMs);
                 this.hud.update(deltaTimeMs);
 
                 this.previousTimeMs = currentTimeMs - (deltaTimeMs % this.FRAME_INTERVAL_MS);
@@ -100,6 +103,7 @@ export class Game {
             const r = this.resolution.get();
             ctx.clearRect(0, 0, r.cssWidth, r.cssHeight);
 
+            this.worldRenderer.render(this.world.getState());
             this.hudRenderer.render(this.hud.getState());
 
             // Draw animations on top of the board
@@ -109,19 +113,33 @@ export class Game {
     }
 
     private loadTestData() {
-        // Allow swapping scenarios from browser console: window.loadScenario(2)
-        (window as any).loadScenario = (playerCount: 2 | 3 | 4) => {
+        const load = (snapshot: GameSnapshot) => {
             this.frameQueue.push({
                 type:    GameEventType.GAME_STATE_LOADED,
-                payload: createTestGameState(playerCount),
-                source:  GameEventSource.Network
+                payload: snapshot,
+                source:  GameEventSource.Network,
             });
         };
 
-        this.frameQueue.push({
-            type:    GameEventType.GAME_STATE_LOADED,
-            payload: createTestGameState(4),
-            source:  GameEventSource.Network
-        });
+        load(createTestGameState());
+
+        // Use arrow function that always reads current game instance
+        // Survives React StrictMode remounts because it's reassigned each time
+        (window as any).loadScenario = (name: keyof typeof TEST_SCENARIOS) => {
+            const factory = TEST_SCENARIOS[name];
+            if (!factory) {
+                console.warn(
+                    `Unknown scenario "${name}". Available: ${Object.keys(TEST_SCENARIOS).join(', ')}`
+                );
+                return;
+            }
+            load(factory());
+            console.info(`%c[DEV] Loaded scenario: ${name}`, 'color: #50c050');
+        };
+
+        console.info(
+            '%c[DEV] Scenarios: ' + Object.keys(TEST_SCENARIOS).join(', '),
+            'color: #50a0e0; font-weight: bold'
+        );
     }
 }

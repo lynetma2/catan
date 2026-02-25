@@ -1,11 +1,9 @@
-// rendering/world/WorldRenderer.ts
-import { type WorldState }    from '@/game/world/types';
-import { type Camera }        from '@/game/core/Camera';
-import { type WorldTheme }    from './WorldTheme';
-import { DEFAULT_WORLD_THEME } from './WorldTheme';
-import { TileRenderer }       from './TileRenderer';
-import { PieceRenderer }      from './PieceRenderer';
-import { HoverRenderer }      from './HoverRenderer';
+import {PieceRenderer} from "@/game/rendering/world/PieceRenderer.ts";
+import {TileRenderer} from "@/game/rendering/world/TileRenderer.ts";
+import {HoverRenderer} from "@/game/rendering/world/HoverRenderer.ts";
+import type {Camera} from "@/game/core/Camera.ts";
+import {DEFAULT_WORLD_THEME, type WorldTheme} from "@/game/rendering/world/WorldTheme.ts";
+import type {WorldState} from "@/game/world/types.ts";
 
 export class WorldRenderer {
     private readonly tileRenderer:  TileRenderer;
@@ -15,7 +13,7 @@ export class WorldRenderer {
     constructor(
         private readonly ctx:    CanvasRenderingContext2D,
         private readonly camera: Camera,
-        private readonly theme:  WorldTheme = DEFAULT_WORLD_THEME,
+        theme:  WorldTheme = DEFAULT_WORLD_THEME,
     ) {
         this.tileRenderer  = new TileRenderer(ctx, theme.tile, camera);
         this.pieceRenderer = new PieceRenderer(ctx, theme.piece, camera);
@@ -49,9 +47,9 @@ export class WorldRenderer {
 
         // ── Layer 4: Hover on vertices and edges ──────────────────────
         // Drawn on top of pieces so placement indicators are always visible
-        if (state.hover.target?.kind !== 'hex') {
+/*        if (state.hover.target?.kind !== 'hex') {
             this.hoverRenderer.render(state.hover);
-        }
+        }*/
 
         this.ctx.restore();
     }

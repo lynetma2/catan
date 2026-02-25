@@ -1,10 +1,10 @@
-// rendering/world/HoverRenderer.ts
-import { type HoverState }  from '@/game/world/systems/HoverSystem';
-import { type HoverTheme }  from './WorldTheme';
-import { type Camera }      from '@/game/core/Camera';
-import { type Vec2 }        from '@/game/utils/Vec2';
-import { vertex }           from '@/game/utils/HexGeometry/Vertex';
-import { edge }             from '@/game/utils/HexGeometry/Edge';
+import type {HoverTheme} from "@/game/rendering/world/WorldTheme.ts";
+import type {Camera} from "@/game/core/Camera.ts";
+import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
+import {edge, type Edge} from "@/game/utils/HexGeometry/Edge.ts";
+import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
+import type {Vec2} from "@/game/utils/Vec2.ts";
+import type {HoverState} from "@/game/world/systems/hover/HoverSystem.ts";
 
 export class HoverRenderer {
     constructor(

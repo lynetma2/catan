@@ -1,4 +1,4 @@
-import {GameKey, MouseButton, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
+import {GameKey, InputType, MouseButton, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import type {InputLayer} from "@/game/core/Input/types.ts";
 
@@ -22,6 +22,10 @@ export class InputManager {
         canvas.addEventListener('mousemove', e => this.onMouseMove(e));
         canvas.addEventListener('click',     e => this.onClick(e));
         canvas.addEventListener('keydown', e => this.onKeyDown(e));
+        canvas.addEventListener('mousedown',  e => this.onMouseDown(e));
+        canvas.addEventListener('mouseup',    e => this.onMouseUp(e));
+        canvas.addEventListener('wheel',      e => this.onWheel(e), { passive: true });
+        canvas.addEventListener('contextmenu', e => e.preventDefault()); // prevent right-click menu
     }
 
     /**
@@ -52,24 +56,22 @@ export class InputManager {
      * @throws Error if an unsupported button type is detected.
      */
     private onClick(e: MouseEvent) {
-        let buttonType: MouseButton;
-
-        switch (e.button) {
-            case 0:
-                buttonType = MouseButton.Left;
-                break;
-            case 1:
-                buttonType = MouseButton.Middle;
-                break;
-            case 2:
-                buttonType = MouseButton.Right;
-                break;
-            default:
-                throw new Error("Unsupported button type " + e.button);
-        }
-
-        this.dispatch({ type: 'click', screenPos: this.toCanvasPos(e), button: buttonType });
+        this.dispatch({
+            type:      InputType.MouseClick,
+            screenPos: this.toCanvasPos(e),
+            button:    this.toMouseButton(e.button),
+        });
     }
+
+    private toMouseButton(button: number): MouseButton {
+        switch (button) {
+            case 0:  return MouseButton.Left;
+            case 1:  return MouseButton.Middle;
+            case 2:  return MouseButton.Right;
+            default: return MouseButton.Left;
+        }
+    }
+
 
     private onKeyDown(e: KeyboardEvent) {
         // we convert the incoming key to lowercase to ensure a match.
@@ -84,6 +86,30 @@ export class InputManager {
             // Ignore or log keys that aren't part of the game controls
             console.log(`Unmapped key pressed: ${e.key}`);
         }
+    }
+
+    private onMouseDown(e: MouseEvent) {
+        this.dispatch({
+            type:      InputType.MouseDown,
+            screenPos: this.toCanvasPos(e),
+            button:    this.toMouseButton(e.button),
+        });
+    }
+
+    private onMouseUp(e: MouseEvent) {
+        this.dispatch({
+            type:      InputType.MouseUp,
+            screenPos: this.toCanvasPos(e),
+            button:    this.toMouseButton(e.button),
+        });
+    }
+
+    private onWheel(e: WheelEvent) {
+        this.dispatch({
+            type:      InputType.Wheel,
+            screenPos: this.toCanvasPos(e),
+            delta:     e.deltaY,
+        });
     }
 
     /**

@@ -1,9 +1,10 @@
 // events/GameEventTypes.ts
 
 import {
-    type BuildTarget, GamePhase,
+    type BuildTarget, GamePhase, type GameSnapshot,
     type PieceType, type PlacementSnapshot, type PlayerSnapshot, type Resource
-} from "@/game/core/types.ts"; // Adjust path as needed
+} from "@/game/core/types.ts";
+import type {Hex} from "@/game/utils/HexGeometry/Hex.ts"; // Adjust path as needed
 
 export enum GameEventSource {
     Hud     = 'hud',
@@ -49,7 +50,12 @@ export enum GameEventType {
     OPPONENT_CARD_COUNT_CHANGED = 'OPPONENT_CARD_COUNT_CHANGED',
     DISCARD_REQUIRED = 'DISCARD_REQUIRED',
     DISCARD_CONFIRMED = 'DISCARD_CONFIRMED',
-    CARDS_DISCARDED = 'CARDS_DISCARDED'
+    CARDS_DISCARDED = 'CARDS_DISCARDED',
+    ROBBER_PLACED = 'ROBBER_PLACED',
+    ROBBER_STEAL_COMPLETE = 'ROBBER_STEAL_COMPLETE',
+    SETUP_TURN_COMPLETED = 'SETUP_TURN_COMPLETED',
+    PHASE_ADVANCED = 'PHASE_ADVANCED',
+    GAME_ENDED = 'GAME_ENDED',
 }
 
 // 2. Map the payloads using the GameEventType enum
@@ -62,7 +68,7 @@ export interface EventPayloads {
     [GameEventType.DICE_ROLLED]:                { values: [number, number]; total: number };
     [GameEventType.DRAW_DEVELOPMENT_CARD_REQUESTED]: { playerId: string };
     [GameEventType.END_TURN_REQUESTED]:         Record<string, never>;
-    [GameEventType.GAME_STATE_LOADED]:          { players: PlayerSnapshot[]; placements: PlacementSnapshot; currentPhase: GamePhase; currentPlayerId: string; turnNumber: number };
+    [GameEventType.GAME_STATE_LOADED]:          GameSnapshot;
     [GameEventType.LARGEST_ARMY_CHANGED]:       { playerId: string };
     [GameEventType.LONGEST_ROAD_CHANGED]:       { playerId: string };
     [GameEventType.PANEL_CLOSED]:               { panel: 'trade' | 'build' | 'dev-cards' };
@@ -80,6 +86,11 @@ export interface EventPayloads {
     [GameEventType.DISCARD_REQUIRED]:           { playerId: string, amount: number };
     [GameEventType.DISCARD_CONFIRMED]:          { playerId: string, resources: Resource[] };
     [GameEventType.CARDS_DISCARDED]:            { playerId: string, resources: Resource[] };
+    [GameEventType.ROBBER_PLACED]:              { playerId: string, hex: Hex };
+    [GameEventType.ROBBER_STEAL_COMPLETE]:      { playerId: string, resources: Resource[] };
+    [GameEventType.SETUP_TURN_COMPLETED]:       { playerId: string };
+    [GameEventType.PHASE_ADVANCED]:            { phase: GamePhase };
+    [GameEventType.GAME_ENDED]:                Record<string, never>;
 }
 
 export interface GameEvent<T extends GameEventType = GameEventType> {

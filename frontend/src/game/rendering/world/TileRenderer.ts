@@ -1,8 +1,8 @@
-// rendering/world/TileRenderer.ts
-import { type Tile }          from '@/game/world/board/HexGrid';
-import { type TileTheme }     from './WorldTheme';
-import { type Camera }        from '@/game/core/Camera';
-import { type Vec2 }          from '@/game/utils/Vec2';
+import type {Tile} from "@/game/core/types.ts";
+import type {TileTheme} from "@/game/rendering/world/WorldTheme.ts";
+import type {Camera} from "@/game/core/Camera.ts";
+import type {Vec2} from "@/game/utils/Vec2.ts";
+import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
 
 export class TileRenderer {
     constructor(
@@ -51,7 +51,7 @@ export class TileRenderer {
 
     // ─── Number token ─────────────────────────────────────────────────
 
-    private drawToken(number: number, hex: typeof tile.hex, hasRobber: boolean) {
+    private drawToken(number: number, hex: Hex, hasRobber: boolean) {
         if (hasRobber) return;   // robber covers token
 
         const { ctx, theme } = this;

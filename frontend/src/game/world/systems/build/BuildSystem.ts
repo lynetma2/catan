@@ -5,6 +5,7 @@ import type {BuildValidator} from "@/game/world/systems/build/BuildValidator.ts"
 import {type EventPayloads, GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
 import type {PieceType} from "@/game/core/types.ts";
 import {PIECE_COSTS} from "@/game/world/systems/build/BuildRules.ts";
+import type {GamePhaseManager} from "@/game/core/GamePhaseManager.ts";
 
 export class BuildSystem {
     constructor(
@@ -58,7 +59,7 @@ export class BuildSystem {
             source: GameEventSource.World,
         });
 
-        if (!this.gamePhase.isSetupPhase()) {
+        if (!this.shared.isSetupPhase) {
             this.frameQueue.push({
                 type:    GameEventType.RESOURCES_SPENT,
                 payload: {
@@ -69,7 +70,7 @@ export class BuildSystem {
             });
         }
 
-        if (this.gamePhase.isSetupPhase()) {
+        if (this.shared.isSetupPhase) {
             this.advanceSetupPhase();
         }
     }
@@ -77,10 +78,10 @@ export class BuildSystem {
     // ─── Setup phase ──────────────────────────────────────────────────
     // TODO handle phase advancements.
     private advanceSetupPhase() {
-        switch (this.gamePhase.getCurrentPhase()) {
+        switch (this.shared.currentPhase) {
             case 'setup_place_settlement':
                 this.frameQueue.push({
-                    type:    GameEventType.PhaseAdvanced,
+                    type:    GameEventType.PHASE_ADVANCED,
                     payload: { phase: 'setup_place_road' },
                     source:  GameEventSource.World,
                 });
@@ -88,7 +89,7 @@ export class BuildSystem {
 
             case 'setup_place_road':
                 this.frameQueue.push({
-                    type:    GameEventType.SetupTurnCompleted,
+                    type:    GameEventType.SETUP_TURN_COMPLETED,
                     payload: { playerId: this.shared.localPlayerId! },
                     source:  GameEventSource.World,
                 });

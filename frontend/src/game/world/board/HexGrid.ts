@@ -2,7 +2,14 @@
 import {hex, type Hex} from '@/game/utils/HexGeometry/Hex';
 import { type Vertex } from '@/game/utils/HexGeometry/Vertex';
 import { type Edge }   from '@/game/utils/HexGeometry/Edge';
-import type {HexGridState, Tile, LandTile} from "@/game/core/types.ts";
+import {
+    type HexGridState,
+    type Tile,
+    type LandTile,
+    type TileSnapshot,
+    TileKind,
+    type LandTileType, TileType
+} from "@/game/core/types.ts";
 
 export class HexGrid {
     private tiles: Map<string, Tile> = new Map();
@@ -10,9 +17,10 @@ export class HexGrid {
     // ─── Setup ────────────────────────────────────────────────────────
 
     // Called once from GAME_STATE_LOADED
-    loadTiles(tiles: Tile[]) {
+    loadTiles(snapshots: TileSnapshot[]) {
         this.tiles.clear();
-        tiles.forEach(tile => {
+        snapshots.forEach(snapshot => {
+            const tile = tileFromSnapshot(snapshot);
             this.tiles.set(this.hexKey(tile.hex), tile);
         });
     }
@@ -65,5 +73,38 @@ export class HexGrid {
 
     private hexKey(hex: Hex): string {
         return `${hex.q},${hex.r},${hex.s}`;
+    }
+}
+
+export function tileFromSnapshot(snapshot: TileSnapshot): Tile {
+    const base = {
+        hex:       snapshot.hex,
+        hasRobber: snapshot.hasRobber,
+    };
+
+    switch (snapshot.kind) {
+        case TileKind.Land:
+            return {
+                ...base,
+                kind:   TileKind.Land,
+                type:   snapshot.type as LandTileType,
+                number: snapshot.number!,
+            };
+
+        case TileKind.Desert:
+            return {
+                ...base,
+                kind: TileKind.Desert,
+                type: TileType.Desert,
+            };
+
+        case TileKind.Sea:
+            return {
+                ...base,
+                kind:     TileKind.Sea,
+                type:     TileType.Sea,
+                isPort:   snapshot.isPort,
+                portType: snapshot.portType,
+            };
     }
 }

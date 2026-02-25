@@ -1,11 +1,9 @@
-// rendering/world/PieceRenderer.ts
-import { type PlacementState,
-    type PlacedPiece }   from '@/game/world/board/PlacementMap';
-import { type PieceTheme }    from './WorldTheme';
-import { type Camera }        from '@/game/core/Camera';
-import { type Vec2 }          from '@/game/utils/Vec2';
-import { vertex }             from '@/game/utils/HexGeometry/Vertex';
-import { edge }               from '@/game/utils/HexGeometry/Edge';
+import type {PieceTheme} from "@/game/rendering/world/WorldTheme.ts";
+import type {Camera} from "@/game/core/Camera.ts";
+import type {PlacedPiece, PlacementState} from "@/game/core/types.ts";
+import {edge, type Edge} from "@/game/utils/HexGeometry/Edge.ts";
+import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
+import type {Vec2} from "@/game/utils/Vec2.ts";
 
 export class PieceRenderer {
     constructor(
