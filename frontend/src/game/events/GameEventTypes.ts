@@ -1,8 +1,8 @@
 // events/GameEventTypes.ts
 
-import type {
-    BuildTarget,
-    PieceType, Resource
+import {
+    type BuildTarget, GamePhase,
+    type PieceType, type PlacementSnapshot, type PlayerSnapshot, type Resource
 } from "@/game/core/types.ts"; // Adjust path as needed
 
 export enum GameEventSource {
@@ -47,6 +47,9 @@ export enum GameEventType {
     VICTORY_POINTS_CHANGED    = 'VICTORY_POINTS_CHANGED',
     GAME_STARTED              = 'GAME_STARTED',
     OPPONENT_CARD_COUNT_CHANGED = 'OPPONENT_CARD_COUNT_CHANGED',
+    DISCARD_REQUIRED = 'DISCARD_REQUIRED',
+    DISCARD_CONFIRMED = 'DISCARD_CONFIRMED',
+    CARDS_DISCARDED = 'CARDS_DISCARDED'
 }
 
 // 2. Map the payloads using the GameEventType enum
@@ -74,6 +77,9 @@ export interface EventPayloads {
     [GameEventType.TURN_STARTED]:               { playerId: string };
     [GameEventType.VICTORY_POINTS_CHANGED]:     { playerId: string; points: number };
     [GameEventType.GAME_STARTED]:               { players: PlayerSnapshot[] };
+    [GameEventType.DISCARD_REQUIRED]:           { playerId: string, amount: number };
+    [GameEventType.DISCARD_CONFIRMED]:          { playerId: string, resources: Resource[] };
+    [GameEventType.CARDS_DISCARDED]:            { playerId: string, resources: Resource[] };
 }
 
 export interface GameEvent<T extends GameEventType = GameEventType> {

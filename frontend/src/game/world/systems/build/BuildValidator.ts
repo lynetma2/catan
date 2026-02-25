@@ -17,8 +17,7 @@ export interface BuildValidator {
 
 export function createBuildValidator(
     board:     Board,
-    shared:    SharedState,
-    gamePhase: GamePhaseManager,
+    shared:    SharedState
 ): BuildValidator {
     // Context created once — arrow functions close over live object references
     // so state is always current at validation time
@@ -45,11 +44,11 @@ export function createBuildValidator(
             },
         },
         gamePhase: {
-            isPlayersTurn:   id => gamePhase.isPlayersTurn(id),
-            isBuildingPhase: ()  => gamePhase.isBuildingPhase(),
-            isSetupPhase:    ()  => gamePhase.isSetupPhase(),
-            canRollDice:     ()  => gamePhase.canRollDice(),
-            mustPlaceRobber: ()  => gamePhase.mustPlaceRobber(),
+            isPlayersTurn:   id => shared.isPlayersTurn(id),
+            isBuildingPhase: ()  => shared.isBuildingPhase,
+            isSetupPhase:    ()  => shared.isSetupPhase,
+            canRollDice:     ()  => shared.canRollDice,
+            mustPlaceRobber: ()  => shared.mustPlaceRobber,
         },
     };
 

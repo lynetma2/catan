@@ -1,4 +1,4 @@
-import {type GamePhase, PieceType, type Player, type Resource} from "@/game/core/types.ts";
+import {GamePhase, PieceType, type Player, type Resource} from "@/game/core/types.ts";
 
 
 export class SharedState {
@@ -10,6 +10,8 @@ export class SharedState {
     private _currentPhase:    GamePhase | null = null;
     private _buildMode:       PieceType | null = null;
     private _players:         Map<string, Player> = new Map();
+    private _mustDiscard: boolean;
+    private _discardCount: number;
 
     // ─── Getters ──────────────────────────────────────────────────────
 
@@ -18,6 +20,8 @@ export class SharedState {
     get currentPhase():    GamePhase | null    { return this._currentPhase; }
     get buildMode():       PieceType | null    { return this._buildMode; }
     get players():         ReadonlyMap<string, Player> { return this._players; }
+    get mustDiscard(): boolean { return this._mustDiscard; }
+    get discardCount(): number { return this._discardCount; }
     
     get localPlayer():     Player | null {
         if (!this.localPlayerId) return null;
@@ -69,5 +73,50 @@ export class SharedState {
     updatePlayer(playerId: string, update: Partial<Player>) {
         const existing = this._players.get(playerId);
         if (existing) this._players.set(playerId, { ...existing, ...update });
+    }
+
+    setMustDiscard(amount: number) {
+        this._mustDiscard = true;
+        this._discardCount = amount;
+    }
+
+    clearMustDiscard() {
+        this._mustDiscard  = false;
+        this._discardCount = 0;
+    }
+
+    // Queries
+
+    isPlayersTurn(playerId: string): boolean {
+        return this._currentPlayerId === playerId;
+    }
+
+    get isBuildingPhase(): boolean {
+        return this._currentPhase === GamePhase.PostRoll;
+    }
+
+    get isSetupPhase(): boolean {
+        return this._currentPhase === GamePhase.SetupPlaceSettlement
+            || this._currentPhase === GamePhase.SetupPlaceRoad;
+    }
+
+    get canRollDice(): boolean {
+        return this._currentPhase === GamePhase.PreRoll;
+    }
+
+    get mustPlaceRobber(): boolean {
+        return this._currentPhase === GamePhase.RobberPlacement;
+    }
+
+    get mustSteal(): boolean {
+        return this._currentPhase === GamePhase.RobberSteal;
+    }
+
+    get canInitiateTrade(): boolean {
+        return this._currentPhase === GamePhase.PostRoll;
+    }
+
+    get isGameOver(): boolean {
+        return this._currentPhase === GamePhase.End;
     }
 }

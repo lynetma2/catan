@@ -1,12 +1,10 @@
 // core/GamePhaseManager.ts
-import { type EventBus }    from '@/game/core/EventBus';
-import { type SharedState } from '@/game/core/SharedState';
-import { type EventPayloads } from '@/game/events/GameEventTypes';
-import { GameEventType }    from '@/game/events/GameEventTypes';
+import {type EventPayloads, GameEventType} from "@/game/events/GameEventTypes.ts";
+import type {SharedState} from "@/game/core/SharedState.ts";
+import type {EventBus} from "@/game/core/EventBus.ts";
 import {GamePhase} from "@/game/core/types.ts";
 
 export class GamePhaseManager {
-
     constructor(
         private readonly bus:    EventBus,
         private readonly shared: SharedState,
@@ -14,125 +12,59 @@ export class GamePhaseManager {
         this.subscribeToEvents();
     }
 
-    // ─── Subscriptions ────────────────────────────────────────────────
-
     private subscribeToEvents() {
-        this.bus.on(GameEventType.GAME_STATE_LOADED,     e => this.onGameStateLoaded(e.payload));
-        this.bus.on(GameEventType.PhaseAdvanced,       e => this.onPhaseAdvanced(e.payload));
-        this.bus.on(GameEventType.TURN_STARTED,         e => this.onTurnStarted(e.payload));
-        this.bus.on(GameEventType.TURN_ENDED,           e => this.onTurnEnded(e.payload));
-        this.bus.on(GameEventType.DICE_ROLLED,          e => this.onDiceRolled(e.payload));
+        this.bus.on(GameEventType.GameStateLoaded,     e => this.onGameStateLoaded(e.payload));
+        this.bus.on(GameEventType.TurnStarted,         e => this.onTurnStarted(e.payload));
+        this.bus.on(GameEventType.TurnEnded,           e => this.onTurnEnded(e.payload));
+        this.bus.on(GameEventType.DiceRolled,          e => this.onDiceRolled(e.payload));
         this.bus.on(GameEventType.RobberPlaced,        e => this.onRobberPlaced(e.payload));
         this.bus.on(GameEventType.RobberStealComplete, e => this.onRobberStealComplete(e.payload));
         this.bus.on(GameEventType.SetupTurnCompleted,  e => this.onSetupTurnCompleted(e.payload));
-        this.bus.on(GameEventType.GameEnded,           e => this.onGameEnded(e.payload));
+        this.bus.on(GameEventType.PhaseAdvanced,       e => this.onPhaseAdvanced(e.payload));
+        this.bus.on(GameEventType.GameEnded,           _e => this.shared.setCurrentPhase(GamePhase.End));
+        this.bus.on(GameEventType.DISCARD_REQUIRED,    e => this.onDiscardRequired(e.payload));
     }
 
-    // ─── Event handlers ───────────────────────────────────────────────
-
-    private onGameStateLoaded(payload: EventPayloads[GameEventType.GAME_STATE_LOADED]) {
-        this.phase           = payload.currentPhase;
-        this.currentPlayerId = payload.currentPlayerId;
+    private onGameStateLoaded(payload: EventPayloads[GameEventType.GameStateLoaded]) {
+        this.shared.setCurrentPhase((payload.currentPhase);
         this.shared.setCurrentPlayer(payload.currentPlayerId);
-        this.shared.setCurrentPhase(payload.currentPhase);
     }
 
-    private onPhaseAdvanced(payload: EventPayloads[GameEventType.PhaseAdvanced]) {
-        this.phase = payload.phase;
-        this.shared.setCurrentPhase(payload.phase);
-    }
-
-    private onTurnStarted(payload: EventPayloads[GameEventType.TURN_STARTED]) {
-        this.currentPlayerId        = payload.playerId;
-        this.shared.currentPlayerId = payload.playerId;
-        this.phase                  = GamePhase.PreRoll;
-        this.shared.currentPhase    = GamePhase.PreRoll;
+    private onTurnStarted(payload: EventPayloads[GameEventType.TurnStarted]) {
+        this.shared.setCurrentPlayer(payload.playerId);
+        this.shared.setCurrentPhase(GamePhase.PreRoll);
     }
 
     private onTurnEnded(_payload: EventPayloads[GameEventType.TurnEnded]) {
-        // Server will fire TURN_STARTED for next player
-        // Nothing to do locally
+        // Server fires TURN_STARTED for next player
     }
 
     private onDiceRolled(payload: EventPayloads[GameEventType.DiceRolled]) {
-        if (payload.total === 7) {
-            this.phase               = GamePhase.RobberPlacement;
-            this.shared.currentPhase = GamePhase.RobberPlacement;
-        } else {
-            this.phase               = GamePhase.PostRoll;
-            this.shared.currentPhase = GamePhase.PostRoll;
-        }
+        this.shared.setCurrentPhase(
+            payload.total === 7
+                ? GamePhase.RobberPlacement
+                : GamePhase.PostRoll
+        );
     }
 
     private onRobberPlaced(_payload: EventPayloads[GameEventType.RobberPlaced]) {
-        // After robber is placed check if steal is needed
-        // Server will tell us if there are players to steal from
-        this.phase               = GamePhase.RobberSteal;
-        this.shared.currentPhase = GamePhase.RobberSteal;
+        this.shared.setCurrentPhase(GamePhase.RobberSteal);
     }
 
     private onRobberStealComplete(_payload: EventPayloads[GameEventType.RobberStealComplete]) {
-        this.phase               = GamePhase.PostRoll;
-        this.shared.currentPhase = GamePhase.PostRoll;
+        this.shared.setCurrentPhase(GamePhase.PostRoll);
     }
 
     private onSetupTurnCompleted(_payload: EventPayloads[GameEventType.SetupTurnCompleted]) {
-        // Server determines next setup phase and fires TURN_STARTED or PHASE_ADVANCED
+        // Server determines next phase
     }
 
-    private onGameEnded(_payload: EventPayloads[GameEventType.GameEnded]) {
-        this.phase               = GamePhase.End;
-        this.shared.currentPhase = GamePhase.End;
+    private onPhaseAdvanced(payload: EventPayloads[GameEventType.PhaseAdvanced]) {
+        this.shared.setCurrentPhase(payload.phase);
     }
 
-    // ─── Queries ──────────────────────────────────────────────────────
-
-    public getCurrentPhase(): GamePhase {
-        return this.phase;
-    }
-
-    public isPlayersTurn(playerId: string): boolean {
-        return this.currentPlayerId === playerId;
-    }
-
-    // Build actions
-    public isBuildingPhase(): boolean {
-        return this.phase === GamePhase.PostRoll;
-    }
-
-    public isSetupPhase(): boolean {
-        return this.phase === GamePhase.SetupPlaceSettlement
-            || this.phase === GamePhase.SetupPlaceRoad;
-    }
-
-    // Dice
-    public canRollDice(): boolean {
-        return this.phase === GamePhase.PreRoll;
-    }
-
-    // Robber
-    public mustPlaceRobber(): boolean {
-        return this.phase === GamePhase.RobberPlacement;
-    }
-
-    public mustSteal(): boolean {
-        return this.phase === GamePhase.RobberSteal;
-    }
-
-    // Trading — note: deliberately NOT phase-dependent
-    // Anyone can respond to a trade offer regardless of phase
-    // Only initiating a trade requires it to be your turn and post-roll
-    public canInitiateTrade(playerId: string): boolean {
-        return this.isPlayersTurn(playerId)
-            && this.phase === GamePhase.PostRoll;
-    }
-
-    public canRespondToTrade(): boolean {
-        // Always true — you can accept/reject offers at any time
-        return true;
-    }
-
-    public isGameOver(): boolean {
-        return this.phase === GamePhase.End;
+    private onDiscardRequired(payload: EventPayloads[GameEventType.DISCARD_REQUIRED]) {
+        if (payload.playerId !== this.shared.localPlayerId) return;
+        this.shared.setMustDiscard(payload.amount);
     }
 }
