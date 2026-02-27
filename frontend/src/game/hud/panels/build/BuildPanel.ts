@@ -10,6 +10,7 @@ import type {Vec2} from "@/game/utils/Vec2.ts";
 import {containsPoint} from "@/game/utils/Rect.ts";
 import {GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
 import {PieceType} from "@/game/core/types.ts";
+import type { EventBus } from "@/game/core/EventBus";
 
 const ALL_BUTTONS: ButtonType[] = [
     ButtonType.putRoad,
@@ -29,7 +30,17 @@ export class BuildPanel {
         private readonly frameQueue:   FrameQueue,
         private readonly sharedState:  SharedState,
         private readonly resolution:   ResolutionManager,
-    ) {}
+        private readonly bus:         EventBus,
+    ) {
+        this.subscribeToEvents();
+    }
+
+    private subscribeToEvents() {
+        // Clear selection whenever build mode exits — regardless of source
+        // Covers: Escape in World, clicking same button again, BUILD_PLACED
+        this.bus.on(GameEventType.BUILD_MODE_EXITED, _e => this.clearSelection());
+        this.bus.on(GameEventType.BUILD_PLACED,     _e => this.clearSelection());
+    }
 
     // ─── Input ────────────────────────────────────────────────────────
 
@@ -58,6 +69,11 @@ export class BuildPanel {
                 this.exitBuildMode();
                 return true;
             }
+        }
+
+        if (event.type === InputType.MouseLeave) {
+            this.hoveredButton = null;
+            return false;
         }
 
         return false;

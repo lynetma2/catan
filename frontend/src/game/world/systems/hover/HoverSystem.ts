@@ -51,6 +51,10 @@ export class HoverSystem {
         return { target: this.target };
     }
 
+    clear() {
+        this.target = null;
+    }
+
     // ─── Vertex finding ───────────────────────────────────────────────
 
     private findVertex(screenPos: Vec2): BuildTarget | null {

@@ -26,6 +26,7 @@ export class InputManager {
         canvas.addEventListener('mouseup',    e => this.onMouseUp(e));
         canvas.addEventListener('wheel',      e => this.onWheel(e), { passive: true });
         canvas.addEventListener('contextmenu', e => e.preventDefault()); // prevent right-click menu
+        canvas.addEventListener('mouseleave', e => this.onMouseLeave(e));
     }
 
     /**
@@ -86,6 +87,12 @@ export class InputManager {
             // Ignore or log keys that aren't part of the game controls
             console.log(`Unmapped key pressed: ${e.key}`);
         }
+    }
+
+    private onMouseLeave(e: MouseEvent) {
+        this.dispatch({
+            type: InputType.MouseLeave
+        });
     }
 
     private onMouseDown(e: MouseEvent) {

@@ -25,6 +25,7 @@ export enum InputType {
     Wheel = 'wheel',
     KeyDown = 'keydown',
     KeyUp = 'keyup',
+    MouseLeave = 'mouseleave',
 }
 
 export type NormalizedInputEvent =
@@ -34,7 +35,8 @@ export type NormalizedInputEvent =
     | MouseUpEvent
     | WheelEvent
     | KeyDownEvent
-    | KeyUpEvent;
+    | KeyUpEvent
+    | MouseLeaveEvent;
 
 interface MouseMoveEvent {
     type: InputType.MouseMove;
@@ -75,3 +77,6 @@ interface KeyUpEvent {
     key: GameKey;
 }
 
+interface MouseLeaveEvent {
+    type: InputType.MouseLeave;
+}

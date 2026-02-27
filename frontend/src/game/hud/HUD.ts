@@ -27,7 +27,7 @@ export class HUD implements InputLayer {
         frameQueue: FrameQueue,
         resolution: ResolutionManager,
     ) {
-        this.buildPanel    = new BuildPanel(frameQueue, shared, resolution);
+        this.buildPanel    = new BuildPanel(frameQueue, shared, resolution, bus);
         this.resourcePanel = new ResourcePanel(shared, resolution);
         this.overviewPanel = new PlayerOverviewPanel(bus, shared, resolution);
 

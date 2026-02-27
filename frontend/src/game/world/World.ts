@@ -114,6 +114,11 @@ export class World implements InputLayer {
             return this.handleClick(event.screenPos);
         }
 
+        if (event.type === InputType.MouseLeave) {
+            this.hoverSystem.clear();
+            return false;
+        }
+
         return false;
     }
 

@@ -5,11 +5,14 @@ import {edge, type Edge} from "@/game/utils/HexGeometry/Edge.ts";
 import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 
+export type PlayerColorLookup = (playerId: string) => string;
+
 export class PieceRenderer {
     constructor(
         private readonly ctx:    CanvasRenderingContext2D,
         private readonly theme:  PieceTheme,
         private readonly camera: Camera,
+        private readonly playerColor: PlayerColorLookup,
     ) {}
 
     render(placements: PlacementState) {
@@ -49,7 +52,7 @@ export class PieceRenderer {
             theme.road.width,
             2
         );
-        ctx.fillStyle   = piece.playerId;   // player color from SharedState lookup
+        ctx.fillStyle   = this.playerColor(piece.playerId);   // player color from SharedState lookup
         ctx.fill();
         ctx.strokeStyle = theme.strokeColor;
         ctx.lineWidth   = theme.strokeWidth;
@@ -71,7 +74,7 @@ export class PieceRenderer {
         // House body
         ctx.beginPath();
         ctx.rect(x, y + height * 0.35, width, height * 0.65);
-        ctx.fillStyle   = piece.playerId;
+        ctx.fillStyle   = this.playerColor(piece.playerId);
         ctx.fill();
         ctx.strokeStyle = theme.strokeColor;
         ctx.lineWidth   = theme.strokeWidth;
@@ -100,7 +103,7 @@ export class PieceRenderer {
         // Main building
         ctx.beginPath();
         ctx.rect(x, y + height * 0.3, width, height * 0.7);
-        ctx.fillStyle   = piece.playerId;
+        ctx.fillStyle   = this.playerColor(piece.playerId);
         ctx.fill();
         ctx.strokeStyle = theme.strokeColor;
         ctx.lineWidth   = theme.strokeWidth;

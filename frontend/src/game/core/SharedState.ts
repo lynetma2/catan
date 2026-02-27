@@ -1,4 +1,4 @@
-import {GamePhase, PieceType, type Player, type Resource} from "@/game/core/types.ts";
+import {GamePhase, type GameSnapshot, PieceType, type Player, type Resource} from "@/game/core/types.ts";
 
 
 export class SharedState {
@@ -12,6 +12,22 @@ export class SharedState {
     private _players:         Map<string, Player> = new Map();
     private _mustDiscard: boolean;
     private _discardCount: number;
+
+    // core/SharedState.ts
+    loadFromSnapshot(payload: GameSnapshot, localPlayerId: string) {
+        this.setCurrentPhase(payload.currentPhase);
+        this.setCurrentPlayer(payload.currentPlayerId);
+        this.setPlayers(payload.players.map(p => ({
+            id:    p.id,
+            name:  p.name,
+            color: p.color,
+            resources: p.resources,
+            victoryPoints: p.victoryPoints
+        })));
+
+        const local = payload.players.find(p => p.id === localPlayerId);
+        if (local) this.setLocalPlayer(local);
+    }
 
     // ─── Getters ──────────────────────────────────────────────────────
 
