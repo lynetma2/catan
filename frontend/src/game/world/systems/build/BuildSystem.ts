@@ -38,6 +38,8 @@ export class BuildSystem {
             playerId,
         );
 
+        console.log("onBuildRequested: reason is:", reason);
+
         if (reason) {
             this.frameQueue.push({
                 type:    GameEventType.BUILD_REJECTED,
@@ -48,9 +50,8 @@ export class BuildSystem {
         }
 
         // Validation passed — fire placement and resource deduction atomically
-        // TODO update this when connecting to the backend!
         this.frameQueue.push({
-            type:    GameEventType.BUILD_PLACED,
+            type:    GameEventType.BUILD_SENT_TO_SERVER,
             payload: {
                 pieceType: payload.pieceType,
                 target:    payload.target,
@@ -58,49 +59,5 @@ export class BuildSystem {
             },
             source: GameEventSource.World,
         });
-
-        if (!this.shared.isSetupPhase) {
-            this.frameQueue.push({
-                type:    GameEventType.RESOURCES_SPENT,
-                payload: {
-                    playerId,
-                    amount: this.totalCost(payload.pieceType),
-                },
-                source: GameEventSource.World,
-            });
-        }
-
-        if (this.shared.isSetupPhase) {
-            this.advanceSetupPhase();
-        }
-    }
-
-    // ─── Setup phase ──────────────────────────────────────────────────
-    // TODO handle phase advancements.
-    private advanceSetupPhase() {
-        switch (this.shared.currentPhase) {
-            case 'setup_place_settlement':
-                this.frameQueue.push({
-                    type:    GameEventType.PHASE_ADVANCED,
-                    payload: { phase: 'setup_place_road' },
-                    source:  GameEventSource.World,
-                });
-                break;
-
-            case 'setup_place_road':
-                this.frameQueue.push({
-                    type:    GameEventType.SETUP_TURN_COMPLETED,
-                    payload: { playerId: this.shared.localPlayerId! },
-                    source:  GameEventSource.World,
-                });
-                break;
-        }
-    }
-
-    // ─── Helpers ──────────────────────────────────────────────────────
-
-    private totalCost(pieceType: PieceType): number {
-        return Object.values(PIECE_COSTS[pieceType])
-            .reduce((sum, count) => sum + count, 0);
     }
 }

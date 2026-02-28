@@ -147,9 +147,13 @@ export class BuildPanel {
     private isButtonDisabled(type: ButtonType, isMyTurn: boolean): boolean {
         switch (type) {
             case ButtonType.putRoad:
+                return !this.sharedState.canAfford(PieceType.Road);
             case ButtonType.putSettlement:
+                return !this.sharedState.canAfford(PieceType.Settlement);
             case ButtonType.putCity:
+                return !this.sharedState.canAfford(PieceType.City);
             case ButtonType.drawDevelopmentCard:
+                return !this.sharedState.canAffordDevCard();
             case ButtonType.endTurn:
                 return !isMyTurn;  // all action buttons disabled when not your turn
             case ButtonType.waiting:
@@ -172,6 +176,7 @@ export class BuildPanel {
             this.clearSelection();
             this.exitBuildMode();
         } else {
+            if (!this.sharedState.canAfford(pieceType)) return;
             this.selectedButton = ButtonType;
             this.enterBuildMode(pieceType);
         }

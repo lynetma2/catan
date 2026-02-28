@@ -4,23 +4,22 @@
 
 import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
 import type {Edge} from "@/game/utils/HexGeometry/Edge.ts";
-import type {BuildTarget} from "@/game/core/types.ts";
+import {type BuildTarget, PieceType, ResourceType} from "@/game/core/types.ts";
+import {BuildRejectionReason} from "@/game/events/GameEventTypes.ts";
 
-export type PieceType = 'road' | 'settlement' | 'city';
+export type ResourceCost = Partial<Record<ResourceType, number>>;
 
-export type ResourceCost = {
-    wood:  number;
-    brick: number;
-    wool:  number;
-    wheat: number;
-    ore:   number;
+export const PIECE_COSTS: Record<PieceType, ResourceCost> = {
+    road:       { [ResourceType.Lumber]: 1, [ResourceType.Brick]: 1 },
+    settlement: { [ResourceType.Lumber]: 1, [ResourceType.Brick]: 1, [ResourceType.Wool]: 1, [ResourceType.Grain]: 1 },
+    city:       { [ResourceType.Grain]: 2, [ResourceType.Ore]: 3 },
 };
 
-export const PIECE_COSTS: Record<PieceType, Partial<ResourceCost>> = {
-    road:       { wood: 1, brick: 1 },
-    settlement: { wood: 1, brick: 1, wool: 1, wheat: 1 },
-    city:       { wheat: 2, ore: 3 },
-};
+export const DEV_CARD_COST: Partial<ResourceCost> = {
+    [ResourceType.Ore]: 1,
+    [ResourceType.Grain]: 1,
+    [ResourceType.Wool]: 1
+}
 
 // ─── Query interfaces ─────────────────────────────────────────────────
 
@@ -63,19 +62,19 @@ export const buildRules = {
         playerId:  string,
         ctx:       BuildContext,
     ): BuildRejectionReason | null => {
-        if (!ctx.gamePhase.isPlayersTurn(playerId))       return 'NOT_YOUR_TURN';
+        if (!ctx.gamePhase.isPlayersTurn(playerId))       return BuildRejectionReason.NOT_YOUR_TURN;
         if (!ctx.gamePhase.isBuildingPhase() &&
-            !ctx.gamePhase.isSetupPhase())                return 'WRONG_PHASE';
+            !ctx.gamePhase.isSetupPhase())                return BuildRejectionReason.WRONG_PHASE;
 
         if (!ctx.gamePhase.isSetupPhase()) {
             if (!ctx.player.canAfford(playerId, PIECE_COSTS[pieceType]))
-                return 'INSUFFICIENT_RESOURCES';
+                return BuildRejectionReason.INSUFFICIENT_RESOURCES;
         }
 
         switch (pieceType) {
-            case 'settlement': return buildRules.validateSettlement(target, playerId, ctx);
-            case 'city':       return buildRules.validateCity(target, playerId, ctx);
-            case 'road':       return buildRules.validateRoad(target, playerId, ctx);
+            case PieceType.Settlement: return buildRules.validateSettlement(target, playerId, ctx);
+            case PieceType.City:       return buildRules.validateCity(target, playerId, ctx);
+            case PieceType.Road:       return buildRules.validateRoad(target, playerId, ctx);
         }
     },
 
@@ -84,12 +83,12 @@ export const buildRules = {
         playerId: string,
         ctx:      BuildContext,
     ): BuildRejectionReason | null => {
-        if (target.kind !== 'vertex')                            return 'INVALID_LOCATION';
-        if (!ctx.board.isValidVertex(target.vertex))             return 'INVALID_LOCATION';
-        if (ctx.board.isVertexOccupied(target.vertex))           return 'SPOT_OCCUPIED';
-        if (!ctx.board.respectsDistanceRule(target.vertex))      return 'DISTANCE_RULE_VIOLATED';
+        if (target.kind !== 'vertex')                            return BuildRejectionReason.INVALID_LOCATION;
+        if (!ctx.board.isValidVertex(target.vertex))             return BuildRejectionReason.INVALID_LOCATION;
+        if (ctx.board.isVertexOccupied(target.vertex))           return BuildRejectionReason.SPOT_OCCUPIED;
+        if (!ctx.board.respectsDistanceRule(target.vertex))      return BuildRejectionReason.DISTANCE_RULE_VIOLATED;
         if (!ctx.gamePhase.isSetupPhase() &&
-            !ctx.board.hasAdjacentRoad(target.vertex, playerId)) return 'NO_ADJACENT_ROAD';
+            !ctx.board.hasAdjacentRoad(target.vertex, playerId)) return BuildRejectionReason.NO_ADJACENT_ROAD;
         return null;
     },
 
@@ -98,9 +97,9 @@ export const buildRules = {
         playerId: string,
         ctx:      BuildContext,
     ): BuildRejectionReason | null => {
-        if (target.kind !== 'vertex')                             return 'INVALID_LOCATION';
-        if (!ctx.board.isValidVertex(target.vertex))              return 'INVALID_LOCATION';
-        if (!ctx.board.hasOwnSettlement(target.vertex, playerId)) return 'NO_SETTLEMENT_TO_UPGRADE';
+        if (target.kind !== 'vertex')                             return BuildRejectionReason.INVALID_LOCATION;
+        if (!ctx.board.isValidVertex(target.vertex))              return BuildRejectionReason.INVALID_LOCATION;
+        if (!ctx.board.hasOwnSettlement(target.vertex, playerId)) return BuildRejectionReason.NO_SETTLEMENT_TO_UPGRADE;
         return null;
     },
 
@@ -109,10 +108,10 @@ export const buildRules = {
         playerId: string,
         ctx:      BuildContext,
     ): BuildRejectionReason | null => {
-        if (target.kind !== 'edge')                                        return 'INVALID_LOCATION';
-        if (!ctx.board.isValidEdge(target.edge))                           return 'INVALID_LOCATION';
-        if (ctx.board.isEdgeOccupied(target.edge))                         return 'SPOT_OCCUPIED';
-        if (!ctx.board.hasAdjacentRoadOrSettlement(target.edge, playerId)) return 'NO_ADJACENT_ROAD';
+        if (target.kind !== 'edge')                                        return BuildRejectionReason.INVALID_LOCATION;
+        if (!ctx.board.isValidEdge(target.edge))                           return BuildRejectionReason.INVALID_LOCATION;
+        if (ctx.board.isEdgeOccupied(target.edge))                         return BuildRejectionReason.SPOT_OCCUPIED;
+        if (!ctx.board.hasAdjacentRoadOrSettlement(target.edge, playerId)) return BuildRejectionReason.NO_ADJACENT_ROAD;
         return null;
     },
 };

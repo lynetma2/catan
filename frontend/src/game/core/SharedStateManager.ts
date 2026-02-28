@@ -16,6 +16,8 @@ export class SharedStateManager {
         this.bus.on(GameEventType.GAME_STATE_LOADED,  e => this.onGameStateLoaded(e.payload));
         this.bus.on(GameEventType.RESOURCES_GRANTED, e => this.onResourcesGranted(e.payload));
         this.bus.on(GameEventType.RESOURCES_SPENT,   e => this.onResourcesSpent(e.payload));
+        this.bus.on(GameEventType.BUILD_MODE_ENTERED, e => this.shared.setBuildMode(e.payload.pieceType));
+        this.bus.on(GameEventType.BUILD_MODE_EXITED,  _e => this.shared.setBuildMode(null));
     }
 
     private onGameStateLoaded(payload: EventPayloads[GameEventType.GAME_STATE_LOADED]) {

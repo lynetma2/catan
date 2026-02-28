@@ -5,6 +5,7 @@ import {edge, type Edge} from "@/game/utils/HexGeometry/Edge.ts";
 import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import type {HoverState} from "@/game/world/systems/hover/HoverSystem.ts";
+import {type BuildTarget, BuildTargetKind} from "@/game/core/types.ts";
 
 export class HoverRenderer {
     constructor(
@@ -14,13 +15,57 @@ export class HoverRenderer {
     ) {}
 
     render(hover: HoverState) {
-        if (!hover.target) return;
+        // First pass — draw all valid spots dimly
+        hover.validTargets!.forEach(target => {
+            this.drawValidTarget(target);
+        });
 
-        switch (hover.target.kind) {
-            case 'vertex': this.drawVertexHover(hover.target.vertex); break;
-            case 'edge':   this.drawEdgeHover(hover.target.edge);     break;
-            case 'hex':    this.drawHexHover(hover.target.hex);        break;
+        // Second pass — draw hovered spot brightly on top
+        if (hover.target) {
+            this.drawHoveredTarget(hover.target);
         }
+    }
+
+    private drawValidTarget(target: BuildTarget) {
+        switch (target.kind) {
+            case BuildTargetKind.Vertex: this.drawVertexValid(target.vertex); break;
+            case BuildTargetKind.Edge:   this.drawEdgeValid(target.edge);     break;
+            case BuildTargetKind.Hex:    this.drawHexHover(target.hex);       break;
+        }
+    }
+
+    private drawHoveredTarget(target: BuildTarget) {
+        switch (target.kind) {
+            case BuildTargetKind.Vertex: this.drawVertexHover(target.vertex); break;
+            case BuildTargetKind.Edge:   this.drawEdgeHover(target.edge);     break;
+            case BuildTargetKind.Hex:    this.drawHexHover(target.hex);       break;
+        }
+    }
+
+    // Dim version — all valid spots
+    private drawVertexValid(v: Vertex) {
+        const { ctx, theme } = this;
+        const pos            = this.vertexToScreen(v);
+
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, theme.vertex.radius * 0.7, 0, Math.PI * 2);
+        ctx.fillStyle   = theme.vertex.validFillColor;    // ← add to theme
+        ctx.fill();
+    }
+
+    private drawEdgeValid(e: Edge) {
+        const { ctx, theme } = this;
+        const [v1, v2]       = edge.vertices(e);
+        const p1             = this.vertexToScreen(v1);
+        const p2             = this.vertexToScreen(v2);
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.strokeStyle = theme.edge.validFillColor;      // ← add to theme
+        ctx.lineWidth   = theme.edge.width * 0.6;
+        ctx.lineCap     = 'round';
+        ctx.stroke();
     }
 
     // ─── Vertex hover ─────────────────────────────────────────────────

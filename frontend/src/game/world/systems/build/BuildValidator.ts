@@ -2,7 +2,7 @@
 
 // ─── Interface ────────────────────────────────────────────────────────
 
-import type {BuildTarget, PieceType} from "@/game/core/types.ts";
+import {type BuildTarget, BuildTargetKind, PieceType} from "@/game/core/types.ts";
 import type {BuildRejectionReason} from "@/game/events/GameEventTypes.ts";
 import type {Board} from "@/game/world/board/Board.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
@@ -11,6 +11,7 @@ import {type BuildContext, buildRules} from "@/game/world/systems/build/BuildRul
 export interface BuildValidator {
     validate: (pieceType: PieceType, target: BuildTarget, playerId: string) => BuildRejectionReason | null;
     canBuild: (pieceType: PieceType, target: BuildTarget, playerId: string) => boolean;
+    validTargets: (pieceType: PieceType, playerId: string) => BuildTarget[];
 }
 
 // ─── Factory ──────────────────────────────────────────────────────────
@@ -58,5 +59,29 @@ export function createBuildValidator(
 
         canBuild: (pieceType, target, playerId) =>
             buildRules.validate(pieceType, target, playerId, context) === null,
+
+        validTargets: (pieceType, playerId) => {
+            switch (pieceType) {
+                case PieceType.Settlement:
+                case PieceType.City:
+                    return board.hexGrid.getAllVertices()
+                        .filter(v => buildRules.validateSettlement(
+                            { kind: BuildTargetKind.Vertex, vertex: v },
+                            playerId,
+                            context
+                        ) === null)
+                        .map(v => ({ kind: BuildTargetKind.Vertex, vertex: v }));
+
+                case PieceType.Road:
+                    return board.hexGrid.getAllEdges()
+                        .filter(e => buildRules.validateRoad(
+                            { kind: BuildTargetKind.Edge, edge: e },
+                            playerId,
+                            context
+                        ) === null)
+                        .map(e => ({ kind: BuildTargetKind.Edge, edge: e }));
+            }
+            return [];
+        },
     };
 }

@@ -59,10 +59,12 @@ export interface HoverTheme {
     vertex: {
         fillColor:   string;
         strokeColor: string;
+        validFillColor: string;
         radius:      number;
     };
     edge: {
         fillColor: string;
+        validFillColor: string;
         width:     number;
     };
     hex: {
@@ -133,10 +135,12 @@ export const DEFAULT_WORLD_THEME: WorldTheme = {
         vertex: {
             fillColor:   'rgba(255, 255, 255, 0.35)',
             strokeColor: 'rgba(255, 255, 255, 0.8)',
+            validFillColor: 'rgba(255, 255, 255, 0.15)',
             radius:      10,
         },
         edge: {
             fillColor: 'rgba(255, 255, 255, 0.35)',
+            validFillColor: 'rgba(255, 255, 255, 0.15)',
             width:     8,
         },
         hex: {
@@ -203,10 +207,12 @@ export const PARCHMENT_WORLD_THEME: WorldTheme = {
         vertex: {
             fillColor:   'rgba(255, 240, 180, 0.4)',
             strokeColor: 'rgba(255, 220, 100, 0.9)',
+            validFillColor: 'rgba(255, 240, 180, 0.15)',
             radius:      12,
         },
         edge: {
             fillColor: 'rgba(255, 240, 180, 0.4)',
+            validFillColor: 'rgba(255, 240, 180, 0.15)',
             width:     9,
         },
         hex: {

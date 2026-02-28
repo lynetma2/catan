@@ -54,6 +54,10 @@ export class Camera {
         return this.toScreen(layout.hexToPixel(this.layout, h));
     }
 
+    public hexToWorld(h: Hex): Vec2 {
+        return this.toScreen(layout.hexToPixel(this.layout, h));
+    }
+
     public hexCornersScreen(h: Hex): Vec2[] {
         return layout.polygonCorners(this.layout, h)
             .map(p => this.toScreen(p));

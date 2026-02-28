@@ -1,13 +1,13 @@
 import {Board} from "@/game/world/board/Board.ts";
 import type {InputLayer} from "@/game/core/Input/types.ts";
 import {GamePhaseManager} from "@/game/core/GamePhaseManager.ts";
-import type {BuildSystem} from "@/game/world/systems/build/BuildSystem.ts";
+import {BuildSystem} from "@/game/world/systems/build/BuildSystem.ts";
 import type {Camera} from "@/game/core/Camera.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 import type {EventBus} from "@/game/core/EventBus.ts";
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
 import {type EventPayloads, GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
-import {BuildTargetKind, PieceType} from "@/game/core/types.ts";
+import {type BuildTarget, BuildTargetKind, PieceType} from "@/game/core/types.ts";
 import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {type BuildValidator, createBuildValidator} from "@/game/world/systems/build/BuildValidator.ts";
 import type {WorldState} from "@/game/world/types.ts";
@@ -34,8 +34,9 @@ export class World implements InputLayer {
     ) {
         this.board = new Board();
         this.gamePhase = new GamePhaseManager(bus, shared);
-        this.hoverSystem = new HoverSystem(this.board, camera);
         this.buildValidator = createBuildValidator(this.board, shared);
+        this.buildSystem = new BuildSystem(bus, frameQueue, shared, this.gamePhase, this.buildValidator);
+        this.hoverSystem = new HoverSystem(this.board, camera, this.buildValidator, shared);
 
         this.subscribeToEvents();
     }
@@ -44,8 +45,14 @@ export class World implements InputLayer {
 
     private subscribeToEvents() {
         // World owns the board — it is responsible for mutating it
-        this.bus.on(GameEventType.GAME_STATE_LOADED, e => this.onGameStateLoaded(e.payload));
-        this.bus.on(GameEventType.BUILD_PLACED,     e => this.onBuildPlaced(e.payload));
+        this.bus.on(GameEventType.GAME_STATE_LOADED, e =>
+            this.onGameStateLoaded(e.payload));
+        this.bus.on(GameEventType.BUILD_PLACED, e => this.onBuildPlaced(e.payload));
+        this.bus.on(GameEventType.BUILD_MODE_ENTERED, _e => this.hoverSystem.onModeChanged());
+        this.bus.on(GameEventType.BUILD_MODE_EXITED,  _e => {
+            this.hoverSystem.onModeChanged();
+            this.hoverSystem.clear();
+        });
     }
 
     private onGameStateLoaded(payload: EventPayloads[GameEventType.GAME_STATE_LOADED]) {
@@ -126,18 +133,14 @@ export class World implements InputLayer {
         const target    = this.hoverSystem.getTarget();
         const buildMode = this.shared.buildMode;
 
-        if (!target || !buildMode) return false;
+        if (!target) return false;
 
-        const validClick =
-            (buildMode === PieceType.Settlement && target.kind === 'vertex') ||
-            (buildMode === PieceType.City       && target.kind === 'vertex') ||
-            (buildMode === PieceType.Road       && target.kind === 'edge');
-
-        if (!validClick) return false;
+        const pieceType = buildMode ?? this.inferPieceType(target);
+        if (!pieceType) return false;
 
         this.frameQueue.push({
             type:    GameEventType.BUILD_PLACEMENT_REQUESTED,
-            payload: { pieceType: buildMode, target },
+            payload: { pieceType, target },
             source:  GameEventSource.Input,
         });
 
@@ -186,5 +189,23 @@ export class World implements InputLayer {
 
     private isPanButton(button: string): boolean {
         return button === 'middle' || button === 'right';
+    }
+
+    private inferPieceType(target: BuildTarget): PieceType | null {
+        const playerId = this.shared.localPlayerId;
+        switch (target.kind) {
+            case BuildTargetKind.Vertex:
+                // Prefer city upgrade if player has a settlement there
+                if (playerId && this.buildValidator.canBuild(PieceType.City, target, playerId)) {
+                    return PieceType.City;
+                }
+                return PieceType.Settlement;
+
+            case BuildTargetKind.Edge:
+                return PieceType.Road;
+
+            default:
+                return null;
+        }
     }
 }

@@ -1,12 +1,12 @@
 // hud/HUD.ts
-import { type EventBus }             from '@/game/core/EventBus';
-import { type FrameQueue }           from '@/game/core/FrameQueue';
-import { type SharedState }          from '@/game/core/SharedState';
-import { type ResolutionManager}           from '@/game/core/ResolutionManager';
-import { BuildPanel }                from './panels/build/BuildPanel.ts';
+import {type EventBus} from '@/game/core/EventBus';
+import {type FrameQueue} from '@/game/core/FrameQueue';
+import {type SharedState} from '@/game/core/SharedState';
+import {type ResolutionManager} from '@/game/core/ResolutionManager';
+import {BuildPanel} from './panels/build/BuildPanel.ts';
 import type {InputLayer} from "@/game/core/Input/types.ts";
 import {type HudState, type Toast} from "@/game/hud/types.ts";
-import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
+import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {containsPoint} from "@/game/utils/Rect.ts";
 import {ResourcePanel} from "@/game/hud/panels/resource/ResourcePanel.ts";
 import {PlayerOverviewPanel} from "@/game/hud/panels/overview/OverviewPanel.ts";
@@ -67,7 +67,7 @@ export class HUD implements InputLayer {
 
     handleInput(event: NormalizedInputEvent): boolean {
         // Keyboard events have no position — forward directly
-        if (event.type === 'keydown' || event.type === 'keyup') {
+        if (event.type === 'keydown' || event.type === 'keyup' || event.type === InputType.MouseLeave) {
             return this.buildPanel.handleInput(event);
         }
 

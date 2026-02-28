@@ -1,4 +1,5 @@
 import {GamePhase, type GameSnapshot, PieceType, type Player, type Resource} from "@/game/core/types.ts";
+import {DEV_CARD_COST, PIECE_COSTS, type ResourceCost} from "@/game/world/systems/build/BuildRules.ts";
 
 
 export class SharedState {
@@ -134,5 +135,24 @@ export class SharedState {
 
     get isGameOver(): boolean {
         return this._currentPhase === GamePhase.End;
+    }
+
+    canAffordDevCard(): boolean {
+        return this.meetsResourceCost(DEV_CARD_COST);
+    }
+
+    canAfford(pieceType: PieceType): boolean {
+        return this.meetsResourceCost(PIECE_COSTS[pieceType]);
+    }
+
+    private meetsResourceCost(cost: Partial<ResourceCost>): boolean {
+        const resources = this.localPlayerResources ?? [];
+
+        return (Object.keys(cost) as (keyof typeof cost)[])
+            .every(type =>
+                resources
+                    .filter(r => r.resourceType === type)
+                    .length >= (cost[type] ?? 0)
+            );
     }
 }

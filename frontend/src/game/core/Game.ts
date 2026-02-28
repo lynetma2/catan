@@ -99,6 +99,7 @@ export class Game {
             this.animationFrameId = null;
         }
         this.resolution.destroy();
+        this.inputManager.destroy();
     }
 
     // Arrow function automatically binds 'this', preventing context loss

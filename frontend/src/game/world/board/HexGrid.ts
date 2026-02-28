@@ -1,7 +1,7 @@
 // world/board/HexGrid.ts
 import {hex, type Hex} from '@/game/utils/HexGeometry/Hex';
-import { type Vertex } from '@/game/utils/HexGeometry/Vertex';
-import { type Edge }   from '@/game/utils/HexGeometry/Edge';
+import {vertex, type Vertex} from '@/game/utils/HexGeometry/Vertex';
+import {edge, type Edge} from '@/game/utils/HexGeometry/Edge';
 import {
     type HexGridState,
     type Tile,
@@ -43,6 +43,40 @@ export class HexGrid {
     getNeighboursOf(h: Hex): Hex[] {
         // Returns the 6 neighbours — used by HoverSystem for candidate search
         return hex.neighbors(h).filter(h => this.tiles.has(this.hexKey(h)));
+    }
+
+    getAllVertices(): Vertex[] {
+        const seen = new Set<string>();
+        const result: Vertex[] = [];
+
+        this.tiles.forEach(tile => {
+            vertex.ofHex(tile.hex).forEach(v => {
+                const key = vertex.toKey(v);
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    result.push(v);
+                }
+            });
+        });
+
+        return result;
+    }
+
+    getAllEdges(): Edge[] {
+        const seen = new Set<string>();
+        const result: Edge[] = [];
+
+        this.tiles.forEach(tile => {
+            edge.ofHex(tile.hex).forEach(e => {
+                const key = edge.toKey(e);
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    result.push(e);
+                }
+            });
+        });
+
+        return result;
     }
 
     // ─── Queries used by ResourceSystem ──────────────────────────────

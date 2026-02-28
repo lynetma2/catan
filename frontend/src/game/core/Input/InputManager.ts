@@ -11,6 +11,7 @@ import type {InputLayer} from "@/game/core/Input/types.ts";
  */
 export class InputManager {
     private readonly layers: InputLayer[] = [];
+    private readonly abortController = new AbortController();
 
     /**
      * Creates an instance of InputManager.
@@ -18,15 +19,16 @@ export class InputManager {
      * @param canvas - The HTML canvas element to listen for events on.
      */
     constructor(private readonly canvas: HTMLCanvasElement) {
+        const opts = {signal: this.abortController.signal};
         // All DOM listeners live here and nowhere else
-        canvas.addEventListener('mousemove', e => this.onMouseMove(e));
-        canvas.addEventListener('click',     e => this.onClick(e));
-        canvas.addEventListener('keydown', e => this.onKeyDown(e));
-        canvas.addEventListener('mousedown',  e => this.onMouseDown(e));
-        canvas.addEventListener('mouseup',    e => this.onMouseUp(e));
-        canvas.addEventListener('wheel',      e => this.onWheel(e), { passive: true });
-        canvas.addEventListener('contextmenu', e => e.preventDefault()); // prevent right-click menu
-        canvas.addEventListener('mouseleave', e => this.onMouseLeave(e));
+        canvas.addEventListener('mousemove', e => this.onMouseMove(e), opts);
+        canvas.addEventListener('click',     e => this.onClick(e), opts);
+        canvas.addEventListener('keydown', e => this.onKeyDown(e), opts);
+        canvas.addEventListener('mousedown',  e => this.onMouseDown(e), opts);
+        canvas.addEventListener('mouseup',    e => this.onMouseUp(e), opts);
+        canvas.addEventListener('wheel',      e => this.onWheel(e), { ...opts, passive: true });
+        canvas.addEventListener('contextmenu', e => e.preventDefault(), opts); // prevent right-click menu
+        canvas.addEventListener('mouseleave', e => this.onMouseLeave(e), opts);
     }
 
     /**
@@ -40,13 +42,17 @@ export class InputManager {
         this.layers.sort((a, b) => b.priority - a.priority); // highest first
     }
 
+    destroy() {
+        this.abortController.abort();
+    }
+
     /**
      * Handles the raw mouse move event from the DOM.
      *
      * @param e - The raw MouseEvent.
      */
     private onMouseMove(e: MouseEvent) {
-        this.dispatch({ type: 'mousemove', screenPos: this.toCanvasPos(e) });
+        this.dispatch({ type: InputType.MouseMove, screenPos: this.toCanvasPos(e) });
     }
 
     /**
@@ -82,7 +88,7 @@ export class InputManager {
         console.log("Key pressed: " + pressedKey + "")
 
         if (isGameKey) {
-            this.dispatch({ type: 'keydown', key: pressedKey as GameKey });
+            this.dispatch({ type: InputType.KeyDown, key: pressedKey as GameKey });
         } else {
             // Ignore or log keys that aren't part of the game controls
             console.log(`Unmapped key pressed: ${e.key}`);
