@@ -60,12 +60,12 @@ export const hudLayout = {
     },
 };
 
-const BUTTON_SIZE    = 80;
-const BUTTON_PADDING = 5;
+export const BUTTON_SIZE    = 80;
+export const BUTTON_PADDING = 5;
 
 // Base distance from the right/bottom edge.
 // Set to BUTTON_PADDING * 2 to match your original -20 offset.
-const EDGE_MARGIN = BUTTON_PADDING * 2;
+export const EDGE_MARGIN = BUTTON_PADDING * 2;
 
 /**
  * Calculates the X offset for a button in a right-anchored row.

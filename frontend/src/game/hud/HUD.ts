@@ -81,6 +81,9 @@ export class HUD implements InputLayer {
         if (containsPoint(this.resourcePanel.getState().bounds, event.screenPos)) {
             if (this.resourcePanel.handleInput(event)) return true;
         }
+        if (containsPoint(this.dicePanel.getState().layout.panel, event.screenPos)) {
+            if (this.dicePanel.handleInput(event)) return true;
+        }
 
         return false;
     }
@@ -102,7 +105,7 @@ export class HUD implements InputLayer {
                 build:    buildPanel,
                 resource: this.resourcePanel.getState(),
                 overview: this.overviewPanel.getState(),
-                dice: this.dicePanel.getState(buildPanel.bounds),
+                dice:     this.dicePanel.getState(),
             }
         };
     }

@@ -44,12 +44,12 @@ export class DicePanel {
 
     // ─── Input ────────────────────────────────────────────────────────
 
-    handleInput(event: NormalizedInputEvent, buildPanelBounds: Rect): boolean {
+    handleInput(event: NormalizedInputEvent): boolean {
         if (event.type !== InputType.MouseClick)     return false;
         if (!this.shared.canRollDice)                return false;
         if (!this.shared.isLocalPlayersTurn)         return false;
 
-        const layout = resolveDicePanelLayout(this.resolution.get(), buildPanelBounds);
+        const layout = resolveDicePanelLayout(this.resolution.get());
         if (!containsPoint(layout.panel, event.screenPos)) return false;
 
         this.frameQueue.push({
@@ -63,12 +63,12 @@ export class DicePanel {
 
     // ─── State ────────────────────────────────────────────────────────
 
-    getState(buildPanelBounds: Rect): DicePanelState {
+    getState(): DicePanelState {
         return {
             die1:    this.die1,
             die2:    this.die2,
             canRoll: this.shared.canRollDice && this.shared.isLocalPlayersTurn,
-            layout:  resolveDicePanelLayout(this.resolution.get(), buildPanelBounds),
+            layout:  resolveDicePanelLayout(this.resolution.get()),
         };
     }
 }

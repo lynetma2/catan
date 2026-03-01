@@ -1,6 +1,7 @@
 // hud/panels/dice/DicePanelLayout.ts
 import { type Resolution } from '@/game/core/ResolutionManager';
 import { type Rect }       from '@/game/utils/Rect';
+import { BUTTON_SIZE, BUTTON_PADDING, EDGE_MARGIN } from '@/game/hud/HudLayout';
 
 // ─── Config ───────────────────────────────────────────────────────────
 
@@ -20,11 +21,29 @@ export interface DicePanelLayout {
 
 export function resolveDicePanelLayout(
     r:                Resolution,
-    buildPanelBounds:  Rect,
 ): DicePanelLayout {
+    // Calculate the top of the build panel based on constants
+    // The build panel is anchored to the bottom with EDGE_MARGIN offset.
+    // Its height is BUTTON_SIZE + 2 * BUTTON_PADDING (derived from derivePanelBounds logic)
+    // y = r.cssHeight - (BUTTON_SIZE + BUTTON_PADDING * 2) - EDGE_MARGIN
+    
+    // However, derivePanelBounds adds padding around the buttons.
+    // The buttons are at y = r.cssHeight - BUTTON_SIZE - EDGE_MARGIN (roughly)
+    // Let's calculate the build panel's top Y coordinate explicitly using the constants.
+    
+    const buildPanelHeight = BUTTON_SIZE + BUTTON_PADDING * 2;
+    const buildPanelTopY = r.cssHeight - buildPanelHeight - EDGE_MARGIN + BUTTON_PADDING; 
+    // Note: The logic in HudLayout for buttons is:
+    // y = r.cssHeight - height + offset
+    // y = r.cssHeight - BUTTON_SIZE - EDGE_MARGIN
+    // The panel bounds start at minY - BUTTON_PADDING
+    // So panelTop = (r.cssHeight - BUTTON_SIZE - EDGE_MARGIN) - BUTTON_PADDING
+    
+    const effectiveBuildPanelTop = r.cssHeight - BUTTON_SIZE - EDGE_MARGIN - BUTTON_PADDING;
+
     const panel: Rect = {
-        x:      r.cssWidth / 2 - PANEL_WIDTH / 2,
-        y:      buildPanelBounds.y - PANEL_HEIGHT - 8,
+        x:      r.cssWidth - PANEL_WIDTH - EDGE_MARGIN, // Align with right edge margin
+        y:      effectiveBuildPanelTop - PANEL_HEIGHT - 8, // 8px gap above build panel
         width:  PANEL_WIDTH,
         height: PANEL_HEIGHT,
     };
