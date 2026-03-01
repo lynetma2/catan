@@ -119,7 +119,12 @@ export class Game {
 
             const ctx = this.canvas.getContext("2d")!;
             const r = this.resolution.get();
-            ctx.clearRect(0, 0, r.cssWidth, r.cssHeight);
+
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, r.pixelWidth, r.pixelHeight);
+
+            // Reapply dpr scale as base transform
+            ctx.setTransform(r.dpr, 0, 0, r.dpr, 0, 0);
 
             this.worldRenderer.render(this.world.getState());
             this.hudRenderer.render(this.hud.getState());

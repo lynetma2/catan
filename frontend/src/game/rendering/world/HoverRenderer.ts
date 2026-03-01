@@ -45,7 +45,7 @@ export class HoverRenderer {
     // Dim version — all valid spots
     private drawVertexValid(v: Vertex) {
         const { ctx, theme } = this;
-        const pos            = this.vertexToScreen(v);
+        const pos            = this.vertexToWorld(v);
 
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, theme.vertex.radius * 0.7, 0, Math.PI * 2);
@@ -56,8 +56,8 @@ export class HoverRenderer {
     private drawEdgeValid(e: Edge) {
         const { ctx, theme } = this;
         const [v1, v2]       = edge.vertices(e);
-        const p1             = this.vertexToScreen(v1);
-        const p2             = this.vertexToScreen(v2);
+        const p1             = this.vertexToWorld(v1);
+        const p2             = this.vertexToWorld(v2);
 
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
@@ -72,7 +72,7 @@ export class HoverRenderer {
 
     private drawVertexHover(v: Vertex) {
         const { ctx, theme } = this;
-        const pos            = this.vertexToScreen(v);
+        const pos            = this.vertexToWorld(v);
 
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, theme.vertex.radius, 0, Math.PI * 2);
@@ -89,8 +89,8 @@ export class HoverRenderer {
         const { ctx, theme } = this;
         const [v1, v2]       = edge.vertices(e);
 
-        const p1 = this.vertexToScreen(v1);
-        const p2 = this.vertexToScreen(v2);
+        const p1 = this.vertexToWorld(v1);
+        const p2 = this.vertexToWorld(v2);
 
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
@@ -105,7 +105,7 @@ export class HoverRenderer {
 
     private drawHexHover(hex: Hex) {
         const { ctx, theme } = this;
-        const corners        = this.camera.hexCornersScreen(hex);
+        const corners        = this.camera.hexCornersWorld(hex);
 
         ctx.beginPath();
         ctx.moveTo(corners[0].x, corners[0].y);
@@ -119,8 +119,8 @@ export class HoverRenderer {
 
     // ─── Helpers ──────────────────────────────────────────────────────
 
-    private vertexToScreen(v: Vertex): Vec2 {
-        const positions = v.hexes.map(h => this.camera.hexToScreen(h));
+    private vertexToWorld(v: Vertex): Vec2 {
+        const positions = v.hexes.map(h => this.camera.hexToWorld(h));
         return {
             x: positions.reduce((sum, p) => sum + p.x, 0) / 3,
             y: positions.reduce((sum, p) => sum + p.y, 0) / 3,

@@ -12,7 +12,7 @@ export class TileRenderer {
     ) {}
 
     render(tile: Tile) {
-        const corners = this.camera.hexCornersScreen(tile.hex);
+        const corners = this.camera.hexCornersWorld(tile.hex);
 
         this.drawFill(tile, corners);
         this.drawStroke(corners);
@@ -55,7 +55,7 @@ export class TileRenderer {
         if (hasRobber) return;   // robber covers token
 
         const { ctx, theme } = this;
-        const center         = this.camera.hexToScreen(hex);
+        const center         = this.camera.hexToWorld(hex);
         const isRed          = number === 6 || number === 8;
         const dotCount       = this.dotCount(number);
 

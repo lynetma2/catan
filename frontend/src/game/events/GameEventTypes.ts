@@ -2,7 +2,7 @@
 
 import {
     type BuildTarget, GamePhase, type GameSnapshot,
-    type PieceType, type PlacementSnapshot, type PlayerSnapshot, type Resource
+    type PieceType, type PlayerSnapshot, type Resource
 } from "@/game/core/types.ts";
 import type {Hex} from "@/game/utils/HexGeometry/Hex.ts"; // Adjust path as needed
 
@@ -34,6 +34,7 @@ export enum GameEventType {
     BUILD_SENT_TO_SERVER      = 'BUILD_SENT_TO_SERVER',
     DRAW_DEVELOPMENT_CARD_REQUESTED = 'DRAW_DEVELOPMENT_CARD_REQUESTED',
     DICE_ROLLED               = 'DICE_ROLLED',
+    DICE_ROLL_REQUESTED       = 'DICE_ROLL_REQUESTED',
     END_TURN_REQUESTED        = 'END_TURN_REQUESTED',
     GAME_STATE_LOADED         = 'GAME_STATE_LOADED',
     LARGEST_ARMY_CHANGED      = 'LARGEST_ARMY_CHANGED',

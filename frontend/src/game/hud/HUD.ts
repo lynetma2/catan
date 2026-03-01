@@ -11,6 +11,7 @@ import {containsPoint} from "@/game/utils/Rect.ts";
 import {ResourcePanel} from "@/game/hud/panels/resource/ResourcePanel.ts";
 import {PlayerOverviewPanel} from "@/game/hud/panels/overview/OverviewPanel.ts";
 import {GameEventType} from "@/game/events/GameEventTypes.ts";
+import {DicePanel} from "@/game/hud/panels/dice/DicePanel.ts";
 
 export class HUD implements InputLayer {
     readonly priority = 10;
@@ -20,6 +21,7 @@ export class HUD implements InputLayer {
     private readonly buildPanel:    BuildPanel;
     private readonly resourcePanel: ResourcePanel;
     private readonly overviewPanel: PlayerOverviewPanel;
+    private readonly dicePanel: DicePanel;
 
     constructor(
         private readonly bus:        EventBus,
@@ -30,6 +32,7 @@ export class HUD implements InputLayer {
         this.buildPanel    = new BuildPanel(frameQueue, shared, resolution, bus);
         this.resourcePanel = new ResourcePanel(shared, resolution);
         this.overviewPanel = new PlayerOverviewPanel(bus, shared, resolution);
+        this.dicePanel = new DicePanel(bus, frameQueue, shared, resolution);
 
         this.subscribeToEvents();
     }
@@ -91,12 +94,15 @@ export class HUD implements InputLayer {
     // ─── State ────────────────────────────────────────────────────────
 
     getState(): HudState {
+        const buildPanel = this.buildPanel.getState();
+
         return {
             toast:     this.toast,
             panels: {
-                build:    this.buildPanel.getState(),
+                build:    buildPanel,
                 resource: this.resourcePanel.getState(),
                 overview: this.overviewPanel.getState(),
+                dice: this.dicePanel.getState(buildPanel.bounds),
             }
         };
     }

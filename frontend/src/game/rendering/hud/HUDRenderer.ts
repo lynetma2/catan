@@ -8,11 +8,13 @@ import {type Resolution, ResolutionManager} from "@/game/core/ResolutionManager.
 import {DEFAULT_HUD_THEME, type HudTheme} from "@/game/rendering/theme/theme.ts";
 import type {HudState} from "@/game/hud/types.ts";
 import {PlayerOverviewRenderer} from "@/game/rendering/hud/overview/PlayerOverviewRenderer.ts";
+import {DicePanelRenderer} from "@/game/rendering/hud/dice/DicePanelRenderer.ts";
 
 export class HudRenderer {
     private readonly buildPanelRenderer:    BuildPanelRenderer;
     private readonly resourcePanelRenderer: ResourcePanelRenderer;
     private readonly overviewPanelRenderer: PlayerOverviewRenderer;
+    private readonly dicePanelRenderer: DicePanelRenderer;
     private readonly toastRenderer:         ToastRenderer;
     private resolution: Resolution;
 
@@ -25,6 +27,7 @@ export class HudRenderer {
         this.buildPanelRenderer     = new BuildPanelRenderer(ctx);
         this.resourcePanelRenderer  = new ResourcePanelRenderer(ctx);
         this.overviewPanelRenderer  = new PlayerOverviewRenderer(ctx);
+        this.dicePanelRenderer      = new DicePanelRenderer(ctx);
         this.toastRenderer          = new ToastRenderer(ctx, theme.toast);
 
         resolutionManager.onChange(r => { this.resolution = r; });
@@ -34,6 +37,7 @@ export class HudRenderer {
         this.buildPanelRenderer.render(state.panels.build);
         this.resourcePanelRenderer.render(state.panels.resource);
         this.overviewPanelRenderer.render(state.panels.overview);
+        this.dicePanelRenderer.render(state.panels.dice);
         if (state.toast) this.toastRenderer.render(state.toast, this.resolution);
     }
 }

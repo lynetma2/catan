@@ -55,7 +55,7 @@ export class Camera {
     }
 
     public hexToWorld(h: Hex): Vec2 {
-        return this.toScreen(layout.hexToPixel(this.layout, h));
+        return layout.hexToPixel(this.layout, h);
     }
 
     public hexCornersScreen(h: Hex): Vec2[] {
@@ -63,11 +63,18 @@ export class Camera {
             .map(p => this.toScreen(p));
     }
 
+    public hexCornersWorld(h: Hex): Vec2[] {
+        return layout.polygonCorners(this.layout, h);
+    }
+
     // ─── Canvas transform ─────────────────────────────────────────────
 
-    public applyTransform(ctx: CanvasRenderingContext2D): void {
-        ctx.translate(this.pan.x, this.pan.y);
-        ctx.scale(this.zoom, this.zoom);
+    public applyTransform(ctx: CanvasRenderingContext2D, dpr: number): void {
+        ctx.setTransform(
+            this.zoom * dpr, 0,
+            0,               this.zoom * dpr,
+            this.pan.x * dpr, this.pan.y * dpr
+        );
     }
 
     // ─── Mutation ─────────────────────────────────────────────────────

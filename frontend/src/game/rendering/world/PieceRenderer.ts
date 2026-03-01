@@ -33,8 +33,8 @@ export class PieceRenderer {
         const { ctx, theme, camera } = this;
         const [v1, v2] = edge.vertices(e);
 
-        const p1 = this.vertexToScreen(v1);
-        const p2 = this.vertexToScreen(v2);
+        const p1 = this.vertexToWorld(v1);
+        const p2 = this.vertexToWorld(v2);
 
         const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
 
@@ -65,7 +65,7 @@ export class PieceRenderer {
 
     private drawSettlement(v: Vertex, piece: PlacedPiece) {
         const { ctx, theme } = this;
-        const pos            = this.vertexToScreen(v);
+        const pos            = this.vertexToWorld(v);
         const { width, height } = theme.settlement;
 
         const x = pos.x - width  / 2;
@@ -94,7 +94,7 @@ export class PieceRenderer {
 
     private drawCity(v: Vertex, piece: PlacedPiece) {
         const { ctx, theme } = this;
-        const pos            = this.vertexToScreen(v);
+        const pos            = this.vertexToWorld(v);
         const { width, height } = theme.city;
 
         const x = pos.x - width  / 2;
@@ -126,9 +126,9 @@ export class PieceRenderer {
 
     // ─── Helpers ──────────────────────────────────────────────────────
 
-    private vertexToScreen(v: Vertex): Vec2 {
+    private vertexToWorld(v: Vertex): Vec2 {
         // Average the screen positions of the vertex's 3 hex centers
-        const screenPositions = v.hexes.map(h => this.camera.hexToScreen(h));
+        const screenPositions = v.hexes.map(h => this.camera.hexToWorld(h));
         return {
             x: screenPositions.reduce((sum, p) => sum + p.x, 0) / 3,
             y: screenPositions.reduce((sum, p) => sum + p.y, 0) / 3,

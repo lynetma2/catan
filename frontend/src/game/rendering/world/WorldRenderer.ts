@@ -28,7 +28,8 @@ export class WorldRenderer {
 
     render(state: WorldState) {
         this.ctx.save();
-        this.camera.applyTransform(this.ctx);
+        const dpr = window.devicePixelRatio ?? 1;
+        this.camera.applyTransform(this.ctx, dpr);
 
         // Layer 1 — sea tiles
         state.tiles.tiles
