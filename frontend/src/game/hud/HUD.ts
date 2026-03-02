@@ -12,6 +12,7 @@ import {ResourcePanel} from "@/game/hud/panels/resource/ResourcePanel.ts";
 import {PlayerOverviewPanel} from "@/game/hud/panels/overview/OverviewPanel.ts";
 import {GameEventType} from "@/game/events/GameEventTypes.ts";
 import {DicePanel} from "@/game/hud/panels/dice/DicePanel.ts";
+import type {Vec2} from "@/game/utils/Vec2.ts";
 
 export class HUD implements InputLayer {
     readonly priority = 10;
@@ -69,12 +70,28 @@ export class HUD implements InputLayer {
     // ─── Input ────────────────────────────────────────────────────────
 
     handleInput(event: NormalizedInputEvent): boolean {
-        // Keyboard events have no position — forward directly
-        if (event.type === 'keydown' || event.type === 'keyup' || event.type === InputType.MouseLeave) {
-            return this.buildPanel.handleInput(event);
+        // Non-positional — forward to all, never consume
+        if (event.type === InputType.KeyDown   ||
+            event.type === InputType.KeyUp     ||
+            event.type === InputType.MouseLeave) {
+            this.buildPanel.handleInput(event);
+            this.resourcePanel.handleInput(event);
+            this.dicePanel.handleInput(event);
+            return false;
         }
 
-        // Positional events — only forward if inside a panel's bounds
+        // MouseMove — forward to all panels for hover tracking
+        // but only consume if mouse is actually over a panel
+        if (event.type === InputType.MouseMove) {
+            this.buildPanel.handleInput(event);
+            this.resourcePanel.handleInput(event);
+            this.dicePanel.handleInput(event);
+
+            // Consume if over any panel — prevents world hover underneath
+            return this.isOverAnyPanel(event.screenPos);
+        }
+
+        // Click events — only forward if inside panel bounds
         if (containsPoint(this.buildPanel.getState().bounds, event.screenPos)) {
             if (this.buildPanel.handleInput(event)) return true;
         }
@@ -86,6 +103,12 @@ export class HUD implements InputLayer {
         }
 
         return false;
+    }
+
+    private isOverAnyPanel(screenPos: Vec2): boolean {
+        return containsPoint(this.buildPanel.getState().bounds,    screenPos)
+            || containsPoint(this.resourcePanel.getState().bounds, screenPos)
+            || containsPoint(this.dicePanel.getState().layout.panel, screenPos);
     }
 
     // ─── Update ───────────────────────────────────────────────────────

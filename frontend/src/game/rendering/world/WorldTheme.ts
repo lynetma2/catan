@@ -33,6 +33,13 @@ export interface TileTheme {
         strokeColor: string;
         radius:      number;
     };
+
+    // Port
+    port?: {
+        dockColor: string;
+        dockStrokeColor: string;
+        dockWidth: number;
+    }
 }
 
 export interface PieceTheme {
@@ -108,6 +115,12 @@ export const DEFAULT_WORLD_THEME: WorldTheme = {
             fillColor:   '#111111',
             strokeColor: '#444444',
             radius:      12,
+        },
+
+        port: {
+            dockColor:       '#8B6914',
+            dockStrokeColor: '#5C4510',
+            dockWidth:       6,
         },
     },
 

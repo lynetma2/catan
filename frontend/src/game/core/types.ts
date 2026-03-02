@@ -92,6 +92,7 @@ export interface SeaTile extends BaseTile {
     type:     TileType.Sea;
     isPort:   boolean;
     portType: PortResource | null; // Prevents accidental 'desert' or 'sea' ports!
+    portFacing: number | null;
 }
 
 export type Tile = LandTile | DesertTile | SeaTile;
@@ -108,6 +109,7 @@ export interface TileSnapshot {
     hasRobber: boolean;
     isPort:    boolean;
     portType:  PortResource | null;
+    portFacing: number | null;
 }
 
 export interface PlacementSnapshot {

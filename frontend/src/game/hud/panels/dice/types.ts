@@ -10,4 +10,5 @@ export interface DicePanelState {
     die2:       DieState;
     canRoll:    boolean;
     layout:     DicePanelLayout;
+    isHovered:  boolean;
 }

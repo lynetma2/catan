@@ -21,8 +21,12 @@ export class DicePanelRenderer {
     render(state: DicePanelState) {
         drawPanelChrome(this.ctx, state.layout.panel, 'Dice', DEFAULT_HUD_THEME.panel);
 
-        this.drawDie(state.die1, state.layout.die1, state.canRoll);
-        this.drawDie(state.die2, state.layout.die2, state.canRoll);
+        if (state.isHovered) {
+            this.drawHoverOverlay(state.layout.panel);
+        }
+
+        this.drawDie(state.die1, state.layout.die1, state.canRoll, 5);
+        this.drawDie(state.die2, state.layout.die2, state.canRoll, 2);
 
         if (state.canRoll && state.die1.value === null) {
             this.drawRollHint(state.layout.panel);
@@ -31,13 +35,16 @@ export class DicePanelRenderer {
 
     // ─── Die ──────────────────────────────────────────────────────────
 
-    private drawDie(die: DieState, bounds: Rect, canRoll: boolean) {
+    private drawDie(die: DieState, bounds: Rect, canRoll: boolean, placeholder: number) {
         const isUnrolled = die.value === null;
 
         this.drawDieBackground(bounds, isUnrolled, canRoll);
 
         if (isUnrolled) {
-            this.drawQuestionMark(bounds, canRoll);
+            const color = canRoll
+                ? 'rgba(255, 255, 255, 0.5)'
+                : 'rgba(255, 255, 255, 0.15)';
+            this.drawDots(placeholder, bounds, color);
         } else {
             this.drawDots(die.value!, bounds);
         }
@@ -64,32 +71,14 @@ export class DicePanelRenderer {
         ctx.stroke();
     }
 
-    // ─── Question mark ────────────────────────────────────────────────
-
-    private drawQuestionMark(bounds: Rect, canRoll: boolean) {
-        const { ctx } = this;
-
-        ctx.font         = 'bold 22px sans-serif';
-        ctx.fillStyle    = canRoll
-            ? 'rgba(255, 255, 255, 0.6)'
-            : 'rgba(255, 255, 255, 0.2)';
-        ctx.textAlign    = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(
-            '?',
-            bounds.x + bounds.width  / 2,
-            bounds.y + bounds.height / 2,
-        );
-    }
-
     // ─── Dots ─────────────────────────────────────────────────────────
 
-    private drawDots(value: number, bounds: Rect) {
+    private drawDots(value: number, bounds: Rect, color: string = '#2a1a0a') {
         const { ctx }   = this;
         const positions = DOT_POSITIONS[value] ?? [];
         const dotRadius = bounds.width * 0.08;
 
-        ctx.fillStyle = '#2a1a0a';
+        ctx.fillStyle = color;
 
         positions.forEach(([fx, fy]) => {
             ctx.beginPath();
@@ -117,5 +106,20 @@ export class DicePanelRenderer {
             panelBounds.x + panelBounds.width  / 2,
             panelBounds.y + panelBounds.height + 4,
         );
+    }
+
+    // ─── Hover Overlay ────────────────────────────────────────────────
+
+    private drawHoverOverlay(bounds: Rect) {
+        const { ctx } = this;
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(bounds.x, bounds.y, bounds.width, bounds.height, 12);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
     }
 }

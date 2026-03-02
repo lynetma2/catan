@@ -11,6 +11,7 @@ import {resolveDicePanelLayout} from "@/game/hud/panels/dice/DicePanelLayout.ts"
 export class DicePanel {
     private die1: DieState = { value: null };
     private die2: DieState = { value: null };
+    private isHovered: boolean = false;
 
     constructor(
         private readonly bus:        EventBus,
@@ -45,9 +46,20 @@ export class DicePanel {
     // ─── Input ────────────────────────────────────────────────────────
 
     handleInput(event: NormalizedInputEvent): boolean {
-        if (event.type !== InputType.MouseClick)     return false;
-        if (!this.shared.canRollDice)                return false;
-        if (!this.shared.isLocalPlayersTurn)         return false;
+        if (event.type === InputType.MouseMove) {
+            const layout     = resolveDicePanelLayout(this.resolution.get());
+            this.isHovered   = containsPoint(layout.panel, event.screenPos);
+            return this.isHovered;
+        }
+
+        if (event.type === InputType.MouseLeave) {
+            this.isHovered = false;
+            return false;
+        }
+
+        if (event.type !== InputType.MouseClick)  return false;
+        if (!this.shared.canRollDice)             return false;
+        if (!this.shared.isLocalPlayersTurn)      return false;
 
         const layout = resolveDicePanelLayout(this.resolution.get());
         if (!containsPoint(layout.panel, event.screenPos)) return false;
@@ -67,6 +79,7 @@ export class DicePanel {
         return {
             die1:    this.die1,
             die2:    this.die2,
+            isHovered: this.isHovered,
             canRoll: this.shared.canRollDice && this.shared.isLocalPlayersTurn,
             layout:  resolveDicePanelLayout(this.resolution.get()),
         };

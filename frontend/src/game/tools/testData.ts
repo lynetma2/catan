@@ -161,34 +161,35 @@ function createTiles(): TileSnapshot[] {
             hasRobber: type === 'desert',
             isPort:   false,
             portType: null,
+            portFacing: null,
         });
     });
 
     // ── Sea tiles with ports ──────────────────────────────────────────
 
-    const seaLayout: { q: number; r: number; isPort: boolean; portType: TileSnapshot['portType'] }[] = [
-        { q:  3, r: -3, isPort: false, portType: null       },
-        { q:  3, r: -2, isPort: true,  portType: 'any'      },
-        { q:  3, r: -1, isPort: false, portType: null       },
-        { q:  3, r:  0, isPort: true,  portType: ResourceType.Grain   },   // grain port
-        { q:  2, r:  1, isPort: false, portType: null       },
-        { q:  1, r:  2, isPort: true,  portType: 'any'      },
-        { q:  0, r:  3, isPort: false, portType: null       },
-        { q: -1, r:  3, isPort: true,  portType: ResourceType.Brick    },   // brick port
-        { q: -2, r:  3, isPort: false, portType: null       },
-        { q: -3, r:  3, isPort: true,  portType: 'any'      },
-        { q: -3, r:  2, isPort: false, portType: null       },
-        { q: -3, r:  1, isPort: true,  portType: ResourceType.Wool  },   // wool port
-        { q: -3, r:  0, isPort: false, portType: null       },
-        { q: -3, r: -1, isPort: true,  portType: 'any'      }, // intentionally off to keep it slightly asymmetric like the original
-        { q: -2, r: -2, isPort: false, portType: null       },  // not a port
-        { q: -1, r: -3, isPort: true,  portType: ResourceType.Lumber   },   // wood port
-        { q:  0, r: -3, isPort: false, portType: null       },
-        { q:  1, r: -3, isPort: true,  portType: ResourceType.Ore},   // ore port
-        { q:  2, r: -3, isPort: false, portType: null       },
+    const seaLayout = [
+        { q:  3, r: -3, isPort: false, portType: null,                portFacing: null },
+        { q:  3, r: -2, isPort: true,  portType: 'any',               portFacing: 3    }, // → left
+        { q:  3, r: -1, isPort: false, portType: null,                portFacing: null },
+        { q:  3, r:  0, isPort: true,  portType: ResourceType.Grain,  portFacing: 4    }, // → lower-left
+        { q:  2, r:  1, isPort: false, portType: null,                portFacing: null },
+        { q:  1, r:  2, isPort: true,  portType: 'any',               portFacing: 3    }, // → left
+        { q:  0, r:  3, isPort: false, portType: null,                portFacing: null },
+        { q: -1, r:  3, isPort: true,  portType: ResourceType.Brick,  portFacing: 2    }, // → upper-left
+        { q: -2, r:  3, isPort: false, portType: null,                portFacing: null },
+        { q: -3, r:  3, isPort: true,  portType: 'any',               portFacing: 1    }, // → upper-right
+        { q: -3, r:  2, isPort: false, portType: null,                portFacing: null },
+        { q: -3, r:  1, isPort: true,  portType: ResourceType.Wool,   portFacing: 0    }, // → right
+        { q: -3, r:  0, isPort: false, portType: null,                portFacing: null },
+        { q: -3, r: -1, isPort: true,  portType: 'any',               portFacing: 0    }, // → right
+        { q: -2, r: -2, isPort: false, portType: null,                portFacing: null },
+        { q: -1, r: -3, isPort: true,  portType: ResourceType.Lumber, portFacing: 5    }, // → lower-right
+        { q:  0, r: -3, isPort: false, portType: null,                portFacing: null },
+        { q:  1, r: -3, isPort: true,  portType: ResourceType.Ore,    portFacing: 4    }, // → lower-left
+        { q:  2, r: -3, isPort: false, portType: null,                portFacing: null },
     ];
 
-    seaLayout.forEach(({ q, r, isPort, portType }) => {
+    seaLayout.forEach(({ q, r, isPort, portType, portFacing }) => {
         const s = -q - r;
         tiles.push({
             hex:       { q, r, s },
@@ -198,6 +199,7 @@ function createTiles(): TileSnapshot[] {
             hasRobber: false,
             isPort,
             portType,
+            portFacing,
         });
     });
 

@@ -139,6 +139,7 @@ export function tileFromSnapshot(snapshot: TileSnapshot): Tile {
                 type:     TileType.Sea,
                 isPort:   snapshot.isPort,
                 portType: snapshot.portType,
+                portFacing: snapshot.portFacing,
             };
     }
 }
