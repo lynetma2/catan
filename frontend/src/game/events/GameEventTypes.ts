@@ -68,7 +68,9 @@ export interface EventPayloads {
     [GameEventType.BUILD_PLACEMENT_REQUESTED]:  { pieceType: PieceType; target: BuildTarget };
     [GameEventType.BUILD_PLACED]:               { pieceType: PieceType; target: BuildTarget; playerId: string };
     [GameEventType.BUILD_REJECTED]:             { pieceType: PieceType; reason: BuildRejectionReason };
+    [GameEventType.BUILD_SENT_TO_SERVER]:       { pieceType: PieceType; target: BuildTarget; playerId: string };
     [GameEventType.DICE_ROLLED]:                { values: [number, number]; total: number };
+    [GameEventType.DICE_ROLL_REQUESTED]:        Record<string, never>;
     [GameEventType.DRAW_DEVELOPMENT_CARD_REQUESTED]: { playerId: string };
     [GameEventType.END_TURN_REQUESTED]:         Record<string, never>;
     [GameEventType.GAME_STATE_LOADED]:          GameSnapshot;

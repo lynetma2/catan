@@ -8,6 +8,7 @@ import { type FrameQueue }    from '@/game/core/FrameQueue';
 import { GameEventType,
     GameEventSource }    from '@/game/events/GameEventTypes';
 import { TEST_SCENARIOS }     from './testData';
+import {DEBUG_EVENT_TEMPLATES} from "@/game/tools/DebugEvents.ts";
 
 export class DebugTools {
     constructor(
@@ -34,6 +35,8 @@ export class DebugTools {
         w.debugCamera     = () => this.debugCamera();
         w.debugHud        = () => this.debugHud();
         w.loadScenario    = (name: string) => this.loadScenario(name);
+        w.emitEvent       = (name: string, overrides?: Record<string, unknown>) => this.emitEvent(name, overrides);
+        w.listEvents      = () => this.listEvents();
     }
 
     private printHelp() {
@@ -44,9 +47,46 @@ export class DebugTools {
         console.info(
             '%c  debugState()   debugShared()   debugBoard()\n' +
             '  debugPlayers() debugCamera()   debugHud()\n' +
-            '  loadScenario(name) — scenarios: ' + Object.keys(TEST_SCENARIOS).join(', '),
+            '  loadScenario(name)\n' +
+            '  emitEvent(name, overrides?) — listEvents() to see all',
             'color: #aaaaaa'
         );
+    }
+
+    private emitEvent(name: string, overrides?: Record<string, unknown>) {
+        const template = (DEBUG_EVENT_TEMPLATES as any)[name];
+        if (!template) {
+            console.warn(
+                `[DEV] Unknown event "${name}". Run listEvents() to see available events.`
+            );
+            return;
+        }
+
+        const payload = { ...template.payload(), ...overrides };
+
+        console.info(
+            `%c[DEV] Emitting: ${name}`,
+            'color: #50c050; font-weight: bold',
+            payload
+        );
+
+        this.frameQueue.push({
+            type:    template.type,
+            payload: payload as any,
+            source:  GameEventSource.Network,  // pretend it came from server
+        });
+    }
+
+    private listEvents() {
+        console.group('%c[DEV] Available debug events', 'color: #50a0e0; font-weight: bold');
+        Object.entries(DEBUG_EVENT_TEMPLATES).forEach(([name, template]) => {
+            console.log(
+                `%c${name.padEnd(20)}%c${template.description}`,
+                'color: #e0c050; font-weight: bold',
+                'color: #aaaaaa'
+            );
+        });
+        console.groupEnd();
     }
 
     // ─── Commands ─────────────────────────────────────────────────────
