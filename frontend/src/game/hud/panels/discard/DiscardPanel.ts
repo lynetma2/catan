@@ -1,4 +1,12 @@
 // hud/panels/DiscardPanel.ts
+import {type EventPayloads, GameEventType} from "@/game/events/GameEventTypes.ts";
+import type {ResolutionManager} from "@/game/core/ResolutionManager.ts";
+import type {SharedState} from "@/game/core/SharedState.ts";
+import type {FrameQueue} from "@/game/core/FrameQueue.ts";
+import type {EventBus} from "@/game/core/EventBus.ts";
+import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
+import {containsPoint} from "@/game/utils/Rect.ts";
+
 export class DiscardPanel {
     private selectedUids: Set<string> = new Set();
 
@@ -15,11 +23,11 @@ export class DiscardPanel {
 
     private subscribeToEvents() {
         // Clear selection when discard obligation arrives or clears
-        this.bus.on(GameEventType.DiscardRequired, _e => this.selectedUids.clear());
-        this.bus.on(GameEventType.CardsDiscarded,   e  => this.onCardsDiscarded(e.payload));
+        this.bus.on(GameEventType.DISCARD_REQUIRED, _e => this.selectedUids.clear());
+        this.bus.on(GameEventType.CARDS_DISCARDED,   e  => this.onCardsDiscarded(e.payload));
     }
 
-    private onCardsDiscarded(payload: EventPayloads[GameEventType.CardsDiscarded]) {
+    private onCardsDiscarded(payload: EventPayloads[GameEventType.CARDS_DISCARDED]) {
         if (payload.playerId === this.shared.localPlayerId) {
             this.selectedUids.clear();
         }

@@ -1,10 +1,13 @@
-// rendering/hud/ResourcePanelRenderer.ts
-import { type ResourcePanelState }  from '@/game/hud/panels/resource/types.ts';
-import { type PanelTheme }          from '@/game/rendering/theme/theme.ts';
-import { drawPanelChrome }          from '../panelChrome.ts';
-import { ResourceCardRenderer }     from './ResourceCardRenderer.ts';
+// rendering/hud/resource/ResourcePanelRenderer.ts
+import {ResourcePanelModeKind, type ResourcePanelState} from '@/game/hud/panels/resource/types';
+import {type Rect} from '@/game/utils/Rect';
+import {type PanelTheme} from '@/game/rendering/theme/theme';
+import {drawPanelChrome} from '../panelChrome';
+import {ResourceCardRenderer} from './ResourceCardRenderer';
+import {BrowseModeRenderer} from './modes/BrowseModeRenderer';
+import {DiscardModeRenderer} from './modes/DiscardModeRenderer';
+import {TradeModeRenderer} from './modes/TradeModeRenderer';
 
-// Distinct color from the build panel — warm dark amber instead of cool dark navy
 const RESOURCE_PANEL_THEME: PanelTheme = {
     background:   'rgba(28, 18, 10, 0.85)',
     borderColor:  'rgba(255, 200, 100, 0.12)',
@@ -16,33 +19,50 @@ const RESOURCE_PANEL_THEME: PanelTheme = {
 };
 
 export class ResourcePanelRenderer {
-    private readonly cardRenderer: ResourceCardRenderer;
+    private readonly cardRenderer:    ResourceCardRenderer;
+    private readonly browseModeRenderer:  BrowseModeRenderer;
+    private readonly discardModeRenderer: DiscardModeRenderer;
+    private readonly tradeModeRenderer:   TradeModeRenderer;
 
     constructor(private readonly ctx: CanvasRenderingContext2D) {
-        this.cardRenderer = new ResourceCardRenderer(ctx);
+        this.cardRenderer         = new ResourceCardRenderer(ctx);
+        this.browseModeRenderer   = new BrowseModeRenderer(ctx);
+        this.discardModeRenderer  = new DiscardModeRenderer(ctx);
+        this.tradeModeRenderer    = new TradeModeRenderer(ctx);
     }
 
     render(state: ResourcePanelState) {
-        // Panel background — always drawn even with empty hand
-        drawPanelChrome(
-            this.ctx,
-            state.bounds,
-            'Hand',
-            RESOURCE_PANEL_THEME
-        );
+        drawPanelChrome(this.ctx, state.bounds, 'Hand', RESOURCE_PANEL_THEME);
 
-        // Cards on top of background
         if (state.resourceCards.length > 0) {
             this.cardRenderer.render(state);
         } else {
-            this.drawEmptyState();
+            this.drawEmptyState(state.bounds);
+        }
+
+        this.renderMode(state);
+    }
+
+    // ─── Mode rendering ───────────────────────────────────────────────
+
+    private renderMode(state: ResourcePanelState) {
+        switch (state.mode.kind) {
+            case ResourcePanelModeKind.Browse:
+                this.browseModeRenderer.render(state.mode, state.bounds);
+                break;
+            case ResourcePanelModeKind.Discard:
+                this.discardModeRenderer.render(state.mode, state.bounds);
+                break;
+            case ResourcePanelModeKind.Trade:
+                this.tradeModeRenderer.render(state.mode, state.bounds);
+                break;
         }
     }
 
-    private drawEmptyState() {
-        const { ctx } = this;
+    // ─── Empty state ──────────────────────────────────────────────────
 
-        // Subtle hint when hand is empty
+    private drawEmptyState(bounds: Rect) {
+        const { ctx } = this;
         ctx.save();
         ctx.font         = '11px monospace';
         ctx.fillStyle    = 'rgba(255, 200, 100, 0.25)';
@@ -50,8 +70,8 @@ export class ResourcePanelRenderer {
         ctx.textBaseline = 'middle';
         ctx.fillText(
             'No resources',
-            this.ctx.canvas.width  / 2,
-            this.ctx.canvas.height / 2
+            bounds.x + bounds.width  / 2,
+            bounds.y + bounds.height / 2,
         );
         ctx.restore();
     }
