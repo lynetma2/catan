@@ -1,7 +1,7 @@
 // rendering/hud/ResourceCardRenderer.ts
 import { type ResourceCard }        from '@/game/hud/panels/resource/types.ts';
 import { type ResourcePanelState }  from '@/game/hud/panels/resource/types.ts';
-import {RESOURCE_STYLES, type ResourceStyle} from "@/game/rendering/theme/ResourceTheme.ts";
+import { RESOURCE_STYLES, type ResourceStyle } from "@/game/rendering/theme/ResourceTheme.ts";
 
 export class ResourceCardRenderer {
     private static imageCache: Map<string, HTMLImageElement> = new Map();
@@ -11,14 +11,13 @@ export class ResourceCardRenderer {
     // ─── Public ───────────────────────────────────────────────────────
 
     render(state: ResourcePanelState) {
-        // Draw non-hovered cards first so hovered card renders on top
-        state.resourceCards
-            .filter(c => !c.isHovered)
-            .forEach(c => this.drawCard(c));
+        this.renderCards(state.resourceCards);
+    }
 
-        state.resourceCards
-            .filter(c => c.isHovered)
-            .forEach(c => this.drawCard(c));
+    renderCards(cards: ResourceCard[]) {
+        // Draw non-hovered cards first so hovered card renders on top
+        cards.filter(c => !c.isHovered).forEach(c => this.drawCard(c));
+        cards.filter(c =>  c.isHovered).forEach(c => this.drawCard(c));
     }
 
     // ─── Card drawing ─────────────────────────────────────────────────
@@ -38,15 +37,14 @@ export class ResourceCardRenderer {
     }
 
     private drawBackground(card: ResourceCard, style: ResourceStyle) {
-        const { ctx }              = this;
-        const { x, y, width, height } = card.bounds;
+        const { ctx }                  = this;
+        const { x, y, width, height }  = card.bounds;
 
         ctx.beginPath();
         ctx.roundRect(x, y, width, height, 8);
         ctx.fillStyle = style.fillColor;
         ctx.fill();
 
-        // Border — gold if selected, subtle otherwise
         ctx.lineWidth   = card.isSelected ? 2.5 : 1.5;
         ctx.strokeStyle = card.isSelected
             ? '#FFD700'
@@ -72,10 +70,9 @@ export class ResourceCardRenderer {
     private drawLabel(card: ResourceCard) {
         if (!card.isHovered) return;
 
-        const { ctx }              = this;
-        const { x, y, width }     = card.bounds;
+        const { ctx }          = this;
+        const { x, y, width } = card.bounds;
 
-        // Show resource type label above card when hovered
         ctx.font         = 'bold 10px monospace';
         ctx.fillStyle    = 'rgba(255,255,255,0.9)';
         ctx.textAlign    = 'center';
@@ -83,21 +80,21 @@ export class ResourceCardRenderer {
         ctx.fillText(
             card.resourceType.charAt(0).toUpperCase() + card.resourceType.slice(1),
             x + width / 2,
-            y - 4
+            y - 4,
         );
     }
 
     private drawSelectionGlow(card: ResourceCard) {
-        const { ctx }              = this;
+        const { ctx }                 = this;
         const { x, y, width, height } = card.bounds;
 
-        ctx.shadowColor   = '#FFD700';
-        ctx.shadowBlur    = 10;
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur  = 10;
         ctx.beginPath();
         ctx.roundRect(x, y, width, height, 8);
-        ctx.strokeStyle   = 'transparent';
+        ctx.strokeStyle = 'transparent';
         ctx.stroke();
-        ctx.shadowBlur    = 0;
+        ctx.shadowBlur  = 0;
     }
 
     // ─── Image cache ──────────────────────────────────────────────────

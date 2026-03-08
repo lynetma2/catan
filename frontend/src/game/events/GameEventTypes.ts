@@ -59,6 +59,8 @@ export enum GameEventType {
     SETUP_TURN_COMPLETED = 'SETUP_TURN_COMPLETED',
     PHASE_ADVANCED = 'PHASE_ADVANCED',
     GAME_ENDED = 'GAME_ENDED',
+    TRADE_STARTED = 'TRADE_STARTED',
+    TRADE_ENDED = 'TRADE_ENDED',
 }
 
 // 2. Map the payloads using the GameEventType enum
@@ -94,8 +96,10 @@ export interface EventPayloads {
     [GameEventType.ROBBER_PLACED]:              { playerId: string, hex: Hex };
     [GameEventType.ROBBER_STEAL_COMPLETE]:      { playerId: string, resources: Resource[] };
     [GameEventType.SETUP_TURN_COMPLETED]:       { playerId: string };
-    [GameEventType.PHASE_ADVANCED]:            { phase: GamePhase };
-    [GameEventType.GAME_ENDED]:                Record<string, never>;
+    [GameEventType.PHASE_ADVANCED]:             { phase: GamePhase };
+    [GameEventType.GAME_ENDED]:                 Record<string, never>;
+    [GameEventType.TRADE_STARTED]:              { initialSelection: string } //The uid of the card to offer.
+    [GameEventType.TRADE_ENDED]:                Record<string, never>;
 }
 
 export interface GameEvent<T extends GameEventType = GameEventType> {

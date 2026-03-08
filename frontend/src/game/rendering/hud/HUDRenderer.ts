@@ -25,7 +25,7 @@ export class HudRenderer {
     ) {
         this.resolution             = resolutionManager.get();
         this.buildPanelRenderer     = new BuildPanelRenderer(ctx);
-        this.resourcePanelRenderer  = new ResourcePanelRenderer(ctx);
+        this.resourcePanelRenderer  = new ResourcePanelRenderer(ctx, resolutionManager);
         this.overviewPanelRenderer  = new PlayerOverviewRenderer(ctx);
         this.dicePanelRenderer      = new DicePanelRenderer(ctx);
         this.toastRenderer          = new ToastRenderer(ctx, theme.toast);

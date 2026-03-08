@@ -1,6 +1,12 @@
-import type {ResourcePanel} from "../ResourcePanel";
-import {type BrowseModeState, type ResourcePanelMode, ResourcePanelModeKind} from "../types";
-import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent";
+import type { ResourcePanel }              from "../ResourcePanel";
+import { type BrowseModeState,
+    type ResourcePanelMode,
+    type PanelHit,
+    ResourcePanelModeKind }           from "../types";
+import { InputType,
+    type NormalizedInputEvent }       from "@/game/core/Input/InputEvent";
+import { GameEventSource,
+    GameEventType }                   from "@/game/events/GameEventTypes.ts";
 
 export class BrowseMode implements ResourcePanelMode<BrowseModeState> {
     private selectedIds = new Set<string>();
@@ -10,28 +16,32 @@ export class BrowseMode implements ResourcePanelMode<BrowseModeState> {
     onEnter() {}
     onExit() { this.selectedIds.clear(); }
 
-    handleInput(event: NormalizedInputEvent): boolean {
-        if (event.type === InputType.MouseClick) {
-            const cardId = this.panel.cardAtPos(event.screenPos);
-            if (cardId) {
-                this.toggleSelection(cardId);
-                return true;
-            }
+    handleInput(_event: NormalizedInputEvent): boolean {
+        return false;
+    }
+
+    handleHit(hit: PanelHit): boolean {
+        if (hit.kind === 'hand') {
+            this.panel.bus.emit({
+                type:    GameEventType.TRADE_STARTED,
+                payload: { initialSelection: hit.cardId },
+                source:  GameEventSource.Hud,
+            });
+            return true;
         }
         return false;
     }
 
-    getState(): BrowseModeState {
-        return {
-            kind: ResourcePanelModeKind.Browse,
-            canConfirm: false,
-            selectedIds: this.selectedIds,
-            label: null
-        };
+    getHandFilter(): Set<string> {
+        return this.selectedIds; // always empty in browse mode
     }
 
-    private toggleSelection(uid: string) {
-        if (this.selectedIds.has(uid)) this.selectedIds.delete(uid);
-        else this.selectedIds.add(uid);
+    getState(): BrowseModeState {
+        return {
+            kind:        ResourcePanelModeKind.Browse,
+            canConfirm:  false,
+            selectedIds: this.selectedIds,
+            label:       null,
+        };
     }
 }

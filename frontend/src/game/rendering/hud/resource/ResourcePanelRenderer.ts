@@ -1,12 +1,14 @@
 // rendering/hud/resource/ResourcePanelRenderer.ts
-import {ResourcePanelModeKind, type ResourcePanelState} from '@/game/hud/panels/resource/types';
-import {type Rect} from '@/game/utils/Rect';
-import {type PanelTheme} from '@/game/rendering/theme/theme';
-import {drawPanelChrome} from '../panelChrome';
-import {ResourceCardRenderer} from './ResourceCardRenderer';
-import {BrowseModeRenderer} from './modes/BrowseModeRenderer';
-import {DiscardModeRenderer} from './modes/DiscardModeRenderer';
-import {TradeModeRenderer} from './modes/TradeModeRenderer';
+import { ResourcePanelModeKind,
+    type ResourcePanelState }  from '@/game/hud/panels/resource/types';
+import { type Rect }                 from '@/game/utils/Rect';
+import { type PanelTheme }           from '@/game/rendering/theme/theme';
+import { drawPanelChrome }           from '../panelChrome';
+import { ResourceCardRenderer }      from './ResourceCardRenderer';
+import { BrowseModeRenderer }        from './modes/BrowseModeRenderer';
+import { DiscardModeRenderer }       from './modes/DiscardModeRenderer';
+import { TradeModeRenderer }         from './modes/TradeModeRenderer';
+import { ResolutionManager }         from '@/game/core/ResolutionManager';
 
 const RESOURCE_PANEL_THEME: PanelTheme = {
     background:   'rgba(28, 18, 10, 0.85)',
@@ -19,16 +21,19 @@ const RESOURCE_PANEL_THEME: PanelTheme = {
 };
 
 export class ResourcePanelRenderer {
-    private readonly cardRenderer:    ResourceCardRenderer;
+    private readonly cardRenderer:        ResourceCardRenderer;
     private readonly browseModeRenderer:  BrowseModeRenderer;
     private readonly discardModeRenderer: DiscardModeRenderer;
     private readonly tradeModeRenderer:   TradeModeRenderer;
 
-    constructor(private readonly ctx: CanvasRenderingContext2D) {
+    constructor(
+        private readonly ctx:        CanvasRenderingContext2D,
+        private readonly resolution: ResolutionManager,
+    ) {
         this.cardRenderer         = new ResourceCardRenderer(ctx);
         this.browseModeRenderer   = new BrowseModeRenderer(ctx);
         this.discardModeRenderer  = new DiscardModeRenderer(ctx);
-        this.tradeModeRenderer    = new TradeModeRenderer(ctx);
+        this.tradeModeRenderer    = new TradeModeRenderer(ctx, this.cardRenderer, resolution);
     }
 
     render(state: ResourcePanelState) {
@@ -43,23 +48,25 @@ export class ResourcePanelRenderer {
         this.renderMode(state);
     }
 
-    // ─── Mode rendering ───────────────────────────────────────────────
+    // ─── Mode rendering ───────────────────────────────────────────────────────
 
     private renderMode(state: ResourcePanelState) {
         switch (state.mode.kind) {
             case ResourcePanelModeKind.Browse:
                 this.browseModeRenderer.render(state.mode, state.bounds);
                 break;
+
             case ResourcePanelModeKind.Discard:
                 this.discardModeRenderer.render(state.mode, state.bounds);
                 break;
+
             case ResourcePanelModeKind.Trade:
-                this.tradeModeRenderer.render(state.mode, state.bounds);
+                this.tradeModeRenderer.render(state.mode);
                 break;
         }
     }
 
-    // ─── Empty state ──────────────────────────────────────────────────
+    // ─── Empty state ──────────────────────────────────────────────────────────
 
     private drawEmptyState(bounds: Rect) {
         const { ctx } = this;
