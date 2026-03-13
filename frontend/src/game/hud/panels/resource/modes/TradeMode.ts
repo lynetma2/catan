@@ -11,6 +11,7 @@ import type { Resource, ResourceType }    from "@/game/core/types";
 export class TradeMode implements ResourcePanelMode<TradeModeState> {
     private selectedIds     = new Set<string>();
     private wantedResources: Resource[] = [];
+    private offeredResources: Resource[] = [];
 
     constructor(private panel: ResourcePanel, initialSelection?: string) {
         if (initialSelection) {
