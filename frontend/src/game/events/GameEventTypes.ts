@@ -61,6 +61,8 @@ export enum GameEventType {
     GAME_ENDED = 'GAME_ENDED',
     TRADE_STARTED = 'TRADE_STARTED',
     TRADE_ENDED = 'TRADE_ENDED',
+    TRADE_CONFIRM_BANK_SENT_TO_SERVER = 'TRADE_CONFIRM_BANK_SENT_TO_SERVER',
+    TRADE_CONFIRM_GLOBAL_SENT_TO_SERVER = 'TRADE_CONFIRM_GLOBAL_SENT_TO_SERVER',
 }
 
 // 2. Map the payloads using the GameEventType enum
@@ -100,6 +102,8 @@ export interface EventPayloads {
     [GameEventType.GAME_ENDED]:                 Record<string, never>;
     [GameEventType.TRADE_STARTED]:              { initialSelection: string } //The uid of the card to offer.
     [GameEventType.TRADE_ENDED]:                Record<string, never>;
+    [GameEventType.TRADE_CONFIRM_BANK_SENT_TO_SERVER]: { playerId: string, offered: Resource[], wanted: Resource[] };
+    [GameEventType.TRADE_CONFIRM_GLOBAL_SENT_TO_SERVER]: { playerId: string, offered: Resource[], wanted: Resource[] };
 }
 
 export interface GameEvent<T extends GameEventType = GameEventType> {

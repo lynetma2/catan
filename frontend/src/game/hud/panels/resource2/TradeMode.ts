@@ -1,35 +1,30 @@
-// hud/panels/resource/modes/TradeMode.ts
-import type { ResourcePanel }             from "../ResourcePanel";
-import { ResourcePanelModeKind,
-    type ResourcePanelMode,
-    type TradeModeState,
-    type PanelHit }                 from "../types";
 import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent";
-import { GameEventSource, GameEventType } from "@/game/events/GameEventTypes";
-import type { Resource, ResourceType }    from "@/game/core/types";
+import type {Resource} from "@/game/core/types";
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
-import type {ButtonType} from "@/game/hud/types.ts";
 import type {ResolutionManager} from "@/game/core/ResolutionManager.ts";
 import {resolveTradeLayout, type TradeLayout} from "@/game/hud/panels/resource2/Layout/ResourcePanelLayout.ts";
 import {resolveTradeCards, type TradeCards} from "@/game/hud/panels/resource2/Layout/ResourceCardLayout.ts";
 import type {ResourceCard} from "@/game/hud/panels/resource/types.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import {containsPoint, type Rect} from "@/game/utils/Rect.ts";
-import type {TradeButtonType} from "@/game/hud/panels/resource2/types.ts";
+import {type HitResult, HitResultKind, TradeButtonType, TradePanelKind} from "@/game/hud/panels/resource2/types.ts";
+import {GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
+import type {SharedState} from "@/game/core/SharedState.ts";
 
 export class TradeMode {
     private readonly frameQueue: FrameQueue;
     private readonly resolution: ResolutionManager;
+    private readonly sharedState: SharedState;
     private hand: Resource[] = [];
     private wantedResources: Resource[] = [];
     private offeredResources: Resource[] = [];
-    private hoveredButton: TradeButtonType | null = null; //TODO change to tradeButtons.
+    private hoveredButton: TradeButtonType | null = null;
     private hoveredCardId: string | null = null;
-    //TODO add the buttons.
 
-    constructor(frameQueue: FrameQueue, resolution: ResolutionManager) {
+    constructor(frameQueue: FrameQueue, resolution: ResolutionManager, sharedState: SharedState) {
         this.frameQueue = frameQueue;
         this.resolution = resolution;
+        this.sharedState = sharedState;
     }
 
     onEnter(initialHand: Resource[]) {
@@ -47,10 +42,33 @@ export class TradeMode {
         const r = this.resolution.get();
         const layout = resolveTradeLayout(r);
         const cards  = resolveTradeCards(
-            { hand: this.hand, offered: this.offeredResources, wanted: this.wantedResources },
+            { [TradePanelKind.Hand]: this.hand, [TradePanelKind.Offered]: this.offeredResources, [TradePanelKind.Wanted]: this.wantedResources },
             this.hoveredCardId,
             r,
         );
+
+        if (event.type === InputType.MouseMove) {
+            const hit = this.hitTestingGlobal(event.screenPos, layout, cards);
+
+            switch (hit.kind) {
+                case HitResultKind.None:
+                    this.hoveredCardId = null;
+                    this.hoveredButton = null;
+                    break;
+                case HitResultKind.Card:
+                    this.hoveredCardId = hit.uid;
+                    this.hoveredButton = null;
+                    break;
+                case HitResultKind.Button:
+                    this.hoveredButton = hit.button;
+                    this.hoveredCardId = null;
+                    break;
+            }
+        }
+
+        if (event.type === InputType.MouseClick) {
+            return this.handleClick(event.screenPos, layout, cards);
+        }
         return false;
     }
 
@@ -59,23 +77,23 @@ export class TradeMode {
         const r = this.resolution.get();
         const layout = resolveTradeLayout(r);
         const cards = resolveTradeCards({
-            hand: this.hand,
-            offered: this.offeredResources,
-            wanted: this.wantedResources
+            [TradePanelKind.Hand]: this.hand,
+            [TradePanelKind.Offered]: this.offeredResources,
+            [TradePanelKind.Wanted]: this.wantedResources
         },
             this.hoveredCardId,
             r
         );
 
         return {
-            hand:     { bounds: layout.hand,     cards: cards.hand     },
-            offered:  { bounds: layout.offer,    cards: cards.offered  },
-            wanted:   { bounds: layout.wanted,   cards: cards.wanted   },
-            selector: { bounds: layout.selector, cards: cards.selector },
+            [TradePanelKind.Hand]:     { bounds: layout[TradePanelKind.Hand],     cards: cards[TradePanelKind.Hand]     },
+            [TradePanelKind.Offered]:  { bounds: layout[TradePanelKind.Offered],    cards: cards[TradePanelKind.Offered]  },
+            [TradePanelKind.Wanted]:   { bounds: layout[TradePanelKind.Wanted],   cards: cards[TradePanelKind.Wanted]   },
+            [TradePanelKind.Selector]: { bounds: layout[TradePanelKind.Selector], cards: cards[TradePanelKind.Selector] },
             buttons: {
-                cancel:        layout.cancelButton,
-                confirmGlobal: layout.confirmGlobalButton,
-                confirmBank:   layout.confirmBankButton,
+                cancel:        layout[TradeButtonType.Cancel],
+                confirmGlobal: layout[TradeButtonType.ConfirmGlobal],
+                confirmBank:   layout[TradeButtonType.ConfirmBank],
             },
             hoveredButton: this.hoveredButton,
         }
@@ -103,23 +121,144 @@ export class TradeMode {
         return null;
     }
 
-    // Hover handlers
-    private handleMouseMove(event: Extract<NormalizedInputEvent, { type: InputType.MouseMove }>, layout: TradeLayout, cards: TradeCards) {
-        const pos = event.screenPos;
+    private hitTestingGlobal(pos: Vec2, layout: TradeLayout, cards: TradeCards): HitResult {
+        const buttons = {
+            [TradeButtonType.Cancel]:        layout[TradeButtonType.Cancel],
+            [TradeButtonType.ConfirmGlobal]: layout[TradeButtonType.ConfirmGlobal],
+            [TradeButtonType.ConfirmBank]:   layout[TradeButtonType.ConfirmBank],
+        };
 
         //Check cards.
-        for (const [key, panel] of Object.entries(cards)) {
+        for (const panel of Object.values(cards)) {
             const hit = this.findHitCard(panel, pos);
             if (hit != null) {
-                this.hoveredCardId = hit.uid;
-                return;
+                return {
+                    kind: HitResultKind.Card,
+                    panelKind: panel,
+                    uid: hit.uid,
+                    resourceType: hit.resourceType
+                };
             }
         }
 
-        //TODO check the butttons.
+        //Check butttons
+        const hitButton = this.findHitButton(buttons, pos);
+        if (hitButton != null) {
+            return {kind: HitResultKind.Button, button: hitButton};
+        }
+
+        return {kind: HitResultKind.None};
     }
 
     // Click handlers
+    private handleClick(pos: Vec2, layout: TradeLayout, cards: TradeCards): boolean {
+        const hit = this.hitTestingGlobal(pos, layout, cards);
+
+        switch (hit.kind) {
+            case HitResultKind.Card:
+                return this.handleCardClick(hit);
+            case HitResultKind.Button:
+                return this.handleButtonClick(hit);
+            case HitResultKind.None:
+                return false;
+        }
+    }
+
+    private handleButtonClick(hit: Extract<HitResult, { kind: HitResultKind.Button }>): boolean {
+        let targetHit = false;
+        switch (hit.button) {
+            case TradeButtonType.Cancel: {
+                this.resetArrays();
+                targetHit = true;
+                break;
+            }
+            case TradeButtonType.ConfirmGlobal: {
+                this.frameQueue.push({
+                    type: GameEventType.TRADE_CONFIRM_GLOBAL_SENT_TO_SERVER,
+                    payload: {
+                        playerId: this.sharedState.localPlayerId!,
+                        offered: this.offeredResources,
+                        wanted: this.wantedResources,
+                    },
+                    source: GameEventSource.Hud
+                });
+                targetHit = true;
+                break;
+            }
+            case TradeButtonType.ConfirmBank: {
+                this.frameQueue.push({
+                    type: GameEventType.TRADE_CONFIRM_BANK_SENT_TO_SERVER,
+                    payload: {
+                        playerId: this.sharedState.localPlayerId!,
+                        offered: this.offeredResources,
+                        wanted: this.wantedResources,
+                    },
+                    source: GameEventSource.Hud
+                });
+                targetHit = true;
+                break;
+            }
+        }
+
+        return targetHit;
+    }
+
+    private handleCardClick(hit: Extract<HitResult, { kind: HitResultKind.Card }>): boolean {
+        let targetHit = false;
+        switch (hit.panelKind) {
+            case TradePanelKind.Hand: {
+                this.moveCard(hit.uid, this.hand, this.offeredResources);
+                targetHit = true;
+                break;
+            }
+            case TradePanelKind.Offered: {
+                this.moveCard(hit.uid, this.offeredResources, this.hand);
+                targetHit = true;
+                break;
+            }
+            case TradePanelKind.Wanted: {
+                this.removeCard(hit.uid, this.wantedResources);
+                targetHit = true;
+                break;
+            }
+            case TradePanelKind.Selector: {
+                const newCard: Resource = {
+                    uid: crypto.randomUUID(),
+                    resourceType: hit.resourceType
+                }
+                this.wantedResources.push(newCard);
+                targetHit = true;
+                break;
+            }
+        }
+        return targetHit;
+    }
+
+    private moveCard(uid: string, from: Resource[], to: Resource[]): void {
+        const cardIndex = from.findIndex(card => card.uid === uid);
+
+        if (cardIndex !== -1) {
+            const [cardToMove] = from.splice(cardIndex, 1);
+            to.push(cardToMove);
+        } else {
+            console.warn(`Card with uid '${uid}' was not found in the source array.`);
+        }
+    }
+
+    private removeCard(uid: string, from: Resource[]): void {
+        const cardIndex = from.findIndex(card => card.uid === uid);
+        if (cardIndex !== -1) {
+            from.splice(cardIndex, 1);
+        } else {
+            console.warn(`Card with uid '${uid}' was not found in the source array.`);
+        }
+    }
+
+    private resetArrays(): void {
+        this.wantedResources = [];
+        this.hand.push(...this.offeredResources);
+        this.offeredResources = [];
+    }
 
     // Keyboard handlers
 }

@@ -13,6 +13,7 @@ import {PlayerOverviewPanel} from "@/game/hud/panels/overview/OverviewPanel.ts";
 import {GameEventType} from "@/game/events/GameEventTypes.ts";
 import {DicePanel} from "@/game/hud/panels/dice/DicePanel.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
+import {ResourcePanelManager} from "@/game/hud/panels/resource2/ResourcePanelManager.ts";
 
 export class HUD implements InputLayer {
     readonly priority = 10;
@@ -20,7 +21,7 @@ export class HUD implements InputLayer {
     private toast:      Toast | null          = null;
 
     private readonly buildPanel:    BuildPanel;
-    private readonly resourcePanel: ResourcePanel;
+    private readonly resourcePanel: ResourcePanelManager;
     private readonly overviewPanel: PlayerOverviewPanel;
     private readonly dicePanel: DicePanel;
 
@@ -31,7 +32,7 @@ export class HUD implements InputLayer {
         resolution: ResolutionManager,
     ) {
         this.buildPanel    = new BuildPanel(frameQueue, shared, resolution, bus);
-        this.resourcePanel = new ResourcePanel(shared, resolution, bus, frameQueue);
+        this.resourcePanel = new ResourcePanelManager(shared, resolution, bus, frameQueue);
         this.overviewPanel = new PlayerOverviewPanel(bus, shared, resolution);
         this.dicePanel = new DicePanel(bus, frameQueue, shared, resolution);
 

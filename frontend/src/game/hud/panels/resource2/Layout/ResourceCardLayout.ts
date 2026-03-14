@@ -1,12 +1,10 @@
 // hud/panels/resource/ResourceCardLayout.ts
-import { type Resolution }             from '@/game/core/ResolutionManager';
-import { type Resource, ResourceType } from '@/game/core/types';
-import { type ResourceCard }           from './types';
-import { type Rect }                   from '@/game/utils/Rect';
-import {
-    resolveHandPanelBounds,
-    resolveTradeLayout,
-} from './ResourcePanelLayout';
+import {type Resolution} from '@/game/core/ResolutionManager';
+import {type Resource, ResourceType} from '@/game/core/types';
+import {type Rect} from '@/game/utils/Rect';
+import {resolveHandPanelBounds, resolveTradeLayout,} from './ResourcePanelLayout';
+import {TradePanelKind} from "@/game/hud/panels/resource2/types.ts";
+import type {ResourceCard} from "@/game/hud/panels/resource/types.ts";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -41,10 +39,10 @@ interface CardOffset {
 }
 
 export interface TradeCards {
-    hand:     ResourceCard[];
-    offered:  ResourceCard[];
-    wanted:   ResourceCard[];
-    selector: ResourceCard[];
+    [TradePanelKind.Hand]:     ResourceCard[];
+    [TradePanelKind.Offered]:  ResourceCard[];
+    [TradePanelKind.Wanted]:   ResourceCard[];
+    [TradePanelKind.Selector]: ResourceCard[];
 }
 
 // ─── Public — top resource panel ─────────────────────────────────────────────
@@ -85,9 +83,9 @@ export function resolveHandCards(
  */
 export function resolveTradeCards(
     resources: {
-        hand:    Resource[];
-        offered: Resource[];
-        wanted:  Resource[];
+        [TradePanelKind.Hand]:    Resource[];
+        [TradePanelKind.Offered]: Resource[];
+        [TradePanelKind.Wanted]:  Resource[];
     },
     hoveredId: string | null,
     r:         Resolution,
@@ -96,10 +94,10 @@ export function resolveTradeCards(
     const selector = resolveSelectorResources();
 
     return {
-        hand:     resolveCardsInRect(resources.hand,    layout.hand,     hoveredId, 'fan'),
-        offered:  resolveCardsInRect(resources.offered, layout.offer,    hoveredId, 'fan'),
-        wanted:   resolveCardsInRect(resources.wanted,  layout.wanted,   hoveredId, 'fan'),
-        selector: resolveCardsInRect(selector,          layout.selector, hoveredId, 'fan'),
+        [TradePanelKind.Hand]:     resolveCardsInRect(resources[TradePanelKind.Hand],    layout[TradePanelKind.Hand],     hoveredId, 'fan'),
+        [TradePanelKind.Offered]:  resolveCardsInRect(resources[TradePanelKind.Offered], layout[TradePanelKind.Offered],    hoveredId, 'fan'),
+        [TradePanelKind.Wanted]:   resolveCardsInRect(resources[TradePanelKind.Wanted],  layout[TradePanelKind.Wanted],   hoveredId, 'fan'),
+        [TradePanelKind.Selector]: resolveCardsInRect(selector,          layout[TradePanelKind.Selector], hoveredId, 'highlight'),
     };
 }
 

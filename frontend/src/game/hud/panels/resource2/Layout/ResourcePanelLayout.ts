@@ -3,6 +3,7 @@ import { type Resolution }             from '@/game/core/ResolutionManager';
 import { hudLayout, type PanelConfig } from '@/game/hud/HudLayout';
 import { Anchor }                      from '@/game/hud/types';
 import { type Rect }                   from '@/game/utils/Rect';
+import {TradeButtonType, TradePanelKind} from "@/game/hud/panels/resource2/types.ts";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -26,14 +27,14 @@ const ROW_GAP = 12;
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface TradeLayout {
-    hand:     Rect;
-    offer:    Rect;
-    wanted:   Rect;
-    selector: Rect;
+    [TradePanelKind.Hand]:     Rect;
+    [TradePanelKind.Offered]:    Rect;
+    [TradePanelKind.Wanted]:   Rect;
+    [TradePanelKind.Selector]: Rect;
 
-    cancelButton:        Rect;
-    confirmGlobalButton: Rect;
-    confirmBankButton:   Rect;
+    [TradeButtonType.Cancel]:        Rect;
+    [TradeButtonType.ConfirmGlobal]:  Rect;
+    [TradeButtonType.ConfirmBank]:    Rect;
 }
 
 // ─── Hand panel ───────────────────────────────────────────────────────────────
@@ -54,14 +55,14 @@ export function resolveHandPanelBounds(r: Resolution): Rect {
 export function resolveTradeLayout(r: Resolution): TradeLayout {
     const hand = resolveHandPanelBounds(r);
 
-    const offer: Rect = {
+    const offered: Rect = {
         ...hand,
         y: hand.y - hand.height - ROW_GAP,
     };
 
     const wanted: Rect = {
-        ...offer,
-        y: offer.y - offer.height - ROW_GAP,
+        ...offered,
+        y: offered.y - offered.height - ROW_GAP,
     };
 
     const selector: Rect = {
@@ -95,12 +96,13 @@ export function resolveTradeLayout(r: Resolution): TradeLayout {
     };
 
     return {
-        hand,
-        offer,
-        wanted,
-        selector,
-        cancelButton,
-        confirmGlobalButton,
-        confirmBankButton,
+        [TradePanelKind.Hand]:     hand,
+        [TradePanelKind.Offered]:  offered,
+        [TradePanelKind.Wanted]:   wanted,
+        [TradePanelKind.Selector]: selector,
+
+        [TradeButtonType.Cancel]:        cancelButton,
+        [TradeButtonType.ConfirmGlobal]: confirmGlobalButton,
+        [TradeButtonType.ConfirmBank]:   confirmBankButton,
     };
 }
