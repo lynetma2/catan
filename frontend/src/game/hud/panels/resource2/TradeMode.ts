@@ -14,7 +14,8 @@ import {resolveTradeLayout, type TradeLayout} from "@/game/hud/panels/resource2/
 import {resolveTradeCards, type TradeCards} from "@/game/hud/panels/resource2/Layout/ResourceCardLayout.ts";
 import type {ResourceCard} from "@/game/hud/panels/resource/types.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
-import {containsPoint} from "@/game/utils/Rect.ts";
+import {containsPoint, type Rect} from "@/game/utils/Rect.ts";
+import type {TradeButtonType} from "@/game/hud/panels/resource2/types.ts";
 
 export class TradeMode {
     private readonly frameQueue: FrameQueue;
@@ -22,7 +23,7 @@ export class TradeMode {
     private hand: Resource[] = [];
     private wantedResources: Resource[] = [];
     private offeredResources: Resource[] = [];
-    private hoveredButton: ButtonType | null = null; //TODO change to tradeButtons.
+    private hoveredButton: TradeButtonType | null = null; //TODO change to tradeButtons.
     private hoveredCardId: string | null = null;
     //TODO add the buttons.
 
@@ -88,6 +89,16 @@ export class TradeMode {
     ): ResourceCard | null {
         for (let i = cards.length - 1; i >= 0; i--) {
             if (containsPoint(cards[i].bounds, pos)) return cards[i];
+        }
+        return null;
+    }
+
+    private findHitButton(
+        buttons: Record<TradeButtonType, Rect>,
+        pos:     Vec2,
+    ): TradeButtonType | null {
+        for (const [type, rect] of Object.entries(buttons)) {
+            if (containsPoint(rect, pos)) return type as TradeButtonType;
         }
         return null;
     }
