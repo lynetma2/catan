@@ -7,6 +7,7 @@ import {resolveTradeCards, type TradeCards} from "@/game/hud/panels/resource/Lay
 import {
     type HitResult,
     HitResultKind,
+    type ResourceCard,
     type ResourcePanelMode,
     ResourcePanelModeKind,
     TradeButtonType,
@@ -35,8 +36,10 @@ export class TradeMode implements ResourcePanelMode<TradeModeState, string> {
     }
 
     onEnter(initialCardUid: string) {
-        this.hand = this.sharedState.localPlayerResources ?? [];
-        this.moveCard(initialCardUid, this.hand, this.offeredResources);
+        this.hand = [...(this.sharedState.localPlayerResources ?? [])];
+        if (initialCardUid) {
+            this.moveCard(initialCardUid, this.hand, this.offeredResources);
+        }
     }
 
     onExit() {
@@ -126,12 +129,12 @@ export class TradeMode implements ResourcePanelMode<TradeModeState, string> {
         };
 
         //Check cards.
-        for (const panel of Object.values(cards)) {
-            const hit = findHitCard(panel, pos);
+        for (const [panelKind, card] of Object.entries(cards) as [TradePanelKind, ResourceCard[]][]) {
+            const hit = findHitCard(card, pos);
             if (hit != null) {
                 return {
                     kind: HitResultKind.Card,
-                    panelKind: panel,
+                    panelKind: panelKind,
                     uid: hit.uid,
                     resourceType: hit.resourceType
                 };
@@ -167,6 +170,11 @@ export class TradeMode implements ResourcePanelMode<TradeModeState, string> {
             case TradeButtonType.Cancel: {
                 this.resetArrays();
                 targetHit = true;
+                this.frameQueue.push({
+                    type: GameEventType.TRADE_CANCELLED,
+                    payload: {},
+                    source: GameEventSource.Hud
+                });
                 break;
             }
             case TradeButtonType.ConfirmGlobal: {

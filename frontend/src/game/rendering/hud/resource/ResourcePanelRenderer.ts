@@ -1,7 +1,7 @@
 import {
     type ResourceCard,
+    type ResourcePanelManagerState,
     ResourcePanelModeKind,
-    type ResourcePanelModeState,
     TradePanelKind,
 } from '@/game/hud/panels/resource/types';
 import {type Rect} from '@/game/utils/Rect';
@@ -37,19 +37,21 @@ export class ResourcePanelRenderer {
         this.tradeModeRenderer = new TradeModeRenderer(ctx, this.cardRenderer);
     }
 
-    render(state: ResourcePanelModeState) {
-        switch (state.kind) {
+    render(state: ResourcePanelManagerState) {
+        const modeState = state.modeState;
+
+        switch (modeState.kind) {
             case ResourcePanelModeKind.Browse:
-                this.renderHandChrome(state.hand);
-                this.browseModeRenderer.render(state);
+                this.renderHandChrome(modeState.hand);
+                this.browseModeRenderer.render(modeState);
                 break;
             case ResourcePanelModeKind.Discard:
-                this.renderHandChrome(state.hand);
-                this.discardModeRenderer.render(state);
+                this.renderHandChrome(modeState.hand);
+                this.discardModeRenderer.render(modeState);
                 break;
             case ResourcePanelModeKind.Trade:
-                this.renderHandChrome(state[TradePanelKind.Hand]);
-                this.tradeModeRenderer.render(state);
+                this.renderHandChrome(modeState[TradePanelKind.Hand]);
+                this.tradeModeRenderer.render(modeState);
                 break;
         }
     }

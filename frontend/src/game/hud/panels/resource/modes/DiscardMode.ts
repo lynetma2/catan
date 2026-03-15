@@ -20,7 +20,6 @@ export class DiscardMode implements ResourcePanelMode<DiscardModeState, number> 
     private readonly frameQueue: FrameQueue;
     private readonly resolution: ResolutionManager;
     private readonly sharedState: SharedState;
-    private hand: Resource[] = [];
     private hoveredCardId: string | null = null;
     private hoveredButton: DiscardButtonType | null = null;
     private selectedCards: Set<string> = new Set();
@@ -32,13 +31,15 @@ export class DiscardMode implements ResourcePanelMode<DiscardModeState, number> 
         this.sharedState = sharedState;
     }
 
+    private get hand(): Resource[] {
+        return this.sharedState.localPlayerResources ?? [];
+    }
+
     onEnter(mustDiscard: number): void {
-        this.hand = this.sharedState.localPlayerResources ?? [];
         this.mustDiscard = mustDiscard;
     }
 
     onExit(): void {
-        this.hand = [];
         this.hoveredCardId = null;
         this.hoveredButton = null;
         this.selectedCards = new Set<string>();

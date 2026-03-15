@@ -33,6 +33,10 @@ export class ResourcePanelManager {
     // ─── Events ───────────────────────────────────────────────────────────────
 
     private subscribeToEvents() {
+        this.bus.on(GameEventType.GAME_STATE_LOADED, () => {
+            this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
+        });
+
         this.bus.on(GameEventType.TRADE_STARTED, (e) => {
             this.transitionTo(new TradeMode(this.frameQueue, this.resolution, this.shared), e.payload.initialSelection);
         });
@@ -44,6 +48,7 @@ export class ResourcePanelManager {
         this.bus.on(GameEventType.TRADE_CONFIRM_BANK_SENT_TO_SERVER, () => this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared)));
         this.bus.on(GameEventType.TRADE_CONFIRM_GLOBAL_SENT_TO_SERVER, () => this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared)));
         this.bus.on(GameEventType.DISCARD_CONFIRMED, () => this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared)));
+        this.bus.on(GameEventType.TRADE_CANCELLED, () => this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared)));
     }
 
     private transitionTo<TState extends ResourcePanelModeState>(

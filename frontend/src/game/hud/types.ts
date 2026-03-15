@@ -1,14 +1,13 @@
 // types/HudState.ts
-import { type BuildPanelState } from './panels/build/BuildPanel.ts';
-import type {Rect} from "@/game/utils/Rect.ts";
-import type {ResourcePanelState} from "@/game/hud/panels/resource/types.ts";
 import type {PlayerOverviewState} from "@/game/hud/panels/overview/types.ts";
 import type {DicePanelState} from "@/game/hud/panels/dice/types.ts";
+import type {BuildPanelState} from "@/game/hud/panels/build/types.ts";
+import type {ResourcePanelManagerState} from "@/game/hud/panels/resource/types.ts";
 
 export interface HudState {
     toast:     Toast | null;
     panels: {
-        resource: ResourcePanelState;
+        resource: ResourcePanelManagerState;
         build:    BuildPanelState;
         overview: PlayerOverviewState;
         dice: DicePanelState;
