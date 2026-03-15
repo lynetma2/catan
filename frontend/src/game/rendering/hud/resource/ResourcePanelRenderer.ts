@@ -1,14 +1,16 @@
-// rendering/hud/resource/ResourcePanelRenderer.ts
-import { ResourcePanelModeKind,
-    type ResourcePanelState }  from '@/game/hud/panels/resource/types';
-import { type Rect }                 from '@/game/utils/Rect';
-import { type PanelTheme }           from '@/game/rendering/theme/theme';
-import { drawPanelChrome }           from '../panelChrome';
-import { ResourceCardRenderer }      from './ResourceCardRenderer';
-import { BrowseModeRenderer }        from './modes/BrowseModeRenderer';
-import { DiscardModeRenderer }       from './modes/DiscardModeRenderer';
-import { TradeModeRenderer }         from './modes/TradeModeRenderer';
-import { ResolutionManager }         from '@/game/core/ResolutionManager';
+import {
+    type ResourceCard,
+    ResourcePanelModeKind,
+    type ResourcePanelModeState,
+    TradePanelKind,
+} from '@/game/hud/panels/resource/types';
+import {type Rect} from '@/game/utils/Rect';
+import {type PanelTheme} from '@/game/rendering/theme/theme';
+import {drawPanelChrome} from '../panelChrome';
+import {ResourceCardRenderer} from './ResourceCardRenderer';
+import {BrowseModeRenderer} from './modes/BrowseModeRenderer';
+import {DiscardModeRenderer} from './modes/DiscardModeRenderer';
+import {TradeModeRenderer} from './modes/TradeModeRenderer';
 
 const RESOURCE_PANEL_THEME: PanelTheme = {
     background:   'rgba(28, 18, 10, 0.85)',
@@ -27,46 +29,40 @@ export class ResourcePanelRenderer {
     private readonly tradeModeRenderer:   TradeModeRenderer;
 
     constructor(
-        private readonly ctx:        CanvasRenderingContext2D,
-        private readonly resolution: ResolutionManager,
+        private readonly ctx: CanvasRenderingContext2D
     ) {
-        this.cardRenderer         = new ResourceCardRenderer(ctx);
-        this.browseModeRenderer   = new BrowseModeRenderer(ctx);
-        this.discardModeRenderer  = new DiscardModeRenderer(ctx);
-        this.tradeModeRenderer    = new TradeModeRenderer(ctx, this.cardRenderer, resolution);
+        this.cardRenderer = new ResourceCardRenderer(ctx);
+        this.browseModeRenderer = new BrowseModeRenderer(ctx, this.cardRenderer);
+        this.discardModeRenderer = new DiscardModeRenderer(ctx);
+        this.tradeModeRenderer = new TradeModeRenderer(ctx, this.cardRenderer);
     }
 
-    render(state: ResourcePanelState) {
-        drawPanelChrome(this.ctx, state.bounds, 'Hand', RESOURCE_PANEL_THEME);
-
-        if (state.resourceCards.length > 0) {
-            this.cardRenderer.render(state);
-        } else {
-            this.drawEmptyState(state.bounds);
-        }
-
-        this.renderMode(state);
-    }
-
-    // ─── Mode rendering ───────────────────────────────────────────────────────
-
-    private renderMode(state: ResourcePanelState) {
-        switch (state.mode.kind) {
+    render(state: ResourcePanelModeState) {
+        switch (state.kind) {
             case ResourcePanelModeKind.Browse:
-                this.browseModeRenderer.render(state.mode, state.bounds);
+                this.renderHandChrome(state.hand);
+                this.browseModeRenderer.render(state);
                 break;
-
             case ResourcePanelModeKind.Discard:
-                this.discardModeRenderer.render(state.mode, state.bounds);
+                this.renderHandChrome(state.hand);
+                this.discardModeRenderer.render(state);
                 break;
-
             case ResourcePanelModeKind.Trade:
-                this.tradeModeRenderer.render(state.mode);
+                this.renderHandChrome(state[TradePanelKind.Hand]);
+                this.tradeModeRenderer.render(state);
                 break;
         }
     }
 
-    // ─── Empty state ──────────────────────────────────────────────────────────
+    private renderHandChrome(hand: { bounds: Rect; cards: ResourceCard[] }) {
+        drawPanelChrome(this.ctx, hand.bounds, 'Hand', RESOURCE_PANEL_THEME);
+
+        if (hand.cards.length > 0) {
+            this.cardRenderer.renderCards(hand.cards);
+        } else {
+            this.drawEmptyState(hand.bounds);
+        }
+    }
 
     private drawEmptyState(bounds: Rect) {
         const { ctx } = this;

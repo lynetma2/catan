@@ -1,10 +1,10 @@
 // hud/panels/resource/ResourceCardLayout.ts
-import {type Resolution} from '@/game/core/ResolutionManager';
-import {type Resource, ResourceType} from '@/game/core/types';
-import {type Rect} from '@/game/utils/Rect';
-import {resolveHandPanelBounds, resolveTradeLayout,} from './ResourcePanelLayout';
-import {TradePanelKind} from "@/game/hud/panels/resource2/types.ts";
+import {type Resolution} from '@/game/core/ResolutionManager.ts';
+import {type Resource, ResourceType} from '@/game/core/types.ts';
+import {type Rect} from '@/game/utils/Rect.ts';
+import {resolveHandPanelBounds, resolveTradeLayout,} from './ResourcePanelLayout.ts';
 import type {ResourceCard} from "@/game/hud/panels/resource/types.ts";
+import {TradePanelKind} from "@/game/hud/panels/resource/types.ts";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 

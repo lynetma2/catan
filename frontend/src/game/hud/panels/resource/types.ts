@@ -1,41 +1,74 @@
-import type { Rect }                   from "@/game/utils/Rect.ts";
-import type { Resource, ResourceType } from "@/game/core/types.ts";
-import type { NormalizedInputEvent }   from "@/game/core/Input/InputEvent.ts";
+import type {ResourceType} from "@/game/core/types.ts";
+import type {Rect} from "@/game/utils/Rect.ts";
+import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 
-// ─── Hit testing ──────────────────────────────────────────────────────────────
+export enum TradeButtonType {
+    Cancel = "Cancel",
+    ConfirmGlobal = "ConfirmGlobal",
+    ConfirmBank = "ConfirmBank"
+}
 
-export type PanelHit =
-    | { kind: 'hand';               cardId: string }
-    | { kind: 'offered';            cardId: string }
-    | { kind: 'wanted';             cardId: string }
-    | { kind: 'selector';           resourceType: ResourceType }
-    | { kind: 'tradeCancel' }
-    | { kind: 'tradeConfirmGlobal' }
-    | { kind: 'tradeConfirmBank' }
-    | { kind: 'none' }
+export enum HitResultKind {
+    None = "None",
+    Card = "Card",
+    Button = "Button"
+}
 
-export type TradeButtonKind =
-    | 'tradeCancel'
-    | 'tradeConfirmGlobal'
-    | 'tradeConfirmBank'
+export enum TradePanelKind {
+    Hand = "Hand",
+    Offered = "Offered",
+    Wanted = "Wanted",
+    Selector = "Selector"
+}
 
-// ─── Card ─────────────────────────────────────────────────────────────────────
+export type HitResult =
+    | { kind: HitResultKind.None }
+    | { kind: HitResultKind.Card, panelKind: TradePanelKind, uid: string, resourceType: ResourceType }
+    | { kind: HitResultKind.Button, button: TradeButtonType };
 
 export interface ResourceCard {
     resourceType: ResourceType;
-    uid:          string;
-    isHovered:    boolean;
-    isSelected:   boolean;
-    isDisabled:   boolean;
-    bounds:       Rect;
+    uid: string;
+    isHovered: boolean;
+    isSelected: boolean;
+    isDisabled: boolean;
+    bounds: Rect;
 }
 
-// ─── Panel state ──────────────────────────────────────────────────────────────
+export interface BrowseModeState {
+    kind: ResourcePanelModeKind.Browse;
+    hand: { bounds: Rect, cards: ResourceCard[] };
+}
 
-export interface ResourcePanelState {
-    bounds:        Rect;
-    resourceCards: ResourceCard[];
-    mode:          ResourcePanelModeState;
+export enum DiscardButtonType {
+    Confirm = "Confirm",
+    Cancel = "Cancel",
+}
+
+export interface DiscardModeState {
+    kind: ResourcePanelModeKind.Discard;
+    hand: { bounds: Rect; cards: ResourceCard[] };
+    amountSelected: number;
+    mustDiscard: number;
+    buttons: {
+        confirm: Rect;
+        cancel: Rect;
+    };
+    hoveredButton: DiscardButtonType | null;
+}
+
+export interface TradeModeState {
+    kind: ResourcePanelModeKind.Trade;
+    [TradePanelKind.Hand]: { bounds: Rect; cards: ResourceCard[] };
+    [TradePanelKind.Offered]: { bounds: Rect; cards: ResourceCard[] };
+    [TradePanelKind.Wanted]: { bounds: Rect; cards: ResourceCard[] };
+    [TradePanelKind.Selector]: { bounds: Rect; cards: ResourceCard[] };
+    buttons: {
+        cancel: Rect;
+        confirmGlobal: Rect;
+        confirmBank: Rect;
+    };
+    hoveredButton: TradeButtonType | null;
 }
 
 export type ResourcePanelModeState =
@@ -43,52 +76,25 @@ export type ResourcePanelModeState =
     | DiscardModeState
     | TradeModeState;
 
+export interface ResourcePanelManagerState {
+    modeState: ResourcePanelModeState;
+    bounds: Rect;
+}
+
 export enum ResourcePanelModeKind {
-    Browse  = "Browse",
+    Browse = "Browse",
     Discard = "Discard",
-    Trade   = "Trade",
+    Trade = "Trade",
 }
 
-// ─── Mode interface ───────────────────────────────────────────────────────────
+export interface ResourcePanelMode<
+    TState extends ResourcePanelModeState,
+    TEnterArg = void> {
+    onEnter(arg: TEnterArg): void;
 
-export interface ResourcePanelMode<TState extends ResourcePanelModeState> {
-    handleInput(event: NormalizedInputEvent): boolean;
-    handleHit(hit: PanelHit): boolean;
-    getState(): TState;
-    /** IDs to exclude from the main hand while this mode is active. */
-    getHandFilter(): Set<string>;
-    /** Only implemented by TradeMode — wanted resources for hit-testing. */
-    getWantedResources?(): Resource[];
-    onEnter(): void;
     onExit(): void;
-}
 
-// ─── Mode states — logical only, no pixel data ───────────────────────────────
+    handleInput(event: NormalizedInputEvent): boolean;
 
-export interface BrowseModeState {
-    kind:        ResourcePanelModeKind.Browse;
-    canConfirm:  false;
-    selectedIds: Set<string>;
-    label:       null;
-}
-
-export interface DiscardModeState {
-    kind:           ResourcePanelModeKind.Discard;
-    canConfirm:     boolean;
-    selectedIds:    Set<string>;
-    label:          string;
-    mustDiscard:    number;
-    discardedSoFar: number;
-}
-
-export interface TradeModeState {
-    kind:              ResourcePanelModeKind.Trade;
-    selectedIds:       Set<string>;
-    offeredResources:  Resource[];
-    wantedTypes:       ResourceType[];
-    canConfirmGlobal:  boolean;
-    canConfirmBank:    boolean;
-    // Hover state injected by ResourcePanel.getState(), not by TradeMode itself
-    hoveredCardId?:     string | null;
-    hoveredButton?:     TradeButtonKind | null;
+    getState(): TState;
 }

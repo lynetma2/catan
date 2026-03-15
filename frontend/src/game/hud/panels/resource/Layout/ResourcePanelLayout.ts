@@ -1,9 +1,9 @@
 // hud/panels/resource/ResourcePanelLayout.ts
-import { type Resolution }             from '@/game/core/ResolutionManager';
-import { hudLayout, type PanelConfig } from '@/game/hud/HudLayout';
-import { Anchor }                      from '@/game/hud/types';
-import { type Rect }                   from '@/game/utils/Rect';
-import {TradeButtonType, TradePanelKind} from "@/game/hud/panels/resource2/types.ts";
+import {type Resolution} from '@/game/core/ResolutionManager.ts';
+import {hudLayout, type PanelConfig} from '@/game/hud/HudLayout.ts';
+import {Anchor} from '@/game/hud/types.ts';
+import {type Rect} from '@/game/utils/Rect.ts';
+import {DiscardButtonType, TradeButtonType, TradePanelKind} from "@/game/hud/panels/resource/types.ts";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -35,6 +35,12 @@ export interface TradeLayout {
     [TradeButtonType.Cancel]:        Rect;
     [TradeButtonType.ConfirmGlobal]:  Rect;
     [TradeButtonType.ConfirmBank]:    Rect;
+}
+
+export interface DiscardLayout {
+    [TradePanelKind.Hand]: Rect;
+    [DiscardButtonType.Confirm]: Rect;
+    [DiscardButtonType.Cancel]: Rect;
 }
 
 // ─── Hand panel ───────────────────────────────────────────────────────────────
@@ -104,5 +110,37 @@ export function resolveTradeLayout(r: Resolution): TradeLayout {
         [TradeButtonType.Cancel]:        cancelButton,
         [TradeButtonType.ConfirmGlobal]: confirmGlobalButton,
         [TradeButtonType.ConfirmBank]:   confirmBankButton,
+    };
+}
+
+/**
+ * Buttons sit above the hand rect, centered.
+ * Confirm is to the right of center, Cancel to the left.
+ */
+export function resolveDiscardLayout(r: Resolution): DiscardLayout {
+    const hand = resolveHandPanelBounds(r);
+
+    const totalButtonWidth = BUTTON.width * 2 + BUTTON.gap;
+    const centerX = hand.x + hand.width / 2;
+    const buttonY = hand.y - BUTTON.height - BUTTON.gap;
+
+    const cancelButton: Rect = {
+        x: centerX - totalButtonWidth / 2,
+        y: buttonY,
+        width: BUTTON.width,
+        height: BUTTON.height,
+    };
+
+    const confirmButton: Rect = {
+        x: centerX + BUTTON.gap / 2,
+        y: buttonY,
+        width: BUTTON.width,
+        height: BUTTON.height,
+    };
+
+    return {
+        [TradePanelKind.Hand]: hand,
+        [DiscardButtonType.Cancel]: cancelButton,
+        [DiscardButtonType.Confirm]: confirmButton,
     };
 }

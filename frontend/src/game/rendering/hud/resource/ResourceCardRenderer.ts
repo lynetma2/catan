@@ -1,44 +1,32 @@
-// rendering/hud/ResourceCardRenderer.ts
-import { type ResourceCard }        from '@/game/hud/panels/resource/types.ts';
-import { type ResourcePanelState }  from '@/game/hud/panels/resource/types.ts';
-import { RESOURCE_STYLES, type ResourceStyle } from "@/game/rendering/theme/ResourceTheme.ts";
+import {type ResourceCard} from '@/game/hud/panels/resource/types.ts';
+import {RESOURCE_STYLES, type ResourceStyle} from '@/game/rendering/theme/ResourceTheme.ts';
 
 export class ResourceCardRenderer {
     private static imageCache: Map<string, HTMLImageElement> = new Map();
 
     constructor(private readonly ctx: CanvasRenderingContext2D) {}
 
-    // ─── Public ───────────────────────────────────────────────────────
-
-    render(state: ResourcePanelState) {
-        this.renderCards(state.resourceCards);
-    }
-
     renderCards(cards: ResourceCard[]) {
-        // Draw non-hovered cards first so hovered card renders on top
+        // Non-hovered first so hovered card renders on top
         cards.filter(c => !c.isHovered).forEach(c => this.drawCard(c));
         cards.filter(c =>  c.isHovered).forEach(c => this.drawCard(c));
     }
 
-    // ─── Card drawing ─────────────────────────────────────────────────
+    // ─── Card drawing ─────────────────────────────────────────────────────────
 
     private drawCard(card: ResourceCard) {
         const style = RESOURCE_STYLES[card.resourceType];
-
         this.ctx.save();
-
         this.drawBackground(card, style);
         this.drawIcon(card, style);
         this.drawLabel(card);
-
         if (card.isSelected) this.drawSelectionGlow(card);
-
         this.ctx.restore();
     }
 
     private drawBackground(card: ResourceCard, style: ResourceStyle) {
-        const { ctx }                  = this;
-        const { x, y, width, height }  = card.bounds;
+        const {ctx} = this;
+        const {x, y, width, height} = card.bounds;
 
         ctx.beginPath();
         ctx.roundRect(x, y, width, height, 8);
@@ -60,19 +48,15 @@ export class ResourceCardRenderer {
 
         const { x, y, width, height } = card.bounds;
         const padding = 5;
-        const iconW   = width  - padding * 2;
-        const iconH   = iconW;
-        const iconY   = y + (height - iconH) / 2;
-
-        this.ctx.drawImage(img, x + padding, iconY, iconW, iconH);
+        const iconW = width - padding * 2;
+        const iconY = y + (height - iconW) / 2;
+        this.ctx.drawImage(img, x + padding, iconY, iconW, iconW);
     }
 
     private drawLabel(card: ResourceCard) {
         if (!card.isHovered) return;
-
-        const { ctx }          = this;
+        const {ctx} = this;
         const { x, y, width } = card.bounds;
-
         ctx.font         = 'bold 10px monospace';
         ctx.fillStyle    = 'rgba(255,255,255,0.9)';
         ctx.textAlign    = 'center';
@@ -87,7 +71,6 @@ export class ResourceCardRenderer {
     private drawSelectionGlow(card: ResourceCard) {
         const { ctx }                 = this;
         const { x, y, width, height } = card.bounds;
-
         ctx.shadowColor = '#FFD700';
         ctx.shadowBlur  = 10;
         ctx.beginPath();
@@ -96,8 +79,6 @@ export class ResourceCardRenderer {
         ctx.stroke();
         ctx.shadowBlur  = 0;
     }
-
-    // ─── Image cache ──────────────────────────────────────────────────
 
     private static getImage(src: string): HTMLImageElement {
         if (!ResourceCardRenderer.imageCache.has(src)) {

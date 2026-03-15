@@ -1,11 +1,15 @@
-// rendering/hud/resource/modes/BrowseModeRenderer.ts
-import { type Rect }            from '@/game/utils/Rect';
-import type {BrowseModeState} from "@/game/hud/panels/resource/types.ts";
+import type {BrowseModeState} from '@/game/hud/panels/resource/types.ts';
+import type {ResourceCardRenderer} from '../ResourceCardRenderer';
 
 export class BrowseModeRenderer {
-    constructor(private readonly ctx: CanvasRenderingContext2D) {}
+    constructor(
+        private readonly ctx: CanvasRenderingContext2D,
+        private readonly cardRenderer: ResourceCardRenderer,
+    ) {
+    }
 
-    render(_mode: BrowseModeState, _bounds: Rect) {
-        // Nothing extra in browse mode
+    render(_state: BrowseModeState) {
+        // Hand cards are already drawn by ResourcePanelRenderer.
+        // Nothing extra in browse mode.
     }
 }

@@ -8,18 +8,15 @@ import type {InputLayer} from "@/game/core/Input/types.ts";
 import {type HudState, type Toast} from "@/game/hud/types.ts";
 import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {containsPoint} from "@/game/utils/Rect.ts";
-import {ResourcePanel} from "@/game/hud/panels/resource/ResourcePanel.ts";
 import {PlayerOverviewPanel} from "@/game/hud/panels/overview/OverviewPanel.ts";
 import {GameEventType} from "@/game/events/GameEventTypes.ts";
 import {DicePanel} from "@/game/hud/panels/dice/DicePanel.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
-import {ResourcePanelManager} from "@/game/hud/panels/resource2/ResourcePanelManager.ts";
+import {ResourcePanelManager} from "@/game/hud/panels/resource/ResourcePanelManager.ts";
 
 export class HUD implements InputLayer {
     readonly priority = 10;
-
     private toast:      Toast | null          = null;
-
     private readonly buildPanel:    BuildPanel;
     private readonly resourcePanel: ResourcePanelManager;
     private readonly overviewPanel: PlayerOverviewPanel;
