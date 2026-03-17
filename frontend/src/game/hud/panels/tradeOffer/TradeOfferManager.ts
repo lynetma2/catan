@@ -1,16 +1,17 @@
 // hud/panels/overview/PlayerOverviewPanel.ts
-import { type EventBus }             from '@/game/core/EventBus';
-import { type SharedState }          from '@/game/core/SharedState';
-import { type NormalizedInputEvent } from '@/game/core/Input/InputEvent';
-import { type ResolutionManager,
-    type Resolution }           from '@/game/core/ResolutionManager';
+import {type EventBus} from '@/game/core/EventBus';
+import {type SharedState} from '@/game/core/SharedState';
+import {type NormalizedInputEvent} from '@/game/core/Input/InputEvent';
+import {type Resolution, type ResolutionManager} from '@/game/core/ResolutionManager';
 import {type EventPayloads, GameEventType} from '@/game/events/GameEventTypes';
-import type {PlayerOverviewEntry, PlayerOverviewState} from "@/game/hud/panels/overview/types.ts";
+import type {PlayerOverviewState} from "@/game/hud/panels/overview/types.ts";
 import {resolveOverviewPanelBounds, resolvePlayerRows} from "@/game/hud/panels/overview/OverviewPanelLayout.ts";
+import type {TradeOfferIncomingPanel} from "@/game/hud/panels/tradeOffer/tradeOfferPanel/TradeOfferIncomingPanel.ts";
+import type {TradeOfferOutgoingPanel} from "@/game/hud/panels/tradeOffer/tradeOfferPanel/TradeOfferOutgoingPanel.ts";
 
-export class PlayerOverviewPanel {
+export class TradeOfferManager {
     // Panel owns this state — no other system needs it
-    private players: Map<string, PlayerOverviewEntry> = new Map();
+    private activeTrades: (TradeOfferIncomingPanel | TradeOfferOutgoingPanel)[];
 
     constructor(
         private readonly bus:        EventBus,
