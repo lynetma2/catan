@@ -8,7 +8,8 @@ import {
     type PlayerSnapshot,
     type Resource
 } from "@/game/core/types.ts";
-import type {Hex} from "@/game/utils/HexGeometry/Hex.ts"; // Adjust path as needed
+import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
+import type {TradeOfferPanelData} from "@/game/hud/panels/tradeOffer/types.ts"; // Adjust path as needed
 
 export enum GameEventSource {
     Hud = 'hud',
@@ -68,6 +69,13 @@ export enum GameEventType {
     TRADE_CANCELLED = 'TRADE_CANCELLED',
     TRADE_CONFIRM_BANK_SENT_TO_SERVER = 'TRADE_CONFIRM_BANK_SENT_TO_SERVER',
     TRADE_CONFIRM_GLOBAL_SENT_TO_SERVER = 'TRADE_CONFIRM_GLOBAL_SENT_TO_SERVER',
+    TRADE_OFFER_INCOME_RECIEVED = 'TRADE_OFFER_INCOME_RECIEVED',
+    TRADE_OFFER_OUTGOING_RECIEVED = 'TRADE_OFFER_OUTGOING_RECIEVED',
+    TRADE_OFFER_CANCELLED = 'TRADE_OFFER_CANCELLED',
+    TRADE_OFFER_ACCEPTED_SENT_TO_SERVER = "TRADE_OFFER_ACCEPTED_SENT_TO_SERVER",
+    TRADE_OFFER_ACCEPTED = "TRADE_OFFER_ACCEPTED",
+    TRADE_OFFER_DECLINED_SENT_TO_SERVER = "TRADE_OFFER_DECLINED_SENT_TO_SERVER",
+    TRADE_OFFER_DECLINED = "TRADE_OFFER_DECLINED",
 }
 
 // 2. Map the payloads using the GameEventType enum
@@ -110,6 +118,13 @@ export interface EventPayloads {
     [GameEventType.TRADE_CANCELLED]: void;
     [GameEventType.TRADE_CONFIRM_BANK_SENT_TO_SERVER]: { playerId: string, offered: Resource[], wanted: Resource[] };
     [GameEventType.TRADE_CONFIRM_GLOBAL_SENT_TO_SERVER]: { playerId: string, offered: Resource[], wanted: Resource[] };
+    [GameEventType.TRADE_OFFER_INCOME_RECIEVED]: TradeOfferPanelData;
+    [GameEventType.TRADE_OFFER_OUTGOING_RECIEVED]: TradeOfferPanelData;
+    [GameEventType.TRADE_OFFER_CANCELLED]: { tradeOfferId: string, };
+    [GameEventType.TRADE_OFFER_ACCEPTED]: { playerId: string, tradeOfferId: string };
+    [GameEventType.TRADE_OFFER_ACCEPTED_SENT_TO_SERVER]: { playerId: string, tradeOfferId: string };
+    [GameEventType.TRADE_OFFER_DECLINED]: { playerId: string, tradeOfferId: string };
+    [GameEventType.TRADE_OFFER_DECLINED_SENT_TO_SERVER]: { playerId: string, tradeOfferId: string };
 }
 
 export interface GameEvent<T extends GameEventType = GameEventType> {

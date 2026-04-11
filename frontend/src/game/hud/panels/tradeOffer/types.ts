@@ -1,10 +1,11 @@
 import type {Rect} from "@/game/utils/Rect.ts";
 import type {ResourceCard} from "@/game/hud/panels/resource/types.ts";
+import type {Resource} from "@/game/core/types.ts";
 
 export interface TradeOfferBaseState {
     bounds: Rect;
-    incomingResources: { bounds: Rect; cards: ResourceCard[] };
-    outgoingResources: { bounds: Rect; cards: ResourceCard[] };
+    wantedResources: { bounds: Rect; cards: ResourceCard[] };
+    offeredResources: { bounds: Rect; cards: ResourceCard[] };
     tradeOfferId: string;
     tradeOwnerId: string;
     timer: number;
@@ -37,4 +38,15 @@ export interface TradeOfferOutgoingState extends TradeOfferBaseState {
         bounds: Rect;
     }
     hoveredResponse: string; //PlayerId
+}
+
+export interface TradeOfferPanelData {
+    tradeOfferId: string,
+    tradeOwnerId: string,
+    wantedResources: Resource[],
+    offeredResources: Resource[],
+    playerResponses: {
+        playerId: string,
+        response: TradeOfferResponseKind
+    }[]
 }

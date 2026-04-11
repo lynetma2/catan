@@ -6,16 +6,19 @@ import {type Resolution, type ResolutionManager} from '@/game/core/ResolutionMan
 import {type EventPayloads, GameEventType} from '@/game/events/GameEventTypes';
 import type {PlayerOverviewState} from "@/game/hud/panels/overview/types.ts";
 import {resolveOverviewPanelBounds, resolvePlayerRows} from "@/game/hud/panels/overview/OverviewPanelLayout.ts";
-import type {TradeOfferIncomingPanel} from "@/game/hud/panels/tradeOffer/tradeOfferPanel/TradeOfferIncomingPanel.ts";
-import type {TradeOfferOutgoingPanel} from "@/game/hud/panels/tradeOffer/tradeOfferPanel/TradeOfferOutgoingPanel.ts";
+import {TradeOfferIncomingPanel} from "@/game/hud/panels/tradeOffer/tradeOfferPanel/TradeOfferIncomingPanel.ts";
+import {TradeOfferOutgoingPanel} from "@/game/hud/panels/tradeOffer/tradeOfferPanel/TradeOfferOutgoingPanel.ts";
+import {TradeOfferResponseKind} from "@/game/hud/panels/tradeOffer/types.ts";
+import type {FrameQueue} from "@/game/core/FrameQueue.ts";
 
 export class TradeOfferManager {
     // Panel owns this state — no other system needs it
-    private activeTrades: (TradeOfferIncomingPanel | TradeOfferOutgoingPanel)[];
+    private readonly activeTradePanels: (TradeOfferIncomingPanel | TradeOfferOutgoingPanel)[] = [];
 
     constructor(
         private readonly bus:        EventBus,
         private readonly shared:     SharedState,
+        private readonly frameQueue: FrameQueue,
         private readonly resolution: ResolutionManager,
     ) {
         this.subscribeToEvents();
@@ -27,84 +30,21 @@ export class TradeOfferManager {
         // Snapshot — full state on load/reload
         this.bus.on(GameEventType.GAME_STATE_LOADED, e => this.onGameStateLoaded(e.payload));
 
-        // Structural — fires once at game start
-        this.bus.on(GameEventType.GAME_STARTED, e => this.onGameStarted(e.payload));
+        // Add incoming trade event.
+        this.bus.on(GameEventType.TRADE_OFFER_INCOME_RECIEVED, e => this.onIncomingTradeOffer(e.payload));
 
-        // Turn tracking
-        this.bus.on(GameEventType.TURN_STARTED, e => this.onTurnStarted(e.payload));
+        // Add outgoing trade event.
+        this.bus.on(GameEventType.TRADE_OFFER_OUTGOING_RECIEVED, e => this.onOutgoingTradeOffer(e.payload));
 
-        // Resource changes
-        this.bus.on(GameEventType.RESOURCES_GRANTED, e => this.onResourcesGranted(e.payload));
-        this.bus.on(GameEventType.RESOURCES_SPENT,   e => this.onResourcesSpent(e.payload));
-        this.bus.on(GameEventType.OPPONENT_CARD_COUNT_CHANGED, e => this.onOpponentCardCountChanged(e.payload));
+        // Update trade event.
+        this.bus.on(GameEventType.TRADE_OFFER_ACCEPTED, e => this.onUpdatePlayerResponse(e.payload, TradeOfferResponseKind.Accept));
+        this.bus.on(GameEventType.TRADE_OFFER_DECLINED, e => this.onUpdatePlayerResponse(e.payload, TradeOfferResponseKind.Decline));
 
-        // Building
-        this.bus.on(GameEventType.BUILD_PLACED, e => this.onBuildPlaced(e.payload));
+        this.bus.on(GameEventType.TRADE_OFFER_CANCELLED, e => this.onTradeOfferCancelled(e.payload));
 
-        // Special cards
-        this.bus.on(GameEventType.LONGEST_ROAD_CHANGED, e => this.onLongestRoadChanged(e.payload));
-        this.bus.on(GameEventType.LARGEST_ARMY_CHANGED, e => this.onLargestArmyChanged(e.payload));
-        this.bus.on(GameEventType.VICTORY_POINTS_CHANGED, e => this.onVictoryPointsChanged(e.payload));
     }
 
     // ─── Event handlers ───────────────────────────────────────────────
-
-    private onGameStarted(payload: EventPayloads[GameEventType.GAME_STARTED]) {
-        payload.players.forEach(p => {
-            this.players.set(p.id, {
-                playerId:       p.id,
-                name:           p.name,
-                color:          p.color,
-                victoryPoints:  0,
-                cardCount:      0,
-                devCardCount:   0,
-                hasLongestRoad: false,
-                hasLargestArmy: false,
-                usedRobbers:    0,
-                isCurrentTurn:  false,
-            });
-        });
-    }
-
-    private onTurnStarted(payload: EventPayloads[GameEventType.TURN_STARTED]) {
-        this.players.forEach((p, id) => {
-            p.isCurrentTurn = id === payload.playerId;
-        });
-    }
-
-    private onResourcesGranted(payload: EventPayloads[GameEventType.RESOURCES_GRANTED]) {
-        const player = this.players.get(payload.playerId);
-        if (player) player.cardCount += payload.resources.length;
-    }
-
-    private onResourcesSpent(payload: EventPayloads[GameEventType.RESOURCES_SPENT]) {
-        const player = this.players.get(payload.playerId);
-        if (player) player.cardCount = Math.max(0, player.cardCount - payload.amount);
-    }
-
-    private onBuildPlaced(payload: EventPayloads[GameEventType.BUILD_PLACED]) {
-        const player = this.players.get(payload.playerId);
-        if (!player) return;
-        if (payload.pieceType === 'settlement') player.victoryPoints++;
-        if (payload.pieceType === 'city')       player.victoryPoints += 2;
-    }
-
-    private onLongestRoadChanged(payload: EventPayloads[GameEventType.LONGEST_ROAD_CHANGED]) {
-        this.players.forEach((p, id) => {
-            p.hasLongestRoad = id === payload.playerId;
-        });
-    }
-
-    private onLargestArmyChanged(payload: EventPayloads[GameEventType.LARGEST_ARMY_CHANGED]) {
-        this.players.forEach((p, id) => {
-            p.hasLargestArmy = id === payload.playerId;
-        });
-    }
-
-    private onVictoryPointsChanged(payload: EventPayloads[GameEventType.VICTORY_POINTS_CHANGED]) {
-        const player = this.players.get(payload.playerId);
-        if (player) player.victoryPoints = payload.points;
-    }
 
     private onGameStateLoaded(payload: EventPayloads[GameEventType.GAME_STATE_LOADED]) {
         // Rebuild entire state from snapshot — wipes any previous state
@@ -125,9 +65,31 @@ export class TradeOfferManager {
         });
     }
 
-    private onOpponentCardCountChanged(payload: EventPayloads[GameEventType.OPPONENT_CARD_COUNT_CHANGED]) {
-        const player = this.players.get(payload.playerId);
-        if (player) player.cardCount = payload.cardCount
+    private onUpdatePlayerResponse(payload: EventPayloads[GameEventType.TRADE_OFFER_ACCEPTED],
+                                   response: TradeOfferResponseKind) {
+        for (const element of this.activeTradePanels) {
+            const panel = element;
+            if (panel.getTradeOfferId() === payload.tradeOfferId) {
+                panel.updatePlayerResponse(payload.playerId, response);
+            }
+        }
+    }
+
+    private onTradeOfferCancelled(payload: EventPayloads[GameEventType.TRADE_OFFER_CANCELLED]) {
+        const index = this.activeTradePanels.findIndex(panel => panel.getTradeOfferId() === payload.tradeOfferId);
+        if (index !== -1) {
+            this.activeTradePanels.splice(index, 1);
+        }
+    }
+
+    private onIncomingTradeOffer(payload: EventPayloads[GameEventType.TRADE_OFFER_INCOME_RECIEVED]) {
+        const tradePanel = new TradeOfferIncomingPanel(this.resolution, this.frameQueue, this.shared, payload);
+        this.activeTradePanels.push(tradePanel);
+    }
+
+    private onOutgoingTradeOffer(payload: EventPayloads[GameEventType.TRADE_OFFER_OUTGOING_RECIEVED]) {
+        const tradePanel = new TradeOfferOutgoingPanel(this.resolution, this.frameQueue, this.shared, payload);
+        this.activeTradePanels.push(tradePanel);
     }
 
     // ─── Input ────────────────────────────────────────────────────────
