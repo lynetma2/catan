@@ -5,6 +5,7 @@ import {Anchor} from '@/game/hud/types';
 import {type Rect} from '@/game/utils/Rect';
 import type {Resource} from "@/game/core/types.ts";
 import type {ResourceCard} from "@/game/hud/panels/resource/types.ts";
+import type {TradeOfferResponseKind} from "@/game/hud/panels/tradeOffer/types.ts";
 
 // ─── Config ───────────────────────────────────────────────────────────
 
@@ -23,7 +24,21 @@ const CARD = {
     overlap: 0
 };
 
+const BUTTON_GAP = 6;
+const BUTTON_HEIGHT = 28;
+const BUTTON_WIDTH = 44;
+
 const TRADE_OFFER_GAP = 12;
+
+// const RESPONSE_COLOR: Record<TradeOfferResponseKind, string> = {
+//     [TradeOfferResponseKind.Accept]:   "#1D9E75",
+//     [TradeOfferResponseKind.Decline]:  "#E24B4A",
+//     [TradeOfferResponseKind.NoAnswer]: "#5F5E5A",
+// };
+
+const CHIP_SIZE = 30;
+const CHIP_GAP = 6;
+const DOT_RADIUS = 4;
 
 export function resolveTradeOfferPanelBounds(r: Resolution, index: number): Rect {
     const rect = hudLayout.resolve(TRADE_OFFER_PANEL, r);
@@ -37,7 +52,7 @@ export function resolveTradeOfferPanelBounds(r: Resolution, index: number): Rect
 
 // ─── Private — cards in rect ──────────────────────────────────────────────────
 
-function resolveTradeCards(
+export function resolveTradeCards(
     panel_bounds: Rect,
     wantedResources: Resource[],
     offeredResources: Resource[],
@@ -46,17 +61,17 @@ function resolveTradeCards(
 ) {
 
     const offered: Rect = {
-        x: panel_bounds.x - 20,
-        y: panel_bounds.y - 10,
+        x: panel_bounds.x - 10,
+        y: panel_bounds.y - 5,
         height: 45,
-        width: panel_bounds.width,
+        width: panel_bounds.width - 20,
     }
 
     const wanted: Rect = {
-        x: panel_bounds.x - 20,
-        y: panel_bounds.y - 65,
+        x: panel_bounds.x - 10,
+        y: panel_bounds.y - 55,
         height: 45,
-        width: panel_bounds.width,
+        width: panel_bounds.width - 20,
     }
 
     return {
@@ -111,9 +126,70 @@ function resolveTradeCard(
     };
 }
 
-function resolvePlayerResponses() {}
+export function resolvePlayerResponses(
+    panel_bounds: Rect,
+    playerResponses: { playerId: string; response: TradeOfferResponseKind }[]
+    //TODO add something for hover effects.
+) {
+    const bounds: Rect = {
+        x: panel_bounds.x - 10,
+        y: panel_bounds.y - 105,
+        width: panel_bounds.width - 100,
+        height: 45,
+    };
 
-function resolveResponseButtons() {}
+    const centerY = bounds.y + bounds.height / 2;
+    const chipY = centerY - CHIP_SIZE / 2;
+
+    const chips = playerResponses.map((pr, i) => {
+        const chipX = bounds.x + i * (CHIP_SIZE + CHIP_GAP);
+        const cx = chipX + CHIP_SIZE / 2;
+        const cy = chipY + CHIP_SIZE / 2;
+
+        return {
+            cx,
+            cy,
+            radius: CHIP_SIZE / 2,
+            dotCx: chipX + CHIP_SIZE - DOT_RADIUS,
+            dotCy: chipY + CHIP_SIZE - DOT_RADIUS,
+            dotRadius: DOT_RADIUS,
+            initial: pr.playerId.charAt(0).toUpperCase(),
+            playerId: pr.playerId,
+            response: pr.response,
+        };
+    });
+
+    return {chips, bounds};
+}
+
+export function resolveResponseButtons(panel_bounds: Rect): ButtonLayout {
+    const bounds: Rect = {
+        x: panel_bounds.x + panel_bounds.width - 100 + 10,
+        y: panel_bounds.y - 105,
+        width: 100 - 10,  // the reserved 100px strip minus a small left margin
+        height: 45,
+    };
+
+    const centerY = bounds.y + bounds.height / 2;
+    const totalWidth = BUTTON_WIDTH * 2 + BUTTON_GAP;
+    const startX = bounds.x + (bounds.width - totalWidth) / 2;
+    const buttonY = centerY - BUTTON_HEIGHT / 2;
+
+    return {
+        acceptBounds: {
+            x: startX,
+            y: buttonY,
+            width: BUTTON_WIDTH,
+            height: BUTTON_HEIGHT,
+        },
+        rejectBounds: {
+            x: startX + BUTTON_WIDTH + BUTTON_GAP,
+            y: buttonY,
+            width: BUTTON_WIDTH,
+            height: BUTTON_HEIGHT,
+        },
+    };
+}
 
 function resolveSpacing(count: number, panelWidth: number): number {
     const naturalSpacing = CARD.width - CARD.overlap;
