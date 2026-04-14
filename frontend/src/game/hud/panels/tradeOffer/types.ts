@@ -42,6 +42,7 @@ export interface TradeOfferIncomingState extends TradeOfferBaseState {
 
 export interface TradeOfferOutgoingState extends TradeOfferBaseState {
     hoveredResponse: string; //PlayerId
+    hoveredButton: string;
 }
 
 export interface TradeOfferPanelData {
