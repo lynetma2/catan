@@ -6,9 +6,18 @@ export interface TradeOfferBaseState {
     bounds: Rect;
     wantedResources: { bounds: Rect; cards: ResourceCard[] };
     offeredResources: { bounds: Rect; cards: ResourceCard[] };
+    playerResponses: {
+        bounds: Rect;
+        playerResponseStates: PlayerResponseState[];
+    };
     tradeOfferId: string;
     tradeOwnerId: string;
     timer: number;
+}
+
+export interface TradeOfferPanelCardsState {
+    wantedResources: { bounds: Rect; cards: ResourceCard[] };
+    offeredResources: { bounds: Rect; cards: ResourceCard[] };
 }
 
 export enum TradeOfferIncomingButtonType {
@@ -32,11 +41,6 @@ export interface TradeOfferIncomingState extends TradeOfferBaseState {
 }
 
 export interface TradeOfferOutgoingState extends TradeOfferBaseState {
-    playerResponses: {
-        playerId: string;
-        response: TradeOfferResponseKind;
-        bounds: Rect;
-    }
     hoveredResponse: string; //PlayerId
 }
 
@@ -49,4 +53,24 @@ export interface TradeOfferPanelData {
         playerId: string,
         response: TradeOfferResponseKind
     }[]
+}
+
+export interface TradeOfferManagerState {
+    activeTradePanels: (TradeOfferIncomingState | TradeOfferOutgoingState)[];
+}
+
+export interface PlayerResponseState {
+    playerId: string;
+    response: TradeOfferResponseKind;
+    chip: ChipLayout;
+}
+
+export interface ChipLayout {
+    cx: number;
+    cy: number;
+    radius: number;
+    dotCx: number;
+    dotCy: number;
+    dotRadius: number;
+    initial: string;
 }

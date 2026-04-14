@@ -5,7 +5,12 @@ import {Anchor} from '@/game/hud/types';
 import {type Rect} from '@/game/utils/Rect';
 import type {Resource} from "@/game/core/types.ts";
 import type {ResourceCard} from "@/game/hud/panels/resource/types.ts";
-import type {TradeOfferResponseKind} from "@/game/hud/panels/tradeOffer/types.ts";
+import type {
+    ChipLayout, PlayerResponseState,
+    TradeOfferPanelCardsState,
+    TradeOfferResponseKind
+} from "@/game/hud/panels/tradeOffer/types.ts";
+import type {TradeCards} from "@/game/hud/panels/resource/Layout/ResourceCardLayout.ts";
 
 // ─── Config ───────────────────────────────────────────────────────────
 
@@ -58,7 +63,7 @@ export function resolveTradeCards(
     offeredResources: Resource[],
     hoveredId: string | null,
     r: Resolution,
-) {
+): TradeOfferPanelCardsState {
 
     const offered: Rect = {
         x: panel_bounds.x - 10,
@@ -75,8 +80,8 @@ export function resolveTradeCards(
     }
 
     return {
-        wanted: resolveTradeCardsInRect(wantedResources, wanted, hoveredId),
-        offered: resolveTradeCardsInRect(offeredResources, offered, hoveredId),
+        wantedResources: {bounds: wanted, cards: resolveTradeCardsInRect(wantedResources, wanted, hoveredId)},
+        offeredResources: {bounds: offered, cards: resolveTradeCardsInRect(offeredResources, offered, hoveredId)},
     }
 }
 
@@ -130,7 +135,7 @@ export function resolvePlayerResponses(
     panel_bounds: Rect,
     playerResponses: { playerId: string; response: TradeOfferResponseKind }[]
     //TODO add something for hover effects.
-) {
+): {bounds: Rect, playerResponseStates: PlayerResponseState[]} {
     const bounds: Rect = {
         x: panel_bounds.x - 10,
         y: panel_bounds.y - 105,
@@ -141,12 +146,12 @@ export function resolvePlayerResponses(
     const centerY = bounds.y + bounds.height / 2;
     const chipY = centerY - CHIP_SIZE / 2;
 
-    const chips = playerResponses.map((pr, i) => {
+    const playerResponseStates: PlayerResponseState[] = playerResponses.map((pr, i) => {
         const chipX = bounds.x + i * (CHIP_SIZE + CHIP_GAP);
         const cx = chipX + CHIP_SIZE / 2;
         const cy = chipY + CHIP_SIZE / 2;
 
-        return {
+        const chip =  {
             cx,
             cy,
             radius: CHIP_SIZE / 2,
@@ -154,15 +159,19 @@ export function resolvePlayerResponses(
             dotCy: chipY + CHIP_SIZE - DOT_RADIUS,
             dotRadius: DOT_RADIUS,
             initial: pr.playerId.charAt(0).toUpperCase(),
+        };
+
+        return {
             playerId: pr.playerId,
             response: pr.response,
-        };
+            chip,
+        }
     });
 
-    return {chips, bounds};
+    return {bounds, playerResponseStates};
 }
 
-export function resolveResponseButtons(panel_bounds: Rect): ButtonLayout {
+export function resolveResponseButtons(panel_bounds: Rect) {
     const bounds: Rect = {
         x: panel_bounds.x + panel_bounds.width - 100 + 10,
         y: panel_bounds.y - 105,
