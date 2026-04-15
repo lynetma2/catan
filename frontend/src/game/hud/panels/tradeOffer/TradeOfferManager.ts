@@ -100,15 +100,8 @@ export class TradeOfferManager {
 
     // ─── State ────────────────────────────────────────────────────────
 
-    getState(): PlayerOverviewState {
-        const r       = this.resolution.get();
-        const players = Array.from(this.players.values());
+    getState() {
 
-        return {
-            bounds:  resolveOverviewPanelBounds(players.length, r),
-            players,
-            rows:    resolvePlayerRows(players, r),
-        };
     }
 
     getBounds(r: Resolution) {

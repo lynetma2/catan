@@ -9,6 +9,10 @@ import {DEFAULT_HUD_THEME, type HudTheme} from "@/game/rendering/theme/theme.ts"
 import type {HudState} from "@/game/hud/types.ts";
 import {PlayerOverviewRenderer} from "@/game/rendering/hud/overview/PlayerOverviewRenderer.ts";
 import {DicePanelRenderer} from "@/game/rendering/hud/dice/DicePanelRenderer.ts";
+import {
+    defaultTradeOfferRendererTheme,
+    TradeOfferRenderer
+} from "@/game/rendering/hud/tradeOffer/TradeOfferRenderer.ts";
 
 export class HudRenderer {
     private readonly buildPanelRenderer:    BuildPanelRenderer;
@@ -16,6 +20,7 @@ export class HudRenderer {
     private readonly overviewPanelRenderer: PlayerOverviewRenderer;
     private readonly dicePanelRenderer: DicePanelRenderer;
     private readonly toastRenderer:         ToastRenderer;
+    private readonly tradeOfferRenderer: TradeOfferRenderer;
     private resolution: Resolution;
 
     constructor(
@@ -29,6 +34,7 @@ export class HudRenderer {
         this.overviewPanelRenderer  = new PlayerOverviewRenderer(ctx);
         this.dicePanelRenderer      = new DicePanelRenderer(ctx);
         this.toastRenderer          = new ToastRenderer(ctx, theme.toast);
+        this.tradeOfferRenderer = new TradeOfferRenderer(ctx, defaultTradeOfferRendererTheme);
 
         resolutionManager.onChange(r => { this.resolution = r; });
     }
