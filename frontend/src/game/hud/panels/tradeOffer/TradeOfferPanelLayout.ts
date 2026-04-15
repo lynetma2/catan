@@ -6,11 +6,11 @@ import {type Rect} from '@/game/utils/Rect';
 import type {Resource} from "@/game/core/types.ts";
 import type {ResourceCard} from "@/game/hud/panels/resource/types.ts";
 import type {
-    ChipLayout, PlayerResponseState,
+    ButtonLayout,
+    PlayerResponseState,
     TradeOfferPanelCardsState,
     TradeOfferResponseKind
 } from "@/game/hud/panels/tradeOffer/types.ts";
-import type {TradeCards} from "@/game/hud/panels/resource/Layout/ResourceCardLayout.ts";
 
 // ─── Config ───────────────────────────────────────────────────────────
 
@@ -171,7 +171,7 @@ export function resolvePlayerResponses(
     return {bounds, playerResponseStates};
 }
 
-export function resolveResponseButtons(panel_bounds: Rect) {
+export function resolveResponseButtons(panel_bounds: Rect): ButtonLayout {
     const bounds: Rect = {
         x: panel_bounds.x + panel_bounds.width - 100 + 10,
         y: panel_bounds.y - 105,

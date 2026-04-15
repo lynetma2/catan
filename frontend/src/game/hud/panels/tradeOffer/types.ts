@@ -32,12 +32,11 @@ export enum TradeOfferResponseKind {
 }
 
 export interface TradeOfferIncomingState extends TradeOfferBaseState {
-    response: TradeOfferResponseKind;
     buttons: {
         accept: Rect;
         decline: Rect;
     }
-    hoveredButton: TradeOfferIncomingButtonType;
+    hoveredButton?: TradeOfferIncomingButtonType;
 }
 
 export interface TradeOfferOutgoingState extends TradeOfferBaseState {
@@ -74,4 +73,9 @@ export interface ChipLayout {
     dotCy: number;
     dotRadius: number;
     initial: string;
+}
+
+export interface ButtonLayout {
+    acceptBounds: Rect;
+    rejectBounds: Rect;
 }
