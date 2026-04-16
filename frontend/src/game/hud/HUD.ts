@@ -13,6 +13,7 @@ import {GameEventType} from "@/game/events/GameEventTypes.ts";
 import {DicePanel} from "@/game/hud/panels/dice/DicePanel.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import {ResourcePanelManager} from "@/game/hud/panels/resource/ResourcePanelManager.ts";
+import {TradeOfferManager} from "@/game/hud/panels/tradeOffer/TradeOfferManager.ts";
 
 export class HUD implements InputLayer {
     readonly priority = 10;
@@ -21,6 +22,7 @@ export class HUD implements InputLayer {
     private readonly resourcePanel: ResourcePanelManager;
     private readonly overviewPanel: PlayerOverviewPanel;
     private readonly dicePanel: DicePanel;
+    private readonly tradeOfferPanel: TradeOfferManager;
 
     constructor(
         private readonly bus:        EventBus,
@@ -32,6 +34,7 @@ export class HUD implements InputLayer {
         this.resourcePanel = new ResourcePanelManager(shared, resolution, bus, frameQueue);
         this.overviewPanel = new PlayerOverviewPanel(bus, shared, resolution);
         this.dicePanel = new DicePanel(bus, frameQueue, shared, resolution);
+        this.tradeOfferPanel = new TradeOfferManager(bus, shared, frameQueue, resolution);
 
         this.subscribeToEvents();
     }
@@ -127,6 +130,7 @@ export class HUD implements InputLayer {
                 resource: this.resourcePanel.getState(),
                 overview: this.overviewPanel.getState(),
                 dice:     this.dicePanel.getState(),
+                tradeOffers: this.tradeOfferPanel.getState(),
             }
         };
     }

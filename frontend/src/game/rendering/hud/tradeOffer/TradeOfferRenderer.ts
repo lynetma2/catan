@@ -1,7 +1,10 @@
 import {
     type ButtonLayout,
-    type TradeOfferBaseState, TradeOfferIncomingButtonType,
+    type TradeOfferBaseState,
+    TradeOfferIncomingButtonType,
     type TradeOfferIncomingState,
+    TradeOfferKind,
+    type TradeOfferManagerState,
     type TradeOfferOutgoingState
 } from "@/game/hud/panels/tradeOffer/types.ts";
 import {ResourceCardRenderer} from "@/game/rendering/hud/resource/ResourceCardRenderer.ts";
@@ -46,12 +49,14 @@ export class TradeOfferRenderer {
         this.cardRenderer     = new ResourceCardRenderer(ctx);
     }
 
-    render(state: TradeOfferIncomingState | TradeOfferOutgoingState): void {
-        if ("buttons" in state && "accept" in state.buttons) {
-            this.renderIncoming(state as TradeOfferIncomingState);
-        } else {
-            this.renderOutgoing(state as TradeOfferOutgoingState);
-        }
+    render(state: TradeOfferManagerState): void {
+        state.activeTradePanels.forEach(offer => {
+            if (offer.kind == TradeOfferKind.Incoming) {
+                this.renderIncoming(offer);
+            } else {
+                this.renderOutgoing(offer);
+            }
+        });
     }
 
     renderIncoming(state: TradeOfferIncomingState): void {
@@ -86,6 +91,11 @@ export class TradeOfferRenderer {
     }
 
     private renderCards(state: TradeOfferBaseState): void {
+        // Sections first
+        this.renderSection(state.wantedResources.bounds, "WANTS");
+        this.renderSection(state.offeredResources.bounds, "OFFERS");
+
+        // Then cards on top
         this.cardRenderer.renderCards(state.wantedResources.cards);
         this.cardRenderer.renderCards(state.offeredResources.cards);
     }
@@ -108,5 +118,29 @@ export class TradeOfferRenderer {
         };
 
         this.buttonRenderer.render(buttonLayout, interaction);
+    }
+
+    private renderSection(bounds: Rect, label: string): void {
+        const ctx = this.ctx;
+
+        // Inner box
+        ctx.beginPath();
+        ctx.roundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4);
+        ctx.fillStyle = "#2a241b"; // slightly lighter than panel
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.roundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4);
+        ctx.strokeStyle = "#3f3526";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+        // Label
+        ctx.font = "10px sans-serif";
+        ctx.fillStyle = "#8a7a5a"; // muted gold-ish
+        ctx.textAlign = "left";
+        ctx.textBaseline = "bottom";
+
+        ctx.fillText(label, bounds.x + 6, bounds.y - 2);
     }
 }

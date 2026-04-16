@@ -44,6 +44,7 @@ export class HudRenderer {
         this.resourcePanelRenderer.render(state.panels.resource);
         this.overviewPanelRenderer.render(state.panels.overview);
         this.dicePanelRenderer.render(state.panels.dice);
+        this.tradeOfferRenderer.render(state.panels.tradeOffers);
         if (state.toast) this.toastRenderer.render(state.toast, this.resolution);
     }
 }

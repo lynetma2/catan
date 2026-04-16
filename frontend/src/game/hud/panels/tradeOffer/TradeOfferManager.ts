@@ -2,13 +2,16 @@
 import {type EventBus} from '@/game/core/EventBus';
 import {type SharedState} from '@/game/core/SharedState';
 import {type NormalizedInputEvent} from '@/game/core/Input/InputEvent';
-import {type Resolution, type ResolutionManager} from '@/game/core/ResolutionManager';
+import {type ResolutionManager} from '@/game/core/ResolutionManager';
 import {type EventPayloads, GameEventType} from '@/game/events/GameEventTypes';
-import type {PlayerOverviewState} from "@/game/hud/panels/overview/types.ts";
-import {resolveOverviewPanelBounds, resolvePlayerRows} from "@/game/hud/panels/overview/OverviewPanelLayout.ts";
 import {TradeOfferIncomingPanel} from "@/game/hud/panels/tradeOffer/tradeOfferPanel/TradeOfferIncomingPanel.ts";
 import {TradeOfferOutgoingPanel} from "@/game/hud/panels/tradeOffer/tradeOfferPanel/TradeOfferOutgoingPanel.ts";
-import {TradeOfferResponseKind} from "@/game/hud/panels/tradeOffer/types.ts";
+import {
+    TradeOfferKind,
+    type TradeOfferManagerState,
+    type TradeOfferPanelData,
+    TradeOfferResponseKind
+} from "@/game/hud/panels/tradeOffer/types.ts";
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
 
 export class TradeOfferManager {
@@ -16,8 +19,8 @@ export class TradeOfferManager {
     private readonly activeTradePanels: (TradeOfferIncomingPanel | TradeOfferOutgoingPanel)[] = [];
 
     constructor(
-        private readonly bus:        EventBus,
-        private readonly shared:     SharedState,
+        private readonly bus: EventBus,
+        private readonly shared: SharedState,
         private readonly frameQueue: FrameQueue,
         private readonly resolution: ResolutionManager,
     ) {
@@ -48,21 +51,16 @@ export class TradeOfferManager {
 
     private onGameStateLoaded(payload: EventPayloads[GameEventType.GAME_STATE_LOADED]) {
         // Rebuild entire state from snapshot — wipes any previous state
-        this.players.clear();
-        payload.players.forEach(p => {
-            this.players.set(p.id, {
-                playerId:       p.id,
-                name:           p.name,
-                color:          p.color,
-                victoryPoints:  p.victoryPoints,   // ← from snapshot, not zero
-                cardCount:      p.cardCount,
-                devCardCount:   p.devCardCount,
-                hasLongestRoad: p.hasLongestRoad,
-                hasLargestArmy: p.hasLargestArmy,
-                usedRobbers:    p.usedRobbers,
-                isCurrentTurn:  p.id === payload.currentPlayerId,
-            });
-        });
+        this.activeTradePanels.splice(0);
+        payload.activeTradeOffers.forEach((tradeOffer: TradeOfferPanelData) => {
+            if (tradeOffer.kind == TradeOfferKind.Incoming) {
+                const tradePanel = new TradeOfferIncomingPanel(this.resolution, this.frameQueue, this.shared, tradeOffer);
+                this.activeTradePanels.push(tradePanel);
+            } else {
+                const tradePanel = new TradeOfferOutgoingPanel(this.resolution, this.frameQueue, this.shared, tradeOffer);
+                this.activeTradePanels.push(tradePanel);
+            }
+        })
     }
 
     private onUpdatePlayerResponse(payload: EventPayloads[GameEventType.TRADE_OFFER_ACCEPTED],
@@ -100,11 +98,11 @@ export class TradeOfferManager {
 
     // ─── State ────────────────────────────────────────────────────────
 
-    getState() {
-
-    }
-
-    getBounds(r: Resolution) {
-        return resolveOverviewPanelBounds(this.players.size, r);
+    getState(): TradeOfferManagerState {
+        const states = this.activeTradePanels
+            .map((panel, index) => panel.getState(index));
+        return {
+            activeTradePanels: states,
+        }
     }
 }

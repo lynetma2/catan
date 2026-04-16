@@ -31,7 +31,13 @@ export enum TradeOfferResponseKind {
     NoAnswer = "NoAnswer"
 }
 
+export enum TradeOfferKind {
+    Incoming = "Incoming",
+    Outgoing = "Outgoing"
+}
+
 export interface TradeOfferIncomingState extends TradeOfferBaseState {
+    kind: TradeOfferKind.Incoming;
     buttons: {
         accept: Rect;
         decline: Rect;
@@ -40,11 +46,13 @@ export interface TradeOfferIncomingState extends TradeOfferBaseState {
 }
 
 export interface TradeOfferOutgoingState extends TradeOfferBaseState {
+    kind: TradeOfferKind.Outgoing;
     hoveredResponse: string; //PlayerId
     hoveredButton: string;
 }
 
 export interface TradeOfferPanelData {
+    kind: TradeOfferKind;
     tradeOfferId: string,
     tradeOwnerId: string,
     wantedResources: Resource[],

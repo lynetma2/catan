@@ -13,6 +13,7 @@ import type {
 } from "@/game/hud/panels/tradeOffer/types.ts";
 
 // ─── Config ───────────────────────────────────────────────────────────
+const PADDING = 12;
 
 const TRADE_OFFER_PANEL: PanelConfig = {
     anchorX: Anchor.Left,
@@ -20,8 +21,8 @@ const TRADE_OFFER_PANEL: PanelConfig = {
     offsetX: 0,
     offsetY: 0,
     width: 250,
-    height: 150,
-}
+    height: PADDING * 2 + 100 + 45,
+};
 
 const CARD = {
     width: 30,
@@ -32,31 +33,25 @@ const CARD = {
 const BUTTON_GAP = 6;
 const BUTTON_HEIGHT = 28;
 const BUTTON_WIDTH = 44;
-
 const TRADE_OFFER_GAP = 12;
-
-// const RESPONSE_COLOR: Record<TradeOfferResponseKind, string> = {
-//     [TradeOfferResponseKind.Accept]:   "#1D9E75",
-//     [TradeOfferResponseKind.Decline]:  "#E24B4A",
-//     [TradeOfferResponseKind.NoAnswer]: "#5F5E5A",
-// };
 
 const CHIP_SIZE = 30;
 const CHIP_GAP = 6;
 const DOT_RADIUS = 4;
 
+// ─── Panel bounds ─────────────────────────────────────────────────────
 export function resolveTradeOfferPanelBounds(r: Resolution, index: number): Rect {
     const rect = hudLayout.resolve(TRADE_OFFER_PANEL, r);
+    const scale = hudLayout.scaleFor(r);
+    const s = (v: number) => v * scale;
 
-    // Update position based on the index.
     return {
         ...rect,
-        y: rect.y - TRADE_OFFER_GAP * index,
+        y: rect.y + s(TRADE_OFFER_GAP) * index,
     };
 }
 
-// ─── Private — cards in rect ──────────────────────────────────────────────────
-
+// ─── Trade cards ──────────────────────────────────────────────────────
 export function resolveTradeCards(
     panel_bounds: Rect,
     wantedResources: Resource[],
@@ -65,56 +60,88 @@ export function resolveTradeCards(
     r: Resolution,
 ): TradeOfferPanelCardsState {
 
+    const scale = hudLayout.scaleFor(r);
+    const s = (v: number) => v * scale;
+
+    const pad = s(PADDING);
+    const rowH = s(45);
+    const rowGap = s(50);
+
     const offered: Rect = {
-        x: panel_bounds.x - 10,
-        y: panel_bounds.y - 5,
-        height: 45,
-        width: panel_bounds.width - 20,
-    }
+        x: panel_bounds.x + pad,
+        y: panel_bounds.y + pad,
+        height: rowH,
+        width: panel_bounds.width - pad * 2,
+    };
 
     const wanted: Rect = {
-        x: panel_bounds.x - 10,
-        y: panel_bounds.y - 55,
-        height: 45,
-        width: panel_bounds.width - 20,
-    }
+        x: panel_bounds.x + pad,
+        y: panel_bounds.y + pad + rowGap,
+        height: rowH,
+        width: panel_bounds.width - pad * 2,
+    };
 
     return {
-        wantedResources: {bounds: wanted, cards: resolveTradeCardsInRect(wantedResources, wanted, hoveredId)},
-        offeredResources: {bounds: offered, cards: resolveTradeCardsInRect(offeredResources, offered, hoveredId)},
-    }
+        wantedResources: {
+            bounds: wanted,
+            cards: resolveTradeCardsInRect(wantedResources, wanted, hoveredId, scale)
+        },
+        offeredResources: {
+            bounds: offered,
+            cards: resolveTradeCardsInRect(offeredResources, offered, hoveredId, scale)
+        },
+    };
 }
 
+// ─── Cards in rect ────────────────────────────────────────────────────
 function resolveTradeCardsInRect(
     resources: Resource[],
     bounds: Rect,
     hoveredId: string | null,
+    scale: number,
 ): ResourceCard[] {
+
+    const s = (v: number) => v * scale;
+
+    const card = {
+        w: s(CARD.width),
+        h: s(CARD.height),
+        overlap: s(CARD.overlap),
+    };
+
     const count = resources.length;
-    const spacing = resolveSpacing(count, bounds.width);
-    const totalWidth = CARD.width + (count - 1) * spacing;
+
+    const spacing = resolveSpacing(count, bounds.width, card);
+    const totalWidth = card.w + (count - 1) * spacing;
 
     const startX = bounds.x + bounds.width / 2 - totalWidth / 2;
-    const baseY = bounds.y + bounds.height - CARD.height;
+    const baseY = bounds.y + bounds.height - card.h;
 
-    const hoveredIndex = hoveredId === null
-        ? -1
-        : resources.findIndex(res => res.uid === hoveredId);
+    const hoveredIndex =
+        hoveredId === null
+            ? -1
+            : resources.findIndex(res => res.uid === hoveredId);
 
     return resources.map((resource, i) =>
-        resolveTradeCard(resource, i, startX, baseY, spacing, hoveredIndex)
+        resolveTradeCard(resource, i, startX, baseY, spacing, hoveredIndex, card, scale)
     );
 }
 
+// ─── Single card ──────────────────────────────────────────────────────
 function resolveTradeCard(
     resource: Resource,
     index: number,
     startX: number,
     baseY: number,
     spacing: number,
-    hoveredIndex: number
+    hoveredIndex: number,
+    card: { w: number; h: number },
+    scale: number,
 ): ResourceCard {
-    const offset = {x: 4, y: 0};
+
+    const s = (v: number) => v * scale;
+
+    const offset = {x: s(4), y: 0};
 
     return {
         resourceType: resource.resourceType,
@@ -125,86 +152,119 @@ function resolveTradeCard(
         bounds: {
             x: startX + index * spacing + offset.x,
             y: baseY + offset.y,
-            width: CARD.width,
-            height: CARD.height,
+            width: card.w,
+            height: card.h,
         },
     };
 }
 
+// ─── Spacing ──────────────────────────────────────────────────────────
+function resolveSpacing(
+    count: number,
+    panelWidth: number,
+    card: { w: number; overlap: number },
+): number {
+
+    const naturalSpacing = card.w - card.overlap;
+    const naturalWidth = card.w + (count - 1) * naturalSpacing;
+
+    if (naturalWidth <= panelWidth) return naturalSpacing;
+
+    return (panelWidth - card.w) / Math.max(count - 1, 1);
+}
+
+// ─── Player responses ─────────────────────────────────────────────────
 export function resolvePlayerResponses(
     panel_bounds: Rect,
-    playerResponses: { playerId: string; response: TradeOfferResponseKind }[]
-    //TODO add something for hover effects.
-): {bounds: Rect, playerResponseStates: PlayerResponseState[]} {
+    playerResponses: { playerId: string; response: TradeOfferResponseKind }[],
+    r: Resolution,
+): { bounds: Rect; playerResponseStates: PlayerResponseState[] } {
+
+    const scale = hudLayout.scaleFor(r);
+    const s = (v: number) => v * scale;
+
+    const chip = {
+        size: s(CHIP_SIZE),
+        gap: s(CHIP_GAP),
+        dot: s(DOT_RADIUS),
+    };
+
+    const pad = s(PADDING);
+
     const bounds: Rect = {
-        x: panel_bounds.x - 10,
-        y: panel_bounds.y - 105,
-        width: panel_bounds.width - 100,
-        height: 45,
+        x: panel_bounds.x + pad,
+        y: panel_bounds.y + pad + s(100),
+        width: panel_bounds.width - pad * 2 - s(100),
+        height: s(45),
     };
 
     const centerY = bounds.y + bounds.height / 2;
-    const chipY = centerY - CHIP_SIZE / 2;
+    const chipY = centerY - chip.size / 2;
 
     const playerResponseStates: PlayerResponseState[] = playerResponses.map((pr, i) => {
-        const chipX = bounds.x + i * (CHIP_SIZE + CHIP_GAP);
-        const cx = chipX + CHIP_SIZE / 2;
-        const cy = chipY + CHIP_SIZE / 2;
+        const chipX = bounds.x + i * (chip.size + chip.gap);
 
-        const chip =  {
-            cx,
-            cy,
-            radius: CHIP_SIZE / 2,
-            dotCx: chipX + CHIP_SIZE - DOT_RADIUS,
-            dotCy: chipY + CHIP_SIZE - DOT_RADIUS,
-            dotRadius: DOT_RADIUS,
-            initial: pr.playerId.charAt(0).toUpperCase(),
-        };
+        const cx = chipX + chip.size / 2;
+        const cy = chipY + chip.size / 2;
 
         return {
             playerId: pr.playerId,
             response: pr.response,
-            chip,
-        }
+            chip: {
+                cx,
+                cy,
+                radius: chip.size / 2,
+                dotCx: chipX + chip.size - chip.dot,
+                dotCy: chipY + chip.size - chip.dot,
+                dotRadius: chip.dot,
+                initial: pr.playerId.charAt(0).toUpperCase(),
+            },
+        };
     });
 
     return {bounds, playerResponseStates};
 }
 
-export function resolveResponseButtons(panel_bounds: Rect): ButtonLayout {
+// ─── Buttons ──────────────────────────────────────────────────────────
+export function resolveResponseButtons(panel_bounds: Rect, r: Resolution): ButtonLayout {
+
+    const scale = hudLayout.scaleFor(r);
+    const s = (v: number) => v * scale;
+
+    const button = {
+        w: s(BUTTON_WIDTH),
+        h: s(BUTTON_HEIGHT),
+        gap: s(BUTTON_GAP),
+    };
+
+    const pad = s(PADDING);
+
     const bounds: Rect = {
-        x: panel_bounds.x + panel_bounds.width - 100 + 10,
-        y: panel_bounds.y - 105,
-        width: 100 - 10,  // the reserved 100px strip minus a small left margin
-        height: 45,
+        x: panel_bounds.x + panel_bounds.width - s(100),
+        y: panel_bounds.y + pad + s(100),
+        width: s(100) - pad,
+        height: s(45),
     };
 
     const centerY = bounds.y + bounds.height / 2;
-    const totalWidth = BUTTON_WIDTH * 2 + BUTTON_GAP;
+
+    const totalWidth = button.w * 2 + button.gap;
     const startX = bounds.x + (bounds.width - totalWidth) / 2;
-    const buttonY = centerY - BUTTON_HEIGHT / 2;
+
+    const buttonY = centerY - button.h / 2;
 
     return {
         acceptBounds: {
             x: startX,
             y: buttonY,
-            width: BUTTON_WIDTH,
-            height: BUTTON_HEIGHT,
+            width: button.w,
+            height: button.h,
         },
         rejectBounds: {
-            x: startX + BUTTON_WIDTH + BUTTON_GAP,
+            x: startX + button.w + button.gap,
             y: buttonY,
-            width: BUTTON_WIDTH,
-            height: BUTTON_HEIGHT,
+            width: button.w,
+            height: button.h,
         },
     };
-}
-
-function resolveSpacing(count: number, panelWidth: number): number {
-    const naturalSpacing = CARD.width - CARD.overlap;
-    const naturalWidth = CARD.width + (count - 1) * naturalSpacing;
-
-    if (naturalWidth <= panelWidth) return naturalSpacing;
-
-    return (panelWidth - CARD.width) / Math.max(count - 1, 1);
 }

@@ -56,5 +56,5 @@ export abstract class TradeOfferBasePanel<Tstate> { //TODO should extend base pa
 
     abstract handleInput(_event: NormalizedInputEvent): boolean;
 
-    abstract getState(): Tstate;
+    abstract getState(index: number): Tstate;
 }

@@ -16,6 +16,7 @@ import {
     type TileSnapshot,
     TileType
 } from "@/game/core/types.ts";
+import {TradeOfferKind, type TradeOfferPanelData, TradeOfferResponseKind} from "@/game/hud/panels/tradeOffer/types.ts";
 
 const v = (q: number, r: number, dir1: number, dir2: number): Vertex => {
     const center = hex.create(q, r, -q - r);
@@ -234,6 +235,29 @@ function createPlacements(playerCount: 2 | 3 | 4): PlacementSnapshot {
     return { settlements, cities: [], roads };
 }
 
+function createActiveTradeOffers(players: PlayerSnapshot[]): TradeOfferPanelData[] {
+    return [
+        {
+            kind: TradeOfferKind.Incoming,
+            tradeOfferId: 'trade-1',
+            tradeOwnerId: 'p2',
+            offeredResources: [
+                {uid: 't1', resourceType: ResourceType.Lumber},
+                {uid: 't2', resourceType: ResourceType.Lumber},
+            ],
+            wantedResources: [
+                {uid: 't3', resourceType: ResourceType.Brick},
+            ],
+            playerResponses: players
+                .filter(p => p.id !== 'p2')
+                .map(p => ({
+                    playerId: p.id,
+                    response: TradeOfferResponseKind.NoAnswer,
+                })),
+        },
+    ];
+}
+
 // ─── Main factory ─────────────────────────────────────────────────────
 
 export function createTestGameState(
@@ -241,13 +265,16 @@ export function createTestGameState(
     currentPlayerId:  string     = 'p1',
     phase:            GamePhase  = GamePhase.PostRoll,
 ): GameSnapshot {
+    const players = createPlayers(playerCount);
+
     return {
-        players:         createPlayers(playerCount),
-        tiles:           createTiles(),
-        placements:      createPlacements(playerCount),
-        currentPhase:    phase,
+        players,
+        tiles: createTiles(),
+        placements: createPlacements(playerCount),
+        currentPhase: phase,
         currentPlayerId,
-        turnNumber:      4,
+        turnNumber: 4,
+        activeTradeOffers: createActiveTradeOffers(players),
     };
 }
 
