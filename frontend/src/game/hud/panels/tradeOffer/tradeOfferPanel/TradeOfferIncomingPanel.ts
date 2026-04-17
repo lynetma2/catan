@@ -1,7 +1,9 @@
 // hud/panels/overview/PlayerOverviewPanel.ts
-import {type NormalizedInputEvent} from '@/game/core/Input/InputEvent.ts';
-import type {TradeButtonType} from "@/game/hud/panels/resource/types.ts";
+import {InputType, type NormalizedInputEvent} from '@/game/core/Input/InputEvent.ts';
+import {DiscardButtonType, type TradeButtonType} from "@/game/hud/panels/resource/types.ts";
 import {
+    type ButtonLayout,
+    TradeOfferIncomingButtonType,
     type TradeOfferIncomingState,
     TradeOfferKind,
     type TradeOfferPanelData
@@ -16,10 +18,12 @@ import {
     resolveTradeCards,
     resolveTradeOfferPanelBounds
 } from "@/game/hud/panels/tradeOffer/TradeOfferPanelLayout.ts";
+import {containsPoint} from "@/game/utils/Rect.ts";
+import type {Vec2} from "@/game/utils/Vec2.ts";
 
 export class TradeOfferIncomingPanel extends TradeOfferBasePanel<TradeOfferIncomingState> {
     // // Panel owns this state — no other system needs it
-    private hoveringButton: TradeButtonType | null = null;
+    private hoveredButton: TradeOfferIncomingButtonType | undefined = undefined;
     private hoveredCardId: string | null = null;
     private panelData: TradeOfferPanelData;
 
@@ -35,8 +39,49 @@ export class TradeOfferIncomingPanel extends TradeOfferBasePanel<TradeOfferIncom
 
     // ─── Input ────────────────────────────────────────────────────────
 
-    handleInput(_event: NormalizedInputEvent): boolean {
-        return false; // display only for now
+    handleInput(event: NormalizedInputEvent, index: number): boolean {
+        const r = this.resolution.get();
+        const layout = resolveTradeOfferPanelBounds(r, index);
+        const buttons = resolveResponseButtons(layout, r);
+
+        if (event.type === InputType.MouseMove) {
+            const hitButton = this.findHitButton(buttons, event.screenPos);
+
+            this.hoveredButton = hitButton;
+            return hitButton != null;
+        }
+
+        if (event.type === InputType.MouseClick) {
+            const hitButton = this.findHitButton(buttons, event.screenPos);
+            if (hitButton != null) {
+                return this.handleButtonClick(hitButton);
+            }
+        }
+
+        return false;
+    }
+
+    private findHitButton(
+        buttons: ButtonLayout,
+        pos: Vec2,
+    ): TradeOfferIncomingButtonType | undefined {
+        if (containsPoint(buttons.acceptBounds, pos)) {
+            return TradeOfferIncomingButtonType.Accept
+        } else if (containsPoint(buttons.rejectBounds, pos)) {
+            return TradeOfferIncomingButtonType.Decline
+        }
+        return undefined;
+    }
+
+    private handleButtonClick(hitButton: TradeOfferIncomingButtonType) {
+        switch (hitButton) {
+            case TradeOfferIncomingButtonType.Accept:
+                console.log("Accept clicked");
+                return true;
+            case TradeOfferIncomingButtonType.Decline:
+                console.log("Decline clicked");
+                return true;
+        }
     }
 
     // ─── State ────────────────────────────────────────────────────────
@@ -69,7 +114,7 @@ export class TradeOfferIncomingPanel extends TradeOfferBasePanel<TradeOfferIncom
                 accept: buttons.acceptBounds,
                 decline: buttons.rejectBounds
             },
-            hoveredButton: undefined
+            hoveredButton: this.hoveredButton
         }
     }
 }

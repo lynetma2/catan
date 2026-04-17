@@ -54,7 +54,7 @@ export abstract class TradeOfferBasePanel<Tstate> { //TODO should extend base pa
 
     abstract updatePlayerResponse(playerId: string, response: TradeOfferResponseKind): void;
 
-    abstract handleInput(_event: NormalizedInputEvent): boolean;
+    abstract handleInput(_event: NormalizedInputEvent, index: number): boolean;
 
     abstract getState(index: number): Tstate;
 }

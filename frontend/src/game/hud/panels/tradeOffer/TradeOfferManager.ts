@@ -13,6 +13,7 @@ import {
     TradeOfferResponseKind
 } from "@/game/hud/panels/tradeOffer/types.ts";
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
+import {resolveTradeOfferPanelBounds} from "@/game/hud/panels/tradeOffer/TradeOfferPanelLayout.ts";
 
 export class TradeOfferManager {
     // Panel owns this state — no other system needs it
@@ -93,6 +94,9 @@ export class TradeOfferManager {
     // ─── Input ────────────────────────────────────────────────────────
 
     handleInput(_event: NormalizedInputEvent): boolean {
+        const bounds = this.activeTradePanels
+            .map((panel, index) => resolveTradeOfferPanelBounds(this.resolution.get(), index));
+
         return false; // display only for now
     }
 
