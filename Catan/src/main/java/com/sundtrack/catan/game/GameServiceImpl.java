@@ -1,14 +1,14 @@
 package com.sundtrack.catan.game;
 
-import com.sundtrack.catan.game.entity.Board;
-import com.sundtrack.catan.game.entity.Game;
-import com.sundtrack.catan.game.entity.MapBuilder;
-import com.sundtrack.catan.game.entity.Player;
+import com.sundtrack.catan.game.model.Game;
+import com.sundtrack.catan.game.services.BoardService;
+import com.sundtrack.catan.game.services.GameEventExecutor;
+import com.sundtrack.catan.game.model.player.Player;
+import com.sundtrack.catan.game.dto.events.GameEvent;
 import com.sundtrack.catan.lobby.Lobby;
-import com.sundtrack.catan.game.Events.GameEvent;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,6 +17,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GameServiceImpl implements GameService {
 
     private final Map<Integer, Game> games = new ConcurrentHashMap<>();
+    private final BoardService boardService;
+    private final GameEventExecutor gameEventExecutor;
+
+    public GameServiceImpl(BoardService boardService, GameEventExecutor gameEventExecutor) {
+        this.boardService = boardService;
+        this.gameEventExecutor = gameEventExecutor;
+    }
 
     @Override
     public Map<Integer, Game> getGames() {
@@ -36,9 +43,9 @@ public class GameServiceImpl implements GameService {
     public Game newGame(int lobbyId, Lobby lobby) {
         Map<String, Player> newPlayers = new HashMap<>();
         lobby.getPlayers().values().forEach(player -> {
-            newPlayers.put(player.getUsername(), new Player(player.getUsername()));
+            newPlayers.put(player.getUsername(), new Player(player.getUsername(), null)); // Assuming style is null for now or handled elsewhere
         });
-        games.put(lobbyId, new Game(MapBuilder.classicNotRandom(), newPlayers));
+        games.put(lobbyId, new Game(boardService.createClassicBoard(), newPlayers));
 
         return games.get(lobbyId);
     }
@@ -49,15 +56,12 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public Game handleGameEvent(int gameId, GameEvent event) {
-        //TODO add event handling and verification of the event.
+    public List<GameEvent> handleGameEvent(int gameId, GameEvent event) {
         if (!games.containsKey(gameId)) {
             throw new RuntimeException("Game with lobbyId " + gameId + " not found");
         }
 
         Game game = games.get(gameId);
-        game.handleGameEvent(event);
-
-        return game;
+        return gameEventExecutor.executeEvent(game, event);
     }
 }

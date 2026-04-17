@@ -1,13 +1,11 @@
 package com.sundtrack.catan.game.entity;
 
-import com.sundtrack.catan.game.Events.GameEvent;
 import com.sundtrack.catan.game.entity.cards.DevelopmentCard;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class Game {
 

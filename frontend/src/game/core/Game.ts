@@ -1,202 +1,168 @@
-import {Board} from "../entity/Board.ts";
-import {Player} from "../entity/Player.ts";
-import {GameEvent} from "../GameEvent.ts";
-import type {Layout} from "@/game/hexagon/Layout.ts";
-import type {IMessage} from "@stomp/stompjs";
-import {drawBankCards, drawDices} from "@/game/entity/VisualUtilities.ts";
+import {InputManager} from "@/game/core/Input/InputManager.ts";
+import {FrameQueue} from "@/game/core/FrameQueue.ts";
 import {EventBus} from "@/game/core/EventBus.ts";
-import type {GameEvents, Middleware} from "@/game/core/types.ts";
-import type {Button} from "@/game/core/Buttons/ButtonType.ts";
-import {PutRoadButton} from "@/game/core/Buttons/PutRoadButton.ts";
-import {PutHouseButton} from "@/game/core/Buttons/PutHouseButton.ts";
-import {PutCityButton} from "@/game/core/Buttons/PutCityButton.ts";
-import {DrawDevelopmentCardButton} from "@/game/core/Buttons/DrawDevelopmentCardButton.ts";
-import {EndTurnButton} from "@/game/core/Buttons/EndTurnButton.ts";
-import {InteractionManager} from "@/game/input/InteractionManager.ts";
-import {GameController} from "@/game/core/GameController.ts";
+import {HUD} from "@/game/hud/HUD.ts";
+import {HudRenderer} from "@/game/rendering/hud/HUDRenderer.ts";
+import {SharedState} from "@/game/core/SharedState.ts";
+import {ResolutionManager} from "@/game/core/ResolutionManager.ts";
+import {Camera} from "@/game/core/Camera.ts";
+import {layout} from "@/game/utils/HexGeometry/Layout.ts";
+import {DEFAULT_HUD_THEME} from "@/game/rendering/theme/theme.ts";
+import {createTestGameState, TEST_SCENARIOS} from "@/game/tools/testData.ts";
+import {GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
+import {World} from "@/game/world/World.ts";
+import {WorldRenderer} from "@/game/rendering/world/WorldRenderer.ts";
+import type {GameSnapshot} from "@/game/core/types.ts";
+import {GamePhaseManager} from "@/game/core/GamePhaseManager.ts";
+import {SharedStateManager} from "@/game/core/SharedStateManager.ts";
+import {DebugTools} from "@/game/tools/DebugTools.ts";
 
-export enum InputState {
-    HousePlacingMode = "HousePlacingMode",
-    RoadPlacingMode = "RoadPlacingMode",
-    CityPlacingMode = "CityPlacingMode",
-    RollDicesMode = "RollDicesMode",
-    RobberPlacingMode = "RobberPlacingMode",
-    DefaultMode = "DefaultMode",
-    NotMyTurnMode = "NotMyTurnMode",
-}
+const DEV_MODE = import.meta.env.DEV;
 
 export class Game {
-    public board: Board;
-    public players: Map<string, Player>;
-    public dices: number[];
-    public events: GameEvent[];
-    public resources: number[];
-    public developmentCards: number;
-    public localPlayer: string;
-    public currentPlayer: string;
-    public canvas: HTMLCanvasElement;
-    public layout: Layout;
-    public inputState: InputState;
-    private eventBus: EventBus<GameEvents>;
-    private buttons: Button[];
-    private interactionManager: InteractionManager;
+    private readonly bus: EventBus
+    private readonly frameQueue: FrameQueue;
+    private sharedState: SharedState;
+    private readonly gamePhase: GamePhaseManager;
+    private readonly sharedManager: SharedStateManager;
 
-    constructor(board: Board, players: Map<string, Player>, events: GameEvent[], dices: number[], resources: number[], canvas: HTMLCanvasElement, layout: Layout, localPlayer: string, manager: InteractionManager, eventBus: EventBus<GameEvents>) {
-        this.board = board;
-        this.players = players;
-        this.events = events;
-        this.resources = resources;
-        this.dices = dices;
-        this.canvas = canvas;
-        this.layout = layout;
-        this.localPlayer = localPlayer;
-        this.currentPlayer = "test";
-        this.developmentCards = 25;
+    private readonly resolution: ResolutionManager;
+    private readonly camera: Camera;
 
-        //Internal state management
-        this.inputState = InputState.DefaultMode;
-        this.eventBus = eventBus;
-        this.interactionManager = manager;
+    private readonly hud: HUD;
+    private readonly hudRenderer: HudRenderer;
+    private readonly inputManager: InputManager;
 
-        //For know test buttons are used.
-        this.buttons = this.initializeButtons();
+    private readonly world: World;
+    private readonly worldRenderer: WorldRenderer;
 
-        //Make the eventbus work
-        this.setupEventListeners();
+    private animationFrameId: number | null = null;
+    private previousTimeMs: number = 0;
 
-        this.setupLoggingMiddleware();
+    private readonly MAX_FPS = 144;
+    private readonly FRAME_INTERVAL_MS = 1000 / this.MAX_FPS;
 
-        this.eventBus.publish('NotificationEvent', {title: "test Notification Event", stopPropagation: false, uid: "123456", timestamp: 0})
-    }
+    constructor(private readonly canvas: HTMLCanvasElement) {
+        // ── 1. Infrastructure ──────────────────────────────────────────
+        this.bus         = new EventBus();
+        this.frameQueue  = new FrameQueue();
+        this.sharedState = new SharedState();
+        this.resolution  = new ResolutionManager(canvas);
+        this.gamePhase = new GamePhaseManager(this.bus, this.sharedState);
+        this.sharedManager = new SharedStateManager(this.bus, this.sharedState);
 
-    public static fromJSON(message: IMessage, layout: Layout, canvas: HTMLCanvasElement, localPlayer: string, manager: InteractionManager, eventBus: EventBus<GameEvents>): Game {
-        const json = JSON.parse(message.body);
+        this.sharedState.setLocalPlayerId('p1');
 
-        //Parsing the board:
-        const board = Board.fromJSON(json.board, canvas, layout, InputState.DefaultMode, manager, eventBus);
-        const dices = json.dices;
+        // ── 2. Camera ──────────────────────────────────────────────────
+        this.camera = new Camera(
+            layout.pointy,
+            48,               // hex radius in CSS pixels
+            this.resolution,
+        );
 
-        const playersList = Object.entries(json.players).map(([key, value]) => {
-            return [key, Player.fromJSON(value)] as [string, Player];
-        });
-        const players = new Map<string, Player>(playersList)
+        // ── 3. Systems ─────────────────────────────────────────────────
+        this.hud = new HUD(this.bus, this.sharedState, this.frameQueue, this.resolution);
+        this.world = new World(this.bus, this.frameQueue, this.sharedState, this.camera);
 
-        const events = json.events;
-        const resources = json.resources;
+        // ── 4. Renderers ───────────────────────────────────────────────
+        const ctx = canvas.getContext('2d')!;
+        this.hudRenderer = new HudRenderer(ctx, this.resolution, DEFAULT_HUD_THEME);
+        this.worldRenderer = new WorldRenderer(ctx, this.camera, this.sharedState);
 
-        return new Game(board, players, events, dices, resources, canvas, layout, localPlayer, manager, eventBus);
-    }
+        // ── 5. Input ───────────────────────────────────────────────────
+        this.inputManager = new InputManager(canvas);
+        this.inputManager.register(this.hud);  // priority 10
+        this.inputManager.register(this.world); // priority 0
 
-    public draw() {
-        //TODO clear
-        this.clearCanvas(this.canvas);
-
-        //Draw board
-        this.board.draw();
-        if (this.inputState == InputState.HousePlacingMode) {
-            //TODO fix these
-            this.board.drawLegalHouses(true, "player1", this.canvas, this.layout);
-        } else if (this.inputState == InputState.RoadPlacingMode) {
-            //TODO fix this
-            this.board.drawLegalRoads(false, "Dennis", this.canvas, this.layout, this.board.buildings.get("q1r1s-2dEAST"));
+        if (DEV_MODE) {
+            this.loadTestData();
+            new DebugTools(
+                this.sharedState,
+                this.camera,
+                this.resolution,
+                this.world,
+                this.hud,
+                this.frameQueue,
+            );
         }
+    }
 
-        //Draw buttons.
-        this.buttons.forEach(button => {
-            button.draw();
-        })
+    public start() {
+        if (this.animationFrameId === null) {
+            this.loop(0);
+        }
+    }
 
-        //Draw Players stats
-        let currentY = 800;
-        this.players.forEach((player) => {
-            player.drawPlayerStats(this.canvas, currentY);
-            currentY = currentY - 100;
-            if (player.name == this.localPlayer) {
-                //Draw current player inventory
-                player.draw(this.canvas);
+    public destroy() {
+        if (this.animationFrameId !== null) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+        this.resolution.destroy();
+        this.inputManager.destroy();
+    }
+
+    // Arrow function automatically binds 'this', preventing context loss
+    private readonly loop = (currentTimeMs: number) => {
+            const deltaTimeMs = currentTimeMs - this.previousTimeMs;
+
+            if (deltaTimeMs >= this.FRAME_INTERVAL_MS) {
+                // 1. Flush queued events from LAST frame — mutate state before drawing
+                this.frameQueue.flush(this.bus);
+
+                // 2. Update systems
+                this.world.update(deltaTimeMs);
+                this.hud.update(deltaTimeMs);
+
+                this.previousTimeMs = currentTimeMs - (deltaTimeMs % this.FRAME_INTERVAL_MS);
             }
-        });
 
-        //Draw the bank
-        drawBankCards(this.canvas, this.resources, this.developmentCards, 800, currentY);
+            const ctx = this.canvas.getContext("2d")!;
+            const r = this.resolution.get();
 
-        //Draw the dices
-        drawDices(this.canvas, this.dices, 670, 830);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, r.pixelWidth, r.pixelHeight);
+
+            // Reapply dpr scale as base transform
+            ctx.setTransform(r.dpr, 0, 0, r.dpr, 0, 0);
+
+            this.worldRenderer.render(this.world.getState());
+            this.hudRenderer.render(this.hud.getState());
+
+            // Draw animations on top of the board
+            //this.animationService.draw(this.layoutSettings);
+            
+            this.animationFrameId = requestAnimationFrame(this.loop);
     }
 
-    public updateInputState(state: InputState) {
-        this.inputState = state;
-        this.board.inputState = state;
+    private loadTestData() {
+        const load = (snapshot: GameSnapshot) => {
+            this.frameQueue.push({
+                type:    GameEventType.GAME_STATE_LOADED,
+                payload: snapshot,
+                source:  GameEventSource.Network,
+            });
+        };
+
+        load(createTestGameState());
+
+        // Use arrow function that always reads current game instance
+        // Survives React StrictMode remounts because it's reassigned each time
+        (window as any).loadScenario = (name: keyof typeof TEST_SCENARIOS) => {
+            const factory = TEST_SCENARIOS[name];
+            if (!factory) {
+                console.warn(
+                    `Unknown scenario "${name}". Available: ${Object.keys(TEST_SCENARIOS).join(', ')}`
+                );
+                return;
+            }
+            load(factory());
+            console.info(`%c[DEV] Loaded scenario: ${name}`, 'color: #50c050');
+        };
+
+        console.info(
+            '%c[DEV] Scenarios: ' + Object.keys(TEST_SCENARIOS).join(', '),
+            'color: #50a0e0; font-weight: bold'
+        );
     }
-
-    private createButton(
-        ButtonClass: new (bounds: any, canvas: any, color: string, id: string, manager: InteractionManager, ...args: any[]) => Button,
-        bounds: any,
-        id: string,
-        ...extraArgs: any[]
-    ): Button {
-        return new ButtonClass(bounds, this.canvas, "green", id, this.interactionManager, ...extraArgs);
-    }
-
-    private initializeButtons(): Button[] {
-        const margin = 5;
-        const startX = 500;
-        const startY = 900;
-        const buttonSize = { width: 80, height: 80 };
-
-        const buttonTypes: [any, any[]?][] = [
-            [PutRoadButton],
-            [PutHouseButton],
-            [PutCityButton],
-            [DrawDevelopmentCardButton],
-            [EndTurnButton, [false]], // extra arg
-        ];
-
-        return buttonTypes.map(([ButtonClass, extraArgs = []], i) => {
-            const bounds = {
-                x: startX + i * (buttonSize.width + margin),
-                y: startY,
-                ...buttonSize,
-            };
-            return this.createButton(ButtonClass, bounds, i.toString(), this.eventBus, ...extraArgs);
-        });
-    }
-
-    private clearCanvas(canvas: HTMLCanvasElement) {
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-            console.error("Can't get ctx to clear the canvas");
-            return;
-        }
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-    private setupEventListeners(): void {
-        this.eventBus.on('PressedButtonEvent',(event) => GameController.handlePressedButtonEvent(event, this))
-    }
-
-    private setupLoggingMiddleware() {
-        this.eventBus.use(this.loggingMiddleware);
-    }
-
-    private loggingMiddleware: Middleware<GameEvents, keyof GameEvents> = (eventName, payload, next) => {
-        // payload's type is a union of all possible event payloads, so you can only access
-        // properties that exist on ALL of them (e.g., 'uid').
-        console.log(`[Middleware] Event '${String(eventName)}' (ID: ${payload.uid}) triggered.`);
-        next(eventName, payload);
-    };
-
-    //TODO insert event handlers.
-    //TODO make the state able to consider incremental state upgrades.
-
-    //Events
-    //Construction based
-    //Put Settlement
-    //Put city
-    //Put Road
-    //Move Robber
-
-    //Card based
-    //
 }

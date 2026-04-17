@@ -2,10 +2,11 @@ package com.sundtrack.catan.game;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sundtrack.catan.game.entity.Game;
+import com.sundtrack.catan.game.model.Game;
+import com.sundtrack.catan.game.dto.events.GameEvent;
 import com.sundtrack.catan.lobby.LobbyMessages;
 import com.sundtrack.catan.lobby.LobbyService;
-import com.sundtrack.catan.game.Events.GameEvent;
+import com.sundtrack.catan.game.services.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -13,6 +14,8 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
+
+import java.util.List;
 
 @Controller
 @CrossOrigin(origins = "*")
@@ -22,33 +25,23 @@ public class GameController {
     private GameService gameService;
     private LobbyService lobbyService;
     private SimpMessagingTemplate template;
+    private NotificationService notificationService;
 
     @Autowired
-    public GameController(SimpMessagingTemplate template, GameService gameService,  LobbyService lobbyService) {
+    public GameController(SimpMessagingTemplate template, GameService gameService,  LobbyService lobbyService, NotificationService notificationService) {
         this.template = template;
         this.gameService = gameService;
         this.lobbyService = lobbyService;
+        this.notificationService = notificationService;
     }
 
     // For full state sync: /game/fullStatus/{lobbyId}
     // For event state: /game/status/{lobbyId}
 
     @MessageMapping("/event/{lobbyId}")
-    @SendTo("/game/status/{lobbyId}")
-    public GameEvent eventHandling(GameEvent event, @DestinationVariable int id) {
-        Game game = gameService.handleGameEvent(id, event);
-
-        //TODO design incremental game state system at some point.
-        //TODO a first idea is to use the GameEvents (Then handle them on all sides).
-        String text = null;
-        try {
-            text = new ObjectMapper().writeValueAsString(game);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        this.template.convertAndSend("/game/fullStatus/" + id, text);
-        return event;
+    public void eventHandling(GameEvent event, @DestinationVariable int lobbyId) {
+        List<GameEvent> consequences = gameService.handleGameEvent(lobbyId, event);
+        notificationService.broadcastEvents(lobbyId, consequences);
     }
 
     //TODO handle the generation of games not as websocket communication
