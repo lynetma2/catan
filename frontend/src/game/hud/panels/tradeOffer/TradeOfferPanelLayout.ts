@@ -21,7 +21,7 @@ const TRADE_OFFER_PANEL: PanelConfig = {
     offsetX: 0,
     offsetY: 0,
     width: 250,
-    height: PADDING * 2 + 100 + 45,
+    height: PADDING * 2 + 100 + 65,
 };
 
 const CARD = {
@@ -34,7 +34,7 @@ const BUTTON_GAP = 6;
 const BUTTON_HEIGHT = 28;
 const BUTTON_WIDTH = 44;
 const TRADE_OFFER_GAP = 12;
-
+const ROW_GAP = 20;
 const CHIP_SIZE = 30;
 const CHIP_GAP = 6;
 const DOT_RADIUS = 4;
@@ -65,11 +65,11 @@ export function resolveTradeCards(
 
     const pad = s(PADDING);
     const rowH = s(45);
-    const rowGap = s(50);
+    const rowGap = rowH + s(ROW_GAP) * 2;
 
     const offered: Rect = {
         x: panel_bounds.x + pad,
-        y: panel_bounds.y + pad,
+        y: panel_bounds.y + pad + s(ROW_GAP),
         height: rowH,
         width: panel_bounds.width - pad * 2,
     };
@@ -193,7 +193,7 @@ export function resolvePlayerResponses(
 
     const bounds: Rect = {
         x: panel_bounds.x + pad,
-        y: panel_bounds.y + pad + s(100),
+        y: panel_bounds.y + pad + 2*s(45) + 2 * s(ROW_GAP) + 5,
         width: panel_bounds.width - pad * 2 - s(100),
         height: s(45),
     };
@@ -241,7 +241,7 @@ export function resolveResponseButtons(panel_bounds: Rect, r: Resolution): Butto
 
     const bounds: Rect = {
         x: panel_bounds.x + panel_bounds.width - s(100),
-        y: panel_bounds.y + pad + s(100),
+        y: panel_bounds.y + pad + 2*s(45) + 2 * s(ROW_GAP) + 5,
         width: s(100) - pad,
         height: s(45),
     };

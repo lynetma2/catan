@@ -248,12 +248,11 @@ function createActiveTradeOffers(players: PlayerSnapshot[]): TradeOfferPanelData
             wantedResources: [
                 {uid: 't3', resourceType: ResourceType.Brick},
             ],
-            playerResponses: players
-                .filter(p => p.id !== 'p2')
-                .map(p => ({
-                    playerId: p.id,
-                    response: TradeOfferResponseKind.NoAnswer,
-                })),
+            playerResponses: [
+                {playerId: 'p1', response: TradeOfferResponseKind.Accept},
+                {playerId: 'p3', response: TradeOfferResponseKind.Decline},
+                {playerId: 'p4', response: TradeOfferResponseKind.NoAnswer},
+            ]
         },
     ];
 }
