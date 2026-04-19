@@ -1,5 +1,6 @@
 package com.sundtrack.catan.game.entity;
 
+import com.sundtrack.catan.game.dto.events.GameEvent;
 import com.sundtrack.catan.game.entity.cards.DevelopmentCard;
 
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ public class Game {
     }
 
     public void handleGameEvent(GameEvent gameEvent) {
-        gameEvent.doEvent(this);
+        //gameEvent.doEvent(this);
 
         //Add the executed event to the list of events.
         events.add(gameEvent);

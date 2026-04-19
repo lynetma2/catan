@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import java.util.List;
 
 @Controller
-@CrossOrigin(origins = "*")
 @MessageMapping("/game")
 public class GameController {
 

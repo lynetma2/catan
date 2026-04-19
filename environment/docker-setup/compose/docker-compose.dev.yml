@@ -1,0 +1,30 @@
+# ============================================================
+# Development overrides
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+# ============================================================
+
+services:
+
+  app:
+    build:
+      args:
+        SPRING_PROFILE: dev
+    ports:
+      - "8080:8080"   # app — direct access, Vite proxy targets this
+      - "5005:5005"   # JDWP remote debugger
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+    # Hot-reload: mount compiled classes so changes reflect without a full
+    # image rebuild (works well with `gradle build --continuous` on the host)
+    volumes:
+      - ${REPO_ROOT:-.}/build:/app/build:ro
+
+  db:
+    ports:
+      - "5432:5432"   # expose DB to host for tools like DBeaver / pgAdmin
+
+  # nginx is intentionally absent in dev.
+  # The Vite dev server proxies /api/* and /ws/* to the Spring app directly.
+  # Run the frontend separately: cd frontend && npm run dev

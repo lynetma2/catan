@@ -23,5 +23,4 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setAllowedOrigins("http://localhost:5173") // Allow requests from the React frontend
                 .withSockJS();
     }
-
 }

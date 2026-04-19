@@ -1,0 +1,42 @@
+# ============================================================
+# Production overrides
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# ============================================================
+
+services:
+
+  app:
+    build:
+      args:
+        SPRING_PROFILE: prod
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    # No ports exposed — all traffic comes through nginx only
+
+  db:
+    restart: unless-stopped
+    # No ports exposed to host in prod
+
+  nginx:
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certbot_www:/var/www/certbot:ro
+      - certbot_certs:/etc/letsencrypt:ro
+
+  certbot:
+    image: certbot/certbot:latest
+    profiles:
+      - prod
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_certs:/etc/letsencrypt
+
+volumes:
+  certbot_www:
+  certbot_certs:

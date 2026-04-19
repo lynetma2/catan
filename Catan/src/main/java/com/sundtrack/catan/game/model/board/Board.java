@@ -35,7 +35,7 @@ public class Board {
         return robber;
     }
 
-    public void setRobber(HexCoordinates robber) {
+    public void setRobber(HexCoordinates coordinates) {
         robber = coordinates;
     }
 }
