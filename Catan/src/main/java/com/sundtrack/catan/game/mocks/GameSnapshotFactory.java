@@ -111,17 +111,27 @@ public class GameSnapshotFactory {
 
         // Sea Layout
         List<SeaDef> seaLayout = List.of(
-                new SeaDef(3, -3, false, null, null),
-                new SeaDef(3, -2, true, PortType.ANY, 3),
-                new SeaDef(3, 0, true, PortType.GRAIN, 4),
-                new SeaDef(1, 2, true, PortType.ANY, 3),
-                new SeaDef(-1, 3, true, PortType.BRICK, 2),
-                new SeaDef(-3, 3, true, PortType.ANY, 1),
-                new SeaDef(-3, 1, true, PortType.WOOL, 0),
-                new SeaDef(-3, -1, true, PortType.ANY, 0),
-                new SeaDef(-1, -3, true, PortType.LUMBER, 5),
-                new SeaDef(1, -3, true, PortType.ORE, 4)
+                new SeaDef(0, -3, false, null, 0),                           // SEA
+                new SeaDef(1, -3, true, PortType.ANY, 0),                    // ANY
+                new SeaDef(2, -3, false, null, 0),                           // SEA
+                new SeaDef(3, -3, true, PortType.ANY, 0),                    // ANY
+                new SeaDef(3, -2, true, PortType.BRICK, 0),                  // SEA + BRICK
+                new SeaDef(3, 0, false, null, 0),                            // SEA
+                new SeaDef(2, 1, true, PortType.LUMBER, 0),                  // LUMBER
+                new SeaDef(1, 2, false, null, 0),                            // SEA
+                new SeaDef(0, 3, true, PortType.ANY, 0),                     // ANY
+                new SeaDef(-1, 3, false, null, 0),                           // SEA
+                new SeaDef(-2, 3, true, PortType.GRAIN, 0),                  // GRAIN
+                new SeaDef(-3, 3, false, null, 0),                           // SEA
+                new SeaDef(-3, 2, true, PortType.ORE, 0),                    // ORE
+                new SeaDef(-3, 1, false, null, 0),                           // SEA
+                new SeaDef(-3, 0, true, PortType.ANY, 0),                    // ANY
+                new SeaDef(-2, -1, false, null, 0),                          // SEA
+                new SeaDef(-1, -2, true, PortType.WOOL, 0),                   // WOOL
+                new SeaDef(3, -1, true, null, null)                   // WOOL
         );
+
+
         // Note: You can add the remaining empty sea tiles to the list as needed
 
         for (SeaDef def : seaLayout) {
