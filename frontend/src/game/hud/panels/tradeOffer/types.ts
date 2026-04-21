@@ -21,19 +21,19 @@ export interface TradeOfferPanelCardsState {
 }
 
 export enum TradeOfferIncomingButtonType {
-    Accept = "Accept",
-    Decline = "Decline"
+    Accept = "accept",
+    Decline = "decline"
 }
 
 export enum TradeOfferResponseKind {
-    Accept = "Accept",
-    Decline = "Decline",
-    NoAnswer = "NoAnswer"
+    Accept = "accept",
+    Decline = "decline",
+    NoAnswer = "noAnswer"
 }
 
 export enum TradeOfferKind {
-    Incoming = "Incoming",
-    Outgoing = "Outgoing"
+    Incoming = "incoming",
+    Outgoing = "outgoing"
 }
 
 export interface TradeOfferIncomingState extends TradeOfferBaseState {

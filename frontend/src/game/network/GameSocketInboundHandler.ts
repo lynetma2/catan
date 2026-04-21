@@ -16,7 +16,8 @@ export class GameSocketInboundHandler {
     public handle(messageType: string, payload: unknown): void {
         switch (messageType) {
             case GameEventType.GAME_STATE_LOADED:
-                this.onGameStateLoaded(payload as GameSnapshot);
+                // @ts-ignore this is bad
+                this.onGameStateLoaded(payload.payload as GameSnapshot);
                 break;
 
             // ── Extend here as the backend grows ──────────────────────
@@ -32,6 +33,7 @@ export class GameSocketInboundHandler {
     // ── Handlers ───────────────────────────────────────────────────────
 
     private onGameStateLoaded(snapshot: GameSnapshot): void {
+        console.log("this is payload", snapshot);
         this.frameQueue.push({
             type:    GameEventType.GAME_STATE_LOADED,
             payload: snapshot,
