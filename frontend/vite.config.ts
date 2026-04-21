@@ -11,6 +11,9 @@ export default defineConfig({
             '@': path.resolve(__dirname, './src'),
         }
     },
+    define: {
+        global: 'globalThis',
+    },
     test: {
         environment: 'happy-dom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],

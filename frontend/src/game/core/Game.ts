@@ -16,6 +16,7 @@ import type {GameSnapshot} from "@/game/core/types.ts";
 import {GamePhaseManager} from "@/game/core/GamePhaseManager.ts";
 import {SharedStateManager} from "@/game/core/SharedStateManager.ts";
 import {DebugTools} from "@/game/tools/DebugTools.ts";
+import {GameSocketConnection} from "@/game/network/GameSocketClient.ts";
 
 const DEV_MODE = import.meta.env.DEV;
 
@@ -25,6 +26,7 @@ export class Game {
     private sharedState: SharedState;
     private readonly gamePhase: GamePhaseManager;
     private readonly sharedManager: SharedStateManager;
+    private readonly connection: GameSocketConnection;
 
     private readonly resolution: ResolutionManager;
     private readonly camera: Camera;
@@ -38,6 +40,7 @@ export class Game {
 
     private animationFrameId: number | null = null;
     private previousTimeMs: number = 0;
+    private gameId = "test";
 
     private readonly MAX_FPS = 144;
     private readonly FRAME_INTERVAL_MS = 1000 / this.MAX_FPS;
@@ -50,6 +53,7 @@ export class Game {
         this.resolution  = new ResolutionManager(canvas);
         this.gamePhase = new GamePhaseManager(this.bus, this.sharedState);
         this.sharedManager = new SharedStateManager(this.bus, this.sharedState);
+        this.connection = new GameSocketConnection(this.gameId, this.bus, this.frameQueue);
 
         this.sharedState.setLocalPlayerId('p1');
 
@@ -75,7 +79,7 @@ export class Game {
         this.inputManager.register(this.world); // priority 0
 
         if (DEV_MODE) {
-            this.loadTestData();
+            //this.loadTestData();
             new DebugTools(
                 this.sharedState,
                 this.camera,
