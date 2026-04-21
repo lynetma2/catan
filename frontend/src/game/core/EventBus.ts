@@ -18,4 +18,8 @@ export class EventBus {
     emit<T extends GameEventType>(event: GameEvent<T>) {
         this.listeners.get(event.type)?.forEach(cb => cb(event));
     }
+
+    off<T extends GameEventType>(type: T, cb: (e: GameEvent<T>) => void) {
+        this.listeners.get(type)?.delete(cb as GenericEventListener);
+    }
 }
