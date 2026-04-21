@@ -15,7 +15,7 @@ export class GameSocketInboundHandler {
 
     public handle(messageType: string, payload: unknown): void {
         switch (messageType) {
-            case "GAME_STATE_LOADED":
+            case GameEventType.GAME_STATE_LOADED:
                 this.onGameStateLoaded(payload as GameSnapshot);
                 break;
 

@@ -23,28 +23,28 @@ import org.springframework.web.filter.CorsFilter;
  * FILE LOCATION:
  *   src/main/java/com/example/myapp/config/CorsConfig.java
  */
-@Configuration
-@Profile("dev")
-public class CorsConfig {
-
-    @Bean
-    public CorsFilter corsFilter() {
-        CorsConfiguration config = new CorsConfiguration();
-
-        // Vite dev server origin
-        config.addAllowedOrigin("http://localhost:5173");
-
-        config.addAllowedMethod("*");
-        config.addAllowedHeader("*");
-
-        // Required for cookies / Authorization headers,
-        // and also for the WebSocket upgrade handshake
-        config.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", config);
-        source.registerCorsConfiguration("/ws/**", config);  // WebSocket handshake endpoint
-
-        return new CorsFilter(source);
-    }
-}
+//@Configuration
+//@Profile("dev")
+//public class CorsConfig {
+//
+//    @Bean
+//    public CorsFilter corsFilter() {
+//        CorsConfiguration config = new CorsConfiguration();
+//
+//        // Vite dev server origin
+//        config.addAllowedOrigin("http://localhost:5173");
+//
+//        config.addAllowedMethod("*");
+//        config.addAllowedHeader("*");
+//
+//        // Required for cookies / Authorization headers,
+//        // and also for the WebSocket upgrade handshake
+//        config.setAllowCredentials(true);
+//
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        source.registerCorsConfiguration("/api/**", config);
+//        source.registerCorsConfiguration("/ws/**", config);  // WebSocket handshake endpoint
+//
+//        return new CorsFilter(source);
+//    }
+//}

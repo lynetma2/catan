@@ -34,6 +34,7 @@ export class GameSocketConnection {
                 console.info(`%c[WS] Connected — game: ${this.gameId}`, "color: #50c050");
                 this.subscribe();
                 bus.emit({ type: GameEventType.REQUEST_GAME_STATE, payload: {}, source: GameEventSource.Network });
+                console.log("Sent game state event");
             },
 
             onDisconnect: () => {
@@ -105,6 +106,8 @@ export class GameSocketConnection {
                 console.warn("[WS] Received message with no type", payload);
                 return;
             }
+
+            console.log("Got a message");
 
             this.inbound.handle(messageType, payload);
         } catch (err) {

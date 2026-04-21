@@ -33,8 +33,10 @@ export class GameSocketOutboundHandler {
     // ── Private ────────────────────────────────────────────────────────
 
     private register(): void {
+        console.log("Registrering the outbound handler");
         this.on(GameEventType.REQUEST_GAME_STATE, () => {
-            this.publish(`/app/game/${this.gameId}/snapshot`, {});
+            console.log("Got request game state event. Sending it to: " + this.gameId)
+            this.publish(`/app/game/snapshot/${this.gameId}`, {});
         });
 
         // ── Extend here as the backend grows ──────────────────────────

@@ -7,8 +7,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import static com.sundtrack.catan.config.ApiRoutes.TOPIC_PREFIX;
-import static com.sundtrack.catan.config.ApiRoutes.WS_PREFIX;
+import static com.sundtrack.catan.config.ApiRoutes.*;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -17,13 +16,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker(TOPIC_PREFIX);
-        config.setApplicationDestinationPrefixes(TOPIC_PREFIX);
+        config.setApplicationDestinationPrefixes(APP_PREFIX);
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint(WS_PREFIX)
-                .setAllowedOrigins("*")
+                .setAllowedOrigins("http://localhost:5173")  // your Vite dev server
                 .withSockJS();
     }
 }
