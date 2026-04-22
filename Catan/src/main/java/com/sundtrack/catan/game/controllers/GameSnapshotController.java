@@ -13,11 +13,11 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 @MessageMapping(ApiRoutes.GAME_SNAPSHOT_INBOUND)
-public class SnapshotController {
+public class GameSnapshotController {
 
     @MessageMapping("/test")
     @SendTo(ApiRoutes.GAME_TOPIC + "/test") // Broadcasts to "/topic/game/test"
-    public GameMessageWrapperDTO<GameSnapshotDTO> getTestSnapshot() {
+    public GameMessageWrapperDTO<GameSnapshotDTO> getTestGameSnapshot() {
         System.out.println("Got a request test game snapshot message");
         return new GameMessageWrapperDTO<GameSnapshotDTO>(GameMessageType.GAME_STATE_LOADED,GameSnapshotFactory.createTestGameState(
                 2,
