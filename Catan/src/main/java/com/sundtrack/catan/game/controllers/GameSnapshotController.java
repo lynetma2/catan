@@ -38,7 +38,7 @@ public class GameSnapshotController {
     @MessageMapping(GameSnapshotRoutes.In.PING)
     @SendToUser(GameSnapshotRoutes.Out.PING)
     public String ping() {
-
+        return "ok";
     }
 
     @MessageMapping(GameSnapshotRoutes.In.SAVE)
