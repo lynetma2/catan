@@ -3,8 +3,8 @@ package com.sundtrack.catan.session.game.services;
 import com.sundtrack.catan.common.exceptions.SnapshotAlreadyExistsException;
 import com.sundtrack.catan.common.exceptions.SnapshotNotFoundException;
 import com.sundtrack.catan.common.exceptions.SnapshotPersistenceException;
-import com.sundtrack.catan.session.game.datalayer.dao.interfaces.GameSnapshotDAO;
-import com.sundtrack.catan.session.game.datalayer.dto.snapshot.GameSnapshotDTO;
+import com.sundtrack.catan.datalayer.dao.interfaces.GameSnapshotDAO;
+import com.sundtrack.catan.datalayer.dto.snapshot.GameSnapshotDTO;
 import com.sundtrack.catan.session.game.services.interfaces.GameSnapshotService;
 import org.springframework.stereotype.Service;
 

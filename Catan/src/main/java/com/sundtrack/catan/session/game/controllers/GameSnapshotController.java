@@ -1,7 +1,8 @@
 package com.sundtrack.catan.session.game.controllers;
 
 import com.sundtrack.catan.config.routes.GameSnapshotRoutes;
-import com.sundtrack.catan.session.game.datalayer.dto.snapshot.GameSnapshotDTO;
+import com.sundtrack.catan.datalayer.dto.PingResponseDTO;
+import com.sundtrack.catan.datalayer.dto.snapshot.GameSnapshotDTO;
 import com.sundtrack.catan.session.shared.dto.request.DeleteSnapshotRequestDTO;
 import com.sundtrack.catan.session.shared.dto.request.LoadSnapshotRequestDTO;
 import com.sundtrack.catan.session.shared.dto.request.SaveSnapshotRequestDTO;
@@ -12,6 +13,9 @@ import com.sundtrack.catan.session.game.services.interfaces.GameSnapshotService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Controller
 @MessageMapping({GameSnapshotRoutes.BASE})
@@ -25,8 +29,8 @@ public class GameSnapshotController {
 
     @MessageMapping(GameSnapshotRoutes.In.PING)
     @SendToUser(GameSnapshotRoutes.Out.PING)
-    public String ping() {
-        return "ok";
+    public PingResponseDTO ping() {
+        return new PingResponseDTO("ok", LocalDateTime.now());
     }
 
     @MessageMapping(GameSnapshotRoutes.In.SAVE)

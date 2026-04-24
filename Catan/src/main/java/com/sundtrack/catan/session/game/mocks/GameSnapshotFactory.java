@@ -1,20 +1,19 @@
 package com.sundtrack.catan.session.game.mocks;
 
-import com.sundtrack.catan.game.datalayer.domain.*;
-import com.sundtrack.catan.session.game.datalayer.domain.*;
-import com.sundtrack.catan.session.game.datalayer.domain.tradeOffer.TradeOffer;
-import com.sundtrack.catan.session.game.datalayer.domain.tradeOffer.TradeOfferKind;
-import com.sundtrack.catan.session.game.datalayer.domain.tradeOffer.TradeOfferResponseKind;
-import com.sundtrack.catan.session.game.datalayer.domain.tradeOffer.TradePlayerResponse;
-import com.sundtrack.catan.session.game.datalayer.domain.world.Edge;
-import com.sundtrack.catan.session.game.datalayer.domain.world.Hex;
-import com.sundtrack.catan.session.game.datalayer.domain.world.Vertex;
-import com.sundtrack.catan.session.game.datalayer.dto.placement.RoadPlacementDTO;
-import com.sundtrack.catan.session.game.datalayer.dto.placement.SettlementPlacementDTO;
-import com.sundtrack.catan.session.game.datalayer.dto.snapshot.GameSnapshotDTO;
-import com.sundtrack.catan.session.game.datalayer.dto.snapshot.PlacementSnapshotDTO;
-import com.sundtrack.catan.session.game.datalayer.dto.snapshot.PlayerSnapshotDTO;
-import com.sundtrack.catan.session.game.datalayer.dto.snapshot.TileSnapshotDTO;
+import com.sundtrack.catan.datalayer.domain.*;
+import com.sundtrack.catan.datalayer.domain.tradeOffer.TradeOffer;
+import com.sundtrack.catan.datalayer.domain.tradeOffer.TradeOfferKind;
+import com.sundtrack.catan.datalayer.domain.tradeOffer.TradeOfferResponseKind;
+import com.sundtrack.catan.datalayer.domain.tradeOffer.TradePlayerResponse;
+import com.sundtrack.catan.datalayer.domain.world.Edge;
+import com.sundtrack.catan.datalayer.domain.world.Hex;
+import com.sundtrack.catan.datalayer.domain.world.Vertex;
+import com.sundtrack.catan.datalayer.dto.placement.RoadPlacementDTO;
+import com.sundtrack.catan.datalayer.dto.placement.SettlementPlacementDTO;
+import com.sundtrack.catan.datalayer.dto.snapshot.GameSnapshotDTO;
+import com.sundtrack.catan.datalayer.dto.snapshot.PlacementSnapshotDTO;
+import com.sundtrack.catan.datalayer.dto.snapshot.PlayerSnapshotDTO;
+import com.sundtrack.catan.datalayer.dto.snapshot.TileSnapshotDTO;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -55,6 +54,7 @@ public class GameSnapshotFactory {
     public static GameSnapshotDTO createTestGameState(int playerCount, String currentPlayerId, GamePhase phase) {
         List<PlayerSnapshotDTO> players = createPlayers(playerCount);
         return new GameSnapshotDTO(
+                "test",
                 players,
                 createTiles(),
                 createPlacements(playerCount),

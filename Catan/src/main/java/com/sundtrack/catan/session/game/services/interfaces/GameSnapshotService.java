@@ -1,6 +1,6 @@
 package com.sundtrack.catan.session.game.services.interfaces;
 
-import com.sundtrack.catan.session.game.datalayer.dto.snapshot.GameSnapshotDTO;
+import com.sundtrack.catan.datalayer.dto.snapshot.GameSnapshotDTO;
 import java.util.List;
 
 public interface GameSnapshotService {
