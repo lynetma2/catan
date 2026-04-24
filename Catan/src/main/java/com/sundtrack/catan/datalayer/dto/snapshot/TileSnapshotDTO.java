@@ -1,9 +1,9 @@
 package com.sundtrack.catan.datalayer.dto.snapshot;
 
-import com.sundtrack.catan.datalayer.domain.PortType;
-import com.sundtrack.catan.datalayer.domain.TileKind;
-import com.sundtrack.catan.datalayer.domain.TileType;
-import com.sundtrack.catan.datalayer.domain.world.Hex;
+import com.sundtrack.catan.datalayer.domain.board.tile.PortType;
+import com.sundtrack.catan.datalayer.domain.board.tile.TileKind;
+import com.sundtrack.catan.datalayer.domain.board.tile.TileType;
+import com.sundtrack.catan.datalayer.domain.board.Hex;
 
 /**
  * A snapshot of a single board tile.

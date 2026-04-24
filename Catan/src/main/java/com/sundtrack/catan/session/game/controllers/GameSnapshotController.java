@@ -3,18 +3,17 @@ package com.sundtrack.catan.session.game.controllers;
 import com.sundtrack.catan.config.routes.GameSnapshotRoutes;
 import com.sundtrack.catan.datalayer.dto.PingResponseDTO;
 import com.sundtrack.catan.datalayer.dto.snapshot.GameSnapshotDTO;
-import com.sundtrack.catan.session.shared.dto.request.DeleteSnapshotRequestDTO;
-import com.sundtrack.catan.session.shared.dto.request.LoadSnapshotRequestDTO;
-import com.sundtrack.catan.session.shared.dto.request.SaveSnapshotRequestDTO;
-import com.sundtrack.catan.session.shared.dto.response.AckResponseDTO;
-import com.sundtrack.catan.session.shared.dto.response.SnapshotListResponseDTO;
-import com.sundtrack.catan.session.shared.dto.response.SnapshotResponseDTO;
+import com.sundtrack.catan.session.api.request.DeleteSnapshotRequestDTO;
+import com.sundtrack.catan.session.api.request.LoadSnapshotRequestDTO;
+import com.sundtrack.catan.session.api.request.SaveSnapshotRequestDTO;
+import com.sundtrack.catan.session.api.response.AckResponseDTO;
+import com.sundtrack.catan.session.api.response.SnapshotListResponseDTO;
+import com.sundtrack.catan.session.api.response.SnapshotResponseDTO;
 import com.sundtrack.catan.session.game.services.interfaces.GameSnapshotService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Controller

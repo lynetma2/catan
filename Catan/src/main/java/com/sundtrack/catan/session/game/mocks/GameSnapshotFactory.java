@@ -1,13 +1,16 @@
 package com.sundtrack.catan.session.game.mocks;
 
-import com.sundtrack.catan.datalayer.domain.*;
-import com.sundtrack.catan.datalayer.domain.tradeOffer.TradeOffer;
-import com.sundtrack.catan.datalayer.domain.tradeOffer.TradeOfferKind;
-import com.sundtrack.catan.datalayer.domain.tradeOffer.TradeOfferResponseKind;
-import com.sundtrack.catan.datalayer.domain.tradeOffer.TradePlayerResponse;
-import com.sundtrack.catan.datalayer.domain.world.Edge;
-import com.sundtrack.catan.datalayer.domain.world.Hex;
-import com.sundtrack.catan.datalayer.domain.world.Vertex;
+import com.sundtrack.catan.datalayer.domain.board.*;
+import com.sundtrack.catan.datalayer.domain.board.tile.TileKind;
+import com.sundtrack.catan.datalayer.domain.board.tile.TileType;
+import com.sundtrack.catan.datalayer.domain.game.GamePhase;
+import com.sundtrack.catan.datalayer.domain.board.tile.PortType;
+import com.sundtrack.catan.datalayer.domain.resource.Resource;
+import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
+import com.sundtrack.catan.datalayer.domain.trade.TradeOffer;
+import com.sundtrack.catan.datalayer.domain.trade.TradeOfferKind;
+import com.sundtrack.catan.datalayer.domain.trade.TradeOfferResponseKind;
+import com.sundtrack.catan.datalayer.domain.trade.TradePlayerResponse;
 import com.sundtrack.catan.datalayer.dto.placement.RoadPlacementDTO;
 import com.sundtrack.catan.datalayer.dto.placement.SettlementPlacementDTO;
 import com.sundtrack.catan.datalayer.dto.snapshot.GameSnapshotDTO;

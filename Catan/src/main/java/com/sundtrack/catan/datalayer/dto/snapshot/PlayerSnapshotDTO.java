@@ -1,6 +1,6 @@
 package com.sundtrack.catan.datalayer.dto.snapshot;
 
-import com.sundtrack.catan.datalayer.domain.Resource;
+import com.sundtrack.catan.datalayer.domain.resource.Resource;
 
 import java.util.List;
 

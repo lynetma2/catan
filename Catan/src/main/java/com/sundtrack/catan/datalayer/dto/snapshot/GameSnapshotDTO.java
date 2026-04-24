@@ -1,7 +1,7 @@
 package com.sundtrack.catan.datalayer.dto.snapshot;
 
-import com.sundtrack.catan.datalayer.domain.GamePhase;
-import com.sundtrack.catan.datalayer.domain.tradeOffer.TradeOffer;
+import com.sundtrack.catan.datalayer.domain.game.GamePhase;
+import com.sundtrack.catan.datalayer.domain.trade.TradeOffer;
 
 import java.util.List;
 
