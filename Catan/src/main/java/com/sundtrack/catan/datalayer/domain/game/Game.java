@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public class Game {
     private UUID id;
-    private List<Lobby.Player> players;
+    private List<GamePlayer> players;
     private List<Tile> tiles;
     private List<Building<?>> buildings;
     private GamePhase currentPhase;

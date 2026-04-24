@@ -6,5 +6,5 @@ import java.util.Map;
 
 public record LobbySnapshotDTO(
         String id,
-        Map<String, Lobby.Player> players
+        Map<String, Lobby.LobbyPlayer> players
 ) {}

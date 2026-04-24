@@ -9,7 +9,7 @@ public interface LobbyService {
     int createLobby(String username);
     void removeLobby(int lobbyId);
     Lobby handleLobbyEvent(int lobbyId, Lobby.LobbyEvent event);
-    Lobby joinLobby(int lobbyId, Lobby.Player player);
+    Lobby joinLobby(int lobbyId, Lobby.LobbyPlayer lobbyPlayer);
     Lobby leaveLobby(int lobbyId, String username);
 
 }

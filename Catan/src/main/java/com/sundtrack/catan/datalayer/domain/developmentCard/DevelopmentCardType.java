@@ -1,9 +1,9 @@
-package com.sundtrack.catan.datalayer.domain.devCard;
+package com.sundtrack.catan.datalayer.domain.developmentCard;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum DevCardType {
+public enum DevelopmentCardType {
     KNIGHT("knight"),
     ROAD_BUILDING("roadBuilding"),
     YEAR_OF_PLENTY("yearOfPlenty"),
@@ -12,7 +12,7 @@ public enum DevCardType {
 
     private final String value;
 
-    DevCardType(String value) {
+    DevelopmentCardType(String value) {
         this.value = value;
     }
 
@@ -22,8 +22,8 @@ public enum DevCardType {
     }
 
     @JsonCreator
-    public static DevCardType fromValue(String value) {
-        for (DevCardType type : DevCardType.values()) {
+    public static DevelopmentCardType fromValue(String value) {
+        for (DevelopmentCardType type : DevelopmentCardType.values()) {
             if (type.value.equalsIgnoreCase(value)) {
                 return type;
             }

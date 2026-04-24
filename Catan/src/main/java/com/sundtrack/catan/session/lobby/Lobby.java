@@ -3,26 +3,26 @@ package com.sundtrack.catan.session.lobby;
 import java.util.HashMap;
 
 public class Lobby {
-    private HashMap<String, Player> players;
+    private HashMap<String, LobbyPlayer> players;
     //TODO add settings;
 
     public Lobby() {
         this.players = new HashMap<>();
     }
 
-    public HashMap<String, Player> getPlayers() {
+    public HashMap<String, LobbyPlayer> getPlayers() {
         return players;
     }
 
-    public void addPlayer(Player player) {
-        players.put(player.username,  player);
+    public void addPlayer(LobbyPlayer lobbyPlayer) {
+        players.put(lobbyPlayer.username, lobbyPlayer);
     }
 
     public void removePlayer(String username) {
         players.remove(username);
     }
 
-    public Player getPlayer(String username) {
+    public LobbyPlayer getPlayer(String username) {
         if (!players.containsKey(username)) {
             throw new RuntimeException("Player with name " + username + " does not exist");
         }
@@ -30,12 +30,12 @@ public class Lobby {
         return players.get(username);
     }
 
-    public static class Player {
+    public static class LobbyPlayer {
         private String username;
         private boolean isLeader;
         private boolean isReady;
 
-        public Player(String username, boolean isLeader, boolean isReady){
+        public LobbyPlayer(String username, boolean isLeader, boolean isReady){
             this.username = username;
             this.isLeader = isLeader;
             this.isReady = isReady;

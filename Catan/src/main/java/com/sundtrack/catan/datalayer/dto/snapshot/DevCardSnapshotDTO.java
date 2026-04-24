@@ -1,10 +1,10 @@
 package com.sundtrack.catan.datalayer.dto.snapshot;
 
-import com.sundtrack.catan.datalayer.domain.devCard.DevCardType;
+import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCardType;
 
 public record DevCardSnapshotDTO(
         String uid,
-        DevCardType type,
+        DevelopmentCardType type,
         boolean isPlayed,
         boolean boughtThisTurn
 ) {}
