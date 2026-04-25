@@ -1,91 +1,67 @@
 package com.sundtrack.catan.datalayer.domain.lobby;
 
-import java.util.HashMap;
+import java.util.*;
 
 public class Lobby {
-    private HashMap<String, LobbyPlayer> players;
-    //TODO add settings;
+    private UUID id;
+    private Map<UUID, LobbyPlayer> players;
+    private boolean gameStarted;
 
-    public Lobby() {
+    public Lobby(LobbyPlayer firstPlayer) {
+        this.id = UUID.randomUUID();
         this.players = new HashMap<>();
+        this.players.put(firstPlayer.getId(), firstPlayer);
     }
 
-    public HashMap<String, LobbyPlayer> getPlayers() {
+    public UUID getId() {
+        return id;
+    }
+
+    public Map<UUID, LobbyPlayer> getPlayers() {
         return players;
     }
 
     public void addPlayer(LobbyPlayer lobbyPlayer) {
-        players.put(lobbyPlayer.username, lobbyPlayer);
+        this.players.put(lobbyPlayer.getId(), lobbyPlayer);
     }
 
-    public void removePlayer(String username) {
-        players.remove(username);
+    public boolean isFull() {
+        return this.players.size() >= 4;
     }
 
-    public LobbyPlayer getPlayer(String username) {
-        if (!players.containsKey(username)) {
-            throw new RuntimeException("Player with name " + username + " does not exist");
-        }
-
-        return players.get(username);
+    public boolean hasStarted() {
+        return gameStarted;
     }
 
-    public static class LobbyPlayer {
-        private String username;
-        private boolean isLeader;
-        private boolean isReady;
-
-        public LobbyPlayer(String username, boolean isLeader, boolean isReady){
-            this.username = username;
-            this.isLeader = isLeader;
-            this.isReady = isReady;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public boolean getIsLeader() {
-            return isLeader;
-        }
-
-        public void setLeader(boolean leader) {
-            isLeader = leader;
-        }
-
-        public boolean getIsReady() {
-            return isReady;
-        }
-
-        public void setReady(boolean ready) {
-            isReady = ready;
-        }
+    public void setStarted(boolean gameStarted) {
+        this.gameStarted = gameStarted;
     }
 
-    public static class LobbyEvent {
-        public enum EventKind {
-            SETREADY,
-            SETNOTREADY,
-            STARTGAME,
-            //TODO add some to handle settings
-        }
-
-        private final EventKind kind;
-        private final String playerName;
-
-        public  LobbyEvent(EventKind kind, String playerName) {
-            this.kind = kind;
-            this.playerName = playerName;
-        }
-
-        public EventKind getKind() {
-            return kind;
-        }
-
-        public String getPlayerName() {
-            return playerName;
-        }
+    public void setReady(UUID playerId) {
+        this.players.get(playerId).setReady(true);
     }
 
-    public static record LobbyIdandUsername (String username, int lobbyId){}
+    public void setUnready(UUID playerId) {
+        this.players.get(playerId).setReady(false);
+    }
+
+    public boolean isLeader(UUID playerId) {
+        return this.players.get(playerId).isLeader();
+    }
+
+    public boolean allPlayersReady() {
+        return players.values().stream().allMatch(LobbyPlayer::isReady);
+    }
+
+    public int playerCount() {
+        return players.size();
+    }
+
+    public Set<UUID> getPlayerIds() {
+        return players.keySet();
+    }
+
+    public void markAsStarted() {
+        this.gameStarted = true;
+    }
 }

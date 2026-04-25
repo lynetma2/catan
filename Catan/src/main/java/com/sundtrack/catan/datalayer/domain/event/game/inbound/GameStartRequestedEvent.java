@@ -1,4 +1,4 @@
-package com.sundtrack.catan.datalayer.domain.event.inbound;
+package com.sundtrack.catan.datalayer.domain.event.game.inbound;
 
 import java.util.UUID;
 

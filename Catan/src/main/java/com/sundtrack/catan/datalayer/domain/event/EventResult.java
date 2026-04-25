@@ -1,30 +1,26 @@
 package com.sundtrack.catan.datalayer.domain.event;
 
-import com.sundtrack.catan.datalayer.domain.event.outbound.OutboundGameEvent;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public record EventResult(
-        List<OutboundGameEvent> broadcast,
-        Map<UUID, OutboundGameEvent> directed
+// EventResult — bound T to OutboundEvent
+public record EventResult<T extends OutboundEvent>(
+        List<T> broadcast,
+        Map<UUID, T> directed
 ) {
-    // Broadcast one event to all players
-    public static EventResult broadcast(OutboundGameEvent event) {
-        return new EventResult(List.of(event), Map.of());
+    public static <T extends OutboundEvent> EventResult<T> broadcast(T event) {
+        return new EventResult<>(List.of(event), Map.of());
     }
 
-    // Send one event to one player only
-    public static EventResult directed(UUID playerId, OutboundGameEvent event) {
-        return new EventResult(List.of(), Map.of(playerId, event));
+    public static <T extends OutboundEvent> EventResult<T> directed(UUID playerId, T event) {
+        return new EventResult<>(List.of(), Map.of(playerId, event));
     }
 
-    // Both at the same time
-    public static EventResult of(
-            List<OutboundGameEvent> broadcast,
-            Map<UUID, OutboundGameEvent> directed
+    public static <T extends OutboundEvent> EventResult<T> of(
+            List<T> broadcast,
+            Map<UUID, T> directed
     ) {
-        return new EventResult(broadcast, directed);
+        return new EventResult<>(broadcast, directed);
     }
 }

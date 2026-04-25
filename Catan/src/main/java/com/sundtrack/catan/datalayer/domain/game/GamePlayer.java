@@ -1,5 +1,6 @@
 package com.sundtrack.catan.datalayer.domain.game;
 
+import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 
 import java.util.List;
@@ -10,7 +11,7 @@ public class GamePlayer {
     private String username;
     private String color;
     private List<Resource> resources;
-    private List<DevCard> developmentCards;
+    private List<DevelopmentCard> developmentCards;
     private Integer victoryPoints;
     private Integer cardCount;
     private Boolean hasLongestRoad;

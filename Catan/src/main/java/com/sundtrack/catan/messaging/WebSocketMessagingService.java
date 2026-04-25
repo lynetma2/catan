@@ -1,11 +1,13 @@
 package com.sundtrack.catan.messaging;
 
-import com.sundtrack.catan.datalayer.domain.event.outbound.OutboundGameEvent;
+import com.sundtrack.catan.datalayer.domain.event.OutboundEvent;
+import com.sundtrack.catan.datalayer.domain.event.game.outbound.OutboundGameEvent;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+// WebSocketMessagingService — accepts OutboundEvent
 @Service
 public class WebSocketMessagingService {
 
@@ -15,17 +17,11 @@ public class WebSocketMessagingService {
         this.messaging = messaging;
     }
 
-    // Broadcast to all subscribers of a topic
-    public void broadcast(String topic, OutboundGameEvent event) {
+    public void broadcast(String topic, OutboundEvent event) {
         messaging.convertAndSend(topic, event);
     }
 
-    // Send to a specific user on a specific destination
-    public void sendToUser(UUID userId, String destination, OutboundGameEvent event) {
-        messaging.convertAndSendToUser(
-                userId.toString(),
-                destination,
-                event
-        );
+    public void sendToUser(UUID userId, String destination, OutboundEvent event) {
+        messaging.convertAndSendToUser(userId.toString(), destination, event);
     }
 }
