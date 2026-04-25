@@ -1,4 +1,4 @@
-package com.sundtrack.catan.session.game.services.interfaces;
+package com.sundtrack.catan.session.game.services;
 
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.OutboundEvent;

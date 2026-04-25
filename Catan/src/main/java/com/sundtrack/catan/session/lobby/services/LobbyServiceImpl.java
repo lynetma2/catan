@@ -7,6 +7,7 @@ import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.*;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
 import com.sundtrack.catan.datalayer.domain.lobby.LobbyPlayer;
+import com.sundtrack.catan.datalayer.dto.mapper.GameMapper;
 import com.sundtrack.catan.session.game.services.interfaces.GameService;
 import com.sundtrack.catan.session.lobby.services.interfaces.LobbyService;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,12 @@ public class LobbyServiceImpl implements LobbyService {
 
     private final LobbyStore lobbyStore;
     private final GameService gameService;
+    private final GameMapper gameMapper;
 
-    public LobbyServiceImpl(LobbyStore lobbyStore, GameService gameService) {
+    public LobbyServiceImpl(LobbyStore lobbyStore, GameService gameService, GameMapper gameMapper) {
         this.lobbyStore = lobbyStore;
         this.gameService = gameService;
+        this.gameMapper = gameMapper;
     }
 
     public EventResult<OutboundLobbyEvent> handle(UUID lobbyId, InboundLobbyEvent event) {
@@ -122,7 +125,7 @@ public class LobbyServiceImpl implements LobbyService {
 
         // Lobby service constructs this event — no casting needed
         return EventResult.broadcast(
-                new GameInitializedEvent(game.id(), game.boardSnapshot(), game.getPlayers())
+                new GameInitializedEvent(gameMapper.toSnapshotDTO(game))
         );
     }
 }

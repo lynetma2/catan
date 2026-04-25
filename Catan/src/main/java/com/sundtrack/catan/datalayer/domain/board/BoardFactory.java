@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+import static com.sundtrack.catan.common.CollectionUtils.shuffled;
+
 @Component
 public class BoardFactory {
 
@@ -167,11 +169,5 @@ public class BoardFactory {
 
     private boolean areNeighbors(Hex a, Hex b) {
         return (Math.abs(a.q() - b.q()) + Math.abs(a.r() - b.r()) + Math.abs(a.s() - b.s())) / 2 == 1;
-    }
-
-    private <T> List<T> shuffled(List<T> list, Random random) {
-        List<T> copy = new ArrayList<>(list);
-        Collections.shuffle(copy, random);
-        return copy;
     }
 }

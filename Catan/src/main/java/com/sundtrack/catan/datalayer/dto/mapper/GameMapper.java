@@ -1,14 +1,20 @@
 package com.sundtrack.catan.datalayer.dto.mapper;
 
+import com.sundtrack.catan.datalayer.domain.board.Edge;
+import com.sundtrack.catan.datalayer.domain.board.Vertex;
+import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
+import com.sundtrack.catan.datalayer.domain.building.Building;
+import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.game.GamePlayer;
-import com.sundtrack.catan.datalayer.dto.snapshot.GameSnapshotDTO;
-import com.sundtrack.catan.datalayer.dto.snapshot.PlayerSnapshotDTO;
+import com.sundtrack.catan.datalayer.dto.placement.CityPlacementDTO;
+import com.sundtrack.catan.datalayer.dto.placement.RoadPlacementDTO;
+import com.sundtrack.catan.datalayer.dto.placement.SettlementPlacementDTO;
+import com.sundtrack.catan.datalayer.dto.snapshot.*;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 @Component
 public class GameMapper {
@@ -20,7 +26,7 @@ public class GameMapper {
                 mapTiles(game.getTiles()),
                 mapPlacements(game.getBuildings()),
                 game.getCurrentPhase(),
-                getCurrentPlayerId(game),
+                game.getCurrentPlayerId().toString(),
                 game.getTurnNumber(),
                 game.getActiveTradeOffers()
         );
@@ -28,16 +34,60 @@ public class GameMapper {
 
     private List<PlayerSnapshotDTO> mapPlayers(List<GamePlayer> players) {
         // Map GamePlayer domain to PlayerSnapshotDTO
-        return players.stream()
-                .map(p -> new PlayerSnapshotDTO(...))
+        return players
+                .stream()
+                .map(p ->
+                        new PlayerSnapshotDTO(p.getId().toString(), p.getUsername(),
+                                p.getColor(), p.getResources(), mapDevCards(p.getDevelopmentCards()),
+                                p.getVictoryPoints(), p.getCardCount(), p.getDevelopmentCardCount(),
+                                p.getHasLongestRoad(), p.getHasLargestArmy(), p.getRobbersUsed()))
                 .toList();
     }
 
-    private String getCurrentPlayerId(Game game) {
-        // Logic to determine whose turn it is based on turnNumber
-        // and player list order
-        return game.getPlayers().get(game.getTurnNumber() % game.getPlayers().size()).getId().toString();
+    private List<DevCardSnapshotDTO>  mapDevCards(List<DevelopmentCard> cards) {
+        return cards
+                .stream()
+                .map(card ->
+                        new DevCardSnapshotDTO(card.getId().toString(),
+                                card.getType(), card.isUsed(),
+                                card.isBoughtThisTurn()))
+                .toList();
     }
 
-    // ... mapTiles and mapPlacements methods
+    private List<TileSnapshotDTO> mapTiles(List<Tile> tiles) {
+        return tiles
+                .stream()
+                .map(tile ->
+                        new TileSnapshotDTO(
+                                tile.getHex(), tile.getKind(), tile.getType(),
+                                tile.getNumber(), tile.hasRobber(), tile.isPort(),
+                                tile.getPortType(), tile.getPortFacing()
+                        ))
+                .toList();
+    }
+
+    private PlacementSnapshotDTO mapPlacements(List<Building<?>> buildings) {
+        List<RoadPlacementDTO> roads = new ArrayList<>();
+        List<SettlementPlacementDTO> settlements = new ArrayList<>();
+        List<CityPlacementDTO> cityPlacements = new ArrayList<>();
+
+        buildings.forEach(building -> {
+            switch (building.getKind()) {
+                case ROAD:
+                    RoadPlacementDTO road = new RoadPlacementDTO((Edge) building.getLocation(), building.getPlayerId().toString());
+                    roads.add(road);
+                    break;
+                case SETTLEMENT:
+                    SettlementPlacementDTO settlement = new SettlementPlacementDTO((Vertex) building.getLocation(), building.getPlayerId().toString());
+                    settlements.add(settlement);
+                    break;
+                case CITY:
+                    CityPlacementDTO city = new CityPlacementDTO((Vertex) building.getLocation(), building.getPlayerId().toString());
+                    cityPlacements.add(city);
+                    break;
+            }
+        });
+
+        return new PlacementSnapshotDTO(roads, settlements, cityPlacements);
+    }
 }

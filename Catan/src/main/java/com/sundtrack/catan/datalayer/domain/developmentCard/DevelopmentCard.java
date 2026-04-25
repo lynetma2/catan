@@ -8,4 +8,5 @@ public interface DevelopmentCard {
     UUID getId();
     DevelopmentCardType getType();
     Boolean isUsed();
+    Boolean isBoughtThisTurn();
 }

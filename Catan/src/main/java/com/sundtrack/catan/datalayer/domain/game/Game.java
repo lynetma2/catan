@@ -2,6 +2,7 @@ package com.sundtrack.catan.datalayer.domain.game;
 
 import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
 import com.sundtrack.catan.datalayer.domain.building.Building;
+import com.sundtrack.catan.datalayer.domain.event.game.inbound.InboundGameEvent;
 import com.sundtrack.catan.datalayer.domain.trade.TradeOffer;
 
 import java.util.List;
@@ -15,9 +16,10 @@ public class Game {
     private GamePhase currentPhase;
     private Integer turnNumber;
     private List<TradeOffer> activeTradeOffers;
-    private List<GameEvent> gameEvents;
+    private List<InboundGameEvent> gameEvents;
+    private UUID currentPlayerId;
 
-    public Game(List<GamePlayer> players, List<Tile> tiles, List<Building<?>> buildings, GamePhase currentPhase, Integer turnNumber, List<TradeOffer> activeTradeOffers, List<GameEvent> gameEvents) {
+    public Game(List<GamePlayer> players, List<Tile> tiles, List<Building<?>> buildings, GamePhase currentPhase, Integer turnNumber, List<TradeOffer> activeTradeOffers, List<InboundGameEvent> gameEvents, UUID currentPlayerId) {
         this.id = UUID.randomUUID();
         this.players = players;
         this.tiles = tiles;
@@ -26,6 +28,7 @@ public class Game {
         this.turnNumber = turnNumber;
         this.activeTradeOffers = activeTradeOffers;
         this.gameEvents = gameEvents;
+        this.currentPlayerId = currentPlayerId;
     }
 
     public UUID getId() {
@@ -84,11 +87,19 @@ public class Game {
         this.activeTradeOffers = activeTradeOffers;
     }
 
-    public List<GameEvent> getGameEvents() {
+    public List<InboundGameEvent> getGameEvents() {
         return gameEvents;
     }
 
-    public void setGameEvents(List<GameEvent> gameEvents) {
+    public void setGameEvents(List<InboundGameEvent> gameEvents) {
         this.gameEvents = gameEvents;
+    }
+
+    public UUID getCurrentPlayerId() {
+        return currentPlayerId;
+    }
+
+    public void setCurrentPlayerId(UUID currentPlayerId) {
+        this.currentPlayerId = currentPlayerId;
     }
 }
