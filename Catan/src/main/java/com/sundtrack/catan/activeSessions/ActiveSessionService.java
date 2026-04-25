@@ -1,6 +1,6 @@
 package com.sundtrack.catan.activeSessions;
 
-import com.sundtrack.catan.session.lobby.Lobby;
+import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
 
 import java.util.Map;
 

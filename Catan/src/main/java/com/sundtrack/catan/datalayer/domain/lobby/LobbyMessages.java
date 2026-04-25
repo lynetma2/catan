@@ -1,4 +1,4 @@
-package com.sundtrack.catan.session.lobby;
+package com.sundtrack.catan.datalayer.domain.lobby;
 
 public class LobbyMessages {
 

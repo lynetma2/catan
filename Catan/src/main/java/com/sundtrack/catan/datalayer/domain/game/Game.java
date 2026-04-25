@@ -4,7 +4,6 @@ import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
 import com.sundtrack.catan.datalayer.domain.building.Building;
 import com.sundtrack.catan.datalayer.domain.event.GameEvent;
 import com.sundtrack.catan.datalayer.domain.trade.TradeOffer;
-import com.sundtrack.catan.session.lobby.Lobby;
 
 import java.util.List;
 import java.util.UUID;

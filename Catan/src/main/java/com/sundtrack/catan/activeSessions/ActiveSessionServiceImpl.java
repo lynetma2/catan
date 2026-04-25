@@ -1,6 +1,6 @@
 package com.sundtrack.catan.activeSessions;
 
-import com.sundtrack.catan.session.lobby.Lobby;
+import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
