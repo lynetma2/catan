@@ -64,4 +64,8 @@ public class Lobby {
     public void markAsStarted() {
         this.gameStarted = true;
     }
+
+    public boolean hasPlayer(UUID playerId) {
+        return this.players.containsKey(playerId);
+    }
 }

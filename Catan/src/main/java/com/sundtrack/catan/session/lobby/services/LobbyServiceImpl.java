@@ -8,6 +8,7 @@ import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
 import com.sundtrack.catan.datalayer.domain.lobby.LobbyPlayer;
 import com.sundtrack.catan.datalayer.dto.mapper.GameMapper;
+import com.sundtrack.catan.datalayer.dto.mapper.LobbyMapper;
 import com.sundtrack.catan.session.game.services.interfaces.GameService;
 import com.sundtrack.catan.session.lobby.services.interfaces.LobbyService;
 import org.springframework.stereotype.Service;
@@ -22,11 +23,13 @@ public class LobbyServiceImpl implements LobbyService {
     private final LobbyStore lobbyStore;
     private final GameService gameService;
     private final GameMapper gameMapper;
+    private final LobbyMapper lobbyMapper;
 
-    public LobbyServiceImpl(LobbyStore lobbyStore, GameService gameService, GameMapper gameMapper) {
+    public LobbyServiceImpl(LobbyStore lobbyStore, GameService gameService, GameMapper gameMapper, LobbyMapper lobbyMapper) {
         this.lobbyStore = lobbyStore;
         this.gameService = gameService;
         this.gameMapper = gameMapper;
+        this.lobbyMapper = lobbyMapper;
     }
 
     public EventResult<OutboundLobbyEvent> handle(UUID lobbyId, InboundLobbyEvent event) {
@@ -35,11 +38,19 @@ public class LobbyServiceImpl implements LobbyService {
             case LobbyJoinRequestedEvent e    -> joinLobby(lobbyId, e);
             case PlayerReadyRequestedEvent e  -> playerReady(lobbyId, e);
             case PlayerUnreadyRequestedEvent e -> playerUnready(lobbyId, e);
+            case LobbyReconnectRequestedEvent e -> reconnectToLobby(e);
             case GameStartRequestedEvent e    -> startGame(lobbyId, e);
         };
     }
 
     private EventResult<OutboundLobbyEvent> createLobby(LobbyCreateRequestedEvent event) {
+        if (lobbyStore.existsByPlayerId(event.playerId())) {
+            return EventResult.directed(
+                    event.playerId(),
+                    new LobbyJoinRejectedEvent(LobbyJoinRejectionReason.ALREADY_IN_LOBBY)
+            );
+        }
+
         Lobby lobby = new Lobby(new LobbyPlayer(event.playerId(), event.playerName(), true, true));
         UUID lobbyId = lobby.getId();
         lobbyStore.add(lobbyId, lobby);
@@ -71,7 +82,7 @@ public class LobbyServiceImpl implements LobbyService {
 
         return EventResult.of(
                 List.of(new PlayerJoinedLobbyEvent(event.playerId(), event.playerName())),
-                Map.of(event.playerId(), new LobbyStateEvent(lobbyId, lobby.getPlayers()))
+                Map.of(event.playerId(), new LobbyStateEvent(lobbyId, lobbyMapper.toSnapshotDTO(lobby)))
         );
     }
 
@@ -126,6 +137,28 @@ public class LobbyServiceImpl implements LobbyService {
         // Lobby service constructs this event — no casting needed
         return EventResult.broadcast(
                 new GameInitializedEvent(gameMapper.toSnapshotDTO(game))
+        );
+    }
+
+    private EventResult<OutboundLobbyEvent> reconnectToLobby(LobbyReconnectRequestedEvent event) {
+        Lobby lobby = lobbyStore.get(event.lobbyId());
+        if (lobby == null) {
+            return EventResult.directed(
+                    event.playerId(),
+                    new LobbyNotFoundError(event.lobbyId())
+            );
+        }
+
+        if (!lobby.hasPlayer(event.playerId())) {
+            return EventResult.directed(
+                    event.playerId(),
+                    new LobbyReconnectRejectionEvent(LobbyReconnectRejectionReason.PLAYER_NOT_IN_LOBBY)
+            );
+        }
+
+        return EventResult.directed(
+                event.playerId(),
+                new LobbyStateEvent(event.lobbyId(), lobbyMapper.toSnapshotDTO(lobby))
         );
     }
 }

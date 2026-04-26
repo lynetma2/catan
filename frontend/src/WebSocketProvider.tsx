@@ -1,50 +1,29 @@
-import React, {
-    createContext,
-    useContext,
-    useEffect,
-    useRef,
-    useState,
-    type ReactNode,
-} from 'react';
+import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import SockJS from 'sockjs-client/dist/sockjs';
-import {Client, type IMessage, type StompSubscription} from '@stomp/stompjs';
-
-interface WebSocketContextValue {
-    client: Client | null;
-    isConnected: boolean;
-    sendMessage: (destination: string, body: object) => void;
-    subscribe: (
-        destination: string,
-        callback: (message: IMessage) => void
-    ) => StompSubscription | null;
-}
-
-const WebSocketContext = createContext<WebSocketContextValue | undefined>(undefined);
-
-export const useWebSocket = (): WebSocketContextValue => {
-    const context = useContext(WebSocketContext);
-    if (!context) {
-        throw new Error('useWebSocket must be used within a WebSocketProvider');
-    }
-    return context;
-};
+import { Client, type IMessage, type StompSubscription } from '@stomp/stompjs';
+import { WebSocketContext } from './WebSocketContext';
 
 interface WebSocketProviderProps {
     children: ReactNode;
 }
 
-export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({children}) => {
+export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
     const clientRef = useRef<Client | null>(null);
+    const onConnectCallbacks = useRef<(() => void)[]>([]);
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
         const client = new Client({
-            webSocketFactory: () => new SockJS('http://localhost:8080/ws'), // your endpoint
+            webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
             debug: (str) => console.log('[STOMP]', str),
             reconnectDelay: 5000,
             onConnect: () => {
                 console.log('STOMP connected');
                 setIsConnected(true);
+
+                // Fire all registered onConnect callbacks
+                onConnectCallbacks.current.forEach(cb => cb());
+                onConnectCallbacks.current = [];
             },
             onDisconnect: () => {
                 console.log('STOMP disconnected');
@@ -64,30 +43,39 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({children}) 
     }, []);
 
     const sendMessage = (destination: string, body: object) => {
-        if (clientRef.current && clientRef.current.connected) {
+        if (clientRef.current?.connected) {
             clientRef.current.publish({
                 destination,
                 body: JSON.stringify(body),
             });
+        } else {
+            console.warn(`sendMessage called before connected, dropping message to ${destination}`);
         }
     };
 
-    const subscribe = (destination: string, callback: (message: IMessage) => void): StompSubscription | null => {
-        if (clientRef.current && clientRef.current.connected) {
+    const subscribe = (
+        destination: string,
+        callback: (message: IMessage) => void
+    ): StompSubscription | null => {
+        if (clientRef.current?.connected) {
             return clientRef.current.subscribe(destination, callback);
         }
+        console.warn(`subscribe called before connected, dropping subscription to ${destination}`);
         return null;
     };
 
-    const value: WebSocketContextValue = {
-        client: clientRef.current,
-        isConnected,
-        sendMessage,
-        subscribe,
+    const onConnect = (callback: () => void) => {
+        if (clientRef.current?.connected) {
+            // Already connected — fire immediately
+            callback();
+        } else {
+            // Queue it — will fire in onConnect
+            onConnectCallbacks.current.push(callback);
+        }
     };
 
     return (
-        <WebSocketContext.Provider value={value}>
+        <WebSocketContext.Provider value={{ client: clientRef.current, isConnected, sendMessage, subscribe, onConnect }}>
             {children}
         </WebSocketContext.Provider>
     );

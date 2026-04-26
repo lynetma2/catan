@@ -18,16 +18,16 @@ public class GameMessagingService {
         this.messaging = messaging;
     }
 
-    public void broadcast(UUID gameId, EventResult<? extends OutboundEvent> result) {
+    public void broadcast(UUID gameId, String sessionId, EventResult<? extends OutboundEvent> result) {
         result.broadcast().forEach(event ->
                 messaging.broadcast(ApiRoutes.gameTopic(gameId), event)
         );
         result.directed().forEach((playerId, event) ->
-                messaging.sendToUser(playerId, ApiRoutes.gameQueue(gameId), event)
+                messaging.sendToSession(sessionId, ApiRoutes.gameQueue(gameId), event)
         );
     }
 
-    public void sendError(UUID playerId, OutboundGameEvent error) {
-        messaging.sendToUser(playerId, ApiRoutes.errors(), error);
+    public void sendError(String sessionId, OutboundGameEvent error) {
+        messaging.sendToSession(sessionId, ApiRoutes.errors(), error);
     }
 }

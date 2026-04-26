@@ -6,8 +6,10 @@ import java.util.UUID;
 
 public class ApiRoutes {
     public static final String TOPIC_PREFIX = "/topic";
+    public static final String QUEUE_PREFIX = "/queue";
     public static final String APP_PREFIX = "/app";
     public static final String WS_PREFIX = "/ws";
+    public static final String USER_PREFIX = "/user";
 
     public static String gameTopic(UUID gameId) {
         return "/topic/games/" + gameId;

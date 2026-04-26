@@ -8,6 +8,7 @@ import com.sundtrack.catan.session.game.services.interfaces.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 import java.util.UUID;
@@ -25,8 +26,9 @@ public class GameController {
     }
 
     @MessageMapping("/{gameId}/events")
-    public void eventHandling(InboundGameEvent event, @DestinationVariable UUID gameId) {
+    public void eventHandling(InboundGameEvent event, @DestinationVariable UUID gameId, SimpMessageHeaderAccessor headerAccessor) {
+        String sessionId = headerAccessor.getSessionId();
         EventResult<OutboundGameEvent> result = gameService.handle(gameId, event);
-        gameMessagingService.broadcast(gameId, result);
+        gameMessagingService.broadcast(gameId, sessionId, result);
     }
 }

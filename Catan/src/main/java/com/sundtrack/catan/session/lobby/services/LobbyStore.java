@@ -22,6 +22,11 @@ public class LobbyStore {
         lobbyMap.remove(uuid);
     }
 
+    public boolean existsByPlayerId(UUID playerId) {
+        return lobbyMap.values().stream()
+                .anyMatch(lobby -> lobby.hasPlayer(playerId));
+    }
+
     public void persist(Lobby lobby) {
         // Implementation will come later, when it is decided how it should be implemented.
     }

@@ -1,52 +1,40 @@
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {useState} from 'react';
-import {Input} from "@/components/ui/input.tsx";
-import {Label} from "@/components/ui/label.tsx";
-import {Button} from "@/components/ui/button.tsx";
-import {Loader2} from "lucide-react";
-import {useNavigate} from "react-router";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
+import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { useNavigate } from "react-router";
+import { v4 as uuidv4 } from 'uuid';
 
 function IndexPage() {
     const navigate = useNavigate();
     const [username, setUsername] = useState<string>("");
-    const [lobbyId, setLobbyId] = useState<number>(0);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [lobbyId, setLobbyId] = useState<string>("");
 
     function joinLobby() {
-        //TODO add the functionality to join a lobby
-        if (lobbyId == 0) {
+        if (!lobbyId) {
             console.error("No lobby id found");
+            return;
         }
-        if (username == "") {
+        if (!username) {
             console.error("No username found");
+            return;
         }
 
-        //Ready to join lobby -> should go directly to the correct page, using react router.
-        navigate(`/lobby/${lobbyId}`, {state: {username: username}});
+        navigate(`/lobby/${lobbyId}`, {
+            state: { username, playerId: uuidv4() }
+        });
     }
 
     function newLobby() {
-        //TODO add the functionality to create a lobby
-        if (username == "") {
+        if (!username) {
             console.error("No username found");
+            return;
         }
 
-        setLoading(true);
-        fetch("http://localhost:8080/lobby/new", {
-            method: "POST",
-            body: JSON.stringify({'playerName': username}),
-            headers: {
-                "Content-Type": "application/json",
-            }
-        }).then((response: Response) => {
-            if (response.status === 200) {
-                response.json().then((data) => {
-                    const lobbyId = data.lobbyId;
-                    setLoading(false);
-                    //Ready to move to next page.
-                    navigate(`/lobby/${lobbyId}`, {state: {username: username}});
-                });
-            }
+        // No HTTP call needed — LobbyView handles creation via WebSocket
+        navigate(`/lobby`, {
+            state: { username, playerId: uuidv4() }
         });
     }
 
@@ -61,11 +49,16 @@ function IndexPage() {
                     <CardContent>
                         <div className="grid w-full max-w-sm items-center gap-3">
                             <Label>Username</Label>
-                            <Input id="username" placeholder="Username" value={username}
-                                   onChange={(e) => setUsername(e.target.value)}/>
+                            <Input
+                                id="username"
+                                placeholder="Username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                            />
                         </div>
-                        <Button className="w-full mt-1" disabled={loading} onClick={newLobby}>{loading ?
-                            <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : "Create Lobby"}</Button>
+                        <Button className="w-full mt-1" onClick={newLobby}>
+                            Create Lobby
+                        </Button>
                     </CardContent>
                 </Card>
 
@@ -76,15 +69,25 @@ function IndexPage() {
                     <CardContent>
                         <div className="grid w-full max-w-sm items-center gap-3">
                             <Label>Lobby Id</Label>
-                            <Input type="number" id="lobbyId" placeholder="Lobby Id" value={lobbyId}
-                                   onChange={e => setLobbyId(parseInt(e.target.value))}/>
+                            <Input
+                                id="lobbyId"
+                                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                                value={lobbyId}
+                                onChange={(e) => setLobbyId(e.target.value)}
+                            />
                         </div>
                         <div className="grid w-full max-w-sm items-center gap-3 mt-1">
                             <Label>Username</Label>
-                            <Input id="username" placeholder="Username" value={username}
-                                   onChange={(e) => setUsername(e.target.value)}/>
+                            <Input
+                                id="username"
+                                placeholder="Username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                            />
                         </div>
-                        <Button className="w-full mt-1" onClick={joinLobby}>Join Lobby</Button>
+                        <Button className="w-full mt-1" onClick={joinLobby}>
+                            Join Lobby
+                        </Button>
                     </CardContent>
                 </Card>
             </div>

@@ -18,16 +18,20 @@ public class LobbyMessagingService {
         this.messaging = messaging;
     }
 
-    public void broadcast(UUID lobbyId, EventResult<? extends OutboundEvent> result) {
-        result.broadcast().forEach(event ->
-                messaging.broadcast(ApiRoutes.lobbyTopic(lobbyId), event)
+    public void broadcast(UUID lobbyId, String sessionId, EventResult<? extends OutboundEvent> result) {
+        result.broadcast().forEach(event -> {
+                    System.out.println("Broadcasting to topic: " + ApiRoutes.lobbyTopic(lobbyId) + " event: " + event);
+                    messaging.broadcast(ApiRoutes.lobbyTopic(lobbyId), event);
+                }
         );
-        result.directed().forEach((playerId, event) ->
-                messaging.sendToUser(playerId, ApiRoutes.lobbyQueue(), event)
+        result.directed().forEach((playerId, event) -> {
+                    System.out.println("Sending directed to sessionId: " + sessionId + " destination: " + ApiRoutes.lobbyQueue() + " event: " + event);
+                    messaging.sendToSession(sessionId, ApiRoutes.lobbyQueue(), event);
+                }
         );
     }
 
-    public void sendError(UUID playerId, OutboundEvent error) {
-        messaging.sendToUser(playerId, ApiRoutes.errors(), error);
+    public void sendError(String sessionId, OutboundEvent error) {
+        messaging.sendToSession(sessionId, ApiRoutes.errors(), error);
     }
 }

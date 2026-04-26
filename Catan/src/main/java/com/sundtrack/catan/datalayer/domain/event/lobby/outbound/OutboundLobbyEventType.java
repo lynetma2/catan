@@ -13,4 +13,5 @@ public enum OutboundLobbyEventType {
     LOBBY_JOIN_REJECTED,
     GAME_START_REJECTED,
     LOBBY_NOT_FOUND,
+    LOBBY_RECONNECT_REJECTED,
 }

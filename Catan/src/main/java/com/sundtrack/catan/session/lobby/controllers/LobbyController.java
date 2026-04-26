@@ -27,15 +27,18 @@ public class LobbyController {
 
     // No lobbyId yet — create flow
     @MessageMapping("/lobby")
-    public void handleCreate(@Payload LobbyCreateRequestedEvent event) {
+    public void handleCreate(@Payload LobbyCreateRequestedEvent event, SimpMessageHeaderAccessor headerAccessor) {
+        System.out.println("handleCreate called with event: " + event);
+        String sessionId = headerAccessor.getSessionId();
         EventResult<OutboundLobbyEvent> result = lobbyService.handle(null, event);
-        lobbyMessagingService.broadcast(null, result);
+        lobbyMessagingService.broadcast(null, sessionId, result);
     }
 
     // LobbyId known — all other lobby actions
     @MessageMapping("/lobby/{lobbyId}/events")
-    public void handleEvent(@DestinationVariable UUID lobbyId, @Payload InboundLobbyEvent event) {
+    public void handleEvent(@DestinationVariable UUID lobbyId, @Payload InboundLobbyEvent event, SimpMessageHeaderAccessor headerAccessor) {
+        String sessionId = headerAccessor.getSessionId();
         EventResult<OutboundLobbyEvent> result = lobbyService.handle(null, event);
-        lobbyMessagingService.broadcast(lobbyId, result);
+        lobbyMessagingService.broadcast(lobbyId, sessionId, result);
     }
 }
