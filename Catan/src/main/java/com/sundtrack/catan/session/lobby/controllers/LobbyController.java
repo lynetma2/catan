@@ -12,6 +12,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
 import java.util.UUID;
 
 @Controller
@@ -27,18 +28,16 @@ public class LobbyController {
 
     // No lobbyId yet — create flow
     @MessageMapping("/lobby")
-    public void handleCreate(@Payload LobbyCreateRequestedEvent event, SimpMessageHeaderAccessor headerAccessor) {
+    public void handleCreate(@Payload LobbyCreateRequestedEvent event, Principal principal) {
         System.out.println("handleCreate called with event: " + event);
-        String sessionId = headerAccessor.getSessionId();
         EventResult<OutboundLobbyEvent> result = lobbyService.handle(null, event);
-        lobbyMessagingService.broadcast(null, sessionId, result);
+        lobbyMessagingService.broadcast(null, principal.getName(), result);
     }
 
     // LobbyId known — all other lobby actions
     @MessageMapping("/lobby/{lobbyId}/events")
-    public void handleEvent(@DestinationVariable UUID lobbyId, @Payload InboundLobbyEvent event, SimpMessageHeaderAccessor headerAccessor) {
-        String sessionId = headerAccessor.getSessionId();
+    public void handleEvent(@DestinationVariable UUID lobbyId, @Payload InboundLobbyEvent event, Principal principal) {
         EventResult<OutboundLobbyEvent> result = lobbyService.handle(null, event);
-        lobbyMessagingService.broadcast(lobbyId, sessionId, result);
+        lobbyMessagingService.broadcast(lobbyId, principal.getName(), result);
     }
 }

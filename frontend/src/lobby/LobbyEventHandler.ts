@@ -1,12 +1,18 @@
 import type {
-    GameInitializedEvent, GameStartRejectedEvent,
-    LobbyCreatedEvent, LobbyJoinRejectedEvent, LobbyNotFoundError, OutboundLobbyEvent, PlayerDisconnectedEvent,
+    GameInitializedEvent,
+    GameStartRejectedEvent,
+    InboundLobbyEvent,
+    LobbyCreatedEvent,
+    LobbyJoinRejectedEvent,
+    LobbyNotFoundError,
+    LobbyStateEvent,
+    PlayerDisconnectedEvent,
     PlayerJoinedLobbyEvent,
     PlayerReadyEvent,
     PlayerUnreadyEvent
 } from "@/lobby/LobbyEvents.ts";
 
-type OutboundLobbyEventMap = {
+type InboundLobbyEventMap = {
     'LOBBY_CREATED':       LobbyCreatedEvent;
     'PLAYER_JOINED_LOBBY': PlayerJoinedLobbyEvent;
     'PLAYER_READY':        PlayerReadyEvent;
@@ -16,17 +22,18 @@ type OutboundLobbyEventMap = {
     'LOBBY_JOIN_REJECTED': LobbyJoinRejectedEvent;
     'GAME_START_REJECTED': GameStartRejectedEvent;
     'LOBBY_NOT_FOUND':     LobbyNotFoundError;
+    'LOBBY_STATE': LobbyStateEvent;
 };
 
 type PartialEventHandlers = {
-    [K in keyof OutboundLobbyEventMap]?: (event: OutboundLobbyEventMap[K]) => void;
+    [K in keyof InboundLobbyEventMap]?: (event: InboundLobbyEventMap[K]) => void;
 };
 
-export function handleLobbyEvent(event: OutboundLobbyEvent, handlers: PartialEventHandlers) {
-    const handler = handlers[event.type as keyof OutboundLobbyEventMap];
+export function handleLobbyEvent(event: InboundLobbyEvent, handlers: PartialEventHandlers) {
+    const handler = handlers[event.type as keyof InboundLobbyEventMap];
     if (handler) {
         // TypeScript can't narrow this automatically across the map lookup,
         // so we cast here — but the map guarantees it's correct
-        (handler as (e: OutboundLobbyEvent) => void)(event);
+        (handler as (e: InboundLobbyEvent) => void)(event);
     }
 }

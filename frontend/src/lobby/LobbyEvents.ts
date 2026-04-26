@@ -1,18 +1,18 @@
-// --- Inbound ---
+// --- Outbound ---
 export type LobbyCreateRequestedEvent = { type: 'LOBBY_CREATE_REQUESTED'; playerId: string; playerName: string; };
 export type LobbyJoinRequestedEvent =   { type: 'LOBBY_JOIN_REQUESTED';   playerId: string; playerName: string; };
 export type PlayerReadyRequestedEvent = { type: 'PLAYER_READY_REQUESTED'; playerId: string; };
 export type PlayerUnreadyRequestedEvent={ type: 'PLAYER_UNREADY_REQUESTED';playerId: string; };
 export type GameStartRequestedEvent =   { type: 'GAME_START_REQUESTED';   playerId: string; };
 
-export type InboundLobbyEvent =
+export type OutboundLobbyEvent =
     | LobbyCreateRequestedEvent
     | LobbyJoinRequestedEvent
     | PlayerReadyRequestedEvent
     | PlayerUnreadyRequestedEvent
     | GameStartRequestedEvent;
 
-// --- Outbound ---
+// --- Inbound ---
 export type LobbyCreatedEvent =       { type: 'LOBBY_CREATED';       lobbyId: string; playerId: string; playerName: string; };
 export type PlayerJoinedLobbyEvent =  { type: 'PLAYER_JOINED_LOBBY'; lobbyId: string; playerId: string; playerName: string; isLeader: boolean; };
 export type PlayerReadyEvent =        { type: 'PLAYER_READY';        playerId: string; };
@@ -22,8 +22,20 @@ export type GameInitializedEvent =    { type: 'GAME_INITIALIZED';    gameId: str
 export type LobbyJoinRejectedEvent =  { type: 'LOBBY_JOIN_REJECTED'; reason: string; };
 export type GameStartRejectedEvent =  { type: 'GAME_START_REJECTED'; reason: string; };
 export type LobbyNotFoundError =      { type: 'LOBBY_NOT_FOUND';     lobbyId: string; };
+export type LobbyStateEvent = {
+    type: 'LOBBY_STATE';
+    lobbyId: string;
+    snapshot: {
+        players: Array<{
+            playerId: string;
+            username: string;
+            isReady: boolean;
+            isLeader: boolean;
+        }>;
+    };
+};
 
-export type OutboundLobbyEvent =
+export type InboundLobbyEvent =
     | LobbyCreatedEvent
     | PlayerJoinedLobbyEvent
     | PlayerReadyEvent
@@ -32,4 +44,5 @@ export type OutboundLobbyEvent =
     | GameInitializedEvent
     | LobbyJoinRejectedEvent
     | GameStartRejectedEvent
-    | LobbyNotFoundError;
+    | LobbyNotFoundError
+    | LobbyStateEvent;

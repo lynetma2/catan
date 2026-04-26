@@ -1,5 +1,8 @@
 package com.sundtrack.catan.datalayer.domain.event.lobby.outbound;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+@JsonFormat(shape = JsonFormat.Shape.STRING)
 public enum OutboundLobbyEventType {
     LOBBY_CREATED,
     LOBBY_STATE,

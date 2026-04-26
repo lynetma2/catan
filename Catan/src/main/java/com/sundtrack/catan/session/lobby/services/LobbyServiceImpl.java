@@ -57,7 +57,7 @@ public class LobbyServiceImpl implements LobbyService {
 
         return EventResult.directed(
                 event.playerId(),
-                new LobbyCreatedEvent(lobbyId, event.playerId(), event.playerName())
+                new LobbyStateEvent(lobbyId, lobbyMapper.toSnapshotDTO(lobby))
         );
     }
 

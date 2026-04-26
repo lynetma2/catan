@@ -23,11 +23,11 @@ public class GameMessagingService {
                 messaging.broadcast(ApiRoutes.gameTopic(gameId), event)
         );
         result.directed().forEach((playerId, event) ->
-                messaging.sendToSession(sessionId, ApiRoutes.gameQueue(gameId), event)
+                messaging.sendToUser(sessionId, ApiRoutes.gameQueue(gameId), event)
         );
     }
 
     public void sendError(String sessionId, OutboundGameEvent error) {
-        messaging.sendToSession(sessionId, ApiRoutes.errors(), error);
+        messaging.sendToUser(sessionId, ApiRoutes.errors(), error);
     }
 }
