@@ -6,7 +6,7 @@ public record PlayerReadyRequestedEvent(
         UUID playerId
 ) implements InboundLobbyEvent {
     @Override public InboundLobbyEventType type() {
-        return InboundLobbyEventType.PLAYER_UNREADY_REQUESTED;
+        return InboundLobbyEventType.PLAYER_READY_REQUESTED;
     }
 }
 
