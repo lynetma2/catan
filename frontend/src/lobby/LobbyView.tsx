@@ -9,12 +9,13 @@ import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Label} from '@/components/ui/label';
 import {Button} from '@/components/ui/button';
 import {useWebSocket} from '@/WebSocketContext';
+import {useLobbyActions} from './useLobbyActions';
 import type {StompSubscription} from '@stomp/stompjs';
 
 function LobbyView() {
     const navigate = useNavigate();
     const params = useParams();
-    const {sendMessage, subscribe, onConnect} = useWebSocket();
+    const {subscribe, onConnect} = useWebSocket();
 
     const topicSubscription = useRef<StompSubscription | null>(null);
     const queueSubscription = useRef<StompSubscription | null>(null);
@@ -32,25 +33,28 @@ function LobbyView() {
         return newId;
     }, []);
 
+    const actions = useLobbyActions(lobbyId, playerId);
+
     const myPlayer = lobby?.players.get(playerId);
     const isLeader = myPlayer?.isLeader ?? false;
     const isReady = myPlayer?.isReady ?? false;
 
     function parseLobbyState(event: any): Lobby {
-        const playersMap = new Map<string, Player>(
-            Object.values(event.snapshot.players).map((p: any) => [
-                p.playerId,
-                {
-                    playerId: p.playerId,
-                    username: p.username,
-                    isReady: p.isReady,
-                    isLeader: p.isLeader,
-                },
-            ])
-        );
+        const rawPlayers = event.snapshot.players;
+
+        const entries = Object.values(rawPlayers).map((p: any) : [string, Player] => [
+            p.id,
+            {
+                playerId: p.id,
+                username: p.username,
+                isReady: p.isReady,
+                isLeader: p.isLeader,
+            }
+        ]);
+
         return {
             lobbyId: event.lobbyId,
-            players: playersMap,
+            players: new Map<string, Player>(entries),
         };
     }
 
@@ -58,12 +62,22 @@ function LobbyView() {
         if (topicSubscription.current) return;
         topicSubscription.current = subscribe(`/topic/lobby/${lobbyId}`, (response) => {
             const event: OutboundLobbyEvent = JSON.parse(response.body);
+            console.log('recieved event: ', event);
             handleLobbyEvent(event, {
                 PLAYER_JOINED_LOBBY: (e) => {
-                    setLobby(prev => prev ? applyLobbyEvent(prev, e) : prev);
-                },
+                    setLobby(prev => {
+                        if (!prev) return null; // Guard clause: ignore events if lobby isn't initialized
+                        let result = applyLobbyEvent(prev, e);
+                        console.log('new state: ', result)
+                        return result;
+                    });                },
                 PLAYER_READY: (e) => {
-                    setLobby(prev => prev ? applyLobbyEvent(prev, e) : prev);
+                    setLobby(prev => {
+                        if (!prev) return null; // Guard clause: ignore events if lobby isn't initialized
+                        let result = applyLobbyEvent(prev, e);
+                        console.log('new state: ', result)
+                        return result;
+                    });
                 },
                 PLAYER_UNREADY: (e) => {
                     setLobby(prev => prev ? applyLobbyEvent(prev, e) : prev);
@@ -117,15 +131,11 @@ function LobbyView() {
 
         onConnect(() => {
             if (storedState) {
-                // Normal flow: we have initial state from IndexPage, apply it and
-                // subscribe to live updates only.
                 const event = JSON.parse(storedState);
                 sessionStorage.removeItem('lobbyState');
                 setLobby(parseLobbyState(event));
                 subscribeToLobbyTopic();
             } else {
-                // Reconnect flow: no stored state, fire reconnect event and wait
-                // for the backend to respond with current state.
                 subscribeToQueue((event) => {
                     setLobby(parseLobbyState(event));
                     sessionStorage.removeItem('lobbyState');
@@ -133,11 +143,7 @@ function LobbyView() {
                 });
 
                 setTimeout(() => {
-                    sendMessage(`/app/lobby/${lobbyId}/events`, {
-                        type: 'LOBBY_RECONNECT_REQUESTED',
-                        playerId,
-                        playerName: username,
-                    });
+                    actions.reconnectLobby(username);
                 }, 0);
             }
         });
@@ -150,20 +156,14 @@ function LobbyView() {
         };
     }, []);
 
-    function startGame() {
+    function handleReadyToggle() {
         if (!lobby) return;
-        sendMessage(`/app/lobby/${lobbyId}/events`, {
-            type: 'GAME_START_REQUESTED',
-            playerId,
-        });
+        isReady ? actions.setUnready() : actions.setReady();
     }
 
-    function updateReadyState() {
+    function handleStartGame() {
         if (!lobby) return;
-        sendMessage(`/app/lobby/${lobbyId}/events`, {
-            type: isReady ? 'PLAYER_UNREADY_REQUESTED' : 'PLAYER_READY_REQUESTED',
-            playerId,
-        });
+        actions.startGame();
     }
 
     return (
@@ -175,9 +175,9 @@ function LobbyView() {
             )}
             <PlayersView players={lobby?.players} />
             {isLeader ? (
-                <Button onClick={startGame} disabled={!lobby}>Start Game</Button>
+                <Button onClick={handleStartGame} disabled={!lobby}>Start Game</Button>
             ) : (
-                <Button onClick={updateReadyState} disabled={!lobby}>{isReady ? 'Set Not Ready' : 'Set Ready'}</Button>
+                <Button onClick={handleReadyToggle} disabled={!lobby}>{isReady ? 'Set Not Ready' : 'Set Ready'}</Button>
             )}
         </div>
     );

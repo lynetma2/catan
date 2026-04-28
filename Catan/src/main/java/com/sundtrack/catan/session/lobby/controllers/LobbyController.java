@@ -37,7 +37,8 @@ public class LobbyController {
     // LobbyId known — all other lobby actions
     @MessageMapping("/lobby/{lobbyId}/events")
     public void handleEvent(@DestinationVariable UUID lobbyId, @Payload InboundLobbyEvent event, Principal principal) {
-        EventResult<OutboundLobbyEvent> result = lobbyService.handle(null, event);
+        System.out.println("handleEvent called with event: " + event);
+        EventResult<OutboundLobbyEvent> result = lobbyService.handle(lobbyId, event);
         lobbyMessagingService.broadcast(lobbyId, principal.getName(), result);
     }
 }
