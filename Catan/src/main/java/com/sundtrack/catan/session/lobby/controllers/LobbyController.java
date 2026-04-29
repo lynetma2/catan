@@ -4,6 +4,7 @@ import com.sundtrack.catan.common.handlers.WebSocketSessionKeys;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.lobby.inbound.InboundLobbyEvent;
 import com.sundtrack.catan.datalayer.domain.event.lobby.inbound.LobbyCreateRequestedEvent;
+import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.GameInitializedEvent;
 import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.LobbyStateEvent;
 import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEvent;
 import com.sundtrack.catan.datalayer.domain.presence.PlayerContext;
@@ -41,7 +42,7 @@ public class LobbyController {
                 .map(e -> (LobbyStateEvent) e)
                 .findFirst()
                 .ifPresent(stateEvent -> {
-                    updateSessionAttributes(headerAccessor, principal, stateEvent.lobbyId());
+                    updateSessionAttributes(headerAccessor, principal, stateEvent.lobbyId(), PlayerContext.IN_LOBBY);
                 });
 
         lobbyMessagingService.broadcast(null, principal.getName(), result);
@@ -52,15 +53,23 @@ public class LobbyController {
     public void handleEvent(@DestinationVariable UUID lobbyId, @Payload InboundLobbyEvent event, Principal principal, SimpMessageHeaderAccessor headerAccessor) {
         System.out.println("handleEvent called with event: " + event);
         EventResult<OutboundLobbyEvent> result = lobbyService.handle(lobbyId, event);
-        updateSessionAttributes(headerAccessor, principal, lobbyId);
+
+        // Look for the LobbyStateEvent in the 'directed' map to find the new ID
+        PlayerContext context = result.broadcast().stream()
+                .anyMatch(e -> e instanceof GameInitializedEvent)
+                ? PlayerContext.IN_GAME
+                : PlayerContext.IN_LOBBY;
+
+        updateSessionAttributes(headerAccessor, principal, lobbyId, context);
+
         lobbyMessagingService.broadcast(lobbyId, principal.getName(), result);
     }
 
-    private void updateSessionAttributes(SimpMessageHeaderAccessor headerAccessor, Principal principal, UUID lobbyId) {
+    private void updateSessionAttributes(SimpMessageHeaderAccessor headerAccessor, Principal principal, UUID lobbyId, PlayerContext playerContext) {
         var attrs = headerAccessor.getSessionAttributes();
         if (attrs != null) {
             attrs.putIfAbsent(WebSocketSessionKeys.PLAYER_ID, principal.getName());
-            attrs.put(WebSocketSessionKeys.CONTEXT_KEY, PlayerContext.IN_LOBBY);
+            attrs.put(WebSocketSessionKeys.CONTEXT_KEY, playerContext);
             attrs.put(WebSocketSessionKeys.ID_KEY, lobbyId);
         }
     }
