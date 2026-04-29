@@ -25,8 +25,20 @@ public class Lobby {
         this.players.put(lobbyPlayer.getId(), lobbyPlayer);
     }
 
+    public void removePlayer(UUID playerId) {
+        this.players.remove(playerId);
+    }
+
     public boolean isFull() {
         return this.players.size() >= 4;
+    }
+
+    public boolean isEmpty() {
+        return this.players.isEmpty();
+    }
+
+    public boolean isNotEmpty() {
+        return !this.isEmpty();
     }
 
     public boolean hasStarted() {

@@ -43,6 +43,18 @@ public class LobbyServiceImpl implements LobbyService {
         };
     }
 
+    @Override
+    public EventResult<OutboundLobbyEvent> handleDisconnect(UUID lobbyId, UUID playerId) {
+        Lobby lobby = lobbyStore.get(lobbyId);
+        lobby.removePlayer(playerId);
+
+        if (lobby.isNotEmpty()) {
+            return EventResult.broadcast(new PlayerDisconnectedEvent(playerId));
+        }
+
+        return null;
+    }
+
     private EventResult<OutboundLobbyEvent> createLobby(LobbyCreateRequestedEvent event) {
         if (lobbyStore.existsByPlayerId(event.playerId())) {
             return EventResult.directed(

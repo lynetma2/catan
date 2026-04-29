@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface LobbyService {
     EventResult<OutboundLobbyEvent> handle(UUID lobbyId, InboundLobbyEvent event);
+    EventResult<OutboundLobbyEvent> handleDisconnect(UUID lobbyId, UUID playerId);
 }
