@@ -52,7 +52,9 @@ export function applyLobbyEvent(lobby: Lobby, event: LobbyMutatingEvent): Lobby 
         }
         case 'PLAYER_DISCONNECTED': {
             const players = new Map(lobby.players);
+            console.log("map before: ", players);
             players.delete(event.playerId);
+            console.log("map after: ", players);
             return { ...lobby, players };
         }
     }

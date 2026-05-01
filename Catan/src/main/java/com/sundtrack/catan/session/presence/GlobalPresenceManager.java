@@ -35,10 +35,22 @@ public class GlobalPresenceManager {
 
         String username = principal.getName();
         PlayerContext context = (PlayerContext) attrs.getOrDefault(WebSocketSessionKeys.CONTEXT_KEY, PlayerContext.NONE);
-        UUID playerId = (UUID) attrs.get(WebSocketSessionKeys.PLAYER_ID);
-        UUID contextId = (UUID) attrs.get(WebSocketSessionKeys.ID_KEY);
+        Object rawPlayerId = attrs.get(WebSocketSessionKeys.PLAYER_ID);
+        Object rawContextId = attrs.get(WebSocketSessionKeys.ID_KEY);
 
-        if (contextId == null || playerId == null) return;
+        UUID playerId = null;
+        if (rawPlayerId instanceof String s) {
+            playerId = UUID.fromString(s);
+        } else if (rawPlayerId instanceof UUID u) {
+            playerId = u;
+        }
+
+        UUID contextId = null;
+        if (rawContextId instanceof String s) {
+            contextId = UUID.fromString(s);
+        } else if (rawContextId instanceof UUID u) {
+            contextId = u;
+        }
 
         // Route the event based on where the player was
         switch (context) {

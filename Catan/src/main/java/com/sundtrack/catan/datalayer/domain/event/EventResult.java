@@ -23,4 +23,8 @@ public record EventResult<T extends OutboundEvent>(
     ) {
         return new EventResult<>(broadcast, directed);
     }
+
+    public static <T extends OutboundEvent> EventResult<T> empty() {
+        return new EventResult<>(List.of(), Map.of());
+    }
 }

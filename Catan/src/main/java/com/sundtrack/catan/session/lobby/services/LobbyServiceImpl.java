@@ -50,9 +50,11 @@ public class LobbyServiceImpl implements LobbyService {
 
         if (lobby.isNotEmpty()) {
             return EventResult.broadcast(new PlayerDisconnectedEvent(playerId));
+        } else {
+            lobbyStore.remove(lobbyId);
         }
 
-        return null;
+        return EventResult.empty();
     }
 
     private EventResult<OutboundLobbyEvent> createLobby(LobbyCreateRequestedEvent event) {
