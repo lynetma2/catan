@@ -14,5 +14,4 @@ import java.util.UUID;
 public sealed interface InboundLobbyEvent extends LobbyEvent permits GameStartRequestedEvent, LobbyCreateRequestedEvent, LobbyJoinRequestedEvent, LobbyReconnectRequestedEvent, PlayerReadyRequestedEvent, PlayerUnreadyRequestedEvent {
     @JsonIgnore
     InboundLobbyEventType type();
-    UUID playerId();
 }

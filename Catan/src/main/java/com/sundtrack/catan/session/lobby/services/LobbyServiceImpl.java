@@ -1,5 +1,6 @@
 package com.sundtrack.catan.session.lobby.services;
 
+import com.sundtrack.catan.common.handlers.AnonymousPrincipalHandshakeHandler;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.GameInitializedEvent;
 import com.sundtrack.catan.datalayer.domain.event.lobby.inbound.*;
@@ -13,6 +14,7 @@ import com.sundtrack.catan.session.game.services.interfaces.GameService;
 import com.sundtrack.catan.session.lobby.services.interfaces.LobbyService;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -32,19 +34,21 @@ public class LobbyServiceImpl implements LobbyService {
         this.lobbyMapper = lobbyMapper;
     }
 
-    public EventResult<OutboundLobbyEvent> handle(UUID lobbyId, InboundLobbyEvent event) {
+    public EventResult<OutboundLobbyEvent> handle(Principal principal, UUID lobbyId, InboundLobbyEvent event) {
+        UUID playerId = extractPlayerId(principal);
         return switch (event) {
-            case LobbyCreateRequestedEvent e  -> createLobby(e);
-            case LobbyJoinRequestedEvent e    -> joinLobby(lobbyId, e);
-            case PlayerReadyRequestedEvent e  -> playerReady(lobbyId, e);
-            case PlayerUnreadyRequestedEvent e -> playerUnready(lobbyId, e);
-            case LobbyReconnectRequestedEvent e -> reconnectToLobby(e);
-            case GameStartRequestedEvent e    -> startGame(lobbyId, e);
+            case LobbyCreateRequestedEvent e   -> createLobby(playerId, e);
+            case LobbyJoinRequestedEvent e     -> joinLobby(playerId, lobbyId, e);
+            case PlayerReadyRequestedEvent e   -> playerReady(playerId, lobbyId);
+            case PlayerUnreadyRequestedEvent e -> playerUnready(playerId, lobbyId);
+            case LobbyReconnectRequestedEvent e -> reconnectToLobby(playerId, e);
+            case GameStartRequestedEvent e     -> startGame(playerId, lobbyId);
         };
     }
 
     @Override
-    public EventResult<OutboundLobbyEvent> handleDisconnect(UUID lobbyId, UUID playerId) {
+    public EventResult<OutboundLobbyEvent> handleDisconnect(Principal principal, UUID lobbyId) {
+        UUID playerId = extractPlayerId(principal);
         Lobby lobby = lobbyStore.get(lobbyId);
         lobby.removePlayer(playerId);
 
@@ -57,122 +61,120 @@ public class LobbyServiceImpl implements LobbyService {
         return EventResult.empty();
     }
 
-    private EventResult<OutboundLobbyEvent> createLobby(LobbyCreateRequestedEvent event) {
-        if (lobbyStore.existsByPlayerId(event.playerId())) {
+    private EventResult<OutboundLobbyEvent> createLobby(UUID playerId, LobbyCreateRequestedEvent event) {
+        if (lobbyStore.existsByPlayerId(playerId)) {
             return EventResult.directed(
-                    event.playerId(),
+                    playerId,
                     new LobbyJoinRejectedEvent(LobbyJoinRejectionReason.ALREADY_IN_LOBBY)
             );
         }
 
-        Lobby lobby = new Lobby(new LobbyPlayer(event.playerId(), event.playerName(), true, true));
+        Lobby lobby = new Lobby(new LobbyPlayer(playerId, event.playerName(), true, true));
         UUID lobbyId = lobby.getId();
         lobbyStore.add(lobbyId, lobby);
 
         return EventResult.directed(
-                event.playerId(),
+                playerId,
                 new LobbyStateEvent(lobbyId, lobbyMapper.toSnapshotDTO(lobby))
         );
     }
 
-    private EventResult<OutboundLobbyEvent> joinLobby(UUID lobbyId, LobbyJoinRequestedEvent event) {
+    private EventResult<OutboundLobbyEvent> joinLobby(UUID playerId, UUID lobbyId, LobbyJoinRequestedEvent event) {
         Lobby lobby = lobbyStore.get(lobbyId);
 
         if (lobby.isFull()) {
             return EventResult.directed(
-                    event.playerId(),
+                    playerId,
                     new LobbyJoinRejectedEvent(LobbyJoinRejectionReason.LOBBY_FULL)
             );
         }
 
         if (lobby.hasStarted()) {
             return EventResult.directed(
-                    event.playerId(),
+                    playerId,
                     new LobbyJoinRejectedEvent(LobbyJoinRejectionReason.GAME_ALREADY_STARTED)
             );
         }
 
-        lobby.addPlayer(new LobbyPlayer(event.playerId(), event.playerName(), false, false));
+        lobby.addPlayer(new LobbyPlayer(playerId, event.playerName(), false, false));
 
         return EventResult.of(
-                List.of(new PlayerJoinedLobbyEvent(event.playerId(), event.playerName())),
-                Map.of(event.playerId(), new LobbyStateEvent(lobbyId, lobbyMapper.toSnapshotDTO(lobby)))
+                List.of(new PlayerJoinedLobbyEvent(playerId, event.playerName())),
+                Map.of(playerId, new LobbyStateEvent(lobbyId, lobbyMapper.toSnapshotDTO(lobby)))
         );
     }
 
-    private EventResult<OutboundLobbyEvent> playerReady(UUID lobbyId, PlayerReadyRequestedEvent event) {
+    private EventResult<OutboundLobbyEvent> playerReady(UUID playerId, UUID lobbyId) {
         Lobby lobby = lobbyStore.get(lobbyId);
-        lobby.setReady(event.playerId());
+        lobby.setReady(playerId);
 
-        return EventResult.broadcast(
-                new PlayerReadyEvent(event.playerId())
-        );
+        return EventResult.broadcast(new PlayerReadyEvent(playerId));
     }
 
-    private EventResult<OutboundLobbyEvent> playerUnready(UUID lobbyId, PlayerUnreadyRequestedEvent event) {
+    private EventResult<OutboundLobbyEvent> playerUnready(UUID playerId, UUID lobbyId) {
         Lobby lobby = lobbyStore.get(lobbyId);
-        lobby.setUnready(event.playerId());
+        lobby.setUnready(playerId);
 
-        return EventResult.broadcast(
-                new PlayerUnreadyEvent(event.playerId())
-        );
+        return EventResult.broadcast(new PlayerUnreadyEvent(playerId));
     }
 
-    private EventResult<OutboundLobbyEvent> startGame(UUID lobbyId, GameStartRequestedEvent event) {
+    private EventResult<OutboundLobbyEvent> startGame(UUID playerId, UUID lobbyId) {
         Lobby lobby = lobbyStore.get(lobbyId);
 
-        if (!lobby.isLeader(event.playerId())) {
+        if (!lobby.isLeader(playerId)) {
             return EventResult.directed(
-                    event.playerId(),
+                    playerId,
                     new GameStartRejectedEvent(GameStartRejectionReason.NOT_LEADER)
             );
         }
 
         if (!lobby.allPlayersReady()) {
             return EventResult.directed(
-                    event.playerId(),
+                    playerId,
                     new GameStartRejectedEvent(GameStartRejectionReason.PLAYERS_NOT_READY)
             );
         }
 
         if (lobby.playerCount() < 2) {
             return EventResult.directed(
-                    event.playerId(),
+                    playerId,
                     new GameStartRejectedEvent(GameStartRejectionReason.NOT_ENOUGH_PLAYERS)
             );
         }
 
-        // Hand off to game domain
         Game game = gameService.createGame(lobby.getPlayerIds());
-
         lobby.markAsStarted();
         lobbyStore.remove(lobbyId);
 
-        // Lobby service constructs this event — no casting needed
-        return EventResult.broadcast(
-                new GameInitializedEvent(gameMapper.toSnapshotDTO(game))
-        );
+        return EventResult.broadcast(new GameInitializedEvent(gameMapper.toSnapshotDTO(game)));
     }
 
-    private EventResult<OutboundLobbyEvent> reconnectToLobby(LobbyReconnectRequestedEvent event) {
+    private EventResult<OutboundLobbyEvent> reconnectToLobby(UUID playerId, LobbyReconnectRequestedEvent event) {
         Lobby lobby = lobbyStore.get(event.lobbyId());
         if (lobby == null) {
             return EventResult.directed(
-                    event.playerId(),
+                    playerId,
                     new LobbyNotFoundError(event.lobbyId())
             );
         }
 
-        if (!lobby.hasPlayer(event.playerId())) {
+        if (!lobby.hasPlayer(playerId)) {
             return EventResult.directed(
-                    event.playerId(),
+                    playerId,
                     new LobbyReconnectRejectionEvent(LobbyReconnectRejectionReason.PLAYER_NOT_IN_LOBBY)
             );
         }
 
         return EventResult.directed(
-                event.playerId(),
+                playerId,
                 new LobbyStateEvent(event.lobbyId(), lobbyMapper.toSnapshotDTO(lobby))
         );
+    }
+
+    private UUID extractPlayerId(Principal principal) {
+        if (principal instanceof AnonymousPrincipalHandshakeHandler.StompPrincipal stomp) {
+            return UUID.fromString(stomp.getUuid());
+        }
+        throw new IllegalStateException("Principal is not a StompPrincipal");
     }
 }

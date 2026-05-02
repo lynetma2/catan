@@ -55,7 +55,7 @@ public class GlobalPresenceManager {
         // Route the event based on where the player was
         switch (context) {
             case IN_LOBBY -> {
-                var result = lobbyService.handleDisconnect(contextId, playerId);
+                var result = lobbyService.handleDisconnect(principal, contextId);
                 lobbyMessagingService.broadcast(contextId, username, result);
             }
             case IN_GAME -> {

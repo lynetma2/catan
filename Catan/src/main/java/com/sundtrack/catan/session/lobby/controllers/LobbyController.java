@@ -1,5 +1,6 @@
 package com.sundtrack.catan.session.lobby.controllers;
 
+import com.sundtrack.catan.common.handlers.AnonymousPrincipalHandshakeHandler;
 import com.sundtrack.catan.common.handlers.WebSocketSessionKeys;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.lobby.inbound.InboundLobbyEvent;
@@ -34,7 +35,13 @@ public class LobbyController {
     @MessageMapping("/lobby")
     public void handleCreate(@Payload LobbyCreateRequestedEvent event, Principal principal, SimpMessageHeaderAccessor headerAccessor) {
         System.out.println("handleCreate called with event: " + event);
-        EventResult<OutboundLobbyEvent> result = lobbyService.handle(null, event);
+
+        // Upgrade the principal name now that the player has identified themselves
+        if (principal instanceof AnonymousPrincipalHandshakeHandler.StompPrincipal stomp) {
+            stomp.setName(event.playerName());
+        }
+
+        EventResult<OutboundLobbyEvent> result = lobbyService.handle(principal, null, event);
 
         // Look for the LobbyStateEvent in the 'directed' map to find the new ID
         result.directed().values().stream()
@@ -42,7 +49,7 @@ public class LobbyController {
                 .map(e -> (LobbyStateEvent) e)
                 .findFirst()
                 .ifPresent(stateEvent -> {
-                    updateSessionAttributes(headerAccessor, principal, stateEvent.lobbyId(), PlayerContext.IN_LOBBY);
+                    updateSessionAttributes(headerAccessor, stateEvent.lobbyId(), PlayerContext.IN_LOBBY);
                 });
 
         lobbyMessagingService.broadcast(null, principal.getName(), result);
@@ -52,7 +59,7 @@ public class LobbyController {
     @MessageMapping("/lobby/{lobbyId}/events")
     public void handleEvent(@DestinationVariable UUID lobbyId, @Payload InboundLobbyEvent event, Principal principal, SimpMessageHeaderAccessor headerAccessor) {
         System.out.println("handleEvent called with event: " + event);
-        EventResult<OutboundLobbyEvent> result = lobbyService.handle(lobbyId, event);
+        EventResult<OutboundLobbyEvent> result = lobbyService.handle(principal, lobbyId, event);
 
         // Look for the LobbyStateEvent in the 'directed' map to find the new ID
         PlayerContext context = result.broadcast().stream()
@@ -60,15 +67,14 @@ public class LobbyController {
                 ? PlayerContext.IN_GAME
                 : PlayerContext.IN_LOBBY;
 
-        updateSessionAttributes(headerAccessor, principal, lobbyId, context);
+        updateSessionAttributes(headerAccessor, lobbyId, context);
 
         lobbyMessagingService.broadcast(lobbyId, principal.getName(), result);
     }
 
-    private void updateSessionAttributes(SimpMessageHeaderAccessor headerAccessor, Principal principal, UUID lobbyId, PlayerContext playerContext) {
+    private void updateSessionAttributes(SimpMessageHeaderAccessor headerAccessor, UUID lobbyId, PlayerContext playerContext) {
         var attrs = headerAccessor.getSessionAttributes();
         if (attrs != null) {
-            attrs.putIfAbsent(WebSocketSessionKeys.PLAYER_ID, principal.getName());
             attrs.put(WebSocketSessionKeys.CONTEXT_KEY, playerContext);
             attrs.put(WebSocketSessionKeys.ID_KEY, lobbyId);
         }
