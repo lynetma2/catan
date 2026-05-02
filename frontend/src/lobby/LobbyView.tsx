@@ -33,7 +33,7 @@ function LobbyView() {
         return newId;
     }, []);
 
-    const actions = useLobbyActions(lobbyId, playerId);
+    const actions = useLobbyActions(lobbyId);
 
     const myPlayer = lobby?.players.get(playerId);
     const isLeader = myPlayer?.isLeader ?? false;

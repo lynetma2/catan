@@ -49,17 +49,19 @@ public class AnonymousPrincipalHandshakeHandler extends DefaultHandshakeHandler 
     }
 
     public static class StompPrincipal implements Principal {
-        private volatile String name;
+        private volatile String displayName;
         private final String uuid;
 
-        public StompPrincipal(String name, String uuid) {
-            this.name = name;
+        public StompPrincipal(String displayName, String uuid) {
+            this.displayName = displayName;
             this.uuid = uuid;
         }
 
         @Override
-        public String getName() { return name; }
+        public String getName() { return uuid; } // Spring uses this for routing
+
+        public String getDisplayName() { return displayName; }
         public String getUuid() { return uuid; }
-        public void setName(String name) { this.name = name; }
+        public void setDisplayName(String displayName) { this.displayName = displayName; }
     }
 }

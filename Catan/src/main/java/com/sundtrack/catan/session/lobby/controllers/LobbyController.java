@@ -38,7 +38,7 @@ public class LobbyController {
 
         // Upgrade the principal name now that the player has identified themselves
         if (principal instanceof AnonymousPrincipalHandshakeHandler.StompPrincipal stomp) {
-            stomp.setName(event.playerName());
+            stomp.setDisplayName(event.playerName()); // was setName
         }
 
         EventResult<OutboundLobbyEvent> result = lobbyService.handle(principal, null, event);
