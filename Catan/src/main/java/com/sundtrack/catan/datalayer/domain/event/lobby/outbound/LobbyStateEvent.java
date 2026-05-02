@@ -7,7 +7,8 @@ import java.util.UUID;
 
 public record LobbyStateEvent(
         UUID lobbyId,
-        LobbySnapshotDTO snapshot
+        LobbySnapshotDTO snapshot,
+        UUID localPlayerId
 ) implements OutboundLobbyEvent {
     @Override
     public OutboundLobbyEventType type() {

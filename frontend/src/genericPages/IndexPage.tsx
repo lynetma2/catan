@@ -4,10 +4,10 @@ import {Input} from '@/components/ui/input.tsx';
 import {Label} from '@/components/ui/label.tsx';
 import {Button} from '@/components/ui/button.tsx';
 import {useNavigate} from 'react-router';
-import {v4 as uuidv4} from 'uuid';
 import {useWebSocket} from '@/WebSocketContext';
 import {LobbyError} from '@/lobby/LobbyErrors';
 import {initialLobbyIndexState, lobbyIndexReducer} from '@/lobby/LobbyIndexReducer';
+import type {LobbyStateEvent} from "@/lobby/LobbyEvents.ts";
 
 function IndexPage() {
     const navigate = useNavigate();
@@ -27,12 +27,8 @@ function IndexPage() {
         }
     }, []);
 
-    function getOrCreatePlayerId(): string {
-        const existing = sessionStorage.getItem('playerId');
-        if (existing) return existing;
-        const newId = uuidv4();
-        sessionStorage.setItem('playerId', newId);
-        return newId;
+    function savePlayerId(playerId: string) {
+        sessionStorage.setItem('playerId', playerId);
     }
 
     function saveUsername(value: string) {
@@ -47,17 +43,17 @@ function IndexPage() {
     function newLobby() {
         if (!username || state.isCreating) return;
 
-        const playerId = getOrCreatePlayerId();
         dispatch({type: 'CREATE_STARTED'});
 
         onConnect(() => {
             const subscription = subscribe('/user/queue/lobby', (response) => {
                 try {
-                    const event = JSON.parse(response.body);
+                    const event: LobbyStateEvent = JSON.parse(response.body);
 
                     if (event.type === 'LOBBY_STATE') {
                         subscription.unsubscribe();
                         saveLobbyState(event);
+                        savePlayerId(event.localPlayerId);
                         navigate(`/lobby/${event.lobbyId}`);
                     } else if (event.type === 'LOBBY_JOIN_REJECTED') {
                         subscription.unsubscribe();
@@ -76,7 +72,6 @@ function IndexPage() {
             setTimeout(() => {
                 sendMessage('/app/lobby', {
                     type: 'LOBBY_CREATE_REQUESTED',
-                    playerId,
                     playerName: username,
                 });
             }, 0);
@@ -86,17 +81,17 @@ function IndexPage() {
     function joinLobby() {
         if (!lobbyId || !username || state.isJoining) return;
 
-        const playerId = getOrCreatePlayerId();
         dispatch({type: 'JOIN_STARTED'});
 
         onConnect(() => {
             const subscription = subscribe('/user/queue/lobby', (response) => {
                 try {
-                    const event = JSON.parse(response.body);
+                    const event: LobbyStateEvent = JSON.parse(response.body);
 
                     if (event.type === 'LOBBY_STATE') {
                         subscription.unsubscribe();
                         saveLobbyState(event);
+                        savePlayerId(event.localPlayerId);
                         navigate(`/lobby/${event.lobbyId}`);
                     } else if (event.type === 'LOBBY_JOIN_REJECTED') {
                         subscription.unsubscribe();
@@ -115,7 +110,6 @@ function IndexPage() {
             setTimeout(() => {
                 sendMessage(`/app/lobby/${lobbyId}/events`, {
                     type: 'LOBBY_JOIN_REQUESTED',
-                    playerId,
                     playerName: username,
                 });
             }, 0);

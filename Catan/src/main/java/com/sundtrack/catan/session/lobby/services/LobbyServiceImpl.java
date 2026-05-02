@@ -75,7 +75,7 @@ public class LobbyServiceImpl implements LobbyService {
 
         return EventResult.directed(
                 playerId,
-                new LobbyStateEvent(lobbyId, lobbyMapper.toSnapshotDTO(lobby))
+                new LobbyStateEvent(lobbyId, lobbyMapper.toSnapshotDTO(lobby), playerId)
         );
     }
 
@@ -100,7 +100,7 @@ public class LobbyServiceImpl implements LobbyService {
 
         return EventResult.of(
                 List.of(new PlayerJoinedLobbyEvent(playerId, event.playerName())),
-                Map.of(playerId, new LobbyStateEvent(lobbyId, lobbyMapper.toSnapshotDTO(lobby)))
+                Map.of(playerId, new LobbyStateEvent(lobbyId, lobbyMapper.toSnapshotDTO(lobby), playerId))
         );
     }
 
@@ -167,7 +167,7 @@ public class LobbyServiceImpl implements LobbyService {
 
         return EventResult.directed(
                 playerId,
-                new LobbyStateEvent(event.lobbyId(), lobbyMapper.toSnapshotDTO(lobby))
+                new LobbyStateEvent(event.lobbyId(), lobbyMapper.toSnapshotDTO(lobby), playerId)
         );
     }
 

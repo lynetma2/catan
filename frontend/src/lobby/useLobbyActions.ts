@@ -6,13 +6,12 @@ import type {
     PlayerUnreadyRequestedEvent,
 } from '@/lobby/LobbyEvents';
 
-export function useLobbyActions(lobbyId: string, playerId: string) {
+export function useLobbyActions(lobbyId: string) {
     const {sendMessage} = useWebSocket();
 
     function reconnectLobby(username: string) {
         const event: LobbyJoinRequestedEvent = {
             type: 'LOBBY_JOIN_REQUESTED',
-            playerId,
             playerName: username,
         };
         sendMessage(`/app/lobby/${lobbyId}/events`, event);
@@ -20,8 +19,7 @@ export function useLobbyActions(lobbyId: string, playerId: string) {
 
     function setReady() {
         const event: PlayerReadyRequestedEvent = {
-            type: 'PLAYER_READY_REQUESTED',
-            playerId,
+            type: 'PLAYER_READY_REQUESTED'
         };
         sendMessage(`/app/lobby/${lobbyId}/events`, event);
         console.log("Send event", event);
@@ -29,8 +27,7 @@ export function useLobbyActions(lobbyId: string, playerId: string) {
 
     function setUnready() {
         const event: PlayerUnreadyRequestedEvent = {
-            type: 'PLAYER_UNREADY_REQUESTED',
-            playerId,
+            type: 'PLAYER_UNREADY_REQUESTED'
         };
         sendMessage(`/app/lobby/${lobbyId}/events`, event);
         console.log("Send event", event);
@@ -38,8 +35,7 @@ export function useLobbyActions(lobbyId: string, playerId: string) {
 
     function startGame() {
         const event: GameStartRequestedEvent = {
-            type: 'GAME_START_REQUESTED',
-            playerId,
+            type: 'GAME_START_REQUESTED'
         };
         sendMessage(`/app/lobby/${lobbyId}/events`, event);
     }

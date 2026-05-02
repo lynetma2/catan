@@ -1,9 +1,9 @@
 // --- Outbound ---
-export type LobbyCreateRequestedEvent = { type: 'LOBBY_CREATE_REQUESTED'; playerId: string; playerName: string; };
-export type LobbyJoinRequestedEvent =   { type: 'LOBBY_JOIN_REQUESTED';   playerId: string; playerName: string; };
-export type PlayerReadyRequestedEvent = { type: 'PLAYER_READY_REQUESTED'; playerId: string; };
-export type PlayerUnreadyRequestedEvent={ type: 'PLAYER_UNREADY_REQUESTED';playerId: string; };
-export type GameStartRequestedEvent =   { type: 'GAME_START_REQUESTED';   playerId: string; };
+export type LobbyCreateRequestedEvent = { type: 'LOBBY_CREATE_REQUESTED'; playerName: string; };
+export type LobbyJoinRequestedEvent = { type: 'LOBBY_JOIN_REQUESTED'; playerName: string; };
+export type PlayerReadyRequestedEvent = { type: 'PLAYER_READY_REQUESTED' };
+export type PlayerUnreadyRequestedEvent = { type: 'PLAYER_UNREADY_REQUESTED' };
+export type GameStartRequestedEvent = { type: 'GAME_START_REQUESTED' };
 
 export type OutboundLobbyEvent =
     | LobbyCreateRequestedEvent
@@ -25,6 +25,7 @@ export type LobbyNotFoundError =      { type: 'LOBBY_NOT_FOUND';     lobbyId: st
 export type LobbyStateEvent = {
     type: 'LOBBY_STATE';
     lobbyId: string;
+    localPlayerId: string;
     snapshot: {
         players: Array<{
             playerId: string;
