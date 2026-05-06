@@ -19,8 +19,8 @@ public class Game {
     private List<InboundGameEvent> gameEvents;
     private UUID currentPlayerId;
 
-    public Game(List<GamePlayer> players, List<Tile> tiles, List<Building<?>> buildings, GamePhase currentPhase, Integer turnNumber, List<TradeOffer> activeTradeOffers, List<InboundGameEvent> gameEvents, UUID currentPlayerId) {
-        this.id = UUID.randomUUID();
+    public Game(UUID id, List<GamePlayer> players, List<Tile> tiles, List<Building<?>> buildings, GamePhase currentPhase, Integer turnNumber, List<TradeOffer> activeTradeOffers, List<InboundGameEvent> gameEvents, UUID currentPlayerId) {
+        this.id = id,
         this.players = players;
         this.tiles = tiles;
         this.buildings = buildings;

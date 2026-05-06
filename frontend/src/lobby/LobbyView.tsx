@@ -86,7 +86,10 @@ function LobbyView() {
                     setLobby(prev => prev ? applyLobbyEvent(prev, e) : prev);
                 },
                 GAME_INITIALIZED: (e) => {
-                    navigate(`/game/${e.gameId}`);
+                    navigate(`/game/${lobbyId}`, {
+                        state: {snapshot: e},
+                        replace: true
+                    });
                 },
                 GAME_START_REJECTED: (e) => {
                     console.error('Game start rejected:', e.reason);

@@ -1,4 +1,6 @@
 // --- Outbound ---
+import type {GameSnapshot} from "@/game/core/types.ts";
+
 export type LobbyCreateRequestedEvent = { type: 'LOBBY_CREATE_REQUESTED'; playerName: string; };
 export type LobbyJoinRequestedEvent = { type: 'LOBBY_JOIN_REQUESTED'; playerName: string; };
 export type PlayerReadyRequestedEvent = { type: 'PLAYER_READY_REQUESTED' };
@@ -18,7 +20,7 @@ export type PlayerJoinedLobbyEvent =  { type: 'PLAYER_JOINED_LOBBY'; lobbyId: st
 export type PlayerReadyEvent =        { type: 'PLAYER_READY';        playerId: string; };
 export type PlayerUnreadyEvent =      { type: 'PLAYER_UNREADY';      playerId: string; };
 export type PlayerDisconnectedEvent = { type: 'PLAYER_DISCONNECTED'; playerId: string; };
-export type GameInitializedEvent =    { type: 'GAME_INITIALIZED';    gameId: string; };
+export type GameInitializedEvent =    { type: 'GAME_INITIALIZED';    snapshot: GameSnapshot; };
 export type LobbyJoinRejectedEvent =  { type: 'LOBBY_JOIN_REJECTED'; reason: string; };
 export type GameStartRejectedEvent =  { type: 'GAME_START_REJECTED'; reason: string; };
 export type LobbyNotFoundError =      { type: 'LOBBY_NOT_FOUND';     lobbyId: string; };

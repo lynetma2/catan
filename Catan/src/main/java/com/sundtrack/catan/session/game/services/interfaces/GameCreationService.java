@@ -8,5 +8,5 @@ import java.util.UUID;
 
 public interface GameCreationService {
     // Game lifecycle
-    Game createGame(Set<UUID> playerIds);
+    Game createGame(UUID id, Set<UUID> playerIds);
 }

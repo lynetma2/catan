@@ -45,7 +45,7 @@ export class Game {
     private readonly MAX_FPS = 144;
     private readonly FRAME_INTERVAL_MS = 1000 / this.MAX_FPS;
 
-    constructor(private readonly canvas: HTMLCanvasElement) {
+    constructor(private readonly canvas: HTMLCanvasElement, initialState: GameSnapshot | null) {
         // ── 1. Infrastructure ──────────────────────────────────────────
         this.bus         = new EventBus();
         this.frameQueue  = new FrameQueue();
@@ -88,6 +88,14 @@ export class Game {
                 this.hud,
                 this.frameQueue,
             );
+        }
+
+        if (initialState) {
+            this.frameQueue.push({
+                type: GameEventType.GAME_STATE_LOADED,
+                payload: initialState,
+                source: GameEventSource.Network,
+            });
         }
     }
 

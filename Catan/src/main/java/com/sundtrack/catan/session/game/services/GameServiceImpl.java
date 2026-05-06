@@ -36,8 +36,8 @@ public class GameServiceImpl implements GameService {
         }
     }
 
-    public Game createGame(Set<UUID> playerIds) {
-        Game game = gameCreationService.createGame(playerIds);
+    public Game createGame(UUID id, Set<UUID> playerIds) {
+        Game game = gameCreationService.createGame(id, playerIds);
         gameStore.add(game.getId(), game);
         return game;
     }

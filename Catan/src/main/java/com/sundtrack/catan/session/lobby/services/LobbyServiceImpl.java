@@ -142,7 +142,7 @@ public class LobbyServiceImpl implements LobbyService {
             );
         }
 
-        Game game = gameService.createGame(lobby.getPlayerIds());
+        Game game = gameService.createGame(lobbyId, lobby.getPlayerIds());
         lobby.markAsStarted();
         lobbyStore.remove(lobbyId);
 

@@ -1,11 +1,16 @@
 import {useEffect, useRef} from 'react'
 import './App.css'
 import {Game} from "@/game/core/Game.ts";
+import {useLocation} from "react-router";
+import type {GameSnapshot} from "@/game/core/types.ts";
 
 function App() {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const gameLoopRef = useRef<Game>(null);
+    const location = useLocation();
+    const snapshot: GameSnapshot | null = location.state?.snapshot ?? null;
+
 
     useEffect(() => {
 

@@ -12,10 +12,11 @@ import java.util.*;
 public class GameCreationServiceImpl implements GameCreationService {
 
     @Override
-    public Game createGame(Set<UUID> playerIds) {
+    public Game createGame(UUID id, Set<UUID> playerIds) {
         List<GamePlayer> gamePlayers = createPlayers(playerIds);
 
         return new Game(
+                id,
                 gamePlayers,
                 new ArrayList<>(),
                 new ArrayList<>(),

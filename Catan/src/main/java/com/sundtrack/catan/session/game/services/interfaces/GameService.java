@@ -10,5 +10,5 @@ import java.util.UUID;
 
 public interface GameService {
     EventResult<OutboundGameEvent> handle(UUID gameId, InboundGameEvent event);
-    Game createGame(Set<UUID> playerIds);
+    Game createGame(UUID id, Set<UUID> playerIds);
 }
