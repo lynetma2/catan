@@ -19,11 +19,15 @@ public class GameMessagingService {
     }
 
     public void broadcast(UUID gameId, String sessionId, EventResult<? extends OutboundEvent> result) {
-        result.broadcast().forEach(event ->
-                messaging.broadcast(ApiRoutes.gameTopic(gameId), event)
+        result.broadcast().forEach(event -> {
+                    System.out.println("Broadcasting to topic: " + ApiRoutes.gameTopic(gameId) + " event: " + event);
+                    messaging.broadcast(ApiRoutes.gameTopic(gameId), event);
+                }
         );
-        result.directed().forEach((playerId, event) ->
-                messaging.sendToUser(sessionId, ApiRoutes.gameQueue(gameId), event)
+        result.directed().forEach((playerId, event) -> {
+                    System.out.println("Sending directed to sessionId: " + sessionId + " destination: " + ApiRoutes.lobbyQueue() + " event: " + event);
+                    messaging.sendToUser(sessionId, ApiRoutes.gameQueue(), event);
+                }
         );
     }
 

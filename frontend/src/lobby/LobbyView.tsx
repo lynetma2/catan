@@ -87,7 +87,6 @@ function LobbyView() {
                 },
                 GAME_INITIALIZED: (e) => {
                     navigate(`/game/${lobbyId}`, {
-                        state: {snapshot: e},
                         replace: true
                     });
                 },

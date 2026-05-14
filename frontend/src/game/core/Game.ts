@@ -17,6 +17,7 @@ import {GamePhaseManager} from "@/game/core/GamePhaseManager.ts";
 import {SharedStateManager} from "@/game/core/SharedStateManager.ts";
 import {DebugTools} from "@/game/tools/DebugTools.ts";
 import {GameSocketConnection} from "@/game/network/GameSocketClient.ts";
+import type {WebSocketContextValue} from "@/WebSocketContext.ts";
 
 const DEV_MODE = import.meta.env.DEV;
 
@@ -45,15 +46,16 @@ export class Game {
     private readonly MAX_FPS = 144;
     private readonly FRAME_INTERVAL_MS = 1000 / this.MAX_FPS;
 
-    constructor(private readonly canvas: HTMLCanvasElement, initialState: GameSnapshot | null) {
+    constructor(private readonly canvas: HTMLCanvasElement, ws: WebSocketContextValue, gameId: string) {
         // ── 1. Infrastructure ──────────────────────────────────────────
+        this.gameId = gameId;
         this.bus         = new EventBus();
         this.frameQueue  = new FrameQueue();
         this.sharedState = new SharedState();
         this.resolution  = new ResolutionManager(canvas);
         this.gamePhase = new GamePhaseManager(this.bus, this.sharedState);
         this.sharedManager = new SharedStateManager(this.bus, this.sharedState);
-        this.connection = new GameSocketConnection(this.gameId, this.bus, this.frameQueue);
+        this.connection = new GameSocketConnection(this.gameId, ws, this.bus, this.frameQueue);
 
         this.sharedState.setLocalPlayerId('p1');
 
@@ -88,14 +90,6 @@ export class Game {
                 this.hud,
                 this.frameQueue,
             );
-        }
-
-        if (initialState) {
-            this.frameQueue.push({
-                type: GameEventType.GAME_STATE_LOADED,
-                payload: initialState,
-                source: GameEventSource.Network,
-            });
         }
     }
 

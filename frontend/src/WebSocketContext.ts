@@ -4,7 +4,7 @@ import type { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 export interface WebSocketContextValue {
     client: Client | null;
     isConnected: boolean;
-    sendMessage: (destination: string, body: object) => void;
+    sendMessage: (destination: string, body: unknown) => void;
     subscribe: (
         destination: string,
         callback: (message: IMessage) => void

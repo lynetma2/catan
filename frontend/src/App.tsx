@@ -1,24 +1,22 @@
 import {useEffect, useRef} from 'react'
 import './App.css'
 import {Game} from "@/game/core/Game.ts";
-import {useLocation} from "react-router";
-import type {GameSnapshot} from "@/game/core/types.ts";
+import {useParams} from "react-router";
+import {useWebSocket} from "@/WebSocketContext.ts";
 
 function App() {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const gameLoopRef = useRef<Game>(null);
-    const location = useLocation();
-    const snapshot: GameSnapshot | null = location.state?.snapshot ?? null;
-
+    const ws = useWebSocket();
+    const { gameId } = useParams<{ gameId: string }>();
 
     useEffect(() => {
-
             const canvas = canvasRef.current;
-            if (!canvas) {
+            if (!canvas || !gameId) {
                 return;
             }
-            gameLoopRef.current = new Game(canvas);
+            gameLoopRef.current = new Game(canvas, ws, gameId);
             gameLoopRef.current.start();
 
             console.info("UseEffect ran");

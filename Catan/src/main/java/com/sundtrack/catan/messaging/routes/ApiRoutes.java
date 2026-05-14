@@ -12,11 +12,11 @@ public class ApiRoutes {
     public static final String USER_PREFIX = "/user";
 
     public static String gameTopic(UUID gameId) {
-        return "/topic/games/" + gameId;
+        return "/topic/game/" + gameId;
     }
 
-    public static String gameQueue(UUID gameId) {
-        return "/queue/games/" + gameId;
+    public static String gameQueue() {
+        return "/queue/game";
     }
 
     public static String lobbyTopic(UUID gameId) {

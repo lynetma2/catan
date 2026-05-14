@@ -7,7 +7,6 @@ import com.sundtrack.catan.datalayer.dto.snapshot.GameSnapshotDTO;
 import java.util.UUID;
 
 public record GameInitializedEvent(
-        GameSnapshotDTO gameSnapshotDTO
 ) implements OutboundLobbyEvent {
     @Override
     public OutboundLobbyEventType type() {

@@ -20,7 +20,7 @@ public class Game {
     private UUID currentPlayerId;
 
     public Game(UUID id, List<GamePlayer> players, List<Tile> tiles, List<Building<?>> buildings, GamePhase currentPhase, Integer turnNumber, List<TradeOffer> activeTradeOffers, List<InboundGameEvent> gameEvents, UUID currentPlayerId) {
-        this.id = id,
+        this.id = id;
         this.players = players;
         this.tiles = tiles;
         this.buildings = buildings;

@@ -36,7 +36,7 @@ export class GameSocketOutboundHandler {
         console.log("Registrering the outbound handler");
         this.on(GameEventType.REQUEST_GAME_STATE, () => {
             console.log("Got request game state event. Sending it to: " + this.gameId)
-            this.publish(`/app/game/snapshot/${this.gameId}`, {});
+            this.publish(`/app/game/${this.gameId}/events`, {type: GameEventType.REQUEST_GAME_STATE});
         });
 
         // ── Extend here as the backend grows ──────────────────────────

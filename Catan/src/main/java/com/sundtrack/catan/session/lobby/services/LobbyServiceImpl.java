@@ -1,5 +1,6 @@
 package com.sundtrack.catan.session.lobby.services;
 
+import com.sundtrack.catan.common.PrincipalUtils;
 import com.sundtrack.catan.common.handlers.AnonymousPrincipalHandshakeHandler;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.GameInitializedEvent;
@@ -35,7 +36,7 @@ public class LobbyServiceImpl implements LobbyService {
     }
 
     public EventResult<OutboundLobbyEvent> handle(Principal principal, UUID lobbyId, InboundLobbyEvent event) {
-        UUID playerId = extractPlayerId(principal);
+        UUID playerId = PrincipalUtils.extractPlayerId(principal);
         return switch (event) {
             case LobbyCreateRequestedEvent e   -> createLobby(playerId, e);
             case LobbyJoinRequestedEvent e     -> joinLobby(playerId, lobbyId, e);
@@ -48,7 +49,7 @@ public class LobbyServiceImpl implements LobbyService {
 
     @Override
     public EventResult<OutboundLobbyEvent> handleDisconnect(Principal principal, UUID lobbyId) {
-        UUID playerId = extractPlayerId(principal);
+        UUID playerId = PrincipalUtils.extractPlayerId(principal);
         Lobby lobby = lobbyStore.get(lobbyId);
         lobby.removePlayer(playerId);
 
@@ -142,11 +143,11 @@ public class LobbyServiceImpl implements LobbyService {
             );
         }
 
-        Game game = gameService.createGame(lobbyId, lobby.getPlayerIds());
+        gameService.createGame(lobbyId);
         lobby.markAsStarted();
         lobbyStore.remove(lobbyId);
 
-        return EventResult.broadcast(new GameInitializedEvent(gameMapper.toSnapshotDTO(game)));
+        return EventResult.broadcast(new GameInitializedEvent());
     }
 
     private EventResult<OutboundLobbyEvent> reconnectToLobby(UUID playerId, LobbyReconnectRequestedEvent event) {
@@ -169,12 +170,5 @@ public class LobbyServiceImpl implements LobbyService {
                 playerId,
                 new LobbyStateEvent(event.lobbyId(), lobbyMapper.toSnapshotDTO(lobby), playerId)
         );
-    }
-
-    private UUID extractPlayerId(Principal principal) {
-        if (principal instanceof AnonymousPrincipalHandshakeHandler.StompPrincipal stomp) {
-            return UUID.fromString(stomp.getUuid());
-        }
-        throw new IllegalStateException("Principal is not a StompPrincipal");
     }
 }

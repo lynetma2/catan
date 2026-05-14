@@ -11,6 +11,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
 import java.util.UUID;
 
 @Controller
@@ -21,14 +22,16 @@ public class GameController {
     GameMessagingService gameMessagingService;
 
     @Autowired
-    public GameController(GameService gameService) {
+    public GameController(GameService gameService, GameMessagingService gameMessagingService) {
         this.gameService = gameService;
+        this.gameMessagingService = gameMessagingService;
     }
 
     @MessageMapping("/{gameId}/events")
-    public void eventHandling(InboundGameEvent event, @DestinationVariable UUID gameId, SimpMessageHeaderAccessor headerAccessor) {
-        String sessionId = headerAccessor.getSessionId();
-        EventResult<OutboundGameEvent> result = gameService.handle(gameId, event);
-        gameMessagingService.broadcast(gameId, sessionId, result);
+    public void eventHandling(InboundGameEvent event, @DestinationVariable UUID gameId, Principal principal) {
+        System.out.println("handleEvent called with event: " + event);
+
+        EventResult<OutboundGameEvent> result = gameService.handle(principal, gameId, event);
+        gameMessagingService.broadcast(gameId, principal.getName(), result);
     }
 }

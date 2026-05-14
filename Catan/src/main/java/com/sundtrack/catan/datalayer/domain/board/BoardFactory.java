@@ -50,19 +50,19 @@ public class BoardFactory {
     );
 
     private static final List<Hex> SEA_COORDINATES = List.of(
-            new Hex( 3, -2, -1), new Hex( 2,  1, -3),
-            new Hex( 0,  3, -3), new Hex(-2,  3, -1),
-            new Hex(-3,  2,  1), new Hex(-3,  0,  3),
-            new Hex(-2, -1,  3), new Hex( 0, -3,  3),
-            new Hex( 2, -3,  1)
+            new Hex( 2, -3, 1), new Hex( 0,  -3, 3),
+            new Hex( -2,  -1, 3), new Hex( -3,  1, 2),
+            new Hex(-3,  3, 0),
+            new Hex(-1,  3,  -2), new Hex(1, 2,  -3),
+            new Hex( 3, 0,  -3), new Hex( 3, -2,  -1)
     );
 
     private static final List<Hex> PORT_COORDINATES = List.of(
-            new Hex( 3, -3,  0), new Hex( 3, -1, -2),
-            new Hex( 1,  2, -3), new Hex(-1,  3, -2),
-            new Hex(-3,  3,  0), new Hex(-3,  1,  2),
-            new Hex(-1, -2,  3), new Hex( 1, -3,  2),
-            new Hex( 3, -2, -1)
+            new Hex( 3, -3,  0), new Hex( 1, -3, 2),
+            new Hex( -1,  -2, 3), new Hex(-3,  0, 3),
+            new Hex(-3,  2,  1), new Hex(-2,  3,  -1),
+            new Hex(0, 3,  -3), new Hex( 2, 1,  -3),
+            new Hex( 3, -1,  -2)
     );
 
     // Fixed layout for testing — always produces the same board

@@ -10,6 +10,7 @@ import com.sundtrack.catan.session.game.services.interfaces.GameCreationService;
 import com.sundtrack.catan.session.game.services.interfaces.GameService;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,19 +27,18 @@ public class GameServiceImpl implements GameService {
         this.gameCreationService = gameCreationService;
     }
 
-    public EventResult<OutboundGameEvent> handle(UUID gameId, InboundGameEvent event) {
+    public EventResult<OutboundGameEvent> handle(Principal principal, UUID gameId, InboundGameEvent event) {
         Game game = gameStore.get(gameId);
 
         synchronized (game) {
-            EventResult<OutboundGameEvent> result = dispatcher.dispatch(game, event);
+            EventResult<OutboundGameEvent> result = dispatcher.dispatch(game, event, principal);
             gameStore.persist(game);
             return result;
         }
     }
 
-    public Game createGame(UUID id, Set<UUID> playerIds) {
-        Game game = gameCreationService.createGame(id, playerIds);
+    public void createGame(UUID id) {
+        Game game = gameCreationService.createGame(id);
         gameStore.add(game.getId(), game);
-        return game;
     }
 }

@@ -42,7 +42,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         // No cleanup that deactivates the client – it lives forever
     }, []);
 
-    const sendMessage = (destination: string, body: object) => {
+    const sendMessage = (destination: string, body: unknown) => {
         if (stompClient.connected) {
             stompClient.publish({
                 destination,
