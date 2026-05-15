@@ -10,13 +10,14 @@ function App() {
     const gameLoopRef = useRef<Game>(null);
     const ws = useWebSocket();
     const { gameId } = useParams<{ gameId: string }>();
+    const localPlayerId = sessionStorage.getItem('playerId');
 
     useEffect(() => {
             const canvas = canvasRef.current;
-            if (!canvas || !gameId) {
+            if (!canvas || !gameId || !localPlayerId) {
                 return;
             }
-            gameLoopRef.current = new Game(canvas, ws, gameId);
+            gameLoopRef.current = new Game(canvas, ws, gameId, localPlayerId);
             gameLoopRef.current.start();
 
             console.info("UseEffect ran");

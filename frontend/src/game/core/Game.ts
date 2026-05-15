@@ -41,12 +41,12 @@ export class Game {
 
     private animationFrameId: number | null = null;
     private previousTimeMs: number = 0;
-    private gameId = "test";
+    private gameId: string;
 
     private readonly MAX_FPS = 144;
     private readonly FRAME_INTERVAL_MS = 1000 / this.MAX_FPS;
 
-    constructor(private readonly canvas: HTMLCanvasElement, ws: WebSocketContextValue, gameId: string) {
+    constructor(private readonly canvas: HTMLCanvasElement, ws: WebSocketContextValue, gameId: string, localPlayerId: string) {
         // ── 1. Infrastructure ──────────────────────────────────────────
         this.gameId = gameId;
         this.bus         = new EventBus();
@@ -57,7 +57,7 @@ export class Game {
         this.sharedManager = new SharedStateManager(this.bus, this.sharedState);
         this.connection = new GameSocketConnection(this.gameId, ws, this.bus, this.frameQueue);
 
-        this.sharedState.setLocalPlayerId('p1');
+        this.sharedState.setLocalPlayerId(localPlayerId);
 
         // ── 2. Camera ──────────────────────────────────────────────────
         this.camera = new Camera(
