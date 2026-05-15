@@ -105,6 +105,9 @@ export class SharedState {
     // Queries
 
     isPlayersTurn(playerId: string): boolean {
+        console.log("Trying to build settlement");
+        console.log("player turn", this._currentPlayerId);
+        console.log("player id", playerId);
         return this._currentPlayerId === playerId;
     }
 
@@ -142,7 +145,15 @@ export class SharedState {
     }
 
     canAfford(pieceType: PieceType): boolean {
-        return this.meetsResourceCost(PIECE_COSTS[pieceType]);
+        if (pieceType === PieceType.Settlement &&
+            this._currentPhase === GamePhase.SetupPlaceSettlement) {
+            return true;
+        } else if (pieceType === PieceType.Road &&
+            this._currentPhase === GamePhase.SetupPlaceRoad) {
+            return true;
+        } else {
+            return this.meetsResourceCost(PIECE_COSTS[pieceType]);
+        }
     }
 
     private meetsResourceCost(cost: Partial<ResourceCost>): boolean {

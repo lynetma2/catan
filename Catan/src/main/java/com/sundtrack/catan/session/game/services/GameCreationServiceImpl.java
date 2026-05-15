@@ -29,7 +29,7 @@ public class GameCreationServiceImpl implements GameCreationService {
         Lobby lobby = lobbyStore.get(id);
         Map<UUID, LobbyPlayer> lobbyPlayers = lobby.getPlayers();
 
-        List<Tile> tiles = boardFactory.createStatic();
+        List<Tile> tiles = boardFactory.createRandom();
         List<GamePlayer> gamePlayers = createPlayers(lobbyPlayers);
 
         return new Game(
