@@ -4,9 +4,9 @@ import com.sundtrack.catan.common.handlers.AnonymousPrincipalHandshakeHandler;
 import com.sundtrack.catan.common.handlers.WebSocketSessionKeys;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.lobby.inbound.InboundLobbyEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.inbound.LobbyCreateRequestedEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.GameInitializedEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.LobbyStateEvent;
+import com.sundtrack.catan.datalayer.domain.event.lobby.action.LobbyCreateAction;
+import com.sundtrack.catan.datalayer.domain.event.lobby.server.GameInitializedEvent;
+import com.sundtrack.catan.datalayer.domain.event.lobby.server.LobbyStateEvent;
 import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEvent;
 import com.sundtrack.catan.datalayer.domain.presence.PlayerContext;
 import com.sundtrack.catan.session.lobby.services.LobbyMessagingService;
@@ -33,7 +33,7 @@ public class LobbyController {
 
     // No lobbyId yet — create flow
     @MessageMapping("/lobby")
-    public void handleCreate(@Payload LobbyCreateRequestedEvent event, Principal principal, SimpMessageHeaderAccessor headerAccessor) {
+    public void handleCreate(@Payload LobbyCreateAction event, Principal principal, SimpMessageHeaderAccessor headerAccessor) {
         System.out.println("handleCreate called with event: " + event);
 
         // Upgrade the principal name now that the player has identified themselves

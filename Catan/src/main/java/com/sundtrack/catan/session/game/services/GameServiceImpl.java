@@ -3,7 +3,6 @@ package com.sundtrack.catan.session.game.services;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.game.inbound.InboundGameEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.outbound.OutboundGameEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.GameInitializedEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.session.game.GameEventDispatcher;
 import com.sundtrack.catan.session.game.services.interfaces.GameCreationService;
@@ -11,7 +10,6 @@ import com.sundtrack.catan.session.game.services.interfaces.GameService;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
-import java.util.Set;
 import java.util.UUID;
 
 @Service

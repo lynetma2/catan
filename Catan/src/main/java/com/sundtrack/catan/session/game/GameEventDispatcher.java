@@ -1,16 +1,13 @@
 package com.sundtrack.catan.session.game;
 
 import com.sundtrack.catan.common.PrincipalUtils;
-import com.sundtrack.catan.common.handlers.AnonymousPrincipalHandshakeHandler;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.game.inbound.GameStateRequestedEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.inbound.InboundGameEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.outbound.GameStateEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.outbound.OutboundGameEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.GameInitializedEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.dto.mapper.GameMapper;
-import com.sundtrack.catan.datalayer.dto.snapshot.GameSnapshotDTO;
 import org.springframework.stereotype.Component;
 
 import java.security.Principal;

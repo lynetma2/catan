@@ -1,4 +1,4 @@
-package com.sundtrack.catan.datalayer.domain.event.lobby.outbound;
+package com.sundtrack.catan.datalayer.domain.event.lobby.reason;
 
 public enum LobbyJoinRejectionReason {
     LOBBY_FULL,

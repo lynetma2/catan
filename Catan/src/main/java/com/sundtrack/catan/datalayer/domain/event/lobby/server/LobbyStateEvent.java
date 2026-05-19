@@ -1,6 +1,7 @@
-package com.sundtrack.catan.datalayer.domain.event.lobby.outbound;
+package com.sundtrack.catan.datalayer.domain.event.lobby.server;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEvent;
+import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEventType;
 import com.sundtrack.catan.datalayer.dto.snapshot.LobbySnapshotDTO;
 
 import java.util.UUID;

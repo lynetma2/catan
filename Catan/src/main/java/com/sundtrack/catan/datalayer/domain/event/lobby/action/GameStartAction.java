@@ -1,0 +1,11 @@
+package com.sundtrack.catan.datalayer.domain.event.lobby.action;
+
+import com.sundtrack.catan.datalayer.domain.event.lobby.inbound.InboundLobbyEvent;
+import com.sundtrack.catan.datalayer.domain.event.lobby.inbound.InboundLobbyEventType;
+
+public record GameStartAction() implements InboundLobbyEvent {
+    @Override
+    public InboundLobbyEventType type() {
+        return InboundLobbyEventType.GAME_START_REQUESTED;
+    }
+}
