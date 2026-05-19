@@ -3,9 +3,6 @@ package com.sundtrack.catan.datalayer.domain.event.game.inbound;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import com.sundtrack.catan.datalayer.domain.event.game.GameEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.inbound.InboundLobbyEventTypeResolver;
-
-import java.util.UUID;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM, property = "type")
 @JsonTypeIdResolver(InboundGameEventTypeResolver.class)

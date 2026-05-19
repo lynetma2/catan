@@ -7,8 +7,6 @@ import com.sundtrack.catan.datalayer.domain.event.lobby.reason.GameStartRejectio
 import com.sundtrack.catan.datalayer.domain.event.lobby.reason.LobbyJoinRejectionReason;
 import com.sundtrack.catan.datalayer.domain.event.lobby.reason.LobbyReconnectRejectionReason;
 import com.sundtrack.catan.datalayer.domain.event.lobby.server.*;
-import com.sundtrack.catan.datalayer.domain.event.lobby.inbound.*;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.*;
 import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
 import com.sundtrack.catan.datalayer.domain.lobby.LobbyPlayer;
 import com.sundtrack.catan.datalayer.dto.mapper.GameMapper;
@@ -37,7 +35,7 @@ public class LobbyServiceImpl implements LobbyService {
         this.lobbyMapper = lobbyMapper;
     }
 
-    public EventResult<OutboundLobbyEvent> handle(Principal principal, UUID lobbyId, InboundLobbyEvent event) {
+    public EventResult<LobbyServerEvent> handle(Principal principal, UUID lobbyId, LobbyClientAction event) {
         UUID playerId = PrincipalUtils.extractPlayerId(principal);
         return switch (event) {
             case LobbyCreateAction e   -> createLobby(playerId, e);
@@ -50,7 +48,7 @@ public class LobbyServiceImpl implements LobbyService {
     }
 
     @Override
-    public EventResult<OutboundLobbyEvent> handleDisconnect(Principal principal, UUID lobbyId) {
+    public EventResult<LobbyServerEvent> handleDisconnect(Principal principal, UUID lobbyId) {
         UUID playerId = PrincipalUtils.extractPlayerId(principal);
         Lobby lobby = lobbyStore.get(lobbyId);
         lobby.removePlayer(playerId);
@@ -64,7 +62,7 @@ public class LobbyServiceImpl implements LobbyService {
         return EventResult.empty();
     }
 
-    private EventResult<OutboundLobbyEvent> createLobby(UUID playerId, LobbyCreateAction event) {
+    private EventResult<LobbyServerEvent> createLobby(UUID playerId, LobbyCreateAction event) {
         if (lobbyStore.existsByPlayerId(playerId)) {
             return EventResult.directed(
                     playerId,
@@ -82,7 +80,7 @@ public class LobbyServiceImpl implements LobbyService {
         );
     }
 
-    private EventResult<OutboundLobbyEvent> joinLobby(UUID playerId, UUID lobbyId, LobbyJoinAction event) {
+    private EventResult<LobbyServerEvent> joinLobby(UUID playerId, UUID lobbyId, LobbyJoinAction event) {
         Lobby lobby = lobbyStore.get(lobbyId);
 
         if (lobby.isFull()) {
@@ -107,21 +105,21 @@ public class LobbyServiceImpl implements LobbyService {
         );
     }
 
-    private EventResult<OutboundLobbyEvent> playerReady(UUID playerId, UUID lobbyId) {
+    private EventResult<LobbyServerEvent> playerReady(UUID playerId, UUID lobbyId) {
         Lobby lobby = lobbyStore.get(lobbyId);
         lobby.setReady(playerId);
 
         return EventResult.broadcast(new PlayerReadyEvent(playerId));
     }
 
-    private EventResult<OutboundLobbyEvent> playerUnready(UUID playerId, UUID lobbyId) {
+    private EventResult<LobbyServerEvent> playerUnready(UUID playerId, UUID lobbyId) {
         Lobby lobby = lobbyStore.get(lobbyId);
         lobby.setUnready(playerId);
 
         return EventResult.broadcast(new PlayerUnreadyEvent(playerId));
     }
 
-    private EventResult<OutboundLobbyEvent> startGame(UUID playerId, UUID lobbyId) {
+    private EventResult<LobbyServerEvent> startGame(UUID playerId, UUID lobbyId) {
         Lobby lobby = lobbyStore.get(lobbyId);
 
         if (!lobby.isLeader(playerId)) {
@@ -152,12 +150,12 @@ public class LobbyServiceImpl implements LobbyService {
         return EventResult.broadcast(new GameInitializedEvent());
     }
 
-    private EventResult<OutboundLobbyEvent> reconnectToLobby(UUID playerId, LobbyReconnectAction event) {
+    private EventResult<LobbyServerEvent> reconnectToLobby(UUID playerId, LobbyReconnectAction event) {
         Lobby lobby = lobbyStore.get(event.lobbyId());
         if (lobby == null) {
             return EventResult.directed(
                     playerId,
-                    new LobbyNotFoundError(event.lobbyId())
+                    new LobbyReconnectRejectedEvent(LobbyReconnectRejectionReason.PLAYER_NOT_IN_LOBBY)
             );
         }
 

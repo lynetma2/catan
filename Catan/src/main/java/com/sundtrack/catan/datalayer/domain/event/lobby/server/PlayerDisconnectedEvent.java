@@ -1,15 +1,9 @@
 package com.sundtrack.catan.datalayer.domain.event.lobby.server;
 
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEventType;
-
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.UUID;
 
+@JsonTypeName("server.lobby.player.disconnected")
 public record PlayerDisconnectedEvent(
         UUID playerId
-) implements OutboundLobbyEvent {
-    @Override
-    public OutboundLobbyEventType type() {
-        return OutboundLobbyEventType.PLAYER_DISCONNECTED;
-    }
-}
+) implements LobbyServerEvent {}

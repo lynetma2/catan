@@ -1,16 +1,10 @@
 package com.sundtrack.catan.datalayer.domain.event.lobby.server;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.sundtrack.catan.datalayer.domain.event.lobby.reason.LobbyJoinRejectionReason;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEventType;
 
+@JsonTypeName("server.lobby.join.rejected")
 public record LobbyJoinRejectedEvent(
         LobbyJoinRejectionReason reason
-) implements OutboundLobbyEvent {
-
-    @Override
-    public OutboundLobbyEventType type() {
-        return OutboundLobbyEventType.LOBBY_JOIN_REJECTED;
-    }
-}
+) implements LobbyServerEvent {}
 

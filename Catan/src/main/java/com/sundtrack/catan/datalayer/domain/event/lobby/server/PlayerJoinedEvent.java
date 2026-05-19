@@ -1,15 +1,10 @@
 package com.sundtrack.catan.datalayer.domain.event.lobby.server;
 
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEventType;
-
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.UUID;
 
+@JsonTypeName("server.lobby.player.joined")
 public record PlayerJoinedEvent(
         UUID playerId,
         String playerName
-) implements OutboundLobbyEvent {
-    @Override public OutboundLobbyEventType type() {
-        return OutboundLobbyEventType.PLAYER_JOINED_LOBBY;
-    }
-}
+) implements LobbyServerEvent {}

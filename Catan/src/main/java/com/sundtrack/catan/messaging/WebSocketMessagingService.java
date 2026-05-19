@@ -1,6 +1,6 @@
 package com.sundtrack.catan.messaging;
 
-import com.sundtrack.catan.datalayer.domain.event.OutboundEvent;
+import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +14,10 @@ public class WebSocketMessagingService {
         this.messaging = messaging;
     }
 
-    public void broadcast(String topic, OutboundEvent event) {
+    public void broadcast(String topic, ServerEvent event) {
         messaging.convertAndSend(topic, event);
     }
-    public void sendToUser(String userName, String destination, OutboundEvent event) {
+    public void sendToUser(String userName, String destination, ServerEvent event) {
         messaging.convertAndSendToUser(userName, destination, event);
     }
 }

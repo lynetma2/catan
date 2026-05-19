@@ -1,4 +1,4 @@
 package com.sundtrack.catan.datalayer.domain.event;
 
-public interface OutboundEvent {
+public interface ServerEvent {
 }

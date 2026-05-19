@@ -1,11 +1,6 @@
 package com.sundtrack.catan.datalayer.domain.event.lobby.action;
 
-import com.sundtrack.catan.datalayer.domain.event.lobby.inbound.InboundLobbyEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.inbound.InboundLobbyEventType;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
-public record GameStartAction() implements InboundLobbyEvent {
-    @Override
-    public InboundLobbyEventType type() {
-        return InboundLobbyEventType.GAME_START_REQUESTED;
-    }
-}
+@JsonTypeName("action.game.start")
+public record GameStartAction() implements LobbyClientAction { }

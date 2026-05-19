@@ -1,12 +1,7 @@
 package com.sundtrack.catan.datalayer.domain.event.lobby.server;
 
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEventType;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
+@JsonTypeName("server.game.initialized")
 public record GameInitializedEvent(
-) implements OutboundLobbyEvent {
-    @Override
-    public OutboundLobbyEventType type() {
-        return OutboundLobbyEventType.GAME_INITIALIZED;
-    }
-}
+) implements LobbyServerEvent {}

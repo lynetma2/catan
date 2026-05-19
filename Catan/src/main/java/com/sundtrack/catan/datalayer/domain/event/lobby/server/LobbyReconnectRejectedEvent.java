@@ -1,15 +1,9 @@
 package com.sundtrack.catan.datalayer.domain.event.lobby.server;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.sundtrack.catan.datalayer.domain.event.lobby.reason.LobbyReconnectRejectionReason;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEventType;
 
+@JsonTypeName("server.lobby.reconnect.rejected")
 public record LobbyReconnectRejectedEvent(
         LobbyReconnectRejectionReason reason
-) implements OutboundLobbyEvent {
-
-    @Override
-    public OutboundLobbyEventType type() {
-        return OutboundLobbyEventType.LOBBY_RECONNECT_REJECTED;
-    }
-}
+) implements LobbyServerEvent {}

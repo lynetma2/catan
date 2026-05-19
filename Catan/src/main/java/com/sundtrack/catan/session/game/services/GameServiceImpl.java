@@ -2,7 +2,7 @@ package com.sundtrack.catan.session.game.services;
 
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.game.inbound.InboundGameEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.outbound.OutboundGameEvent;
+import com.sundtrack.catan.datalayer.domain.event.game.outbound.ServerGameEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.session.game.GameEventDispatcher;
 import com.sundtrack.catan.session.game.services.interfaces.GameCreationService;
@@ -25,11 +25,11 @@ public class GameServiceImpl implements GameService {
         this.gameCreationService = gameCreationService;
     }
 
-    public EventResult<OutboundGameEvent> handle(Principal principal, UUID gameId, InboundGameEvent event) {
+    public EventResult<ServerGameEvent> handle(Principal principal, UUID gameId, InboundGameEvent event) {
         Game game = gameStore.get(gameId);
 
         synchronized (game) {
-            EventResult<OutboundGameEvent> result = dispatcher.dispatch(game, event, principal);
+            EventResult<ServerGameEvent> result = dispatcher.dispatch(game, event, principal);
             gameStore.persist(game);
             return result;
         }

@@ -5,7 +5,7 @@ import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.game.inbound.GameStateRequestedEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.inbound.InboundGameEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.outbound.GameStateEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.outbound.OutboundGameEvent;
+import com.sundtrack.catan.datalayer.domain.event.game.outbound.ServerGameEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.dto.mapper.GameMapper;
 import org.springframework.stereotype.Component;
@@ -25,7 +25,7 @@ private final GameMapper gameMapper;
         this.gameMapper = gameMapper;
     }
 
-    public EventResult<OutboundGameEvent> dispatch(Game game, InboundGameEvent event, Principal principal) {
+    public EventResult<ServerGameEvent> dispatch(Game game, InboundGameEvent event, Principal principal) {
         UUID playerId = PrincipalUtils.extractPlayerId(principal);
         return switch (event) {
             case GameStateRequestedEvent e -> EventResult.directed(playerId, new GameStateEvent(gameMapper.toSnapshotDTO(game))); //TODO hide player specific information.

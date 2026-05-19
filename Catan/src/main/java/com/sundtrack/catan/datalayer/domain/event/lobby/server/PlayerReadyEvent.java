@@ -1,15 +1,11 @@
 package com.sundtrack.catan.datalayer.domain.event.lobby.server;
 
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEventType;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import java.util.UUID;
 
+@JsonTypeName("server.lobby.player.ready")
 public record PlayerReadyEvent(
         UUID playerId
-) implements OutboundLobbyEvent {
-    @Override public OutboundLobbyEventType type() {
-        return OutboundLobbyEventType.PLAYER_READY;
-    }
-}
+) implements LobbyServerEvent {}
 

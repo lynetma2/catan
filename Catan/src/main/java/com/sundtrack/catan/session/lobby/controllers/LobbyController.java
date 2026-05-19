@@ -3,11 +3,11 @@ package com.sundtrack.catan.session.lobby.controllers;
 import com.sundtrack.catan.common.handlers.AnonymousPrincipalHandshakeHandler;
 import com.sundtrack.catan.common.handlers.WebSocketSessionKeys;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
-import com.sundtrack.catan.datalayer.domain.event.lobby.inbound.InboundLobbyEvent;
+import com.sundtrack.catan.datalayer.domain.event.lobby.action.LobbyClientAction;
 import com.sundtrack.catan.datalayer.domain.event.lobby.action.LobbyCreateAction;
 import com.sundtrack.catan.datalayer.domain.event.lobby.server.GameInitializedEvent;
+import com.sundtrack.catan.datalayer.domain.event.lobby.server.LobbyServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.lobby.server.LobbyStateEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.outbound.OutboundLobbyEvent;
 import com.sundtrack.catan.datalayer.domain.presence.PlayerContext;
 import com.sundtrack.catan.session.lobby.services.LobbyMessagingService;
 import com.sundtrack.catan.session.lobby.services.interfaces.LobbyService;
@@ -41,7 +41,7 @@ public class LobbyController {
             stomp.setDisplayName(event.playerName()); // was setName
         }
 
-        EventResult<OutboundLobbyEvent> result = lobbyService.handle(principal, null, event);
+        EventResult<LobbyServerEvent> result = lobbyService.handle(principal, null, event);
 
         // Look for the LobbyStateEvent in the 'directed' map to find the new ID
         result.directed().values().stream()
@@ -57,9 +57,9 @@ public class LobbyController {
 
     // LobbyId known — all other lobby actions
     @MessageMapping("/lobby/{lobbyId}/events")
-    public void handleEvent(@DestinationVariable UUID lobbyId, @Payload InboundLobbyEvent event, Principal principal, SimpMessageHeaderAccessor headerAccessor) {
+    public void handleEvent(@DestinationVariable UUID lobbyId, @Payload LobbyClientAction event, Principal principal, SimpMessageHeaderAccessor headerAccessor) {
         System.out.println("handleEvent called with event: " + event);
-        EventResult<OutboundLobbyEvent> result = lobbyService.handle(principal, lobbyId, event);
+        EventResult<LobbyServerEvent> result = lobbyService.handle(principal, lobbyId, event);
 
         // Look for the LobbyStateEvent in the 'directed' map to find the new ID
         PlayerContext context = result.broadcast().stream()

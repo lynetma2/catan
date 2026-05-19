@@ -1,7 +1,7 @@
 package com.sundtrack.catan.session.lobby.services;
 
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
-import com.sundtrack.catan.datalayer.domain.event.OutboundEvent;
+import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 import com.sundtrack.catan.messaging.WebSocketMessagingService;
 import com.sundtrack.catan.messaging.routes.ApiRoutes;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ public class LobbyMessagingService {
         this.messaging = messaging;
     }
 
-    public void broadcast(UUID lobbyId, String sessionId, EventResult<? extends OutboundEvent> result) {
+    public void broadcast(UUID lobbyId, String sessionId, EventResult<? extends ServerEvent> result) {
         result.broadcast().forEach(event -> {
                     System.out.println("Broadcasting to topic: " + ApiRoutes.lobbyTopic(lobbyId) + " event: " + event);
                     messaging.broadcast(ApiRoutes.lobbyTopic(lobbyId), event);
@@ -30,7 +30,7 @@ public class LobbyMessagingService {
         );
     }
 
-    public void sendError(String sessionId, OutboundEvent error) {
+    public void sendError(String sessionId, ServerEvent error) {
         messaging.sendToUser(sessionId, ApiRoutes.errors(), error);
     }
 }
