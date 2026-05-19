@@ -1,51 +1,106 @@
-// --- Outbound ---
-import type {GameSnapshot} from "@/game/core/types.ts";
+// ---------------------------------------------------------------------------
+// Event type constants
+// ---------------------------------------------------------------------------
 
-export type LobbyCreateRequestedEvent = { type: 'LOBBY_CREATE_REQUESTED'; playerName: string; };
-export type LobbyJoinRequestedEvent = { type: 'LOBBY_JOIN_REQUESTED'; playerName: string; };
-export type PlayerReadyRequestedEvent = { type: 'PLAYER_READY_REQUESTED' };
-export type PlayerUnreadyRequestedEvent = { type: 'PLAYER_UNREADY_REQUESTED' };
-export type GameStartRequestedEvent = { type: 'GAME_START_REQUESTED' };
+export const LobbyEvents = {
+    action: {
+        create: 'action.lobby.create',
+        join: 'action.lobby.join',
+    },
 
-export type OutboundLobbyEvent =
-    | LobbyCreateRequestedEvent
-    | LobbyJoinRequestedEvent
-    | PlayerReadyRequestedEvent
-    | PlayerUnreadyRequestedEvent
-    | GameStartRequestedEvent;
+    player: {
+        ready: 'action.player.ready',
+        unready: 'action.player.unready',
+    },
 
-// --- Inbound ---
-export type LobbyCreatedEvent =       { type: 'LOBBY_CREATED';       lobbyId: string; playerId: string; playerName: string; };
-export type PlayerJoinedLobbyEvent =  { type: 'PLAYER_JOINED_LOBBY'; lobbyId: string; playerId: string; playerName: string; isLeader: boolean; };
-export type PlayerReadyEvent =        { type: 'PLAYER_READY';        playerId: string; };
-export type PlayerUnreadyEvent =      { type: 'PLAYER_UNREADY';      playerId: string; };
-export type PlayerDisconnectedEvent = { type: 'PLAYER_DISCONNECTED'; playerId: string; };
-export type GameInitializedEvent =    { type: 'GAME_INITIALIZED' };
-export type LobbyJoinRejectedEvent =  { type: 'LOBBY_JOIN_REJECTED'; reason: string; };
-export type GameStartRejectedEvent =  { type: 'GAME_START_REJECTED'; reason: string; };
-export type LobbyNotFoundError =      { type: 'LOBBY_NOT_FOUND';     lobbyId: string; };
-export type LobbyStateEvent = {
-    type: 'LOBBY_STATE';
-    lobbyId: string;
-    localPlayerId: string;
-    snapshot: {
-        players: Array<{
-            playerId: string;
-            username: string;
-            isReady: boolean;
-            isLeader: boolean;
-        }>;
+    game: {
+        start: 'action.game.start',
+    },
+
+    server: {
+        lobby: {
+            created: 'server.lobby.created',
+            state: 'server.lobby.state',
+            joinRejected: 'server.lobby.join_rejected',
+            notFound: 'server.lobby.not_found',
+        },
+
+        player: {
+            joined: 'server.lobby.player.joined',
+            ready: 'server.lobby.player.ready',
+            unready: 'server.lobby.player.unready',
+            disconnected: 'server.lobby.player.disconnected',
+        },
+
+        game: {
+            initialized: 'server.game.initialized',
+            startRejected: 'server.game.start_rejected',
+        },
+    },
+} as const;
+
+// ---------------------------------------------------------------------------
+// Payload map
+// ---------------------------------------------------------------------------
+
+export interface LobbyEventPayloads {
+    [LobbyEvents.action.create]: {
+        playerName: string;
     };
-};
 
-export type InboundLobbyEvent =
-    | LobbyCreatedEvent
-    | PlayerJoinedLobbyEvent
-    | PlayerReadyEvent
-    | PlayerUnreadyEvent
-    | PlayerDisconnectedEvent
-    | GameInitializedEvent
-    | LobbyJoinRejectedEvent
-    | GameStartRejectedEvent
-    | LobbyNotFoundError
-    | LobbyStateEvent;
+    [LobbyEvents.action.join]: {
+        playerName: string;
+    };
+
+    [LobbyEvents.player.ready]: Record<never, never>;
+    [LobbyEvents.player.unready]: Record<never, never>;
+    [LobbyEvents.game.start]: Record<never, never>;
+
+    [LobbyEvents.server.lobby.created]: {
+        lobbyId: string;
+        playerId: string;
+        playerName: string;
+    };
+
+    [LobbyEvents.server.lobby.state]: {
+        lobbyId: string;
+        localPlayerId: string;
+        snapshot: {
+            players: Array<{
+                playerId: string;
+                username: string;
+                isReady: boolean;
+                isLeader: boolean;
+            }>;
+        };
+    };
+
+    [LobbyEvents.server.lobby.joinRejected]: {
+        reason: string;
+    };
+
+    [LobbyEvents.server.player.joined]: {
+        lobbyId: string;
+        playerId: string;
+        playerName: string;
+        isLeader: boolean;
+    };
+
+    [LobbyEvents.server.player.ready]: {
+        playerId: string;
+    };
+
+    [LobbyEvents.server.player.unready]: {
+        playerId: string;
+    };
+
+    [LobbyEvents.server.player.disconnected]: {
+        playerId: string;
+    };
+
+    [LobbyEvents.server.game.initialized]: Record<never, never>;
+
+    [LobbyEvents.server.game.startRejected]: {
+        reason: string;
+    };
+}
