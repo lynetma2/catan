@@ -1,11 +1,12 @@
 import {LobbyEventType} from "@/events/lobby/LobbyEvents.ts";
+
 import type {GameStartRejectionReason, LobbyJoinRejectionReason} from "@/lobby/errors/RejectionReasons.ts";
 
 export interface LobbyEventPayloads {
 
-    // -------------------------
-    // Actions
-    // -------------------------
+    // =====================================================
+    // Lobby Actions
+    // =====================================================
 
     [LobbyEventType.action.create]: {
         playerName: string;
@@ -16,16 +17,24 @@ export interface LobbyEventPayloads {
         playerName: string;
     };
 
-    [LobbyEventType.action.ready]: undefined;
+    [LobbyEventType.action.ready]:
+        undefined;
 
-    [LobbyEventType.action.unready]: undefined;
+    [LobbyEventType.action.unready]:
+        undefined;
 
-    [LobbyEventType.action.gameStart]: undefined;
+
+    // =====================================================
+    // Game Actions
+    // =====================================================
+
+    [LobbyEventType.game.action.start]:
+        undefined;
 
 
-    // -------------------------
-    // Server Events
-    // -------------------------
+    // =====================================================
+    // Lobby Server Events
+    // =====================================================
 
     [LobbyEventType.server.created]: {
         lobbyId: string;
@@ -52,22 +61,13 @@ export interface LobbyEventPayloads {
         playerId: string;
     };
 
-    [LobbyEventType.server.gameInitialized]:
-        undefined;
-
     [LobbyEventType.server.joinRejected]: {
         reason: LobbyJoinRejectionReason;
     };
 
-    [LobbyEventType.server.gameStartRejected]: {
-        reason: GameStartRejectionReason;
-    };
-
-    [LobbyEventType.server.stateUpdated]: {
+    [LobbyEventType.server.state]: {
         lobbyId: string;
-
         localPlayerId: string;
-
         snapshot: {
             players: Array<{
                 playerId: string;
@@ -76,5 +76,17 @@ export interface LobbyEventPayloads {
                 isLeader: boolean;
             }>;
         };
+    };
+
+
+    // =====================================================
+    // Game Server Events
+    // =====================================================
+
+    [LobbyEventType.game.server.initialized]:
+        undefined;
+
+    [LobbyEventType.game.server.startRejected]: {
+        reason: GameStartRejectionReason;
     };
 }

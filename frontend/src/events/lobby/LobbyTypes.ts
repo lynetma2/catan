@@ -1,6 +1,6 @@
-import type {LobbyEventPayloads} from "@/events/lobby/LobbyPayloads.ts";
 import type {EventOfPayloadMap, EventOfPrefix} from "@/events/shared/EventUtils.ts";
 
+import type {LobbyEventPayloads} from "@/events/lobby/LobbyPayloads.ts";
 
 export type LobbyEvent =
     EventOfPayloadMap<LobbyEventPayloads>;

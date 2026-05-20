@@ -1,41 +1,71 @@
 import type {DeepValueOf} from "@/events/shared/EventUtils.ts";
+import {namespace} from "@/events/shared/EventNamespace.ts";
+
+const lobbyAction =
+    namespace('action.lobby');
+
+const lobbyServer =
+    namespace('server.lobby');
+
+const gameAction =
+    namespace('action.game');
+
+const gameServer =
+    namespace('server.game');
 
 export const LobbyEventType = {
-    action: {
-        create: 'action.lobby.create',
-        join: 'action.lobby.join',
-        ready: 'action.lobby.ready',
-        unready: 'action.lobby.unready',
-        gameStart: 'action.game.start',
-    },
 
-    server: {
-        created: 'server.lobby.created',
+    action: lobbyAction({
+
+        create: 'create',
+
+        join: 'join',
+
+        ready: 'ready',
+
+        unready: 'unready',
+    }),
+
+    server: lobbyServer({
+
+        created: 'created',
 
         playerJoined:
-            'server.lobby.player.joined',
+            'player.joined',
 
         playerReady:
-            'server.lobby.player.ready',
+            'player.ready',
 
         playerUnready:
-            'server.lobby.player.unready',
+            'player.unready',
 
         playerDisconnected:
-            'server.lobby.player.disconnected',
+            'player.disconnected',
 
-        stateUpdated:
-            'server.lobby.state.updated',
-
-        gameInitialized:
-            'server.game.initialized',
+        state:
+            'state',
 
         joinRejected:
-            'server.lobby.join.rejected',
+            'join.rejected',
+    }),
 
-        gameStartRejected:
-            'server.game.start.rejected',
+    game: {
+
+        action: gameAction({
+
+            start: 'start',
+        }),
+
+        server: gameServer({
+
+            initialized:
+                'initialized',
+
+            startRejected:
+                'start.rejected',
+        }),
     },
+
 } as const;
 
 export type LobbyEventType =
