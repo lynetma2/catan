@@ -2,7 +2,7 @@ package com.sundtrack.catan.datalayer.domain.game;
 
 import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
 import com.sundtrack.catan.datalayer.domain.building.Building;
-import com.sundtrack.catan.datalayer.domain.event.game.inbound.InboundGameEvent;
+import com.sundtrack.catan.datalayer.domain.event.game.action.GameActionEvent;
 import com.sundtrack.catan.datalayer.domain.trade.TradeOffer;
 
 import java.util.List;
@@ -16,10 +16,10 @@ public class Game {
     private GamePhase currentPhase;
     private Integer turnNumber;
     private List<TradeOffer> activeTradeOffers;
-    private List<InboundGameEvent> gameEvents;
+    private List<GameActionEvent> gameEvents;
     private UUID currentPlayerId;
 
-    public Game(UUID id, List<GamePlayer> players, List<Tile> tiles, List<Building<?>> buildings, GamePhase currentPhase, Integer turnNumber, List<TradeOffer> activeTradeOffers, List<InboundGameEvent> gameEvents, UUID currentPlayerId) {
+    public Game(UUID id, List<GamePlayer> players, List<Tile> tiles, List<Building<?>> buildings, GamePhase currentPhase, Integer turnNumber, List<TradeOffer> activeTradeOffers, List<GameActionEvent> gameEvents, UUID currentPlayerId) {
         this.id = id;
         this.players = players;
         this.tiles = tiles;
@@ -87,11 +87,11 @@ public class Game {
         this.activeTradeOffers = activeTradeOffers;
     }
 
-    public List<InboundGameEvent> getGameEvents() {
+    public List<GameActionEvent> getGameEvents() {
         return gameEvents;
     }
 
-    public void setGameEvents(List<InboundGameEvent> gameEvents) {
+    public void setGameEvents(List<GameActionEvent> gameEvents) {
         this.gameEvents = gameEvents;
     }
 

@@ -1,8 +1,14 @@
 package com.sundtrack.catan.datalayer.domain.event.lobby.action;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeName("action.lobby.join")
+import com.sundtrack.catan.datalayer.domain.event.ClientAction;
+
 public record LobbyJoinAction(
         String playerName
-) implements LobbyClientAction { }
+) implements LobbyClientAction {
+
+    @Override
+    public String action() {
+        return "join";
+    }
+}

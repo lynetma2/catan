@@ -1,14 +1,16 @@
-package com.sundtrack.catan.datalayer.domain.event.game.outbound;
+package com.sundtrack.catan.datalayer.domain.event.game.server;
 
 import com.sundtrack.catan.datalayer.domain.board.Vertex;
 import com.sundtrack.catan.datalayer.domain.building.BuildingKind;
+import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 
 public record BuildPlacedEvent(
         BuildingKind kind,
         Vertex vertex
-) implements ServerGameEvent {
+) implements GameServerEvent {
+
     @Override
-    public OutboundGameEventType type() {
-        return OutboundGameEventType.BUILD_PLACED;
+    public String event() {
+        return "placed";
     }
 }

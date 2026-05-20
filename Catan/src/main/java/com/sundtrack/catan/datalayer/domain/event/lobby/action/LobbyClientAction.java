@@ -1,8 +1,8 @@
 package com.sundtrack.catan.datalayer.domain.event.lobby.action;
 
-import com.sundtrack.catan.datalayer.domain.event.lobby.LobbyEvent;
+import com.sundtrack.catan.datalayer.domain.event.ClientAction;
 
-public sealed interface LobbyClientAction extends LobbyEvent
+public sealed interface LobbyClientAction extends ClientAction
     permits
         GameStartAction,
         LobbyCreateAction,
@@ -10,4 +10,9 @@ public sealed interface LobbyClientAction extends LobbyEvent
         LobbyReconnectAction,
         PlayerReadyAction,
         PlayerUnreadyAction {
+
+    @Override
+    default String domain() {
+        return "lobby";
+    }
 }

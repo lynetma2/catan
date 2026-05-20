@@ -1,9 +1,8 @@
 package com.sundtrack.catan.datalayer.domain.event.lobby.server;
 
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
-import com.sundtrack.catan.datalayer.domain.event.lobby.LobbyEvent;
 
-public sealed interface LobbyServerEvent extends LobbyEvent, ServerEvent
+public sealed interface LobbyServerEvent extends ServerEvent
         permits
         GameInitializedEvent,
         GameStartRejectedEvent,
@@ -14,4 +13,9 @@ public sealed interface LobbyServerEvent extends LobbyEvent, ServerEvent
         PlayerJoinedEvent,
         PlayerReadyEvent,
         PlayerUnreadyEvent {
+
+    @Override
+    default String domain() {
+        return "lobby";
+    }
 }

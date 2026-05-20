@@ -2,7 +2,7 @@ package com.sundtrack.catan.session.game.services;
 
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.outbound.ServerGameEvent;
+import com.sundtrack.catan.datalayer.domain.event.game.server.GameServerEvent;
 import com.sundtrack.catan.messaging.WebSocketMessagingService;
 import com.sundtrack.catan.messaging.routes.ApiRoutes;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ public class GameMessagingService {
         );
     }
 
-    public void sendError(String sessionId, ServerGameEvent error) {
+    public void sendError(String sessionId, GameServerEvent error) {
         messaging.sendToUser(sessionId, ApiRoutes.errors(), error);
     }
 }

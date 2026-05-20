@@ -1,18 +1,16 @@
 package com.sundtrack.catan.datalayer.domain.event;
 
-public non-sealed interface ServerEvent
-        extends BaseEvent {
+public non-sealed interface ClientAction extends BaseEvent {
 
     String domain();
 
-    String event();
+    String action();
 
     @Override
     default String type() {
-
-        return "server."
+        return "action."
                 + domain()
                 + "."
-                + event();
+                + action();
     }
 }

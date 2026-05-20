@@ -2,10 +2,10 @@ package com.sundtrack.catan.session.game;
 
 import com.sundtrack.catan.common.PrincipalUtils;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
-import com.sundtrack.catan.datalayer.domain.event.game.inbound.GameStateRequestedEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.inbound.InboundGameEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.outbound.GameStateEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.outbound.ServerGameEvent;
+import com.sundtrack.catan.datalayer.domain.event.game.action.GameStateAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.GameActionEvent;
+import com.sundtrack.catan.datalayer.domain.event.game.server.GameStateEvent;
+import com.sundtrack.catan.datalayer.domain.event.game.server.GameServerEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.dto.mapper.GameMapper;
 import org.springframework.stereotype.Component;
@@ -25,10 +25,10 @@ private final GameMapper gameMapper;
         this.gameMapper = gameMapper;
     }
 
-    public EventResult<ServerGameEvent> dispatch(Game game, InboundGameEvent event, Principal principal) {
+    public EventResult<GameServerEvent> dispatch(Game game, GameActionEvent event, Principal principal) {
         UUID playerId = PrincipalUtils.extractPlayerId(principal);
         return switch (event) {
-            case GameStateRequestedEvent e -> EventResult.directed(playerId, new GameStateEvent(gameMapper.toSnapshotDTO(game))); //TODO hide player specific information.
+            case GameStateAction e -> EventResult.directed(playerId, new GameStateEvent(gameMapper.toSnapshotDTO(game))); //TODO hide player specific information.
             //case BuildRoadEvent e -> buildService.buildRoad(game, e);
         //case RollDiceEvent e  -> turnService.rollDice(game, e);
         //case EndTurnEvent e   -> turnService.endTurn(game, e);
