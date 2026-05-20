@@ -11,6 +11,8 @@ import {Button} from '@/components/ui/button';
 import {useWebSocket} from '@/WebSocketContext';
 import {useLobbyActions} from './useLobbyActions';
 import type {StompSubscription} from '@stomp/stompjs';
+import {LobbyEventType} from "@/events/lobby/LobbyEvents.ts";
+import type {LobbyServerEvent} from "@/events/lobby/LobbyTypes.ts";
 
 function LobbyView() {
     const navigate = useNavigate();
@@ -61,41 +63,37 @@ function LobbyView() {
     function subscribeToLobbyTopic() {
         if (topicSubscription.current) return;
         topicSubscription.current = subscribe(`/topic/lobby/${lobbyId}`, (response) => {
-            const event: OutboundLobbyEvent = JSON.parse(response.body);
+            const event: LobbyServerEvent = JSON.parse(response.body);
             console.log('recieved event: ', event);
             handleLobbyEvent(event, {
-                PLAYER_JOINED_LOBBY: (e) => {
+            [LobbyEventType.server.playerJoined]: (e) => {
                     setLobby(prev => {
                         if (!prev) return null; // Guard clause: ignore events if lobby isn't initialized
-                        let result = applyLobbyEvent(prev, e);
+                        const result = applyLobbyEvent(prev, e);
                         console.log('new state: ', result)
                         return result;
                     });                },
-                PLAYER_READY: (e) => {
+                [LobbyEventType.server.playerReady]: (e) => {
                     setLobby(prev => {
                         if (!prev) return null; // Guard clause: ignore events if lobby isn't initialized
-                        let result = applyLobbyEvent(prev, e);
+                        const result = applyLobbyEvent(prev, e);
                         console.log('new state: ', result)
                         return result;
                     });
                 },
-                PLAYER_UNREADY: (e) => {
+                [LobbyEventType.server.playerUnready]: (e) => {
                     setLobby(prev => prev ? applyLobbyEvent(prev, e) : prev);
                 },
-                PLAYER_DISCONNECTED: (e) => {
+                [LobbyEventType.server.playerDisconnected]: (e) => {
                     setLobby(prev => prev ? applyLobbyEvent(prev, e) : prev);
                 },
-                GAME_INITIALIZED: (e) => {
+                [LobbyEventType.server.gameInitialized]: (e) => {
                     navigate(`/game/${lobbyId}`, {
                         replace: true
                     });
                 },
-                GAME_START_REJECTED: (e) => {
-                    console.error('Game start rejected:', e.reason);
-                },
-                LOBBY_NOT_FOUND: (e) => {
-                    console.error('Lobby not found:', e.lobbyId);
-                    navigate(`/?lobbyId=${lobbyId}`);
+                [LobbyEventType.server.gameStartRejected]: (e) => {
+                    console.error('Game start rejected:', e.payload.reason);
                 },
             });
         });
