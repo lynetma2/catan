@@ -7,5 +7,5 @@ export type Player = {
 
 export type Lobby = {
     lobbyId: string;
-    players: Map<string, Player>;
+    players: Record<string, Player>;
 };

@@ -1,44 +1,47 @@
-import {useWebSocket} from '@/WebSocketContext';
-import type {
-    GameStartRequestedEvent,
-    LobbyJoinRequestedEvent,
-    PlayerReadyRequestedEvent,
-    PlayerUnreadyRequestedEvent,
-} from '@/lobby/LobbyEvents';
+import { useWebSocket } from '@/WebSocketContext';
+import {
+    LobbyActionEventCreators,
+} from '@/events/lobby/LobbyActionEvents';
 
 export function useLobbyActions(lobbyId: string) {
-    const {sendMessage} = useWebSocket();
+    const { sendMessage } = useWebSocket();
+
+    const endpoint = `/app/lobby/${lobbyId}/events`;
 
     function reconnectLobby(username: string) {
-        const event: LobbyJoinRequestedEvent = {
-            type: 'LOBBY_JOIN_REQUESTED',
-            playerName: username,
-        };
-        sendMessage(`/app/lobby/${lobbyId}/events`, event);
+        sendMessage(
+            endpoint,
+            LobbyActionEventCreators.join(username)
+        );
     }
 
     function setReady() {
-        const event: PlayerReadyRequestedEvent = {
-            type: 'PLAYER_READY_REQUESTED'
-        };
-        sendMessage(`/app/lobby/${lobbyId}/events`, event);
-        console.log("Send event", event);
+        sendMessage(
+            endpoint,
+            LobbyActionEventCreators.player.ready()
+        );
+
+        console.log("Send event: ready");
     }
 
     function setUnready() {
-        const event: PlayerUnreadyRequestedEvent = {
-            type: 'PLAYER_UNREADY_REQUESTED'
-        };
-        sendMessage(`/app/lobby/${lobbyId}/events`, event);
-        console.log("Send event", event);
+        sendMessage(
+            endpoint,
+            LobbyActionEventCreators.player.unready()
+        );
+
+        console.log("Send event: unready");
     }
 
     function startGame() {
-        const event: GameStartRequestedEvent = {
-            type: 'GAME_START_REQUESTED'
-        };
-        sendMessage(`/app/lobby/${lobbyId}/events`, event);
+        sendMessage(endpoint, LobbyActionEventCreators.start());
+        console.log("Send event: start game");
     }
 
-    return {reconnectLobby, setReady, setUnready, startGame};
+    return {
+        reconnectLobby,
+        setReady,
+        setUnready,
+        startGame,
+    };
 }

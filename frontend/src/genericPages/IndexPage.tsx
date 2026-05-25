@@ -7,7 +7,7 @@ import {useNavigate} from 'react-router';
 import {useWebSocket} from '@/WebSocketContext';
 import {LobbyError} from '@/lobby/LobbyErrors';
 import {initialLobbyIndexState, lobbyIndexReducer} from '@/lobby/LobbyIndexReducer';
-import type {LobbyStateEvent} from "@/lobby/LobbyEvents.ts";
+import type {LobbyStateEvent} from "@/lobby/LobbyActionEvents.ts";
 
 function IndexPage() {
     const navigate = useNavigate();
