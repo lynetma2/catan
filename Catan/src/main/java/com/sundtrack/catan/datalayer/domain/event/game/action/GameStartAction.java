@@ -1,16 +1,12 @@
 package com.sundtrack.catan.datalayer.domain.event.game.action;
 
+import com.sundtrack.catan.datalayer.domain.event.ClientAction;
+import com.sundtrack.catan.datalayer.domain.event.EventType;
+
 import java.util.UUID;
 
-public record GameStartAction(UUID playerId) implements GameActionEvent {
+import static com.sundtrack.catan.datalayer.domain.event.EventDomainConstants.*;
 
-    @Override
-    public UUID playerId() {
-        return playerId;
-    }
-
-    @Override
-    public String action() {
-        return "start";
-    }
+@EventType(ACTION + SEPARATOR + GAME + SEPARATOR + "start")
+public record GameStartAction(UUID playerId) implements ClientAction {
 }

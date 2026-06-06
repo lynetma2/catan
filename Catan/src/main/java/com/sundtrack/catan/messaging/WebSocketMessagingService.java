@@ -1,10 +1,9 @@
 package com.sundtrack.catan.messaging;
 
-import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
+import com.sundtrack.catan.datalayer.domain.event.OutgoingEventEnvelope;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-// WebSocketMessagingService — accepts OutboundEvent
 @Service
 public class WebSocketMessagingService {
 
@@ -14,10 +13,11 @@ public class WebSocketMessagingService {
         this.messaging = messaging;
     }
 
-    public void broadcast(String topic, ServerEvent event) {
+    public void broadcast(String topic, OutgoingEventEnvelope event) {
         messaging.convertAndSend(topic, event);
     }
-    public void sendToUser(String userName, String destination, ServerEvent event) {
+
+    public void sendToUser(String userName, String destination, OutgoingEventEnvelope event) {
         messaging.convertAndSendToUser(userName, destination, event);
     }
 }

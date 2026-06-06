@@ -1,0 +1,21 @@
+package com.sundtrack.catan.datalayer.domain.event;
+
+public final class EventDomainConstants {
+    private EventDomainConstants() {
+    } // prevent instantiation
+
+    // Top-level domains
+    public static final String SEPARATOR = ".";
+    public static final String ACTION = "action";
+    public static final String SERVER = "server";
+
+    // Sub-categories
+    public static final String LOBBY = "lobby";
+    public static final String GAME = "game";
+    public static final String PLAYER = "player";
+    public static final String BUILD = "build";
+
+    // Status constants
+    public static final String REJECTED = "rejected";
+    public static final String ERROR = "error";
+}

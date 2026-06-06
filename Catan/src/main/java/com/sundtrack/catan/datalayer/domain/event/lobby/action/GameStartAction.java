@@ -1,8 +1,11 @@
 package com.sundtrack.catan.datalayer.domain.event.lobby.action;
 
-public record GameStartAction() implements LobbyClientAction {
-    @Override
-    public String action() {
-        return "start";
-    }
+import com.sundtrack.catan.datalayer.domain.event.ClientAction;
+import com.sundtrack.catan.datalayer.domain.event.EventType;
+
+import static com.sundtrack.catan.datalayer.domain.event.EventDomainConstants.*;
+
+@EventType(ACTION + SEPARATOR + LOBBY + SEPARATOR + "start")
+public record GameStartAction()
+        implements ClientAction {
 }

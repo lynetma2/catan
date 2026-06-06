@@ -1,10 +1,7 @@
-import type { Lobby } from "../datalayer/domain/lobby/Lobby.ts";
+import type {Lobby} from "../datalayer/domain/lobby/Lobby.ts";
 
-import type {
-    LobbyPlayerServerEvent,
-} from "@/events/lobby/LobbyServerEvents";
-
-import { LobbyServerEvents } from "@/events/lobby/LobbyServerEvents";
+import type {LobbyPlayerServerEvent,} from "@/events/lobby/LobbyServerEvents";
+import {LobbyServerEvents} from "@/events/lobby/LobbyServerEvents";
 
 /**
  * -------------------------------------------------------
@@ -25,52 +22,43 @@ type HandlerMap = {
  */
 const playerHandlers: HandlerMap = {
     [LobbyServerEvents.player.join.success]: (lobby, event) => {
-        const players = new Map(lobby.players);
-
-        players.set(event.payload.playerId, {
-            playerId: event.payload.playerId,
-            username: event.payload.playerName,
-            isReady: false,
-            isLeader: false,
-        });
-
         return {
             ...lobby,
-            players,
+            players: {
+                ...lobby.players,
+                [event.payload.playerId]: {
+                    playerId: event.payload.playerId,
+                    username: event.payload.playerName,
+                    isReady: false,
+                    isLeader: false,
+                }
+            },
         };
     },
 
     [LobbyServerEvents.player.ready.success]: (lobby, event) => {
-        const players = new Map(lobby.players);
-
-        const player = players.get(event.payload.playerId);
+        const player = lobby.players[event.payload.playerId];
         if (!player) return lobby;
-
-        players.set(event.payload.playerId, {
-            ...player,
-            isReady: true,
-        });
 
         return {
             ...lobby,
-            players,
+            players: {
+                ...lobby.players,
+                [event.payload.playerId]: {...player, isReady: true},
+            },
         };
     },
 
     [LobbyServerEvents.player.unready.success]: (lobby, event) => {
-        const players = new Map(lobby.players);
-
-        const player = players.get(event.payload.playerId);
+        const player = lobby.players[event.payload.playerId];
         if (!player) return lobby;
-
-        players.set(event.payload.playerId, {
-            ...player,
-            isReady: false,
-        });
 
         return {
             ...lobby,
-            players,
+            players: {
+                ...lobby.players,
+                [event.payload.playerId]: {...player, isReady: false},
+            },
         };
     },
 

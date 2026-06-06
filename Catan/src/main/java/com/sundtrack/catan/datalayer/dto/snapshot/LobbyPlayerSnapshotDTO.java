@@ -1,10 +1,11 @@
 package com.sundtrack.catan.datalayer.dto.snapshot;
 
-import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record LobbyPlayerSnapshotDTO(
         String id,
         String username,
-        boolean isLeader,
-        boolean isReady
-) {}
+        @JsonProperty("isLeader") boolean isLeader,
+        @JsonProperty("isReady") boolean isReady
+) {
+}

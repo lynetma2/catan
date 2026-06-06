@@ -1,23 +1,28 @@
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {useEffect, useReducer, useRef, useState} from 'react';
-import {Input} from '@/components/ui/input.tsx';
-import {Label} from '@/components/ui/label.tsx';
-import {Button} from '@/components/ui/button.tsx';
-import {useNavigate} from 'react-router';
-import {useWebSocket} from '@/WebSocketContext';
-import {LobbyError} from '@/lobby/LobbyErrors';
-import {initialLobbyIndexState, lobbyIndexReducer} from '@/lobby/LobbyIndexReducer';
-import type {LobbyStateEvent} from "@/lobby/LobbyActionEvents.ts";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {useEffect, useRef, useState} from "react";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
+import {Button} from "@/components/ui/button";
+import {useNavigate} from "react-router";
+import {useWebSocket} from "@/WebSocketContext";
+import type {LobbyServerEventMap} from "@/events/lobby/LobbyServerEvents";
+// New event system
+import {LobbyServerEvents} from "@/events/lobby/LobbyServerEvents";
+import {LobbyActionEventCreators} from "@/events/lobby/LobbyActionEvents";
 
 function IndexPage() {
     const navigate = useNavigate();
     const {sendMessage, subscribe, onConnect} = useWebSocket();
-    const [state, dispatch] = useReducer(lobbyIndexReducer, initialLobbyIndexState);
-    const [username, setUsername] = useState<string>(() => localStorage.getItem('username') ?? '');
+
+    const [username, setUsername] = useState<string>(() => localStorage.getItem("username") ?? "");
     const [lobbyId, setLobbyId] = useState<string>(() => {
         const params = new URLSearchParams(window.location.search);
-        return params.get('lobbyId') ?? '';
+        return params.get("lobbyId") ?? "";
     });
+
+    const [isCreating, setIsCreating] = useState(false);
+    const [isJoining, setIsJoining] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const usernameJoinRef = useRef<HTMLInputElement>(null);
 
@@ -28,91 +33,93 @@ function IndexPage() {
     }, []);
 
     function savePlayerId(playerId: string) {
-        sessionStorage.setItem('playerId', playerId);
+        sessionStorage.setItem("playerId", playerId);
     }
 
     function saveUsername(value: string) {
         setUsername(value);
-        localStorage.setItem('username', value);
+        localStorage.setItem("username", value);
     }
 
-    function saveLobbyState(event: object) {
-        sessionStorage.setItem('lobbyState', JSON.stringify(event));
+    function saveLobbyState(event: LobbyServerEventMap[typeof LobbyServerEvents.state.success]) {
+        sessionStorage.setItem("lobbyState", JSON.stringify(event));
     }
 
     function newLobby() {
-        if (!username || state.isCreating) return;
+        if (!username || isCreating) return;
 
-        dispatch({type: 'CREATE_STARTED'});
+        setIsCreating(true);
+        setError(null);
 
         onConnect(() => {
-            const subscription = subscribe('/user/queue/lobby', (response) => {
+            const subscription = subscribe("/user/queue/lobby", (response) => {
                 try {
-                    const event: LobbyStateEvent = JSON.parse(response.body);
+                    const event = JSON.parse(response.body);
 
-                    if (event.type === 'LOBBY_STATE') {
+                    if (event.type === LobbyServerEvents.state.success) {
                         subscription.unsubscribe();
-                        saveLobbyState(event);
-                        savePlayerId(event.localPlayerId);
-                        navigate(`/lobby/${event.lobbyId}`);
-                    } else if (event.type === 'LOBBY_JOIN_REJECTED') {
+                        saveLobbyState(event.payload);
+                        savePlayerId(event.payload.localPlayerId);
+                        navigate(`/lobby/${event.payload.lobbyId}`);
+                    } else if (event.type === LobbyServerEvents.player.join.rejected) {
                         subscription.unsubscribe();
-                        dispatch({type: 'CREATE_FAILED', error: LobbyError.LOBBY_CREATE_REJECTED});
-                    } else if (event.type === 'LOBBY_NOT_FOUND') {
+                        setError("Lobby creation rejected");
+                        setIsCreating(false);
+                    } else if (event.type === LobbyServerEvents.initialized.error) {
                         subscription.unsubscribe();
-                        dispatch({type: 'CREATE_FAILED', error: LobbyError.LOBBY_CREATE_REJECTED});
+                        setError("Lobby creation error");
+                        setIsCreating(false);
                     }
-                } catch (error) {
-                    console.error('Error processing lobby creation response:', error);
+                } catch (err) {
+                    console.error("Error processing lobby creation response:", err);
                     subscription.unsubscribe();
-                    dispatch({type: 'CREATE_FAILED', error: LobbyError.LOBBY_CREATE_REJECTED});
+                    setError("Unexpected error while creating lobby");
+                    setIsCreating(false);
                 }
             });
 
-            setTimeout(() => {
-                sendMessage('/app/lobby', {
-                    type: 'LOBBY_CREATE_REQUESTED',
-                    playerName: username,
-                });
-            }, 0);
+            sendMessage("/app/lobby", LobbyActionEventCreators.create(username));
         });
     }
 
     function joinLobby() {
-        if (!lobbyId || !username || state.isJoining) return;
+        if (!lobbyId || !username || isJoining) return;
 
-        dispatch({type: 'JOIN_STARTED'});
+        setIsJoining(true);
+        setError(null);
 
         onConnect(() => {
-            const subscription = subscribe('/user/queue/lobby', (response) => {
+            const subscription = subscribe("/user/queue/lobby", (response) => {
                 try {
-                    const event: LobbyStateEvent = JSON.parse(response.body);
+                    const event = JSON.parse(response.body);
 
-                    if (event.type === 'LOBBY_STATE') {
+                    if (event.type === LobbyServerEvents.state.success) {
                         subscription.unsubscribe();
-                        saveLobbyState(event);
-                        savePlayerId(event.localPlayerId);
-                        navigate(`/lobby/${event.lobbyId}`);
-                    } else if (event.type === 'LOBBY_JOIN_REJECTED') {
+                        saveLobbyState(event.payload);
+                        savePlayerId(event.payload.localPlayerId);
+                        navigate(`/lobby/${event.payload.lobbyId}`);
+                    } else if (event.type === LobbyServerEvents.player.join.rejected) {
                         subscription.unsubscribe();
-                        dispatch({type: 'JOIN_FAILED', error: LobbyError.LOBBY_JOIN_REJECTED});
-                    } else if (event.type === 'LOBBY_NOT_FOUND') {
+                        const reason = event.payload.reason.toLowerCase();
+                        const message = reason.includes("not found")
+                            ? "Lobby not found"
+                            : "Join request rejected";
+                        setError(message);
+                        setIsJoining(false);
+                    } else if (event.type === LobbyServerEvents.initialized.error) {
                         subscription.unsubscribe();
-                        dispatch({type: 'JOIN_FAILED', error: LobbyError.LOBBY_NOT_FOUND});
+                        setError("Lobby join error");
+                        setIsJoining(false);
                     }
-                } catch (error) {
-                    console.error('Error processing lobby join response:', error);
+                } catch (err) {
+                    console.error("Error processing lobby join response:", err);
                     subscription.unsubscribe();
-                    dispatch({type: 'JOIN_FAILED', error: LobbyError.LOBBY_JOIN_REJECTED});
+                    setError("Unexpected error while joining lobby");
+                    setIsJoining(false);
                 }
             });
 
-            setTimeout(() => {
-                sendMessage(`/app/lobby/${lobbyId}/events`, {
-                    type: 'LOBBY_JOIN_REQUESTED',
-                    playerName: username,
-                });
-            }, 0);
+            sendMessage(`/app/lobby/${lobbyId}/events`, LobbyActionEventCreators.join(username));
         });
     }
 
@@ -132,11 +139,11 @@ function IndexPage() {
                                 placeholder="Username"
                                 value={username}
                                 onChange={(e) => saveUsername(e.target.value)}
-                                disabled={state.isCreating}
+                                disabled={isCreating}
                             />
                         </div>
-                        <Button className="w-full mt-1" onClick={newLobby} disabled={state.isCreating}>
-                            {state.isCreating ? 'Creating...' : 'Create Lobby'}
+                        <Button className="w-full mt-1" onClick={newLobby} disabled={isCreating}>
+                            {isCreating ? "Creating..." : "Create Lobby"}
                         </Button>
                     </CardContent>
                 </Card>
@@ -153,7 +160,7 @@ function IndexPage() {
                                 placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                                 value={lobbyId}
                                 onChange={(e) => setLobbyId(e.target.value)}
-                                disabled={state.isJoining}
+                                disabled={isJoining}
                             />
                         </div>
                         <div className="grid w-full max-w-sm items-center gap-3 mt-1">
@@ -164,19 +171,19 @@ function IndexPage() {
                                 placeholder="Username"
                                 value={username}
                                 onChange={(e) => saveUsername(e.target.value)}
-                                disabled={state.isJoining}
+                                disabled={isJoining}
                             />
                         </div>
-                        <Button className="w-full mt-1" onClick={joinLobby} disabled={state.isJoining}>
-                            {state.isJoining ? 'Joining...' : 'Join Lobby'}
+                        <Button className="w-full mt-1" onClick={joinLobby} disabled={isJoining}>
+                            {isJoining ? "Joining..." : "Join Lobby"}
                         </Button>
                     </CardContent>
                 </Card>
             </div>
-            {state.error && (
+            {error && (
                 <LobbyErrorView
-                    error={state.error}
-                    onDismiss={() => dispatch({type: 'ERROR_DISMISSED'})}
+                    error={error}
+                    onDismiss={() => setError(null)}
                 />
             )}
         </div>
@@ -184,7 +191,7 @@ function IndexPage() {
 }
 
 type LobbyErrorViewProps = {
-    error: LobbyError;
+    error: string;
     onDismiss: () => void;
 };
 
@@ -196,7 +203,9 @@ function LobbyErrorView({error, onDismiss}: LobbyErrorViewProps) {
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
                 <p className="text-sm">{error}</p>
-                <Button variant="outline" onClick={onDismiss}>Dismiss</Button>
+                <Button variant="outline" onClick={onDismiss}>
+                    Dismiss
+                </Button>
             </CardContent>
         </Card>
     );
