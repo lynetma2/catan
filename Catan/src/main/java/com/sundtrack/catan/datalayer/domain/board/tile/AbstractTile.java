@@ -1,6 +1,9 @@
 package com.sundtrack.catan.datalayer.domain.board.tile;
 
 import com.sundtrack.catan.datalayer.domain.board.Hex;
+import com.sundtrack.catan.datalayer.domain.board.Vertex;
+
+import java.util.List;
 
 public abstract class AbstractTile implements Tile {
     private final Hex hex;
@@ -62,5 +65,20 @@ public abstract class AbstractTile implements Tile {
 
     public Integer getPortFacing() {
         return portFacing;
+    }
+
+    @Override
+    public List<Vertex> getAdjacentVertices() {
+        int q = hex.q();
+        int r = hex.r();
+
+        return List.of(
+                Vertex.of(q, r, 0, 1),
+                Vertex.of(q, r, 1, 2),
+                Vertex.of(q, r, 2, 3),
+                Vertex.of(q, r, 3, 4),
+                Vertex.of(q, r, 4, 5),
+                Vertex.of(q, r, 5, 0)
+        );
     }
 }

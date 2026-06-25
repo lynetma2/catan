@@ -74,15 +74,15 @@ public class GameMapper {
         buildings.forEach(building -> {
             switch (building.getKind()) {
                 case ROAD:
-                    RoadPlacementDTO road = new RoadPlacementDTO((Edge) building.getLocation(), building.getPlayerId().toString());
+                    RoadPlacementDTO road = new RoadPlacementDTO((Edge) building.getLocation(), building.getOwnerId().toString());
                     roads.add(road);
                     break;
                 case SETTLEMENT:
-                    SettlementPlacementDTO settlement = new SettlementPlacementDTO((Vertex) building.getLocation(), building.getPlayerId().toString());
+                    SettlementPlacementDTO settlement = new SettlementPlacementDTO((Vertex) building.getLocation(), building.getOwnerId().toString());
                     settlements.add(settlement);
                     break;
                 case CITY:
-                    CityPlacementDTO city = new CityPlacementDTO((Vertex) building.getLocation(), building.getPlayerId().toString());
+                    CityPlacementDTO city = new CityPlacementDTO((Vertex) building.getLocation(), building.getOwnerId().toString());
                     cityPlacements.add(city);
                     break;
             }

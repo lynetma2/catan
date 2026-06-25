@@ -1,10 +1,14 @@
 package com.sundtrack.catan.datalayer.domain.game;
 
+import com.sundtrack.catan.datalayer.domain.building.PieceCosts;
+import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
+import com.sundtrack.catan.datalayer.domain.exceptions.validation.InsufficientResourcesException;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
+import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class GamePlayer {
     private UUID id;
@@ -119,5 +123,54 @@ public class GamePlayer {
 
     public void setDevelopmentCardCount(Integer developmentCardCount) {
         this.developmentCardCount = developmentCardCount;
+    }
+
+    public void validateCanAfford(PieceType pieceType) {
+        Map<ResourceType, Long> available = resources.stream()
+                .collect(Collectors.groupingBy(Resource::resourceType, Collectors.counting()));
+
+        Map<ResourceType, Integer> cost = PieceCosts.of(pieceType);
+
+        boolean canAfford = cost.entrySet().stream()
+                .allMatch(entry -> available.getOrDefault(entry.getKey(), 0L) >= entry.getValue());
+
+        if (!canAfford) {
+            throw new InsufficientResourcesException(id, pieceType);
+        }
+    }
+
+    public List<Resource> deduct(PieceType pieceType) {
+        Map<ResourceType, Integer> cost = PieceCosts.of(pieceType);
+        List<Resource> spent = new ArrayList<>();
+
+        for (Map.Entry<ResourceType, Integer> entry : cost.entrySet()) {
+            ResourceType type = entry.getKey();
+            int remainingToRemove = entry.getValue();
+
+            Iterator<Resource> it = resources.iterator();
+            while (it.hasNext() && remainingToRemove > 0) {
+                Resource resource = it.next();
+                if (resource.resourceType() == type) {
+                    spent.add(resource);
+                    it.remove();
+                    remainingToRemove--;
+                }
+            }
+        }
+
+        this.cardCount = resources.size();
+        return spent;
+    }
+
+    public List<Resource> grant(ResourceType resourceType, int amount) {
+        List<Resource> addedResources = new ArrayList<>();
+
+        for (int i = 1; i <= amount; i++) {
+            Resource resource = new Resource(UUID.randomUUID(), resourceType);
+            this.resources.add(resource);
+            addedResources.add(resource);
+        }
+
+        return addedResources;
     }
 }

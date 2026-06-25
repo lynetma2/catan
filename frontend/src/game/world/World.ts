@@ -6,77 +6,107 @@ import type {Camera} from "@/game/core/Camera.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 import type {EventBus} from "@/game/core/EventBus.ts";
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
-import {type EventPayloads, GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
-import {type BuildTarget, BuildTargetKind, PieceType} from "@/game/core/types.ts";
+import {type BuildTarget, BuildTargetKind, type GameSnapshot, PieceType,} from "@/game/core/types.ts";
 import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {type BuildValidator, createBuildValidator} from "@/game/world/systems/build/BuildValidator.ts";
 import type {WorldState} from "@/game/world/types.ts";
 import {HoverSystem} from "@/game/world/systems/hover/HoverSystem.ts";
 
+// New event imports
+import {type GameServerEventMap, GameServerEvents} from "@/events/game/GameServerEvents";
+import {GameUiEvents} from "@/events/game/GameUiEvents";
+import {GameActionEventCreators} from "@/events/game/GameActionEvents";
+import type {GameEventMap} from "@/events/shared/AppEvents.ts";
 
 export class World implements InputLayer {
     readonly priority = 0;
 
-    private readonly board:       Board;
-    private readonly gamePhase:   GamePhaseManager;
+    private readonly board: Board;
     private readonly buildSystem: BuildSystem;
     private readonly hoverSystem: HoverSystem;
     private readonly buildValidator: BuildValidator;
 
-    private isPanning:  boolean                          = false;
+    private isPanning: boolean = false;
     private lastPanPos: { x: number; y: number } | null = null;
 
     constructor(
-        private readonly bus:        EventBus,
-        private readonly frameQueue: FrameQueue,
-        private readonly shared:     SharedState,
-        private readonly camera:     Camera,
+        private readonly bus: EventBus<GameEventMap>,
+        private readonly frameQueue: FrameQueue<GameEventMap>,
+        private readonly shared: SharedState,
+        private readonly camera: Camera,
+        private readonly gamePhaseManager: GamePhaseManager,
     ) {
         this.board = new Board();
-        this.gamePhase = new GamePhaseManager(bus, shared);
         this.buildValidator = createBuildValidator(this.board, shared);
-        this.buildSystem = new BuildSystem(bus, frameQueue, shared, this.gamePhase, this.buildValidator);
+        this.buildSystem = new BuildSystem(bus, frameQueue, shared, this.gamePhaseManager, this.buildValidator);
         this.hoverSystem = new HoverSystem(this.board, camera, this.buildValidator, shared);
 
         this.subscribeToEvents();
     }
 
-        // ─── Subscriptions ────────────────────────────────────────────────
+    // ─── Subscriptions ────────────────────────────────────────────────
 
     private subscribeToEvents() {
         // World owns the board — it is responsible for mutating it
-        this.bus.on(GameEventType.GAME_STATE_LOADED, e =>
-            this.onGameStateLoaded(e.payload));
-        this.bus.on(GameEventType.BUILD_PLACED, e => this.onBuildPlaced(e.payload));
-        this.bus.on(GameEventType.BUILD_MODE_ENTERED, _e => this.hoverSystem.onModeChanged());
-        this.bus.on(GameEventType.BUILD_MODE_EXITED,  _e => {
+        this.bus.on(GameServerEvents.state.full.success, (payload) =>
+            this.onGameStateLoaded(payload)
+        );
+        this.bus.on(
+            GameServerEvents.build.settlement.success,
+            payload => this.onSettlementBuilt(payload)
+        );
+
+        this.bus.on(
+            GameServerEvents.build.city.success,
+            payload => this.onCityBuilt(payload)
+        );
+
+        this.bus.on(
+            GameServerEvents.build.road.success,
+            payload => this.onRoadBuilt(payload)
+        );
+        this.bus.on(GameUiEvents.build.enter, () => this.hoverSystem.onModeChanged());
+        this.bus.on(GameUiEvents.build.exit, () => {
             this.hoverSystem.onModeChanged();
             this.hoverSystem.clear();
         });
     }
 
-    private onGameStateLoaded(payload: EventPayloads[GameEventType.GAME_STATE_LOADED]) {
-        this.board.hexGrid.loadTiles(payload.tiles);
-        this.board.loadFromSnapshot(payload.placements);
+    private onGameStateLoaded(payload: {
+        lobbyId: string;
+        snapshot: GameSnapshot;
+        localPlayerId: string;
+    }) {
+        const {snapshot} = payload;
+        this.board.hexGrid.loadTiles(snapshot.tiles);
+        this.board.loadFromSnapshot(snapshot.placements);
     }
 
-    private onBuildPlaced(payload: EventPayloads[GameEventType.BUILD_PLACED]) {
-        const { pieceType, target, playerId } = payload;
+    private onSettlementBuilt(
+        payload: GameServerEventMap[typeof GameServerEvents.build.settlement.success]
+    ) {
+        this.board.placementMap.placeSettlement(
+            payload.vertex,
+            payload.playerId
+        );
+    }
 
-        switch (pieceType) {
-            case PieceType.Settlement:
-                if (target.kind === BuildTargetKind.Vertex)
-                    this.board.placementMap.placeSettlement(target.vertex, playerId);
-                break;
-            case PieceType.City:
-                if (target.kind === BuildTargetKind.Vertex)
-                    this.board.placementMap.placeCity(target.vertex, playerId);
-                break;
-            case PieceType.Road:
-                if (target.kind === BuildTargetKind.Edge)
-                    this.board.placementMap.placeRoad(target.edge, playerId);
-                break;
-        }
+    private onCityBuilt(
+        payload: GameServerEventMap[typeof GameServerEvents.build.city.success]
+    ) {
+        this.board.placementMap.placeCity(
+            payload.vertex,
+            payload.playerId
+        );
+    }
+
+    private onRoadBuilt(
+        payload: GameServerEventMap[typeof GameServerEvents.build.road.success]
+    ) {
+        this.board.placementMap.placeRoad(
+            payload.edge,
+            payload.playerId
+        );
     }
 
     // ─── Input ────────────────────────────────────────────────────────
@@ -87,13 +117,13 @@ export class World implements InputLayer {
         }
 
         if (event.type === InputType.MouseDown && this.isPanButton(event.button)) {
-            this.isPanning  = true;
+            this.isPanning = true;
             this.lastPanPos = event.screenPos;
             return true;
         }
 
         if (event.type === InputType.MouseUp) {
-            this.isPanning  = false;
+            this.isPanning = false;
             this.lastPanPos = null;
             return false;
         }
@@ -130,7 +160,7 @@ export class World implements InputLayer {
     }
 
     private handleClick(screenPos: { x: number; y: number }): boolean {
-        const target    = this.hoverSystem.getTarget();
+        const target = this.hoverSystem.getTarget();
         const buildMode = this.shared.buildMode;
 
         if (!target) return false;
@@ -138,10 +168,27 @@ export class World implements InputLayer {
         const pieceType = buildMode ?? this.inferPieceType(target);
         if (!pieceType) return false;
 
+        switch (pieceType) {
+            case PieceType.City:
+                if (target.kind === BuildTargetKind.Vertex) {
+                    this.frameQueue.push(GameActionEventCreators.placeCity(target.vertex));
+                }
+                break;
+            case PieceType.Road:
+                if (target.kind === BuildTargetKind.Edge) {
+                    this.frameQueue.push(GameActionEventCreators.placeRoad(target.edge));
+                }
+                break;
+            case PieceType.Settlement:
+                if (target.kind === BuildTargetKind.Vertex) {
+                    this.frameQueue.push(GameActionEventCreators.placeSettlement(target.vertex));
+                }
+                break;
+        }
+
         this.frameQueue.push({
-            type:    GameEventType.BUILD_PLACEMENT_REQUESTED,
-            payload: { pieceType, target },
-            source:  GameEventSource.Input,
+            type: GameUiEvents.build.exit,
+            payload: {},
         });
 
         return true;
@@ -150,9 +197,8 @@ export class World implements InputLayer {
     private handleKeyDown(key: string): boolean {
         if (key === 'Escape' && this.shared.buildMode) {
             this.frameQueue.push({
-                type:    GameEventType.BUILD_MODE_EXITED,
+                type: GameUiEvents.build.exit,
                 payload: {},
-                source:  GameEventSource.Input,
             });
             return true;
         }
@@ -162,7 +208,7 @@ export class World implements InputLayer {
     // ─── Update ───────────────────────────────────────────────────────
 
     update(_deltaTimeMs: number) {
-        // Reserved for time-based world concerns
+        // Reserved for time‑based world concerns
         // Systems react to events in their constructors
     }
 
@@ -170,9 +216,9 @@ export class World implements InputLayer {
 
     getState(): WorldState {
         return {
-            hover:      this.hoverSystem.getState(),
+            hover: this.hoverSystem.getState(),
             placements: this.board.placementMap.getState(),
-            tiles:      this.board.hexGrid.getState(),
+            tiles: this.board.hexGrid.getState(),
         };
     }
 
@@ -180,10 +226,13 @@ export class World implements InputLayer {
 
     private resolveHoverMode() {
         switch (this.shared.buildMode) {
-            case PieceType.Road:       return BuildTargetKind.Edge;
+            case PieceType.Road:
+                return BuildTargetKind.Edge;
             case PieceType.Settlement:
-            case PieceType.City:       return BuildTargetKind.Vertex;
-            default:           return 'inspect';
+            case PieceType.City:
+                return BuildTargetKind.Vertex;
+            default:
+                return 'inspect';
         }
     }
 
@@ -195,15 +244,12 @@ export class World implements InputLayer {
         const playerId = this.shared.localPlayerId;
         switch (target.kind) {
             case BuildTargetKind.Vertex:
-                // Prefer city upgrade if player has a settlement there
                 if (playerId && this.buildValidator.canBuild(PieceType.City, target, playerId)) {
                     return PieceType.City;
                 }
                 return PieceType.Settlement;
-
             case BuildTargetKind.Edge:
                 return PieceType.Road;
-
             default:
                 return null;
         }

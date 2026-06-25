@@ -27,4 +27,14 @@ public record Vertex(List<Hex> hexes) {
         // Defensive copy to ensure the list cannot be modified from outside
         hexes = List.copyOf(hexes);
     }
+
+    public boolean isAdjacentTo(Vertex vertex) {
+        if (vertex == null) {
+            return false;
+        }
+        long common = hexes.stream()
+                .filter(vertex.hexes()::contains)
+                .count();
+        return common == 2;
+    }
 }

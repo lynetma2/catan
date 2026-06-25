@@ -9,7 +9,6 @@ import {Camera} from "@/game/core/Camera.ts";
 import {layout} from "@/game/utils/HexGeometry/Layout.ts";
 import {DEFAULT_HUD_THEME} from "@/game/rendering/theme/theme.ts";
 import {createTestGameState, TEST_SCENARIOS} from "@/game/tools/testData.ts";
-import {GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
 import {World} from "@/game/world/World.ts";
 import {WorldRenderer} from "@/game/rendering/world/WorldRenderer.ts";
 import type {GameSnapshot} from "@/game/core/types.ts";
@@ -18,13 +17,15 @@ import {SharedStateManager} from "@/game/core/SharedStateManager.ts";
 import {DebugTools} from "@/game/tools/DebugTools.ts";
 import {GameSocketConnection} from "@/game/network/GameSocketClient.ts";
 import type {WebSocketContextValue} from "@/WebSocketContext.ts";
+import type {GameEventMap} from "@/events/shared/AppEvents.ts";
+import {GameServerEvents} from "@/events/game/GameServerEvents.ts";
 
 const DEV_MODE = import.meta.env.DEV;
 
 export class Game {
-    private readonly bus: EventBus
-    private readonly frameQueue: FrameQueue;
-    private sharedState: SharedState;
+    private readonly bus: EventBus<GameEventMap>
+    private readonly frameQueue: FrameQueue<GameEventMap>;
+    private readonly sharedState: SharedState;
     private readonly gamePhase: GamePhaseManager;
     private readonly sharedManager: SharedStateManager;
     private readonly connection: GameSocketConnection;
@@ -49,8 +50,8 @@ export class Game {
     constructor(private readonly canvas: HTMLCanvasElement, ws: WebSocketContextValue, gameId: string, localPlayerId: string) {
         // ── 1. Infrastructure ──────────────────────────────────────────
         this.gameId = gameId;
-        this.bus         = new EventBus();
-        this.frameQueue  = new FrameQueue();
+        this.bus = new EventBus<GameEventMap>();
+        this.frameQueue = new FrameQueue<GameEventMap>();
         this.sharedState = new SharedState();
         this.resolution  = new ResolutionManager(canvas);
         this.gamePhase = new GamePhaseManager(this.bus, this.sharedState);
@@ -68,7 +69,7 @@ export class Game {
 
         // ── 3. Systems ─────────────────────────────────────────────────
         this.hud = new HUD(this.bus, this.sharedState, this.frameQueue, this.resolution);
-        this.world = new World(this.bus, this.frameQueue, this.sharedState, this.camera);
+        this.world = new World(this.bus, this.frameQueue, this.sharedState, this.camera, this.gamePhase);
 
         // ── 4. Renderers ───────────────────────────────────────────────
         const ctx = canvas.getContext('2d')!;
@@ -141,12 +142,15 @@ export class Game {
             this.animationFrameId = requestAnimationFrame(this.loop);
     }
 
-    private loadTestData() {
+    private loadTestData(localPlayerId: string) {
         const load = (snapshot: GameSnapshot) => {
             this.frameQueue.push({
-                type:    GameEventType.GAME_STATE_LOADED,
-                payload: snapshot,
-                source:  GameEventSource.Network,
+                type: GameServerEvents.state.full.success,
+                payload: {
+                    lobbyId: "test",
+                    snapshot,
+                    localPlayerId
+                },
             });
         };
 

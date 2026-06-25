@@ -1,112 +1,124 @@
-// hud/panels/overview/PlayerOverviewPanel.ts
-import {type EventBus} from '@/game/core/EventBus';
-import {type SharedState} from '@/game/core/SharedState';
-import {type NormalizedInputEvent} from '@/game/core/Input/InputEvent';
-import {type ResolutionManager} from '@/game/core/ResolutionManager';
-import {type EventPayloads, GameEventType} from '@/game/events/GameEventTypes';
-import {TradeOfferIncomingPanel} from "@/game/hud/panels/tradeOffer/tradeOfferPanel/TradeOfferIncomingPanel.ts";
-import {TradeOfferOutgoingPanel} from "@/game/hud/panels/tradeOffer/tradeOfferPanel/TradeOfferOutgoingPanel.ts";
+// hud/panels/tradeOffer/TradeOfferManager.ts
+import { type EventBus } from '@/game/core/EventBus';
+import { type SharedState } from '@/game/core/SharedState';
+import { type NormalizedInputEvent } from '@/game/core/Input/InputEvent';
+import { type ResolutionManager } from '@/game/core/ResolutionManager';
+import { GameEventType } from '@/game/events/GameEventTypes';
+import { TradeOfferIncomingPanel } from "@/game/hud/panels/tradeOffer/tradeOfferPanel/TradeOfferIncomingPanel.ts";
+import { TradeOfferOutgoingPanel } from "@/game/hud/panels/tradeOffer/tradeOfferPanel/TradeOfferOutgoingPanel.ts";
 import {
     TradeOfferKind,
     type TradeOfferManagerState,
     type TradeOfferPanelData,
     TradeOfferResponseKind
 } from "@/game/hud/panels/tradeOffer/types.ts";
-import type {FrameQueue} from "@/game/core/FrameQueue.ts";
-import {resolveTradeOfferPanelBounds} from "@/game/hud/panels/tradeOffer/TradeOfferPanelLayout.ts";
+import type { FrameQueue } from "@/game/core/FrameQueue.ts";
+import { resolveTradeOfferPanelBounds } from "@/game/hud/panels/tradeOffer/TradeOfferPanelLayout.ts";
+import type { GameEventMap } from "@/events/shared/AppEvents.ts";
+import { GameServerEvents } from "@/events/game/GameServerEvents.ts";
 
 export class TradeOfferManager {
-    // Panel owns this state — no other system needs it
     private readonly activeTradePanels: (TradeOfferIncomingPanel | TradeOfferOutgoingPanel)[] = [];
 
     constructor(
-        private readonly bus: EventBus,
+        private readonly bus: EventBus<GameEventMap>,
         private readonly shared: SharedState,
-        private readonly frameQueue: FrameQueue,
+        private readonly frameQueue: FrameQueue<GameEventMap>,
         private readonly resolution: ResolutionManager,
     ) {
         this.subscribeToEvents();
     }
 
     // ─── Subscriptions ────────────────────────────────────────────────
-
     private subscribeToEvents() {
-        // Snapshot — full state on load/reload
-        this.bus.on(GameEventType.GAME_STATE_LOADED, e => this.onGameStateLoaded(e.payload));
+        // Full state reload – mapped to new server event
+        this.bus.on(GameServerEvents.state.full.success, (payload) => this.onGameStateLoaded(payload));
 
-        // Add incoming trade event.
-        this.bus.on(GameEventType.TRADE_OFFER_INCOME_RECIEVED, e => this.onIncomingTradeOffer(e.payload));
+        // ------------------------------------------------------------------
+        // Trade offer events have no new equivalents yet – keep old ones via any cast
+        // ------------------------------------------------------------------
+        const bus = this.bus as EventBus<any>;
 
-        // Add outgoing trade event.
-        this.bus.on(GameEventType.TRADE_OFFER_OUTGOING_RECIEVED, e => this.onOutgoingTradeOffer(e.payload));
-
-        // Update trade event.
-        this.bus.on(GameEventType.TRADE_OFFER_ACCEPTED, e => this.onUpdatePlayerResponse(e.payload, TradeOfferResponseKind.Accept));
-        this.bus.on(GameEventType.TRADE_OFFER_DECLINED, e => this.onUpdatePlayerResponse(e.payload, TradeOfferResponseKind.Decline));
-
-        this.bus.on(GameEventType.TRADE_OFFER_CANCELLED, e => this.onTradeOfferCancelled(e.payload));
-
+        bus.on(GameEventType.TRADE_OFFER_INCOME_RECIEVED, (payload: any) => this.onIncomingTradeOffer(payload));
+        bus.on(GameEventType.TRADE_OFFER_OUTGOING_RECIEVED, (payload: any) => this.onOutgoingTradeOffer(payload));
+        bus.on(GameEventType.TRADE_OFFER_ACCEPTED, (payload: any) =>
+            this.onUpdatePlayerResponse(payload, TradeOfferResponseKind.Accept),
+        );
+        bus.on(GameEventType.TRADE_OFFER_DECLINED, (payload: any) =>
+            this.onUpdatePlayerResponse(payload, TradeOfferResponseKind.Decline),
+        );
+        bus.on(GameEventType.TRADE_OFFER_CANCELLED, (payload: any) => this.onTradeOfferCancelled(payload));
     }
 
     // ─── Event handlers ───────────────────────────────────────────────
-
-    private onGameStateLoaded(payload: EventPayloads[GameEventType.GAME_STATE_LOADED]) {
-        // Rebuild entire state from snapshot — wipes any previous state
+    private onGameStateLoaded(
+        payload: GameEventMap[typeof GameServerEvents.state.full.success],
+    ) {
         this.activeTradePanels.splice(0);
-        payload.activeTradeOffers.forEach((tradeOffer: TradeOfferPanelData) => {
-            if (tradeOffer.kind == TradeOfferKind.Incoming) {
-                const tradePanel = new TradeOfferIncomingPanel(this.resolution, this.frameQueue, this.shared, tradeOffer);
-                this.activeTradePanels.push(tradePanel);
+        const tradeOffers = payload.snapshot.activeTradeOffers as TradeOfferPanelData[];
+        tradeOffers.forEach((tradeOffer) => {
+            if (tradeOffer.kind === TradeOfferKind.Incoming) {
+                const panel = new TradeOfferIncomingPanel(
+                    this.resolution, this.frameQueue, this.shared, tradeOffer,
+                );
+                this.activeTradePanels.push(panel);
             } else {
-                const tradePanel = new TradeOfferOutgoingPanel(this.resolution, this.frameQueue, this.shared, tradeOffer);
-                this.activeTradePanels.push(tradePanel);
+                const panel = new TradeOfferOutgoingPanel(
+                    this.resolution, this.frameQueue, this.shared, tradeOffer,
+                );
+                this.activeTradePanels.push(panel);
             }
-        })
+        });
     }
 
-    private onUpdatePlayerResponse(payload: EventPayloads[GameEventType.TRADE_OFFER_ACCEPTED],
-                                   response: TradeOfferResponseKind) {
-        for (const element of this.activeTradePanels) {
-            const panel = element;
+    private onUpdatePlayerResponse(
+        payload: any,
+        response: TradeOfferResponseKind,
+    ) {
+        for (const panel of this.activeTradePanels) {
             if (panel.getTradeOfferId() === payload.tradeOfferId) {
                 panel.updatePlayerResponse(payload.playerId, response);
             }
         }
     }
 
-    private onTradeOfferCancelled(payload: EventPayloads[GameEventType.TRADE_OFFER_CANCELLED]) {
-        const index = this.activeTradePanels.findIndex(panel => panel.getTradeOfferId() === payload.tradeOfferId);
-        if (index !== -1) {
-            this.activeTradePanels.splice(index, 1);
-        }
+    private onTradeOfferCancelled(payload: any) {
+        const idx = this.activeTradePanels.findIndex(
+            (p) => p.getTradeOfferId() === payload.tradeOfferId,
+        );
+        if (idx !== -1) this.activeTradePanels.splice(idx, 1);
     }
 
-    private onIncomingTradeOffer(payload: EventPayloads[GameEventType.TRADE_OFFER_INCOME_RECIEVED]) {
-        const tradePanel = new TradeOfferIncomingPanel(this.resolution, this.frameQueue, this.shared, payload);
-        this.activeTradePanels.push(tradePanel);
+    private onIncomingTradeOffer(payload: any) {
+        const panel = new TradeOfferIncomingPanel(
+            this.resolution, this.frameQueue, this.shared, payload,
+        );
+        this.activeTradePanels.push(panel);
     }
 
-    private onOutgoingTradeOffer(payload: EventPayloads[GameEventType.TRADE_OFFER_OUTGOING_RECIEVED]) {
-        const tradePanel = new TradeOfferOutgoingPanel(this.resolution, this.frameQueue, this.shared, payload);
-        this.activeTradePanels.push(tradePanel);
+    private onOutgoingTradeOffer(payload: any) {
+        const panel = new TradeOfferOutgoingPanel(
+            this.resolution, this.frameQueue, this.shared, payload,
+        );
+        this.activeTradePanels.push(panel);
     }
 
     // ─── Input ────────────────────────────────────────────────────────
-
     handleInput(_event: NormalizedInputEvent): boolean {
-        const bounds = this.activeTradePanels
-            .map((panel, index) => resolveTradeOfferPanelBounds(this.resolution.get(), index));
-
-        return false; // display only for now
+        // display‑only for now
+        this.activeTradePanels.forEach((panel, index) =>
+            resolveTradeOfferPanelBounds(this.resolution.get(), index),
+        );
+        return false;
     }
 
     // ─── State ────────────────────────────────────────────────────────
-
     getState(): TradeOfferManagerState {
-        const states = this.activeTradePanels
-            .map((panel, index) => panel.getState(index));
+        const states = this.activeTradePanels.map((panel, index) =>
+            panel.getState(index),
+        );
         return {
             activeTradePanels: states,
-        }
+        };
     }
 }

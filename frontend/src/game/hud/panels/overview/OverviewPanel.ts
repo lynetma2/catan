@@ -1,150 +1,145 @@
 // hud/panels/overview/PlayerOverviewPanel.ts
-import { type EventBus }             from '@/game/core/EventBus';
-import { type SharedState }          from '@/game/core/SharedState';
-import { type NormalizedInputEvent } from '@/game/core/Input/InputEvent';
-import { type ResolutionManager,
-    type Resolution }           from '@/game/core/ResolutionManager';
-import {type EventPayloads, GameEventType} from '@/game/events/GameEventTypes';
-import type {PlayerOverviewEntry, PlayerOverviewState} from "@/game/hud/panels/overview/types.ts";
+import {EventBus} from '@/game/core/EventBus';
+import {SharedState} from '@/game/core/SharedState';
 import {resolveOverviewPanelBounds, resolvePlayerRows} from "@/game/hud/panels/overview/OverviewPanelLayout.ts";
+import type {GameEventMap} from "@/events/shared/AppEvents.ts";
+import {GameServerEvents} from "@/events/game/GameServerEvents.ts";
+import type {PlayerOverviewEntry, PlayerOverviewState} from "@/game/hud/panels/overview/types.ts";
+import type {Resolution, ResolutionManager} from "@/game/core/ResolutionManager.ts";
+import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 
 export class PlayerOverviewPanel {
-    // Panel owns this state — no other system needs it
     private players: Map<string, PlayerOverviewEntry> = new Map();
 
     constructor(
-        private readonly bus:        EventBus,
-        private readonly shared:     SharedState,
+        private readonly bus: EventBus<GameEventMap>,
+        private readonly shared: SharedState,
         private readonly resolution: ResolutionManager,
     ) {
         this.subscribeToEvents();
     }
 
     // ─── Subscriptions ────────────────────────────────────────────────
-
     private subscribeToEvents() {
-        // Snapshot — full state on load/reload
-        this.bus.on(GameEventType.GAME_STATE_LOADED, e => this.onGameStateLoaded(e.payload));
-
-        // Structural — fires once at game start
-        this.bus.on(GameEventType.GAME_STARTED, e => this.onGameStarted(e.payload));
+        // Full state snapshot
+        this.bus.on(GameServerEvents.state.full.success, (payload) => this.onGameStateLoaded(payload));
 
         // Turn tracking
-        this.bus.on(GameEventType.TURN_STARTED, e => this.onTurnStarted(e.payload));
+        this.bus.on(GameServerEvents.turn.start.success, (payload) => this.onTurnStarted(payload));
 
         // Resource changes
-        this.bus.on(GameEventType.RESOURCES_GRANTED, e => this.onResourcesGranted(e.payload));
-        this.bus.on(GameEventType.RESOURCES_SPENT,   e => this.onResourcesSpent(e.payload));
-        this.bus.on(GameEventType.OPPONENT_CARD_COUNT_CHANGED, e => this.onOpponentCardCountChanged(e.payload));
+        this.bus.on(GameServerEvents.resource.grant.success, (payload) => this.onResourcesGranted(payload));
+        this.bus.on(GameServerEvents.resource.spent.success, (payload) => this.onResourcesSpent(payload));
 
         // Building
-        this.bus.on(GameEventType.BUILD_PLACED, e => this.onBuildPlaced(e.payload));
+        this.bus.on(GameServerEvents.build.settlement.success, (payload) => this.onBuildPlaced(payload));
 
-        // Special cards
-        this.bus.on(GameEventType.LONGEST_ROAD_CHANGED, e => this.onLongestRoadChanged(e.payload));
-        this.bus.on(GameEventType.LARGEST_ARMY_CHANGED, e => this.onLargestArmyChanged(e.payload));
-        this.bus.on(GameEventType.VICTORY_POINTS_CHANGED, e => this.onVictoryPointsChanged(e.payload));
+        // Development cards – opponentCard maps to dev card count
+        this.bus.on(GameServerEvents.overview.opponentCard.success, (payload) => this.onDevCardCountChanged(payload));
+
+        // Special cards & victory points
+        this.bus.on(GameServerEvents.overview.longestRoad.success, (payload) => this.onLongestRoadChanged(payload));
+        this.bus.on(GameServerEvents.overview.largestArmy.success, (payload) => this.onLargestArmyChanged(payload));
+        this.bus.on(GameServerEvents.overview.victoryPoint.success, (payload) => this.onVictoryPointsChanged(payload));
     }
 
     // ─── Event handlers ───────────────────────────────────────────────
-
-    private onGameStarted(payload: EventPayloads[GameEventType.GAME_STARTED]) {
-        payload.players.forEach(p => {
+    private onGameStateLoaded(
+        payload: GameEventMap[typeof GameServerEvents.state.full.success]
+    ) {
+        this.players.clear();
+        const {snapshot} = payload;
+        snapshot.players.forEach(p => {
             this.players.set(p.id, {
                 playerId:       p.id,
                 name:           p.name,
                 color:          p.color,
-                victoryPoints:  0,
-                cardCount:      0,
+                victoryPoints: p.victoryPoints,
+                cardCount: p.cardCount,
                 devCardCount:   0,
-                hasLongestRoad: false,
-                hasLargestArmy: false,
-                usedRobbers:    0,
-                isCurrentTurn:  false,
+                hasLongestRoad: p.hasLongestRoad,
+                hasLargestArmy: p.hasLargestArmy,
+                usedRobbers: p.usedRobbers,
+                isCurrentTurn: p.id === snapshot.currentPlayerId,
             });
         });
     }
 
-    private onTurnStarted(payload: EventPayloads[GameEventType.TURN_STARTED]) {
-        this.players.forEach((p, id) => {
-            p.isCurrentTurn = id === payload.playerId;
+    private onTurnStarted(
+        payload: GameEventMap[typeof GameServerEvents.turn.start.success]
+    ) {
+        this.players.forEach((entry, id) => {
+            entry.isCurrentTurn = id === payload.playerId;
         });
     }
 
-    private onResourcesGranted(payload: EventPayloads[GameEventType.RESOURCES_GRANTED]) {
+    private onResourcesGranted(
+        payload: GameEventMap[typeof GameServerEvents.resource.grant.success]
+    ) {
         const player = this.players.get(payload.playerId);
         if (player) player.cardCount += payload.resources.length;
     }
 
-    private onResourcesSpent(payload: EventPayloads[GameEventType.RESOURCES_SPENT]) {
+    private onResourcesSpent(
+        payload: GameEventMap[typeof GameServerEvents.resource.spent.success]
+    ) {
         const player = this.players.get(payload.playerId);
-        if (player) player.cardCount = Math.max(0, player.cardCount - payload.amount);
+        if (player) player.cardCount = Math.max(0, player.cardCount - payload.resources.length);
     }
 
-    private onBuildPlaced(payload: EventPayloads[GameEventType.BUILD_PLACED]) {
+    private onBuildPlaced(
+        payload: GameEventMap[typeof GameServerEvents.build.settlement.success]
+    ) {
         const player = this.players.get(payload.playerId);
         if (!player) return;
-        if (payload.pieceType === 'settlement') player.victoryPoints++;
+        if (payload.pieceType === 'settlement') player.victoryPoints += 1;
         if (payload.pieceType === 'city')       player.victoryPoints += 2;
     }
 
-    private onLongestRoadChanged(payload: EventPayloads[GameEventType.LONGEST_ROAD_CHANGED]) {
-        this.players.forEach((p, id) => {
-            p.hasLongestRoad = id === payload.playerId;
-        });
-    }
-
-    private onLargestArmyChanged(payload: EventPayloads[GameEventType.LARGEST_ARMY_CHANGED]) {
-        this.players.forEach((p, id) => {
-            p.hasLargestArmy = id === payload.playerId;
-        });
-    }
-
-    private onVictoryPointsChanged(payload: EventPayloads[GameEventType.VICTORY_POINTS_CHANGED]) {
+    private onDevCardCountChanged(
+        payload: GameEventMap[typeof GameServerEvents.overview.opponentCard.success]
+    ) {
         const player = this.players.get(payload.playerId);
-        if (player) player.victoryPoints = payload.points;
+        if (player) player.devCardCount = payload.value;
     }
 
-    private onGameStateLoaded(payload: EventPayloads[GameEventType.GAME_STATE_LOADED]) {
-        // Rebuild entire state from snapshot — wipes any previous state
-        this.players.clear();
-        payload.players.forEach(p => {
-            this.players.set(p.id, {
-                playerId:       p.id,
-                name:           p.name,
-                color:          p.color,
-                victoryPoints:  p.victoryPoints,   // ← from snapshot, not zero
-                cardCount:      p.cardCount,
-                devCardCount:   p.devCardCount,
-                hasLongestRoad: p.hasLongestRoad,
-                hasLargestArmy: p.hasLargestArmy,
-                usedRobbers:    p.usedRobbers,
-                isCurrentTurn:  p.id === payload.currentPlayerId,
-            });
+    private onLongestRoadChanged(
+        payload: GameEventMap[typeof GameServerEvents.overview.longestRoad.success]
+    ) {
+        this.players.forEach((entry, id) => {
+            entry.hasLongestRoad = id === payload.playerId;
         });
     }
 
-    private onOpponentCardCountChanged(payload: EventPayloads[GameEventType.OPPONENT_CARD_COUNT_CHANGED]) {
+    private onLargestArmyChanged(
+        payload: GameEventMap[typeof GameServerEvents.overview.largestArmy.success]
+    ) {
+        this.players.forEach((entry, id) => {
+            entry.hasLargestArmy = id === payload.playerId;
+        });
+    }
+
+    private onVictoryPointsChanged(
+        payload: GameEventMap[typeof GameServerEvents.overview.victoryPoint.success]
+    ) {
         const player = this.players.get(payload.playerId);
-        if (player) player.cardCount = payload.cardCount
+        if (player) player.victoryPoints = payload.value;
     }
 
     // ─── Input ────────────────────────────────────────────────────────
-
     handleInput(_event: NormalizedInputEvent): boolean {
         return false; // display only for now
     }
 
     // ─── State ────────────────────────────────────────────────────────
-
     getState(): PlayerOverviewState {
-        const r       = this.resolution.get();
+        const r = this.resolution.get();
         const players = Array.from(this.players.values());
 
         return {
-            bounds:  resolveOverviewPanelBounds(players.length, r),
+            bounds: resolveOverviewPanelBounds(players.length, r),
             players,
-            rows:    resolvePlayerRows(players, r),
+            rows: resolvePlayerRows(players, r),
         };
     }
 

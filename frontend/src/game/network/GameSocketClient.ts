@@ -1,21 +1,11 @@
-import {Client, type IMessage} from "@stomp/stompjs";
-import SockJS from "sockjs-client";
-import type {EventBus} from "@/game/core/EventBus.ts";
-import type {FrameQueue} from "@/game/core/FrameQueue.ts";
-import {GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
-import {GameSocketInboundHandler} from "@/game/network/GameSocketInboundHandler.ts";
-import {GameSocketOutboundHandler} from "@/game/network/GameSocketOutboundHandler.ts";
-import type {WebSocketContextValue} from "@/WebSocketContext.ts";
+import type {IMessage} from "@stomp/stompjs";
+import type {EventBus} from "@/game/core/EventBus";
+import type {FrameQueue} from "@/game/core/FrameQueue";
+import {GameSocketInboundHandler} from "@/game/network/GameSocketInboundHandler";
+import {GameSocketOutboundHandler} from "@/game/network/GameSocketOutboundHandler";
+import type {WebSocketContextValue} from "@/WebSocketContext";
+import {GameActionEvents} from "@/events/game/GameActionEvents";
 
-const WS_URL = import.meta.env.VITE_WS_URL ?? "http://localhost:8080/ws";
-
-/**
- * Owns the full WebSocket lifecycle for one game session.
- *
- * Wires together:
- *  - GameSocketInboundHandler  (STOMP → FrameQueue)
- *  - GameSocketOutboundHandler (EventBus → STOMP)
- */
 export class GameSocketConnection {
     private readonly inbound: GameSocketInboundHandler;
     private readonly outbound: GameSocketOutboundHandler;
@@ -24,46 +14,53 @@ export class GameSocketConnection {
     constructor(
         private readonly gameId: string,
         webSocket: WebSocketContextValue,
-        bus: EventBus,
-        frameQueue: FrameQueue,
+        bus: EventBus<any>,               // ← accepts the combined bus
+        frameQueue: FrameQueue<any>,      // ← accepts the combined queue
     ) {
         this.webSocket = webSocket;
-        this.inbound = new GameSocketInboundHandler(frameQueue);
 
-        this.outbound = new GameSocketOutboundHandler(
-            gameId,
-            bus,
-            (destination, payload) => this.webSocket.sendMessage(destination, payload),
+        // inbound: STOMP → FrameQueue (cast to narrow server type internally)
+        this.inbound = new GameSocketInboundHandler(
+            frameQueue as FrameQueue<any> // already `any`, handler expects <GameServerEventMap>
         );
 
-        if (this.webSocket.isConnected) {
-            //Setup the subscribers, and ask for the initial game state.
-            this.subscribe();
-            this.requestFullState(bus);
-        } else {
-            this.webSocket.onConnect(() => {
-                console.info(`%c[WS] Connected — game: ${this.gameId}`, "color: #50c050");
-                //Setup the subscribers, and ask for the initial game state.
-                this.subscribe();
-                this.requestFullState(bus);
-            })
-        }
+        // outbound: EventBus → STOMP (cast to action map internally)
+        this.outbound = new GameSocketOutboundHandler(
+            gameId,
+            bus as EventBus<any>,   // outbound handler expects <GameActionEventMap>
+            (destination, payload) =>
+                this.webSocket.sendMessage(destination, payload),
+        );
+
+        this.initialize(bus);
     }
 
     public destroy(): void {
         this.outbound.destroy();
     }
 
-    // ── Private ────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
 
-    private subscribe(): void {
-        //Everything
+    private initialize(bus: EventBus<any>): void {
+        const subscribeAndRequest = () => {
+            console.info(`[WS] Connected — game: ${this.gameId}`);
+            this.subscribe(bus);
+            this.requestFullState(bus);
+        };
+
+        if (this.webSocket.isConnected) {
+            subscribeAndRequest();
+        } else {
+            this.webSocket.onConnect(() => subscribeAndRequest());
+        }
+    }
+
+    private subscribe(_bus: EventBus<any>): void {
         this.webSocket.subscribe(
             `/topic/game/${this.gameId}`,
             (msg) => this.onMessage(msg),
         );
 
-        //Private messages
         this.webSocket.subscribe(
             `/user/queue/game`,
             (msg) => this.onMessage(msg),
@@ -73,14 +70,13 @@ export class GameSocketConnection {
     private onMessage(msg: IMessage): void {
         try {
             const payload = JSON.parse(msg.body);
-            const messageType: string = msg.headers["message-type"] ?? payload?.type;
+            const messageType: string =
+                msg.headers["message-type"] ?? payload?.type;
 
             if (!messageType) {
                 console.warn("[WS] Received message with no type", payload);
                 return;
             }
-
-            console.log("Got a message", payload);
 
             this.inbound.handle(messageType, payload);
         } catch (err) {
@@ -88,7 +84,14 @@ export class GameSocketConnection {
         }
     }
 
-    private requestFullState(bus: EventBus): void {
-        bus.emit({type: GameEventType.REQUEST_GAME_STATE, payload: {}, source: GameEventSource.Network});
+    /**
+     * Request the full game state – uses the new "state" action.
+     * The outbound handler automatically forwards it to the server.
+     */
+    private requestFullState(bus: EventBus<any>): void {
+        bus.emit({
+            type: GameActionEvents.state,
+            payload: {},
+        });
     }
 }

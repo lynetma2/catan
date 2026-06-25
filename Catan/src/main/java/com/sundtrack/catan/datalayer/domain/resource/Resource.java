@@ -1,3 +1,6 @@
 package com.sundtrack.catan.datalayer.domain.resource;
 
-public record Resource(String uid, ResourceType resourceType) { }
+import java.util.UUID;
+
+public record Resource(UUID uid, ResourceType resourceType) {
+}

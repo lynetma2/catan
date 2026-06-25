@@ -1,65 +1,60 @@
-import type {EventBus} from "@/game/core/EventBus.ts";
-import type {GameActionEvent} from "@/events/game/GameActionEvents.ts";
-import {GameActionEvents, LobbyActionEventCreators,} from "@/events/game/GameActionEvents.ts";
-
-type PublishFn = (destination: string, payload: unknown) => void;
+import type {EventBus} from "@/game/core/EventBus";
+import {GameActionEvents} from "@/events/game/GameActionEvents";
 
 /**
- * Subscribes to the EventBus and translates local GameActionEvents into
- * outbound STOMP messages via the publish callback supplied by GameSocketConnection.
- *
- * Mirrors GameSocketMessageHandler:
- *   Inbound:  STOMP → FrameQueue → EventBus  (GameSocketMessageHandler)
- *   Outbound: EventBus → STOMP publish        (GameSocketOutboundHandler)
- *
- * Add a new subscription here for every client → server message type.
+ * All GameActionEvents → STOMP (single endpoint)
  */
 export class GameSocketOutboundHandler {
     private readonly unsubscribers: Array<() => void> = [];
+    private readonly publishDestination: string;
 
+    // The bus is now typed loosely so it can accept the combined bus,
+    // but inside we only ever listen to action events (safe).
     constructor(
         private readonly gameId: string,
-        private readonly bus: EventBus,
-        private readonly publish: PublishFn,
+        private readonly bus: EventBus<any>,
+        private readonly publish: (destination: string, payload: unknown) => void,
     ) {
+        this.publishDestination = `/app/game/${this.gameId}/events`;
         this.register();
     }
 
     public destroy(): void {
-        this.unsubscribers.forEach((fn) => fn());
+        this.unsubscribers.forEach(fn => fn());
         this.unsubscribers.length = 0;
     }
 
-    // ── Private ────────────────────────────────────────────────────────
-
     private register(): void {
-        console.log("Registering outbound handler");
+        console.log("Registering outbound handler (auto-listen mode)");
 
-        // Request game state (client → server)
-        this.on(GameActionEvents.state, () => {
-            console.log(`Sending REQUEST_GAME_STATE for game ${this.gameId}`);
-            this.publish(
-                `/app/game/${this.gameId}/events`,
-                LobbyActionEventCreators.state(),
+        const forward = (event: any) => {
+            this.publish(this.publishDestination, event);
+        };
+
+        const actionEvents = this.collectActionEvents(GameActionEvents);
+
+        for (const eventType of actionEvents) {
+            // We know these are valid keys of GameActionEventMap
+            const handler = (payload: any) => {
+                forward({type: eventType, payload});
+            };
+
+            this.bus.on(eventType as any, handler);
+            this.unsubscribers.push(() =>
+                this.bus.off(eventType as any, handler)
             );
-        });
-
-        // ── Extend here as the backend grows ──────────────────────────────
-        // this.on(GameActionEvents.move, (event) => {
-        //   this.publish(`/app/game/${this.gameId}/move`, event.payload);
-        // });
+        }
     }
 
-    /**
-     * Type-safe subscription helper.
-     * @param type - One of the known GameActionEvent types
-     * @param handler - Callback receiving the full event object
-     */
-    private on<T extends GameActionEvent["type"]>(
-        type: T,
-        handler: (event: Extract<GameActionEvent, { type: T }>) => void,
-    ): void {
-        this.bus.on(type, handler);
-        this.unsubscribers.push(() => this.bus.off(type, handler));
+    private collectActionEvents(obj: any): string[] {
+        const result: string[] = [];
+        for (const value of Object.values(obj)) {
+            if (typeof value === "string") {
+                result.push(value);
+            } else if (typeof value === "object") {
+                result.push(...this.collectActionEvents(value));
+            }
+        }
+        return result;
     }
 }

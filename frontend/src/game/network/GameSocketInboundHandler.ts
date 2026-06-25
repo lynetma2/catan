@@ -1,43 +1,69 @@
-import { FrameQueue } from "@/game/core/FrameQueue.ts";
-import { GameEventSource, GameEventType } from "@/game/events/GameEventTypes.ts";
-import type { GameSnapshot } from "@/game/core/types.ts";
+// GameSocketInboundHandler.ts
 
-/**
- * Translates raw STOMP message payloads into typed GameEvents and
- * pushes them onto the FrameQueue.
- *
- * Add a new `case` here for every server → client message type.
- * The string keys must match whatever the backend puts in the
- * `message-type` header (or `payload.type` field).
- */
+import type {FrameQueue} from "@/game/core/FrameQueue";
+import type {GameServerEventMap} from "@/events/game/GameServerEvents";
+import {GameServerEvents} from "@/events/game/GameServerEvents";
+import type {GameSnapshot} from "@/game/core/types";
+
 export class GameSocketInboundHandler {
-    constructor(private readonly frameQueue: FrameQueue) {}
+    private readonly handlers: Record<string, (payload: any) => void> = {};
 
-    public handle(messageType: string, payload: unknown): void {
-        switch (messageType) {
-            case GameEventType.GAME_STATE_LOADED:
-                // @ts-ignore this is bad
-                this.onGameStateLoaded(payload.payload as GameSnapshot);
-                break;
-
-            // ── Extend here as the backend grows ──────────────────────
-            // case "PLAYER_MOVED":
-            //     this.onPlayerMoved(payload as PlayerMovedPayload);
-            //     break;
-
-            default:
-                console.warn(`[WS] Unhandled message type: "${messageType}"`, payload);
-        }
+    constructor(
+        private readonly frameQueue: FrameQueue<GameServerEventMap>
+    ) {
+        this.registerHandlers();
+        // Optional: verify registration
+        console.debug("[Inbound] Registered event types:", Object.keys(this.handlers));
     }
 
-    // ── Handlers ───────────────────────────────────────────────────────
+    /**
+     * Recursively flatten all nested event type strings.
+     */
+    private flattenEventTypes(obj: any): string[] {
+        const result: string[] = [];
+        for (const value of Object.values(obj)) {
+            if (typeof value === "string") {
+                result.push(value);
+            } else if (value && typeof value === "object") {
+                result.push(...this.flattenEventTypes(value));
+            }
+        }
+        return result;
+    }
 
-    private onGameStateLoaded(snapshot: GameSnapshot): void {
-        console.log("this is payload", snapshot);
-        this.frameQueue.push({
-            type:    GameEventType.GAME_STATE_LOADED,
-            payload: snapshot,
-            source:  GameEventSource.Network,
-        });
+    private registerHandlers(): void {
+        // 1. Auto‑register every known server event
+        const allEventTypes = this.flattenEventTypes(GameServerEvents);
+        for (const eventType of allEventTypes) {
+            this.handlers[eventType] = (event: any) => {
+                console.log("Handling eventType:" + eventType + " payload:", event);
+                this.frameQueue.push({
+                    type: eventType as any,
+                    payload: event.payload,
+                });
+            };
+        }
+
+        // 2. Override the full‑state event to inject lobbyId & localPlayerId
+        const fullStateKey = GameServerEvents.state.full.success;
+        this.handlers[fullStateKey] = (event: any) => {
+            // The server sends the snapshot directly at the root.
+            // We wrap it with the required metadata.
+            console.log("Handling eventType:" + fullStateKey + " payload:", event);
+            this.frameQueue.push({
+                type: fullStateKey,
+                payload: event.payload,
+            });
+        };
+    }
+
+    public handle(messageType: string, payload: unknown): void {
+        console.debug("[Inbound] Handling:", messageType, "Handlers keys:", Object.keys(this.handlers));
+        const handler = this.handlers[messageType];
+        if (!handler) {
+            console.warn(`[WS] Unhandled server event: "${messageType}"`, payload);
+            return;
+        }
+        handler(payload);
     }
 }

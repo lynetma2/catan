@@ -1,7 +1,7 @@
 package com.sundtrack.catan.datalayer.domain.building;
 
-public enum BuildingKind {
+public enum PieceType {
     ROAD,
     SETTLEMENT,
-    CITY
+    CITY;
 }

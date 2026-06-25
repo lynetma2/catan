@@ -11,8 +11,8 @@ export class SharedState {
     private _currentPhase:    GamePhase | null = null;
     private _buildMode:       PieceType | null = null;
     private _players:         Map<string, Player> = new Map();
-    private _mustDiscard: boolean;
-    private _discardCount: number;
+    private _mustDiscard: boolean; //TODO create better abstraction for this.
+    private _discardCount: number; //Todo create better abstraction for this.
 
     // core/SharedState.ts
     loadFromSnapshot(payload: GameSnapshot, localPlayerId: string) {
@@ -165,5 +165,32 @@ export class SharedState {
                     .filter(r => r.resourceType === type)
                     .length >= (cost[type] ?? 0)
             );
+    }
+}
+
+//TODO refactor to use an object like this:
+export interface GlobalState {
+    localPlayer: {
+        id: string;
+        name: string;
+        color: string;
+        resources: Resource[];
+        devCards: string;
+        //ETC
+    }
+    turnState: {
+        currentPlayerId: string;
+        currentPhase: string;
+        //TODO add something to handle the discard flow when needed.
+        //TODO add something to handle the robber flow when needed.
+    }
+    opponents: { //Should be a list
+        id: string;
+        name: string;
+        color: string;
+        resourceCount: number;
+        devCount: number;
+        robbersUsed: number;
+        //ETC
     }
 }

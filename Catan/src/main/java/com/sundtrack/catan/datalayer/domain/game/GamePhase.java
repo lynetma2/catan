@@ -2,26 +2,49 @@ package com.sundtrack.catan.datalayer.domain.game;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.sundtrack.catan.datalayer.domain.event.ClientAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.RollDiceAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceRoadAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceSettlementAction;
+import com.sundtrack.catan.datalayer.domain.exceptions.validation.IllegalGamePhaseException;
+
+import java.util.Set;
 
 public enum GamePhase {
-    SETUP_PLACE_SETTLEMENT("setup_place_settlement"),
-    SETUP_PLACE_ROAD("setup_place_road"),
-    PRE_ROLL("pre_roll"),
-    POST_ROLL("post_roll"),
-    ROBBER_PLACEMENT("robber_placement"),
-    ROBBER_STEAL("robber_steal"),
-    TRADING("trading"),
-    END("end");
+    SETUP_PLACE_SETTLEMENT("setup_place_settlement",
+            Set.of(PlaceSettlementAction.class)),
+    SETUP_PLACE_ROAD("setup_place_road",
+            Set.of(PlaceRoadAction.class)),
+    PRE_ROLL("pre_roll",
+            Set.of(RollDiceAction.class)),
+    POST_ROLL("post_roll",
+            Set.of()),
+    ROBBER_PLACEMENT("robber_placement",
+            Set.of()),
+    ROBBER_STEAL("robber_steal",
+            Set.of()),
+    TRADING("trading",
+            Set.of()),
+    END("end",
+            Set.of());
+
+    //TODO finish this class!
 
     private final String value;
+    private final Set<Class<? extends ClientAction>> allowedActions;
 
-    GamePhase(String value) {
+    GamePhase(String value, Set<Class<? extends ClientAction>> allowedActions) {
         this.value = value;
+        this.allowedActions = allowedActions;
     }
 
     @JsonValue
     public String getValue() {
         return value;
+    }
+
+    public Set<Class<? extends ClientAction>> getAllowedActions() {
+        return allowedActions;
     }
 
     @JsonCreator
@@ -32,5 +55,15 @@ public enum GamePhase {
             }
         }
         throw new IllegalArgumentException("Unknown GamePhase: " + value);
+    }
+
+    public void validateAllowedAction(ClientAction action) {
+        if (!allowedActions.contains(action.getClass())) {
+            throw new IllegalGamePhaseException(this);
+        }
+    }
+
+    public boolean isSetupPhase() {
+        return this == SETUP_PLACE_SETTLEMENT || this == SETUP_PLACE_ROAD;
     }
 }

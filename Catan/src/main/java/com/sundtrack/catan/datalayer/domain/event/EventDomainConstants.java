@@ -14,6 +14,9 @@ public final class EventDomainConstants {
     public static final String GAME = "game";
     public static final String PLAYER = "player";
     public static final String BUILD = "build";
+    public static final String RESOURCE = "resource";
+    public static final String STATE = "state";
+    public static final String TURN = "turn";
 
     // Status constants
     public static final String REJECTED = "rejected";
