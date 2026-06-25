@@ -1,11 +1,12 @@
 package com.sundtrack.catan.session.game.eventHandlers.build;
 
-import com.sundtrack.catan.datalayer.domain.board.Edge;
+import com.sundtrack.catan.datalayer.domain.board.Vertex;
 import com.sundtrack.catan.datalayer.domain.building.Building;
 import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceRoadAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceCityAction;
+import com.sundtrack.catan.datalayer.domain.event.game.server.build.BuildCityEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.build.BuildRoadEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceSpentEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseChangedEvent;
@@ -22,16 +23,16 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 
 @Component
-@HandlesEvent(PlaceRoadAction.class)
-public class GamePlaceRoadHandler implements GameActionHandler<PlaceRoadAction> {
+@HandlesEvent(PlaceCityAction.class)
+public class GamePlaceCityHandler implements GameActionHandler<PlaceCityAction> {
     private final GameStore gameStore;
 
-    public GamePlaceRoadHandler(GameStore gameStore) {
+    public GamePlaceCityHandler(GameStore gameStore) {
         this.gameStore = gameStore;
     }
 
     @Override
-    public EventResult<ServerEvent> handle(GameContext context, PlaceRoadAction action) {
+    public EventResult<ServerEvent> handle(GameContext context, PlaceCityAction action) {
         Game game = gameStore.get(context.gameId());
 
         doValidations(game, context, action);
@@ -44,38 +45,28 @@ public class GamePlaceRoadHandler implements GameActionHandler<PlaceRoadAction> 
         return events;
     }
 
-    private void doValidations(Game game, GameContext context, PlaceRoadAction action) {
+    private void doValidations(Game game, GameContext context, PlaceCityAction action) {
         game.validateCurrentPlayer(context.playerId());
         game.getCurrentPhase().validateAllowedAction(action);
-        game.validateBoardRoad(action.target(), context.playerId());
-        game.validateCanAfford(PieceType.ROAD, context.playerId());
+        game.validateBoardCity(action.target(), context.playerId());
+        game.validateCanAfford(PieceType.CITY, context.playerId());
     }
 
-    private MutationResult doMutations(Game game, GameContext context, PlaceRoadAction action) {
-        List<Resource> deductedResources = game.deduct(PieceType.ROAD, context.playerId());
-        Building<Edge> road = game.addRoad(action.target(), context.playerId());
+    private MutationResult doMutations(Game game, GameContext context, PlaceCityAction action) {
+        List<Resource> deductedResources = game.deduct(PieceType.CITY, context.playerId());
+        Building<Vertex> city = game.addCity(action.target(), context.playerId());
         Optional<Game.PhaseAdvanceResult> phaseAdvance = game.advancePhaseAfterRoad();
 
-        return new MutationResult(road, deductedResources, phaseAdvance);
+        return new MutationResult(city, deductedResources, phaseAdvance);
     }
 
     private EventResult<ServerEvent> createResults(GameContext context, MutationResult result) {
         List<ServerEvent> serverEvents = new ArrayList<>();
 
-        serverEvents.add(new BuildRoadEvent(
-                result.road().getLocation(), context.playerId()
+        serverEvents.add(new BuildCityEvent(
+                result.city().getLocation(), context.playerId()
         ));
-
-        result.phaseAdvance().ifPresent(advance -> {
-            serverEvents.add(new GamePhaseChangedEvent(advance.newPhase()));
-
-            if (advance.turnPassed()) {
-                serverEvents.add(new TurnEndEvent(context.playerId()));
-                serverEvents.add(new TurnStartEvent(advance.newCurrentPlayerId()));
-            }
-        });
-
-        //TODO add events of the deducted amount of cards from the player.
+        //TODO add events of the deducted amount of cards from the player. to opponents
 
         Map<UUID, ServerEvent> directed = result.deductedResources().isEmpty()
                 ? Map.of()
@@ -85,7 +76,7 @@ public class GamePlaceRoadHandler implements GameActionHandler<PlaceRoadAction> 
     }
 
     private record MutationResult(
-            Building<Edge> road,
+            Building<Vertex> city,
             List<Resource> deductedResources,
             Optional<Game.PhaseAdvanceResult> phaseAdvance
     ) {

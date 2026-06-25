@@ -46,7 +46,7 @@ public class GamePlaceSettlementHandler implements GameActionHandler<PlaceSettle
     private void doValidations(Game game, GameContext context, PlaceSettlementAction action) {
         game.validateCurrentPlayer(context.playerId());
         game.getCurrentPhase().validateAllowedAction(action);
-        game.validateBoardVertex(action.target(), context.playerId());
+        game.validateBoardSettlement(action.target(), context.playerId());
         game.validateCanAfford(PieceType.SETTLEMENT, context.playerId());
     }
 

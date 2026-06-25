@@ -28,6 +28,9 @@ public class Game {
     public record PhaseAdvanceResult(GamePhase newPhase, boolean turnPassed, UUID newCurrentPlayerId) {
     }
 
+    public record TurnAdvanceResult(UUID previousPlayerId, UUID newCurrentPlayerId, int newTurnNumber) {
+    }
+
     private UUID id;
     private List<GamePlayer> players;
     private List<Tile> tiles;
@@ -39,7 +42,7 @@ public class Game {
     private TurnOrder turnOrder;
     private DicePair dicePair;
 
-    public Game(UUID id, List<GamePlayer> players, List<Tile> tiles, List<Building<?>> buildings, GamePhase currentPhase, Integer turnNumber, List<TradeOffer> activeTradeOffers, List<RecordedEvent> gameEvents, TurnOrder turnOrder) {
+    public Game(UUID id, List<GamePlayer> players, List<Tile> tiles, List<Building<?>> buildings, GamePhase currentPhase, Integer turnNumber, List<TradeOffer> activeTradeOffers, List<RecordedEvent> gameEvents, TurnOrder turnOrder, DicePair dicePair) {
         this.id = id;
         this.players = players;
         this.tiles = tiles;
@@ -49,6 +52,7 @@ public class Game {
         this.activeTradeOffers = activeTradeOffers;
         this.gameEvents = gameEvents;
         this.turnOrder = turnOrder;
+        this.dicePair = dicePair;
     }
 
     public UUID getId() {
@@ -115,7 +119,7 @@ public class Game {
         this.gameEvents = gameEvents;
     }
 
-    public void validateBoardVertex(Vertex vertex, UUID playerId) {
+    public void validateBoardSettlement(Vertex vertex, UUID playerId) {
         // 1. Check that the vertex is free
         if (isVertexOccupied(vertex)) {
             throw new VertexOccupiedException(vertex);
@@ -132,7 +136,23 @@ public class Game {
         }
     }
 
-    public void validateBoardEdge(Edge edge, UUID playerId) {
+    public void validateBoardCity(Vertex vertex, UUID playerId) {
+        // 1. There must be a settlement at this vertex...
+        Building<?> existing = getBuildingAt(vertex)
+                .orElseThrow(() -> new NoSettlementToUpgradeException(vertex));
+
+        // 2. ...owned by this player...
+        if (!existing.getOwnerId().equals(playerId)) {
+            throw new NotOwnerException(vertex, playerId);
+        }
+
+        // 3. ...and it must actually be a settlement, not already a city
+        if (existing.getKind() != PieceType.SETTLEMENT) {
+            throw new AlreadyCityException(vertex, existing);
+        }
+    }
+
+    public void validateBoardRoad(Edge edge, UUID playerId) {
         // 1. Edge must be free
         if (isEdgeOccupied(edge)) {
             throw new EdgeOccupiedException(edge);
@@ -168,6 +188,12 @@ public class Game {
         Building<Edge> road = Building.road(playerId, edge);
         buildings.add(road);
         return road;
+    }
+
+    public Building<Vertex> addCity(Vertex vertex, UUID playerId) {
+        Building<Vertex> city = Building.city(playerId, vertex);
+        buildings.add(city);
+        return city;
     }
 
     public UUID getCurrentPlayerId() {
@@ -254,6 +280,14 @@ public class Game {
         return gamePhase;
     }
 
+    public TurnAdvanceResult advanceTurn() {
+        UUID previousPlayerId = turnOrder.currentPlayerId();
+        turnOrder.advance();
+        turnNumber++;
+        currentPhase = GamePhase.PRE_ROLL;
+        return new TurnAdvanceResult(previousPlayerId, turnOrder.currentPlayerId(), turnNumber);
+    }
+
     private GamePlayer getPlayerOrThrow(UUID playerId) {
         return players.stream()
                 .filter(p -> p.getId().equals(playerId))
@@ -262,9 +296,14 @@ public class Game {
     }
 
     private boolean isVertexOccupied(Vertex vertex) {
+        return getBuildingAt(vertex).isPresent();
+    }
+
+    private Optional<Building<?>> getBuildingAt(Vertex vertex) {
         return buildings.stream()
                 .filter(b -> b.getLocation() instanceof Vertex)
-                .anyMatch(b -> b.getLocation().equals(vertex));
+                .filter(b -> b.getLocation().equals(vertex))
+                .findFirst();
     }
 
     private boolean isAnyAdjacentVertexOccupied(Vertex vertex) {

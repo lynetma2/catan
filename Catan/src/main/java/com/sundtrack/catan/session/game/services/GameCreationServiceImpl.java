@@ -2,10 +2,7 @@ package com.sundtrack.catan.session.game.services;
 
 import com.sundtrack.catan.datalayer.domain.board.BoardFactory;
 import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
-import com.sundtrack.catan.datalayer.domain.game.Game;
-import com.sundtrack.catan.datalayer.domain.game.GamePhase;
-import com.sundtrack.catan.datalayer.domain.game.GamePlayer;
-import com.sundtrack.catan.datalayer.domain.game.TurnOrder;
+import com.sundtrack.catan.datalayer.domain.game.*;
 import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
 import com.sundtrack.catan.datalayer.domain.lobby.LobbyPlayer;
 import com.sundtrack.catan.session.game.services.interfaces.GameCreationService;
@@ -33,6 +30,7 @@ public class GameCreationServiceImpl implements GameCreationService {
         List<Tile> tiles = boardFactory.createRandom();
         List<GamePlayer> gamePlayers = createPlayers(lobbyPlayers);
         TurnOrder turnOrder = TurnOrder.startingNewGame(lobbyPlayers.keySet().stream().toList());
+        DicePair dicePair = new  DicePair();
 
         return new Game(
                 id,
@@ -43,7 +41,8 @@ public class GameCreationServiceImpl implements GameCreationService {
                 0,
                 new ArrayList<>(),
                 new ArrayList<>(),
-                turnOrder
+                turnOrder,
+                dicePair
         );
     }
 
