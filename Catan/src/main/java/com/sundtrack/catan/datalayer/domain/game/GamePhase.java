@@ -23,8 +23,6 @@ public enum GamePhase {
             Set.of()),
     ROBBER_STEAL("robber_steal",
             Set.of()),
-    TRADING("trading",
-            Set.of()),
     END("end",
             Set.of());
 
@@ -66,4 +64,26 @@ public enum GamePhase {
     public boolean isSetupPhase() {
         return this == SETUP_PLACE_SETTLEMENT || this == SETUP_PLACE_ROAD;
     }
+
+    /**
+     * Robber flow:
+     * Pre-Roll -> Robber Placement -> Robber Steal -> Post roll.
+     *
+     * Development Card flows
+     * Knight flow:
+     * Robber Placement -> Robber Steal -> Post roll.
+     *
+     * Road building flow:
+     * RoadBuilding -> RoadBuilding -> Post roll.
+     *
+     * Monopoly flow:
+     * Claim all ressources of a certain kind
+     * No flow should be needed.
+     *
+     * Year of Plenty flow:
+     * No flow should be needed.
+     *
+     * Victory Pint card:
+     * No flow should be needed.
+     */
 }
