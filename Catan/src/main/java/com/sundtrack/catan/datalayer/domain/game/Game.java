@@ -340,7 +340,9 @@ public class Game {
         GamePlayer targetPlayer = getPlayerOrThrow(targetPlayerId);
         GamePlayer retrievingPlayer = getPlayerOrThrow(retrievingPlayerId);
 
-        targetPlayer.
+        Resource resource = targetPlayer.steal();
+        retrievingPlayer.addResource(resource);
+        return resource;
     }
 
     private GamePlayer getPlayerOrThrow(UUID playerId) {

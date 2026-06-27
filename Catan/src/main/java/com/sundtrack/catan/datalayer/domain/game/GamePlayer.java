@@ -189,4 +189,8 @@ public class GamePlayer {
 
         return stolen;
     }
+
+    public void addResource(Resource resource) {
+        this.resources.add(resource);
+    }
 }
