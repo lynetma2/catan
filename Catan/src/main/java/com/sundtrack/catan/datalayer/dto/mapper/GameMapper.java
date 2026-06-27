@@ -44,7 +44,7 @@ public class GameMapper {
                 .toList();
     }
 
-    private List<DevCardSnapshotDTO>  mapDevCards(List<DevelopmentCard> cards) {
+    private List<DevCardSnapshotDTO> mapDevCards(List<DevelopmentCard> cards) {
         return cards
                 .stream()
                 .map(card ->

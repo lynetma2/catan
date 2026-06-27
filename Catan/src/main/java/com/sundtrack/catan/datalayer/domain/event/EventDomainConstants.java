@@ -17,6 +17,7 @@ public final class EventDomainConstants {
     public static final String RESOURCE = "resource";
     public static final String STATE = "state";
     public static final String TURN = "turn";
+    public static final String ROBBER = "robber";
 
     // Status constants
     public static final String REJECTED = "rejected";

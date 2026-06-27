@@ -7,7 +7,7 @@ import com.sundtrack.catan.datalayer.domain.event.EventType;
 
 import static com.sundtrack.catan.datalayer.domain.event.EventDomainConstants.*;
 
-@EventType(ACTION + SEPARATOR + GAME + SEPARATOR + "build" + SEPARATOR + "city")
+@EventType(ACTION + SEPARATOR + GAME + SEPARATOR + BUILD + SEPARATOR + "city")
 public record PlaceCityAction(
         Vertex target
 ) implements ClientAction {

@@ -8,6 +8,7 @@ import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class GamePlayer {
@@ -172,5 +173,20 @@ public class GamePlayer {
         }
 
         return addedResources;
+    }
+
+    public Resource steal() {
+        if (resources.isEmpty()) {
+            throw new IllegalStateException("Cannot steal from player with no resources");
+        }
+
+        // Choose a random index – each card has the same chance of being selected
+        int index = ThreadLocalRandom.current().nextInt(resources.size());
+        Resource stolen = resources.remove(index);
+
+        // Keep the card count in sync
+        this.cardCount = resources.size();
+
+        return stolen;
     }
 }

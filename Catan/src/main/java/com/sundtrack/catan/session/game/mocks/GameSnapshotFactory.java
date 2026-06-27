@@ -1,10 +1,12 @@
 package com.sundtrack.catan.session.game.mocks;
 
-import com.sundtrack.catan.datalayer.domain.board.*;
+import com.sundtrack.catan.datalayer.domain.board.Edge;
+import com.sundtrack.catan.datalayer.domain.board.Hex;
+import com.sundtrack.catan.datalayer.domain.board.Vertex;
+import com.sundtrack.catan.datalayer.domain.board.tile.PortType;
 import com.sundtrack.catan.datalayer.domain.board.tile.TileKind;
 import com.sundtrack.catan.datalayer.domain.board.tile.TileType;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
-import com.sundtrack.catan.datalayer.domain.board.tile.PortType;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
 import com.sundtrack.catan.datalayer.domain.trade.TradeOffer;
@@ -18,7 +20,10 @@ import com.sundtrack.catan.datalayer.dto.snapshot.PlacementSnapshotDTO;
 import com.sundtrack.catan.datalayer.dto.snapshot.PlayerSnapshotDTO;
 import com.sundtrack.catan.datalayer.dto.snapshot.TileSnapshotDTO;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 public class GameSnapshotFactory {
@@ -71,9 +76,9 @@ public class GameSnapshotFactory {
     private static List<PlayerSnapshotDTO> createPlayers(int count) {
         List<PlayerSnapshotDTO> allPlayers = List.of(
                 new PlayerSnapshotDTO("p1", "Alice", "#e05050", List.of(
-                        new Resource("r1", ResourceType.LUMBER), new Resource("r2", ResourceType.LUMBER),
-                        new Resource("r3", ResourceType.BRICK), new Resource("r4", ResourceType.WOOL),
-                        new Resource("r5", ResourceType.GRAIN), new Resource("r6", ResourceType.BRICK)
+                        new Resource(UUID.randomUUID(), ResourceType.LUMBER), new Resource(UUID.randomUUID(), ResourceType.LUMBER),
+                        new Resource(UUID.randomUUID(), ResourceType.BRICK), new Resource(UUID.randomUUID(), ResourceType.WOOL),
+                        new Resource(UUID.randomUUID(), ResourceType.GRAIN), new Resource(UUID.randomUUID(), ResourceType.BRICK)
                 ), List.of(), 2, 3, 0, true, false, 0),
 
                 new PlayerSnapshotDTO("p2", "Bob", "#50a0e0", List.of(), List.of(), 2, 5, 1, false, true, 2),
@@ -173,11 +178,11 @@ public class GameSnapshotFactory {
 
     private static List<TradeOffer> createActiveTradeOffers(List<PlayerSnapshotDTO> players) {
         List<Resource> offered = List.of(
-                new Resource("t1", ResourceType.LUMBER),
-                new Resource("t2", ResourceType.LUMBER)
+                new Resource(UUID.randomUUID(), ResourceType.LUMBER),
+                new Resource(UUID.randomUUID(), ResourceType.LUMBER)
         );
         List<Resource> wanted = List.of(
-                new Resource("t3", ResourceType.BRICK)
+                new Resource(UUID.randomUUID(), ResourceType.BRICK)
         );
 
         List<TradePlayerResponse> responses = List.of(

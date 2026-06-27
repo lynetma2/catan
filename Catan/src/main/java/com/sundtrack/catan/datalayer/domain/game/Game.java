@@ -1,13 +1,16 @@
 package com.sundtrack.catan.datalayer.domain.game;
 
 import com.sundtrack.catan.datalayer.domain.board.Edge;
+import com.sundtrack.catan.datalayer.domain.board.Hex;
 import com.sundtrack.catan.datalayer.domain.board.Vertex;
 import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
+import com.sundtrack.catan.datalayer.domain.board.tile.TileKind;
 import com.sundtrack.catan.datalayer.domain.building.Building;
 import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
+import com.sundtrack.catan.datalayer.domain.exceptions.NoRobbedTileException;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.*;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.trade.TradeOffer;
@@ -164,6 +167,18 @@ public class Game {
         }
     }
 
+    public void validateBoardRobber(Hex hex) {
+        Tile tile = getTileAt(hex);
+
+        if (tile.hasRobber()) {
+            throw new TileAlreadyRobbedException(tile);
+        }
+
+        if (tile.getKind().equals(TileKind.SEA)) {
+            throw new InvalidHexException(hex);
+        }
+    }
+
     public void validateCanAfford(PieceType pieceType, UUID playerId) {
         if (currentPhase.isSetupPhase()) {
             return; // free placement during setup
@@ -196,6 +211,13 @@ public class Game {
         return city;
     }
 
+    public void moveRobber(Hex target) {
+        Tile robbedTile = getRobbedTile();
+        robbedTile.removeRobber();
+        Tile newRobbedTile = getTileAt(target);
+        newRobbedTile.setRobbed();
+    }
+
     public UUID getCurrentPlayerId() {
         return turnOrder.currentPlayerId();
     }
@@ -212,6 +234,20 @@ public class Game {
         if (!getCurrentPlayerId().equals(playerId)) {
             throw new NotPlayersTurnException(getCurrentPlayerId(), playerId);
         }
+    }
+
+    public void validateRobberStealTargetPlayer(UUID targetPlayerId) {
+        Tile robbedTile = getRobbedTile();
+        List<Vertex> adjacents = robbedTile.getAdjacentVertices();
+        for (Vertex adjacent : adjacents) {
+            Optional<Building<?>> building = getBuildingAt(adjacent);
+            if (building.isPresent()) {
+                if (building.get().getOwnerId().equals(targetPlayerId)) {
+                    return;
+                }
+            }
+        }
+        throw new InvalidStealTargetException(targetPlayerId);
     }
 
     public Optional<GamePhase> advancePhaseAfterSettlement() {
@@ -280,12 +316,25 @@ public class Game {
         return gamePhase;
     }
 
+    public GamePhase advancePhaseAfterRobberPlacement() {
+        GamePhase gamePhase = GamePhase.ROBBER_STEAL;
+        this.setCurrentPhase(gamePhase);
+        return gamePhase;
+    }
+
     public TurnAdvanceResult advanceTurn() {
         UUID previousPlayerId = turnOrder.currentPlayerId();
         turnOrder.advance();
         turnNumber++;
         currentPhase = GamePhase.PRE_ROLL;
         return new TurnAdvanceResult(previousPlayerId, turnOrder.currentPlayerId(), turnNumber);
+    }
+
+    public Resource stealResource(UUID targetPlayerId, UUID retrievingPlayerId) {
+        GamePlayer targetPlayer = getPlayerOrThrow(targetPlayerId);
+        GamePlayer retrievingPlayer = getPlayerOrThrow(retrievingPlayerId);
+
+        targetPlayer.
     }
 
     private GamePlayer getPlayerOrThrow(UUID playerId) {
@@ -349,5 +398,21 @@ public class Game {
                     }
                     return false;
                 });
+    }
+
+    private Tile getTileAt(Hex hex) {
+        return tiles
+                .stream()
+                .filter(tile -> tile.getHex().equals(hex))
+                .findFirst()
+                .orElseThrow(() -> new NoTileOnHexException(hex));
+    }
+
+    private Tile getRobbedTile() {
+        return tiles
+                .stream()
+                .filter(Tile::hasRobber)
+                .findFirst()
+                .orElseThrow(() -> new NoRobbedTileException("Called inside getRobbedTile"));
     }
 }

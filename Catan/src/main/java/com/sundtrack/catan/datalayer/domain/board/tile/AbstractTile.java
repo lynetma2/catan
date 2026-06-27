@@ -10,7 +10,7 @@ public abstract class AbstractTile implements Tile {
     private final TileKind kind;
     private final TileType type;
     private final Integer number;
-    private final Boolean hasRobber;
+    private Boolean hasRobber;
     private final Boolean isPort;
     private final PortType portType;
     private final Integer portFacing;
@@ -65,6 +65,16 @@ public abstract class AbstractTile implements Tile {
 
     public Integer getPortFacing() {
         return portFacing;
+    }
+
+    @Override
+    public void removeRobber() {
+        this.hasRobber = false;
+    }
+
+    @Override
+    public void setRobbed() {
+        this.hasRobber = true;
     }
 
     @Override

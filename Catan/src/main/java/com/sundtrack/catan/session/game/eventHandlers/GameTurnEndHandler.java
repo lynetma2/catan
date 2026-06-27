@@ -1,23 +1,19 @@
 package com.sundtrack.catan.session.game.eventHandlers;
 
-import com.sundtrack.catan.datalayer.domain.board.Vertex;
-import com.sundtrack.catan.datalayer.domain.building.Building;
-import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.action.TurnEndAction;
-import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceCityAction;
-import com.sundtrack.catan.datalayer.domain.event.game.server.build.BuildCityEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceSpentEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.turn.TurnEndEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.turn.TurnStartEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
-import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.services.GameStore;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Component
 @HandlesEvent(TurnEndAction.class)

@@ -23,4 +23,8 @@ public interface Tile {
     Integer getPortFacing();
 
     List<Vertex> getAdjacentVertices();
+
+    void removeRobber();
+
+    void setRobbed();
 }
