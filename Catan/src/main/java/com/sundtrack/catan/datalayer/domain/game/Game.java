@@ -322,6 +322,12 @@ public class Game {
         return gamePhase;
     }
 
+    public GamePhase advancePhaseAfterRobberSteal() {
+        GamePhase gamePhase = GamePhase.POST_ROLL;
+        this.setCurrentPhase(gamePhase);
+        return gamePhase;
+    }
+
     public TurnAdvanceResult advanceTurn() {
         UUID previousPlayerId = turnOrder.currentPlayerId();
         turnOrder.advance();

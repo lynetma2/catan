@@ -54,6 +54,7 @@ public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberActi
         GamePhase newPhase = game.advancePhaseAfterRobberPlacement();
 
         //TODO check if the new robber location allows for any resources to be stolen.
+        //TODO check if the player to steal from has any resources to steal.
 
         return new MutationResult(action.target(), newPhase);
     }
