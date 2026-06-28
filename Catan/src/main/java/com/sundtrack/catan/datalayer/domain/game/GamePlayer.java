@@ -193,4 +193,8 @@ public class GamePlayer {
     public void addResource(Resource resource) {
         this.resources.add(resource);
     }
+
+    public boolean hasResources() {
+        return !resources.isEmpty();
+    }
 }

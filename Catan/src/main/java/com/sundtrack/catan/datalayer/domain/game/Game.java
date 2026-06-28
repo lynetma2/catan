@@ -238,16 +238,10 @@ public class Game {
 
     public void validateRobberStealTargetPlayer(UUID targetPlayerId) {
         Tile robbedTile = getRobbedTile();
-        List<Vertex> adjacents = robbedTile.getAdjacentVertices();
-        for (Vertex adjacent : adjacents) {
-            Optional<Building<?>> building = getBuildingAt(adjacent);
-            if (building.isPresent()) {
-                if (building.get().getOwnerId().equals(targetPlayerId)) {
-                    return;
-                }
-            }
+        Set<UUID> players = getAdjacentPlayerIds(robbedTile.getHex());
+        if (!players.contains(targetPlayerId)) {
+            throw new InvalidStealTargetException(targetPlayerId);
         }
-        throw new InvalidStealTargetException(targetPlayerId);
     }
 
     public Optional<GamePhase> advancePhaseAfterSettlement() {
@@ -316,8 +310,11 @@ public class Game {
         return gamePhase;
     }
 
-    public GamePhase advancePhaseAfterRobberPlacement() {
-        GamePhase gamePhase = GamePhase.ROBBER_STEAL;
+    public GamePhase advancePhaseAfterRobberPlacement(UUID retrievingPlayerId) {
+        GamePhase gamePhase = GamePhase.POST_ROLL;
+        if (stealActionPossible(retrievingPlayerId)) {
+            gamePhase = GamePhase.ROBBER_STEAL;
+        }
         this.setCurrentPhase(gamePhase);
         return gamePhase;
     }
@@ -343,6 +340,17 @@ public class Game {
         Resource resource = targetPlayer.steal();
         retrievingPlayer.addResource(resource);
         return resource;
+    }
+
+    public Set<UUID> getAdjacentPlayerIds(Hex target) {
+        Set<UUID> adjacentPlayerIds = new HashSet<>();
+        Tile tile = getTileAt(target);
+        List<Vertex> adjacentVertices = tile.getAdjacentVertices();
+        for (Vertex vertex : adjacentVertices) {
+            Optional<Building<?>> building = getBuildingAt(vertex);
+            building.ifPresent(vertexBuilding -> adjacentPlayerIds.add(vertexBuilding.getOwnerId()));
+        }
+        return adjacentPlayerIds;
     }
 
     private GamePlayer getPlayerOrThrow(UUID playerId) {
@@ -422,5 +430,13 @@ public class Game {
                 .filter(Tile::hasRobber)
                 .findFirst()
                 .orElseThrow(() -> new NoRobbedTileException("Called inside getRobbedTile"));
+    }
+
+    private boolean stealActionPossible(UUID retrievingPlayerId) {
+        Set<UUID> playerIds = getAdjacentPlayerIds(getRobbedTile().getHex());
+        return playerIds
+                .stream()
+                .filter(p -> !p.equals(retrievingPlayerId))
+                .anyMatch(p -> getPlayerOrThrow(p).hasResources());
     }
 }

@@ -32,7 +32,7 @@ public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberActi
         Game game = gameStore.get(context.gameId());
 
         doValidations(game, context, action);
-        MutationResult result = doMutations(game, action);
+        MutationResult result = doMutations(game, context, action);
         EventResult<ServerEvent> events = createResults(context, result);
 
         game.recordEvent(action, events, context);
@@ -47,14 +47,11 @@ public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberActi
         game.validateBoardRobber(action.target());
     }
 
-    private MutationResult doMutations(Game game, PlaceRobberAction action) {
+    private MutationResult doMutations(Game game, GameContext context, PlaceRobberAction action) {
         //Update the position of the robber. (Set to false in old hex and true in new)
         game.moveRobber(action.target());
-        //Update game phase to stealing.
-        GamePhase newPhase = game.advancePhaseAfterRobberPlacement();
-
-        //TODO check if the new robber location allows for any resources to be stolen.
-        //TODO check if the player to steal from has any resources to steal.
+        //Update game phase to stealing or post roll.
+        GamePhase newPhase = game.advancePhaseAfterRobberPlacement(context.playerId());
 
         return new MutationResult(action.target(), newPhase);
     }
@@ -63,6 +60,7 @@ public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberActi
         List<ServerEvent> serverEvents = new ArrayList<>();
         serverEvents.add(new RobberPlaceEvent(result.robbedHex));
         serverEvents.add(new GamePhaseChangedEvent(result.updatedPhase));
+        //TODO return available players to steal from maybe.
 
         return EventResult.of(serverEvents, Map.of());
     }
