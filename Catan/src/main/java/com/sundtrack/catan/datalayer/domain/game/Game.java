@@ -31,7 +31,7 @@ public class Game {
     public record PhaseAdvanceResult(GamePhase newPhase, boolean turnPassed, UUID newCurrentPlayerId) {
     }
 
-    public record TurnAdvanceResult(UUID previousPlayerId, UUID newCurrentPlayerId, int newTurnNumber) {
+    public record TurnAdvanceResult(UUID previousPlayerId, UUID newCurrentPlayerId, int newTurnNumber, GamePhase initialPhase) {
     }
 
     private UUID id;
@@ -269,6 +269,10 @@ public class Game {
         return Optional.of(new PhaseAdvanceResult(currentPhase, turnPassed, turnOrder.currentPlayerId()));
     }
 
+    public GamePhase advancePhaseAfterEndTurn() {
+        return GamePhase.PRE_ROLL;
+    }
+
     public void recordEvent(ClientAction action, EventResult<ServerEvent> resultingEvents, GameContext gameContext) {
         gameEvents.add(new RecordedEvent(action, gameContext, resultingEvents, Instant.now()));
     }
@@ -330,7 +334,7 @@ public class Game {
         turnOrder.advance();
         turnNumber++;
         currentPhase = GamePhase.PRE_ROLL;
-        return new TurnAdvanceResult(previousPlayerId, turnOrder.currentPlayerId(), turnNumber);
+        return new TurnAdvanceResult(previousPlayerId, turnOrder.currentPlayerId(), turnNumber, currentPhase);
     }
 
     public Resource stealResource(UUID targetPlayerId, UUID retrievingPlayerId) {

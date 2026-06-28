@@ -107,7 +107,7 @@ export interface GameServerEventMap {
     [GameServerEvents.build.road.rejected]: { pieceType: PieceType; reason: BuildRejectionReason };
     [GameServerEvents.build.city.success]: { pieceType: PieceType; vertex: Vertex; playerId: string };
     [GameServerEvents.build.city.rejected]: { pieceType: PieceType; reason: BuildRejectionReason };
-    [GameServerEvents.dice.roll.success]: { values: [number, number]; total: number };
+    [GameServerEvents.dice.roll.success]: { values: [number, number] };
     [GameServerEvents.dice.roll.rejected]: { reason: string };
     [GameServerEvents.overview.largestArmy.success]: { playerId: string, value: number };
     [GameServerEvents.overview.longestRoad.success]: { playerId: string, value: number };

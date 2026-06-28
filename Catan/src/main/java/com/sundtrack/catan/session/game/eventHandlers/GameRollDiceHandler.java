@@ -3,6 +3,7 @@ package com.sundtrack.catan.session.game.eventHandlers;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.action.RollDiceAction;
+import com.sundtrack.catan.datalayer.domain.event.game.server.RollDiceEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceGrantEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseChangedEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
@@ -61,7 +62,7 @@ public class GameRollDiceHandler implements GameActionHandler<RollDiceAction> {
             gamePhase = game.advancePhaseAfterGrantResources();
         }
 
-        return new MutationResult(gamePhase, addedResources);
+        return new MutationResult(gamePhase, addedResources, diceRoll);
     }
 
     private EventResult<ServerEvent> createResults(GameContext context, MutationResult result) {
@@ -69,6 +70,7 @@ public class GameRollDiceHandler implements GameActionHandler<RollDiceAction> {
 
         //New Phase event.
         serverEvents.add(new GamePhaseChangedEvent(result.gamePhase));
+        serverEvents.add(new RollDiceEvent(result.diceRoll.toList()));
 
         //Granted resources is public knowledge hence broadcast.
         result.resources.forEach((uuid, resources) -> {
@@ -78,6 +80,6 @@ public class GameRollDiceHandler implements GameActionHandler<RollDiceAction> {
         return EventResult.of(serverEvents, Map.of());
     }
 
-    private record MutationResult(GamePhase gamePhase, Map<UUID, List<Resource>> resources) {
+    private record MutationResult(GamePhase gamePhase, Map<UUID, List<Resource>> resources, DiceRollDTO diceRoll) {
     }
 }
