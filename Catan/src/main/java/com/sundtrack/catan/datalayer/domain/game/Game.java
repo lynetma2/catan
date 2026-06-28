@@ -277,7 +277,7 @@ public class Game {
         Map<UUID, List<Resource>> granted = new HashMap<>();
 
         for (Tile tile : tiles) {
-            if (!tile.getNumber().equals(rollTotal) || tile.hasRobber()) {
+            if (tile.getNumber() == null || !tile.getNumber().equals(rollTotal) || tile.hasRobber()) {
                 continue;
             }
             for (Vertex vertex : tile.getAdjacentVertices()) {

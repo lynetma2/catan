@@ -1,10 +1,10 @@
 // core/SharedStateManager.ts
-import type { SharedState } from "@/game/core/SharedState.ts";
-import { EventBus } from "@/game/core/EventBus.ts";
-import type { GameEventMap } from "@/events/shared/AppEvents.ts";
-import { GameServerEvents } from "@/events/game/GameServerEvents.ts";
-import { GameUiEvents } from "@/events/game/GameUiEvents.ts";
-import type { Resource } from "@/game/core/types.ts";
+import type {SharedState} from "@/game/core/SharedState.ts";
+import {EventBus} from "@/game/core/EventBus.ts";
+import type {GameEventMap} from "@/events/shared/AppEvents.ts";
+import {GameServerEvents} from "@/events/game/GameServerEvents.ts";
+import {GameUiEvents} from "@/events/game/GameUiEvents.ts";
+import type {Resource} from "@/game/core/types.ts";
 
 export class SharedStateManager {
     constructor(
@@ -19,6 +19,7 @@ export class SharedStateManager {
         this.bus.on(GameServerEvents.state.full.success, (payload) => this.onGameStateLoaded(payload));
         this.bus.on(GameServerEvents.resource.grant.success, (payload) => this.onResourcesGranted(payload));
         this.bus.on(GameServerEvents.resource.spent.success, (payload) => this.onResourcesSpent(payload));
+        this.bus.on(GameServerEvents.turn.start.success, (payload) => this.onTurnStarted(payload));
 
         // UI → shared state
         this.bus.on(GameUiEvents.build.enter, (payload) => this.shared.setBuildMode(payload.pieceType));
@@ -39,6 +40,10 @@ export class SharedStateManager {
         if (payload.playerId !== this.shared.localPlayerId) return;
         const current = this.shared.localPlayer?.resources ?? [];
         this.shared.updateLocalPlayerResources(removeResources(current, payload.resources));
+    }
+
+    private onTurnStarted(payload: GameEventMap[typeof GameServerEvents.turn.start.success]) {
+        this.shared.setCurrentPlayer(payload.playerId);
     }
 }
 
