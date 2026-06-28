@@ -31,7 +31,11 @@ public class Game {
     public record PhaseAdvanceResult(GamePhase newPhase, boolean turnPassed, UUID newCurrentPlayerId) {
     }
 
-    public record TurnAdvanceResult(UUID previousPlayerId, UUID newCurrentPlayerId, int newTurnNumber, GamePhase initialPhase) {
+    public record TurnAdvanceResult(UUID previousPlayerId, UUID newCurrentPlayerId, int newTurnNumber,
+                                    GamePhase initialPhase) {
+    }
+
+    public record SevenRolledAdvanceResult(GamePhase gamephase, Optional<DiscardSession> discardSession) {
     }
 
     private UUID id;
@@ -44,6 +48,7 @@ public class Game {
     private List<RecordedEvent> gameEvents;
     private TurnOrder turnOrder;
     private DicePair dicePair;
+    private DiscardSession discardSession;
 
     public Game(UUID id, List<GamePlayer> players, List<Tile> tiles, List<Building<?>> buildings, GamePhase currentPhase, Integer turnNumber, List<TradeOffer> activeTradeOffers, List<RecordedEvent> gameEvents, TurnOrder turnOrder, DicePair dicePair) {
         this.id = id;
@@ -308,10 +313,11 @@ public class Game {
         return gamePhase;
     }
 
-    public GamePhase advancePhaseAfterSevenRoll() {
+    public SevenRolledAdvanceResult advancePhaseAfterSevenRoll() {
         GamePhase gamePhase = GamePhase.ROBBER_PLACEMENT;
         this.setCurrentPhase(gamePhase);
-        return gamePhase;
+        computeAndSetRequiredDiscards(this.players);
+        return new SevenRolledAdvanceResult(gamePhase, Optional.of(this.discardSession));
     }
 
     public GamePhase advancePhaseAfterRobberPlacement(UUID retrievingPlayerId) {
@@ -355,6 +361,14 @@ public class Game {
             building.ifPresent(vertexBuilding -> adjacentPlayerIds.add(vertexBuilding.getOwnerId()));
         }
         return adjacentPlayerIds;
+    }
+
+    public Optional<DiscardSession> getDiscardSession() {
+        return Optional.ofNullable(discardSession);
+    }
+
+    public void setDiscardSession(DiscardSession discardSession) {
+        this.discardSession = discardSession;
     }
 
     private GamePlayer getPlayerOrThrow(UUID playerId) {
@@ -442,5 +456,16 @@ public class Game {
                 .stream()
                 .filter(p -> !p.equals(retrievingPlayerId))
                 .anyMatch(p -> getPlayerOrThrow(p).hasResources());
+    }
+
+    private void computeAndSetRequiredDiscards(List<GamePlayer> players) {
+        Map<UUID, Integer> map = new HashMap<>();
+        for (GamePlayer p : players) {
+            int total = p.getResourceCount();
+            if (total > 7) {
+                map.put(p.getId(), total / 2);
+            }
+        }
+        discardSession = new DiscardSession(map);
     }
 }

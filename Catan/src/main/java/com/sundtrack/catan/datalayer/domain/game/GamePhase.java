@@ -24,6 +24,7 @@ public enum GamePhase {
             Set.of()),
     ROBBER_STEAL("robber_steal",
             Set.of()),
+    DISCARD("discard", Set.of()),
     END("end",
             Set.of());
 

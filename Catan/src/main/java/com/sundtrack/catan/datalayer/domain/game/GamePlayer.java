@@ -197,4 +197,8 @@ public class GamePlayer {
     public boolean hasResources() {
         return !resources.isEmpty();
     }
+
+    public Integer getResourceCount() {
+        return resources.size();
+    }
 }
