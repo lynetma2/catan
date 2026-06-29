@@ -1,30 +1,31 @@
-import {GamePhase, type GameSnapshot, PieceType, type Player, type Resource} from "@/game/core/types.ts";
-import {DEV_CARD_COST, PIECE_COSTS, type ResourceCost} from "@/game/world/systems/build/BuildRules.ts";
+import { GamePhase, type GameSnapshot, PieceType, type Player, type Resource } from "@/game/core/types.ts";
+import { DEV_CARD_COST, PIECE_COSTS, type ResourceCost } from "@/game/world/systems/build/BuildRules.ts";
 
 
 export class SharedState {
     // ─── Readonly from outside ────────────────────────────────────────
     // Private backing fields — only mutated through methods below
 
-    private _localPlayerId:   string | null  = null;
-    private _currentPlayerId: string | null  = null;
-    private _currentPhase:    GamePhase | null = null;
-    private _buildMode:       PieceType | null = null;
-    private _players:         Map<string, Player> = new Map();
-    private _mustDiscard: boolean; //TODO create better abstraction for this.
-    private _discardCount: number; //Todo create better abstraction for this.
+    private _localPlayerId: string | null = null;
+    private _currentPlayerId: string | null = null;
+    private _currentPhase: GamePhase | null = null;
+    private _buildMode: PieceType | null = null;
+    private _players: Map<string, Player> = new Map();
+    private _mustDiscard: boolean = false; //TODO create better abstraction for this.
+    private _discardCount: number = 0; //Todo create better abstraction for this.
 
     // core/SharedState.ts
     loadFromSnapshot(payload: GameSnapshot, localPlayerId: string) {
         this.setCurrentPhase(payload.currentPhase);
         this.setCurrentPlayer(payload.currentPlayerId);
         this.setPlayers(payload.players.map(p => ({
-            id:    p.id,
-            name:  p.name,
+            id: p.id,
+            name: p.name,
             color: p.color,
             resources: p.resources,
             victoryPoints: p.victoryPoints
         })));
+        this.setMustDiscard(payload.discardSession.mustDiscard, payload.discardSession.discardAmount);
 
         const local = payload.players.find(p => p.id === localPlayerId);
         if (local) this.setLocalPlayer(local);
@@ -32,23 +33,30 @@ export class SharedState {
 
     // ─── Getters ──────────────────────────────────────────────────────
 
-    get localPlayerId():   string | null       { return this._localPlayerId; }
-    get currentPlayerId(): string | null       { return this._currentPlayerId; }
-    get currentPhase():    GamePhase | null    { return this._currentPhase; }
-    get buildMode():       PieceType | null    { return this._buildMode; }
-    get players():         ReadonlyMap<string, Player> { return this._players; }
+    get localPlayerId(): string | null { return this._localPlayerId; }
+    get currentPlayerId(): string | null { return this._currentPlayerId; }
+    get currentPhase(): GamePhase | null { return this._currentPhase; }
+
+    get buildMode(): PieceType | "robber" | null {
+        if (this.mustPlaceRobber && this.isLocalPlayersTurn) {
+            return "robber";
+        }
+        return this._buildMode;
+    }
+    get players(): ReadonlyMap<string, Player> { return this._players; }
     get mustDiscard(): boolean { return this._mustDiscard; }
     get discardCount(): number { return this._discardCount; }
-    
-    get localPlayer():     Player | null {
+
+    get localPlayer(): Player | null {
         if (!this.localPlayerId) return null;
-        return this.players.get(this.localPlayerId) ?? null; }
-    
+        return this.players.get(this.localPlayerId) ?? null;
+    }
+
     get localPlayerResources(): Resource[] | null {
         if (!this.localPlayer) return null;
         return this.localPlayer.resources;
     }
-    
+
     get isLocalPlayersTurn(): boolean {
         return this._localPlayerId !== null
             && this._localPlayerId === this._currentPlayerId;
@@ -92,13 +100,13 @@ export class SharedState {
         if (existing) this._players.set(playerId, { ...existing, ...update });
     }
 
-    setMustDiscard(amount: number) {
-        this._mustDiscard = true;
+    setMustDiscard(mustDiscard: boolean, amount: number) {
+        this._mustDiscard = mustDiscard;
         this._discardCount = amount;
     }
 
     clearMustDiscard() {
-        this._mustDiscard  = false;
+        this._mustDiscard = false;
         this._discardCount = 0;
     }
 

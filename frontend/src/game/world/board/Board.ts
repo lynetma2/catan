@@ -1,7 +1,8 @@
 // world/board/Board.ts
-import { HexGrid }      from './HexGrid';
-import { PlacementMap } from './PlacementMap';
-import type {PlacementSnapshot} from "@/game/core/types.ts";
+import {HexGrid} from './HexGrid';
+import {PlacementMap} from './PlacementMap';
+import {type PlacementSnapshot, TileKind} from "@/game/core/types.ts";
+import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
 
 export class Board {
     readonly hexGrid:      HexGrid;
@@ -23,5 +24,15 @@ export class Board {
         placements.cities.forEach(c =>
             this.placementMap.placeCity(c.vertex, c.playerId)
         );
+    }
+
+    getValidRobberHexes(): Hex[] {
+        return this.hexGrid
+            .getAllTiles()
+            .filter((tile) =>
+                tile.kind !== TileKind.Sea &&
+                !tile.hasRobber
+            )
+            .map(tile => tile.hex);
     }
 }

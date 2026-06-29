@@ -3,15 +3,17 @@ import type {EventUnion} from "@/events/shared/EventTypes.ts";
 import {GAME_NAMESPACE} from "@/events/game/GameNamespace.ts";
 import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
 import type {Edge} from "@/game/utils/HexGeometry/Edge.ts";
+import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
 
 export const GAME_ACTION = `${ACTION}${DOT_SEPARATOR}${GAME_NAMESPACE}${DOT_SEPARATOR}`;
 export const BUILD_GAME_ACTION = `${GAME_ACTION}build${DOT_SEPARATOR}`;
 export const DEVELOPMENT_CARD_GAME_ACTION = `${GAME_ACTION}developmentCard${DOT_SEPARATOR}`;
 export const TURN_GAME_ACTION = `${GAME_ACTION}turn${DOT_SEPARATOR}`;
+export const ROBBER_GAME_ACTION = `${GAME_ACTION}robber${DOT_SEPARATOR}`;
 
 export const GameActionEvents = {
     state: `${GAME_ACTION}state`,
-    diceRoll: `${GAME_ACTION}diceRoll`,
+    diceRoll: `${GAME_ACTION}dice${DOT_SEPARATOR}roll`,
     build: {
         settlement: `${BUILD_GAME_ACTION}settlement`,
         road: `${BUILD_GAME_ACTION}road`,
@@ -22,6 +24,9 @@ export const GameActionEvents = {
     },
     turn: {
         end: `${TURN_GAME_ACTION}end`,
+    },
+    robber: {
+        place: `${ROBBER_GAME_ACTION}place`,
     }
 } as const;
 
@@ -34,6 +39,7 @@ export interface GameActionEventMap {
     [GameActionEvents.build.city]: { target: Vertex };
     [GameActionEvents.developmentCard.draw]: Record<never, never>;
     [GameActionEvents.turn.end]: Record<never, never>;
+    [GameActionEvents.robber.place]: { target: Hex };
 }
 
 export type GameActionEvent = EventUnion<GameActionEventMap>;
@@ -73,6 +79,14 @@ export const GameActionEventCreators = {
             payload: {
                 target,
             },
+        }
+    },
+    placeRobber(target: Hex) {
+        return {
+            type: GameActionEvents.robber.place,
+            payload: {
+                target,
+            }
         }
     },
     drawDevelopmentCard() {

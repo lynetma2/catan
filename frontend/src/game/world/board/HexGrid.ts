@@ -4,11 +4,12 @@ import {vertex, type Vertex} from '@/game/utils/HexGeometry/Vertex';
 import {edge, type Edge} from '@/game/utils/HexGeometry/Edge';
 import {
     type HexGridState,
-    type Tile,
     type LandTile,
-    type TileSnapshot,
+    type LandTileType,
+    type Tile,
     TileKind,
-    type LandTileType, TileType
+    type TileSnapshot,
+    TileType
 } from "@/game/core/types.ts";
 
 export class HexGrid {
@@ -38,6 +39,20 @@ export class HexGrid {
 
     isValidHex(h: Hex): boolean {
         return this.tiles.has(this.hexKey(h));
+    }
+
+    isNotRobbedHex(hex: Hex): boolean {
+        // 1. Invalid hex → cannot be a valid destination
+        if (!this.isValidHex(hex)) return false;
+
+        const tile = this.getTile(hex);
+        if (!tile) return false;
+
+        // 2. Robber cannot be on sea tiles
+        if (tile.kind === TileKind.Sea) return false;
+
+        // 3. For land/desert, return whether the robber is absent
+        return !tile.hasRobber;
     }
 
     getNeighboursOf(h: Hex): Hex[] {
@@ -77,6 +92,10 @@ export class HexGrid {
         });
 
         return result;
+    }
+
+    getAllTiles(): Tile[] {
+        return Array.from(this.tiles.values());
     }
 
     // ─── Queries used by ResourceSystem ──────────────────────────────

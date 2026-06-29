@@ -12,11 +12,12 @@ import {edge, type Edge} from "@/game/utils/HexGeometry/Edge.ts";
 import type {BuildValidator} from "@/game/world/systems/build/BuildValidator.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 
-export type HoverMode = BuildTargetKind | 'inspect';
+export type HoverMode = BuildTargetKind | 'inspect' | "robber";
 
 export interface HoverState {
     target: BuildTarget | null;
     validTargets: BuildTarget[] | null;
+    mode: HoverMode | null;
 }
 
 // ─── System ───────────────────────────────────────────────────────────
@@ -24,6 +25,7 @@ export interface HoverState {
 export class HoverSystem {
     private target: BuildTarget | null = null;
     private validTargets: BuildTarget[] = [];
+    private currentMode: HoverMode;
     private validSet: Set<string> = new Set();
 
     constructor(
@@ -40,6 +42,15 @@ export class HoverSystem {
 
         console.log('[HoverSystem] onModeChanged', { buildMode, playerId });
 
+        // ─── Robber mode ──────────────────────────────────────────────
+        if (buildMode === "robber") {
+            const robberHexes = this.board.getValidRobberHexes();
+            this.validTargets = robberHexes.map(h => ({kind: BuildTargetKind.Hex, hex: h}));
+            this.validSet = new Set(this.validTargets.map(t => this.targetKey(t)));
+            return;
+        }
+
+        // ─── Build modes ──────────────────────────────────────────────
         if (!buildMode || !playerId) {
             this.validTargets = [];
             this.validSet.clear();
@@ -54,15 +65,15 @@ export class HoverSystem {
     // ─── Update — called every mousemove from World ───────────────────
 
     update(screenPos: Vec2, mode: HoverMode) {
+        this.currentMode = mode;
         if (mode === 'inspect') {
             this.target = this.findClosestFeature(screenPos);
         } else {
             const candidate = this.findCandidate(screenPos, mode);
-            if (candidate && this.shared.buildMode) {
-                this.target = this.validSet.has(this.targetKey(candidate)) ? candidate : null;
-            } else {
-                this.target = candidate;
-            }
+            // For build/robber, only accept if it's in the valid set
+            this.target = (candidate && this.validSet.has(this.targetKey(candidate)))
+                ? candidate
+                : null;
         }
     }
 
@@ -76,6 +87,7 @@ export class HoverSystem {
         return {
             target: this.target,
             validTargets: this.validTargets,
+            mode: this.currentMode,
         };
     }
 
@@ -250,7 +262,8 @@ export class HoverSystem {
             case BuildTargetKind.Vertex: return this.findVertex(screenPos);
             case BuildTargetKind.Edge:   return this.findEdge(screenPos);
             case BuildTargetKind.Hex:
-            case 'inspect':              return this.findHex(screenPos);
+            case 'inspect':
+            case 'robber':              return this.findHex(screenPos);
         }
     }
 

@@ -177,6 +177,9 @@ export const hex = {
     /** Serializes a Hex to a string (e.g., "0,1,-1") for map keys */
     toString: (h: Hex): string => `${h.q},${h.r},${h.s}`,
 
+    /** Alias for toString, used as a stable key for Maps/Sets */
+    toKey: (h: Hex): string => hex.toString(h),
+
     /** Deserializes a string back into a Hex object */
     fromString: (str: string): Hex => {
         const [q, r, s] = str.split(',').map(Number);

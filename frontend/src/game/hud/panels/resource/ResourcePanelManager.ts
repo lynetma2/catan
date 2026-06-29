@@ -19,6 +19,7 @@ import { type Rect, unionRects } from "@/game/utils/Rect.ts";
 import type { GameEventMap } from "@/events/shared/AppEvents.ts";
 import { GameServerEvents } from "@/events/game/GameServerEvents.ts";
 import { GameUiEvents } from "@/events/game/GameUiEvents.ts";
+import { GamePhase } from "@/game/core/types";
 
 export class ResourcePanelManager {
     private mode: ResourcePanelMode<ResourcePanelModeState>;
@@ -38,7 +39,14 @@ export class ResourcePanelManager {
     private subscribeToEvents() {
         // Full state reload
         this.bus.on(GameServerEvents.state.full.success, () => {
-            this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
+            if (this.shared.currentPhase === GamePhase.Discard && this.shared.mustDiscard) {
+                this.transitionTo(
+                    new DiscardMode(this.frameQueue, this.resolution, this.shared),
+                    this.shared.discardCount,
+                );
+            } else {
+                this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
+            }
         });
 
         // Trade UI events
@@ -57,10 +65,17 @@ export class ResourcePanelManager {
 
         // Discard required
         this.bus.on(GameServerEvents.resource.discardRequired.success, (payload) => {
-            this.transitionTo(
-                new DiscardMode(this.frameQueue, this.resolution, this.shared),
-                payload.amount,
-            );
+            if (payload.playerId === this.shared.localPlayerId) {
+                this.transitionTo(
+                    new DiscardMode(this.frameQueue, this.resolution, this.shared),
+                    payload.amount,
+                );
+            }
+        });
+
+        this.bus.on(GameServerEvents.resource.discardComplete.success, () => {
+            this.shared.clearMustDiscard();
+            this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
         });
 
         // ------------------------------------------------------------------

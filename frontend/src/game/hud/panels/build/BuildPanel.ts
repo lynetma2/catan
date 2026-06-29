@@ -8,7 +8,7 @@ import type {BuildPanelState} from "@/game/hud/panels/build/types.ts";
 import {BUTTON_CONFIGS, derivePanelBounds, hudLayout} from "@/game/hud/HudLayout.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import {containsPoint} from "@/game/utils/Rect.ts";
-import {PieceType} from "@/game/core/types.ts";
+import {PieceType, GamePhase} from "@/game/core/types.ts";
 import type {EventBus} from "@/game/core/EventBus";
 import type {GameEventMap} from "@/events/shared/AppEvents.ts";
 import {GameUiEvents} from "@/events/game/GameUiEvents.ts";
@@ -147,19 +147,35 @@ export class BuildPanel {
     }
 
     private isButtonDisabled(type: ButtonType, isMyTurn: boolean): boolean {
+        if (!isMyTurn) return true;
+
+        const phase = this.sharedState.currentPhase;
+
         switch (type) {
             case ButtonType.putRoad:
-                return !this.sharedState.canAfford(PieceType.Road);
+                if (phase === GamePhase.SetupPlaceRoad) return false;
+                if (phase === GamePhase.PostRoll) return !this.sharedState.canAfford(PieceType.Road);
+                return true;
+
             case ButtonType.putSettlement:
-                return !this.sharedState.canAfford(PieceType.Settlement);
+                if (phase === GamePhase.SetupPlaceSettlement) return false;
+                if (phase === GamePhase.PostRoll) return !this.sharedState.canAfford(PieceType.Settlement);
+                return true;
+
             case ButtonType.putCity:
-                return !this.sharedState.canAfford(PieceType.City);
+                if (phase === GamePhase.PostRoll) return !this.sharedState.canAfford(PieceType.City);
+                return true;
+
             case ButtonType.drawDevelopmentCard:
-                return !this.sharedState.canAffordDevCard();
+                if (phase === GamePhase.PostRoll) return !this.sharedState.canAffordDevCard();
+                return true;
+
             case ButtonType.endTurn:
-                return !isMyTurn;
+                return phase !== GamePhase.PostRoll;
+
             case ButtonType.waiting:
                 return true;
+
             default:
                 return false;
         }

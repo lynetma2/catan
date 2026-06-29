@@ -11,7 +11,7 @@ import {type BuildContext, buildRules} from "@/game/world/systems/build/BuildRul
 export interface BuildValidator {
     validate: (pieceType: PieceType, target: BuildTarget, playerId: string) => BuildRejectionReason | null;
     canBuild: (pieceType: PieceType, target: BuildTarget, playerId: string) => boolean;
-    validTargets: (pieceType: PieceType, playerId: string) => BuildTarget[];
+    validTargets: (pieceType: PieceType | "robber", playerId: string) => BuildTarget[];
 }
 
 // ─── Factory ──────────────────────────────────────────────────────────

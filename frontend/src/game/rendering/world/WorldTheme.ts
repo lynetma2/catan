@@ -77,6 +77,14 @@ export interface HoverTheme {
     hex: {
         fillColor: string;
     };
+    robber: {
+        radius: number;
+        hoverRadius: number;
+        validFill: string;
+        hoverFill: string;
+        hoverStroke: string;
+        strokeWidth?: number;
+    }
 }
 
 export interface WorldTheme {
@@ -159,6 +167,14 @@ export const DEFAULT_WORLD_THEME: WorldTheme = {
         hex: {
             fillColor: 'rgba(255, 255, 255, 0.08)',
         },
+        robber: {
+            radius: 10,
+            hoverRadius: 14,
+            validFill: 'rgba(255, 215, 0, 0.4)',
+            hoverFill: 'rgba(255, 170, 0, 0.8)',
+            hoverStroke: '#FFAA00',
+            strokeWidth: 2,
+        }
     },
 };
 
@@ -231,5 +247,13 @@ export const PARCHMENT_WORLD_THEME: WorldTheme = {
         hex: {
             fillColor: 'rgba(255, 240, 180, 0.1)',
         },
+        robber: {
+            radius: 10,
+            hoverRadius: 14,
+            validFill: 'rgba(218, 165, 32, 0.4)',
+            hoverFill: 'rgba(184, 115, 51, 0.8)',
+            hoverStroke: '#8B4513',
+            strokeWidth: 2,
+        }
     },
 };

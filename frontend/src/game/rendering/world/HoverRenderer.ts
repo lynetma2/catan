@@ -15,12 +15,31 @@ export class HoverRenderer {
     ) {}
 
     render(hover: HoverState) {
-        // First pass — draw all valid spots dimly
-        hover.validTargets!.forEach(target => {
+        const isRobber = hover.mode === 'robber';
+
+        if (isRobber) {
+            const {radius, hoverRadius, validFill, hoverFill, hoverStroke, strokeWidth} = this.theme.robber;
+
+            // Draw all valid hexes as dim circles
+            hover.validTargets?.forEach(target => {
+                if (target.kind === BuildTargetKind.Hex) {
+                    const center = this.camera.hexToWorld(target.hex);
+                    this.drawCircle(center, radius, validFill);
+                }
+            });
+
+            // Draw the hovered hex as a larger, brighter circle with stroke
+            if (hover.target?.kind === BuildTargetKind.Hex) {
+                const center = this.camera.hexToWorld(hover.target.hex);
+                this.drawCircle(center, hoverRadius, hoverFill, hoverStroke, strokeWidth);
+            }
+            return;
+        }
+
+        // ─── BUILD / INSPECT MODE (unchanged) ──────────────────────
+        hover.validTargets?.forEach(target => {
             this.drawValidTarget(target);
         });
-
-        // Second pass — draw hovered spot brightly on top
         if (hover.target) {
             this.drawHoveredTarget(hover.target);
         }
@@ -125,5 +144,18 @@ export class HoverRenderer {
             x: positions.reduce((sum, p) => sum + p.x, 0) / 3,
             y: positions.reduce((sum, p) => sum + p.y, 0) / 3,
         };
+    }
+
+    private drawCircle(center: Vec2, radius: number, fill: string, stroke?: string, lineWidth?: number) {
+        const {ctx} = this;
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = fill;
+        ctx.fill();
+        if (stroke) {
+            ctx.strokeStyle = stroke;
+            ctx.lineWidth = lineWidth ?? 2;
+            ctx.stroke();
+        }
     }
 }

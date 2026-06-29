@@ -6,7 +6,7 @@ import type {Camera} from "@/game/core/Camera.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 import type {EventBus} from "@/game/core/EventBus.ts";
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
-import {type BuildTarget, BuildTargetKind, type GameSnapshot, PieceType,} from "@/game/core/types.ts";
+import {type BuildTarget, BuildTargetKind, type GameSnapshot, PieceType, GamePhase} from "@/game/core/types.ts";
 import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {type BuildValidator, createBuildValidator} from "@/game/world/systems/build/BuildValidator.ts";
 import type {WorldState} from "@/game/world/types.ts";
@@ -65,6 +65,19 @@ export class World implements InputLayer {
             GameServerEvents.build.road.success,
             payload => this.onRoadBuilt(payload)
         );
+        this.bus.on(
+            GameServerEvents.state.phase.change.success,
+            () => {
+                this.hoverSystem.onModeChanged();
+                if (this.shared.currentPhase !== GamePhase.RobberPlacement) {
+                    this.hoverSystem.clear();
+                }
+            }
+        );
+        this.bus.on(
+            GameServerEvents.robber.placed.success,
+            payload => this.onRobberPlaced(payload)
+        );
         this.bus.on(GameUiEvents.build.enter, () => this.hoverSystem.onModeChanged());
         this.bus.on(GameUiEvents.build.exit, () => {
             this.hoverSystem.onModeChanged();
@@ -80,6 +93,7 @@ export class World implements InputLayer {
         const {snapshot} = payload;
         this.board.hexGrid.loadTiles(snapshot.tiles);
         this.board.loadFromSnapshot(snapshot.placements);
+        this.hoverSystem.onModeChanged();
     }
 
     private onSettlementBuilt(
@@ -107,6 +121,12 @@ export class World implements InputLayer {
             payload.edge,
             payload.playerId
         );
+    }
+
+    private onRobberPlaced(
+        payload: GameServerEventMap[typeof GameServerEvents.robber.placed.success]
+    ) {
+        this.board.hexGrid.moveRobber(payload.hex);
     }
 
     // ─── Input ────────────────────────────────────────────────────────
@@ -184,6 +204,11 @@ export class World implements InputLayer {
                     this.frameQueue.push(GameActionEventCreators.placeSettlement(target.vertex));
                 }
                 break;
+            case "robber":
+                console.log("testing clicking on a hex, should send an event.!.!.!")
+                if (target.kind === BuildTargetKind.Hex) {
+                    this.frameQueue.push(GameActionEventCreators.placeRobber(target.hex))
+                }
         }
 
         this.frameQueue.push({
@@ -231,6 +256,8 @@ export class World implements InputLayer {
             case PieceType.Settlement:
             case PieceType.City:
                 return BuildTargetKind.Vertex;
+            case "robber":
+                return "robber";
             default:
                 return 'inspect';
         }

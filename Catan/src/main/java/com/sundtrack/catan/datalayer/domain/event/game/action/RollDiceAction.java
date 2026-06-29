@@ -5,6 +5,6 @@ import com.sundtrack.catan.datalayer.domain.event.EventType;
 
 import static com.sundtrack.catan.datalayer.domain.event.EventDomainConstants.*;
 
-@EventType(ACTION + SEPARATOR + GAME + SEPARATOR + "diceRoll")
+@EventType(ACTION + SEPARATOR + GAME + SEPARATOR + "dice" + SEPARATOR + "roll")
 public record RollDiceAction() implements ClientAction {
 }

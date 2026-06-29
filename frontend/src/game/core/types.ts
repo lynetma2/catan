@@ -1,7 +1,7 @@
-import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
-import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
-import type {Edge} from "@/game/utils/HexGeometry/Edge.ts";
-import type {TradeOfferPanelData} from "@/game/hud/panels/tradeOffer/types.ts";
+import type { Hex } from "@/game/utils/HexGeometry/Hex.ts";
+import type { Vertex } from "@/game/utils/HexGeometry/Vertex.ts";
+import type { Edge } from "@/game/utils/HexGeometry/Edge.ts";
+import type { TradeOfferPanelData } from "@/game/hud/panels/tradeOffer/types.ts";
 
 export interface Player {
     id: string;
@@ -38,17 +38,17 @@ export enum BuildTargetKind {
 
 export type BuildTarget =
     | { kind: BuildTargetKind.Vertex; vertex: Vertex }
-    | { kind: BuildTargetKind.Edge;   edge:   Edge   }
-    | { kind: BuildTargetKind.Hex;    hex:    Hex    };
+    | { kind: BuildTargetKind.Edge; edge: Edge }
+    | { kind: BuildTargetKind.Hex; hex: Hex };
 
 export interface PlacedPiece {
-    playerId:  string;
+    playerId: string;
     pieceType: PieceType;
 }
 
 export interface PlacementState {
     vertices: { vertex: Vertex; piece: PlacedPiece }[];
-    edges:    { edge:   Edge;   piece: PlacedPiece }[];
+    edges: { edge: Edge; piece: PlacedPiece }[];
 }
 
 export enum TileType {
@@ -73,13 +73,13 @@ export type LandTileType = Exclude<TileType, TileType.Desert | TileType.Sea>;
 export type PortResource = ResourceType | 'any';
 
 interface BaseTile {
-    hex:       Hex;
+    hex: Hex;
     hasRobber: boolean;
 }
 
 export interface LandTile extends BaseTile {
-    kind:   TileKind.Land;
-    type:   LandTileType;
+    kind: TileKind.Land;
+    type: LandTileType;
     number: number;
 }
 
@@ -89,9 +89,9 @@ export interface DesertTile extends BaseTile {
 }
 
 export interface SeaTile extends BaseTile {
-    kind:     TileKind.Sea;
-    type:     TileType.Sea;
-    isPort:   boolean;
+    kind: TileKind.Sea;
+    type: TileType.Sea;
+    isPort: boolean;
     portType: PortResource | null; // Prevents accidental 'desert' or 'sea' ports!
     portFacing: number | null;
 }
@@ -103,49 +103,55 @@ export interface HexGridState {
 }
 
 export interface TileSnapshot {
-    hex:       Hex;
-    kind:      TileKind;
-    type:      TileType;
-    number:    number | null;
+    hex: Hex;
+    kind: TileKind;
+    type: TileType;
+    number: number | null;
     hasRobber: boolean;
-    isPort:    boolean;
-    portType:  PortResource | null;
+    isPort: boolean;
+    portType: PortResource | null;
     portFacing: number | null;
 }
 
 export interface PlacementSnapshot {
-    roads:       { edge:   Edge;   playerId: string }[];
+    roads: { edge: Edge; playerId: string }[];
     settlements: { vertex: Vertex; playerId: string }[];
-    cities:      { vertex: Vertex; playerId: string }[];
+    cities: { vertex: Vertex; playerId: string }[];
 }
 
 export interface PlayerSnapshot {
-    id:             string;
-    name:           string;
-    color:          string;
-    resources:      Resource[];
-    devCards:       DevCardSnapshot[];
-    victoryPoints:  number;
-    cardCount:      number;
+    id: string;
+    name: string;
+    color: string;
+    resources: Resource[];
+    devCards: DevCardSnapshot[];
+    victoryPoints: number;
+    cardCount: number;
     hasLongestRoad: boolean;
     hasLargestArmy: boolean;
-    usedRobbers:    number;
+    usedRobbers: number;
 }
 
 export interface DevCardSnapshot {
-    uid:  string;
+    uid: string;
     type: DevCardType;
     used: boolean;
 }
 
 export interface GameSnapshot {
-    players:         PlayerSnapshot[];
-    tiles:           TileSnapshot[];
-    placements:      PlacementSnapshot;
-    currentPhase:    GamePhase;
+    players: PlayerSnapshot[];
+    tiles: TileSnapshot[];
+    placements: PlacementSnapshot;
+    currentPhase: GamePhase;
     currentPlayerId: string;
-    turnNumber:      number;
+    turnNumber: number;
     activeTradeOffers: TradeOfferPanelData[];
+    discardSession: DiscardSession;
+}
+
+export interface DiscardSession {
+    mustDiscard: boolean;
+    discardAmount: number;
 }
 
 export enum GamePhase {
@@ -169,6 +175,9 @@ export enum GamePhase {
 
     /** active trade offer in progress */
     Trading = 'trading',
+
+    /** Seven Rolled - must discard half cards */
+    Discard = 'discard',
 
     /** game over */
     End = 'end',

@@ -7,6 +7,7 @@ import com.sundtrack.catan.datalayer.domain.event.game.action.RollDiceAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.TurnEndAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceRoadAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceSettlementAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.IllegalGamePhaseException;
 
 import java.util.Set;
@@ -21,7 +22,7 @@ public enum GamePhase {
     POST_ROLL("post_roll",
             Set.of(TurnEndAction.class)),
     ROBBER_PLACEMENT("robber_placement",
-            Set.of()),
+            Set.of(PlaceRobberAction.class)),
     ROBBER_STEAL("robber_steal",
             Set.of()),
     DISCARD("discard", Set.of()),
