@@ -52,6 +52,7 @@ public class Game {
     private TurnOrder turnOrder;
     private DicePair dicePair;
     private DiscardSession discardSession;
+    private StealSession stealSession;
 
     public Game(UUID id, List<GamePlayer> players, List<Tile> tiles, List<Building<?>> buildings, GamePhase currentPhase, Integer turnNumber, List<TradeOffer> activeTradeOffers, List<RecordedEvent> gameEvents, TurnOrder turnOrder, DicePair dicePair) {
         this.id = id;
@@ -64,6 +65,8 @@ public class Game {
         this.gameEvents = gameEvents;
         this.turnOrder = turnOrder;
         this.dicePair = dicePair;
+        this.stealSession = new StealSession();
+        this.discardSession = new DiscardSession();
     }
 
     public UUID getId() {
@@ -326,6 +329,7 @@ public class Game {
     public RobberPlacedAdvanceResult advancePhaseAfterRobberPlacement(UUID retrievingPlayerId) {
         GamePhase gamePhase = GamePhase.POST_ROLL;
         List<UUID> stealCandidates = stealActionCandidates(retrievingPlayerId);
+        this.stealSession.activate(retrievingPlayerId, stealCandidates);
         if (!stealCandidates.isEmpty()) {
             gamePhase = GamePhase.ROBBER_STEAL;
         }
@@ -335,6 +339,7 @@ public class Game {
 
     public GamePhase advancePhaseAfterRobberSteal() {
         GamePhase gamePhase = GamePhase.POST_ROLL;
+        this.stealSession.deactivate();
         this.setCurrentPhase(gamePhase);
         return gamePhase;
     }
@@ -367,12 +372,20 @@ public class Game {
         return adjacentPlayerIds;
     }
 
-    public Optional<DiscardSession> getDiscardSession() {
-        return Optional.ofNullable(discardSession);
+    public DiscardSession getDiscardSession() {
+        return discardSession;
     }
 
     public void setDiscardSession(DiscardSession discardSession) {
         this.discardSession = discardSession;
+    }
+
+    public StealSession getStealSession() {
+        return stealSession;
+    }
+
+    public void setStealSession(StealSession stealSession) {
+        this.stealSession = stealSession;
     }
 
     private GamePlayer getPlayerOrThrow(UUID playerId) {
@@ -471,6 +484,6 @@ public class Game {
                 map.put(p.getId(), total / 2);
             }
         }
-        discardSession = new DiscardSession(map);
+        this.discardSession.activate(map);
     }
 }

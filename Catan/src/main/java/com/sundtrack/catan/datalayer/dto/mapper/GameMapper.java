@@ -8,6 +8,7 @@ import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
 import com.sundtrack.catan.datalayer.domain.game.DiscardSession;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.game.GamePlayer;
+import com.sundtrack.catan.datalayer.domain.game.StealSession;
 import com.sundtrack.catan.datalayer.dto.placement.CityPlacementDTO;
 import com.sundtrack.catan.datalayer.dto.placement.RoadPlacementDTO;
 import com.sundtrack.catan.datalayer.dto.placement.SettlementPlacementDTO;
@@ -33,7 +34,9 @@ public class GameMapper {
                 game.getTurnNumber(),
                 game.getActiveTradeOffers(),
                 mapDiscardSession(game.getDiscardSession(), playerId),
-                mapDiceRoll(game.getDiceRoll())
+                mapDiceRoll(game.getDiceRoll()),
+                mapStealSession(game.getStealSession())
+
         );
     }
 
@@ -96,17 +99,17 @@ public class GameMapper {
         return new PlacementSnapshotDTO(roads, settlements, cityPlacements);
     }
 
-    private DiscardSessionDTO mapDiscardSession(Optional<DiscardSession> discardSession, UUID playerId) {
-        if (discardSession.isEmpty()) {
-            return new DiscardSessionDTO(false, 0);
-        }
-        DiscardSession session = discardSession.get();
-        boolean mustDiscard = session.isPending(playerId);
-        int discardAmount = session.getRequiredCount(playerId);
+    private DiscardSessionDTO mapDiscardSession(DiscardSession discardSession, UUID playerId) {
+        boolean mustDiscard = discardSession.isPending(playerId);
+        int discardAmount = discardSession.getRequiredCount(playerId);
         return new DiscardSessionDTO(mustDiscard, discardAmount);
     }
 
     private List<Integer> mapDiceRoll(DiceRollDTO diceRoll) {
         return diceRoll != null ? diceRoll.toList() : null;
+    }
+
+    private StealSessionDTO mapStealSession(StealSession stealSession) {
+        return new StealSessionDTO(stealSession.isActive(), stealSession.getRetrievingPlayerId(), stealSession.getCandidates());
     }
 }

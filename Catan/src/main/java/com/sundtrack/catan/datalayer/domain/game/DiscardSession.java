@@ -5,12 +5,26 @@ import java.util.Set;
 import java.util.UUID;
 
 public class DiscardSession {
-    private final Map<UUID, Integer> requiredDiscards;
-    private final Set<UUID> pendingPLayers;
+    private boolean isActive;
+    private Map<UUID, Integer> requiredDiscards;
+    private Set<UUID> pendingPLayers;
 
-    public DiscardSession(Map<UUID, Integer> requiredDiscards) {
+    public DiscardSession() {
+        this.isActive = false;
+        this.requiredDiscards = null;
+        this.pendingPLayers = null;
+    }
+
+    public void activate(Map<UUID, Integer> requiredDiscards) {
+        this.isActive = true;
         this.requiredDiscards = requiredDiscards;
         this.pendingPLayers = requiredDiscards.keySet();
+    }
+
+    public void deactivate() {
+        this.isActive = false;
+        this.requiredDiscards = null;
+        this.pendingPLayers = null;
     }
 
     public Map<UUID, Integer> getRequiredDiscards() {
@@ -30,6 +44,6 @@ public class DiscardSession {
     }
 
     public boolean isComplete() {
-        return pendingPLayers.isEmpty();
+        return isActive && pendingPLayers.isEmpty();
     }
 }
