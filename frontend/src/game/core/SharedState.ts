@@ -4,6 +4,7 @@ import {
     PieceType,
     type Player,
     type Resource,
+    type StealSession,
     type TileSnapshot
 } from "@/game/core/types.ts";
 import {DEV_CARD_COST, PIECE_COSTS, type ResourceCost} from "@/game/world/systems/build/BuildRules.ts";
@@ -21,7 +22,7 @@ export class SharedState {
     private _players: Map<string, Player> = new Map();
     private _mustDiscard: boolean = false; //TODO create better abstraction for this.
     private _discardCount: number = 0; //Todo create better abstraction for this.
-    private _stealCandidateIds: string[] = [];
+    private _stealSession: StealSession | null = null;
     private _robberHex: Hex | null = null;
 
     // core/SharedState.ts
@@ -39,6 +40,10 @@ export class SharedState {
         const robbedHex = this.findRobbedHex(payload.tiles);
         if (robbedHex !== null) {
             this.setRobberHex(robbedHex);
+        }
+
+        if (payload.stealSession && payload.stealSession.retrievingPlayerId == this._localPlayerId) {
+            this._stealSession = payload.stealSession;
         }
 
         const local = payload.players.find(p => p.id === localPlayerId);
@@ -77,7 +82,9 @@ export class SharedState {
     }
 
     get stealCandidateIds(): string[] {
-        return this._stealCandidateIds;
+        if (this._stealSession === null) return [];
+        if (this._stealSession.candidates === null) return [];
+        return this._stealSession.candidates;
     }
 
     get robberHex(): Hex | null {
@@ -133,11 +140,15 @@ export class SharedState {
     }
 
     setStealCandidateIds(candidateIds: string[]) {
-        this._stealCandidateIds = candidateIds;
+        this._stealSession ??= {
+            isActive: true,
+            retrievingPlayerId: this.localPlayerId ?? "",
+            candidates: candidateIds
+        };
     }
 
     clearStealCandidateIds() {
-        this._stealCandidateIds = [];
+        this._stealSession = null;
     }
 
     setRobberHex(target: Hex) {

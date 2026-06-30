@@ -148,11 +148,18 @@ export interface GameSnapshot {
     activeTradeOffers: TradeOfferPanelData[];
     discardSession: DiscardSession;
     diceRoll?: { values: [number, number] };
+    stealSession: StealSession;
 }
 
 export interface DiscardSession {
     mustDiscard: boolean;
     discardAmount: number;
+}
+
+export interface StealSession {
+    isActive: boolean;
+    retrievingPlayerId: string;
+    candidates: string[];
 }
 
 export enum GamePhase {
