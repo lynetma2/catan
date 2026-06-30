@@ -1,14 +1,14 @@
-import type { DicePanelState, DieState } from "@/game/hud/panels/dice/types.ts";
-import type { EventBus } from "@/game/core/EventBus.ts";
-import type { FrameQueue } from "@/game/core/FrameQueue.ts";
-import type { SharedState } from "@/game/core/SharedState.ts";
-import type { ResolutionManager } from "@/game/core/ResolutionManager.ts";
-import { InputType, type NormalizedInputEvent } from "@/game/core/Input/InputEvent.ts";
-import { containsPoint } from "@/game/utils/Rect.ts";
-import { resolveDicePanelLayout } from "@/game/hud/panels/dice/DicePanelLayout.ts";
-import type { GameEventMap } from "@/events/shared/AppEvents.ts";
-import { GameServerEvents } from "@/events/game/GameServerEvents.ts";
-import { GameActionEvents } from "@/events/game/GameActionEvents.ts";
+import type {DicePanelState, DieState} from "@/game/hud/panels/dice/types.ts";
+import type {EventBus} from "@/game/core/EventBus.ts";
+import type {FrameQueue} from "@/game/core/FrameQueue.ts";
+import type {SharedState} from "@/game/core/SharedState.ts";
+import type {ResolutionManager} from "@/game/core/ResolutionManager.ts";
+import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
+import {containsPoint} from "@/game/utils/Rect.ts";
+import {resolveDicePanelLayout} from "@/game/hud/panels/dice/DicePanelLayout.ts";
+import type {GameEventMap} from "@/events/shared/AppEvents.ts";
+import {GameServerEvents} from "@/events/game/GameServerEvents.ts";
+import {GameActionEvents} from "@/events/game/GameActionEvents.ts";
 
 export class DicePanel {
     private die1: DieState = { value: null };
@@ -29,7 +29,10 @@ export class DicePanel {
     private subscribeToEvents() {
         this.bus.on(GameServerEvents.dice.roll.success, (payload) => this.onDiceRolled(payload));
         this.bus.on(GameServerEvents.turn.start.success, () => this.reset());
-        this.bus.on(GameServerEvents.state.full.success, () => this.reset());
+        this.bus.on(GameServerEvents.state.full.success, (state) => {
+            if (state.snapshot.diceRoll)
+                this.onDiceRolled(state.snapshot.diceRoll)
+        });
     }
 
     private onDiceRolled(payload: GameEventMap[typeof GameServerEvents.dice.roll.success]) {

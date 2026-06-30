@@ -4,6 +4,7 @@ import type {DicePanelState} from "@/game/hud/panels/dice/types.ts";
 import type {BuildPanelState} from "@/game/hud/panels/build/types.ts";
 import type {ResourcePanelManagerState} from "@/game/hud/panels/resource/types.ts";
 import type {TradeOfferManagerState} from "@/game/hud/panels/tradeOffer/types.ts";
+import type {RobberStealPanelState} from "@/game/hud/panels/robber/types.ts";
 
 export interface HudState {
     toast:     Toast | null;
@@ -13,6 +14,7 @@ export interface HudState {
         overview: PlayerOverviewState;
         dice: DicePanelState;
         tradeOffers: TradeOfferManagerState;
+        robberSteal: RobberStealPanelState;
     };
 }
 

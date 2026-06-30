@@ -16,7 +16,9 @@ public record GameSnapshotDTO(
         GamePhase currentPhase,
         String currentPlayerId,
         int turnNumber,
-        List<TradeOffer> activeTradeOffers
+        List<TradeOffer> activeTradeOffers,
+        DiscardSessionDTO discardSession,
+        List<Integer> diceRoll
 ) {
     public GameSnapshotDTO {
         // Ensure all lists are immutable and null-safe

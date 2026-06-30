@@ -68,7 +68,7 @@ export class Game {
         );
 
         // ── 3. Systems ─────────────────────────────────────────────────
-        this.hud = new HUD(this.bus, this.sharedState, this.frameQueue, this.resolution);
+        this.hud = new HUD(this.bus, this.sharedState, this.frameQueue, this.resolution, this.camera);
         this.world = new World(this.bus, this.frameQueue, this.sharedState, this.camera, this.gamePhase);
 
         // ── 4. Renderers ───────────────────────────────────────────────

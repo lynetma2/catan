@@ -20,6 +20,8 @@ export class SharedStateManager {
         this.bus.on(GameServerEvents.resource.grant.success, (payload) => this.onResourcesGranted(payload));
         this.bus.on(GameServerEvents.resource.spent.success, (payload) => this.onResourcesSpent(payload));
         this.bus.on(GameServerEvents.turn.start.success, (payload) => this.onTurnStarted(payload));
+        this.bus.on(GameServerEvents.robber.stealTargetRequired.success, (payload) => this.onStealTargetRequired(payload));
+        this.bus.on(GameServerEvents.robber.placed.success, (payload) => this.onRobberPlaced(payload));
 
         // UI → shared state
         this.bus.on(GameUiEvents.build.enter, (payload) => this.shared.setBuildMode(payload.pieceType));
@@ -45,6 +47,16 @@ export class SharedStateManager {
     private onTurnStarted(payload: GameEventMap[typeof GameServerEvents.turn.start.success]) {
         this.shared.setCurrentPlayer(payload.playerId);
     }
+
+    private onStealTargetRequired(payload: GameEventMap[typeof GameServerEvents.robber.stealTargetRequired.success]) {
+        this.shared.setStealCandidateIds(payload.candidates);
+    }
+
+    private onRobberPlaced(payload: GameEventMap[typeof GameServerEvents.robber.placed.success]) {
+        this.shared.setRobberHex(payload.hex);
+    }
+
+    //TODO add something to clear the steal candidates.
 }
 
 function removeResources(current: Resource[], spent: Resource[]): Resource[] {

@@ -5,6 +5,7 @@ import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.robber.RobberPlaceEvent;
+import com.sundtrack.catan.datalayer.domain.event.game.server.robber.StealTargetRequiredEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseChangedEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
@@ -14,9 +15,7 @@ import com.sundtrack.catan.session.game.eventHandlers.GameContext;
 import com.sundtrack.catan.session.game.services.GameStore;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @HandlesEvent(PlaceRobberAction.class)
@@ -51,22 +50,27 @@ public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberActi
         //Update the position of the robber. (Set to false in old hex and true in new)
         game.moveRobber(action.target());
         //Update game phase to stealing or post roll.
-        GamePhase newPhase = game.advancePhaseAfterRobberPlacement(context.playerId());
+        Game.RobberPlacedAdvanceResult advanceResult = game.advancePhaseAfterRobberPlacement(context.playerId());
 
-        return new MutationResult(action.target(), newPhase);
+        return new MutationResult(action.target(), advanceResult.candidates(), advanceResult.gamePhase());
     }
 
     private EventResult<ServerEvent> createResults(GameContext context, MutationResult result) {
         List<ServerEvent> serverEvents = new ArrayList<>();
         serverEvents.add(new RobberPlaceEvent(result.robbedHex));
         serverEvents.add(new GamePhaseChangedEvent(result.updatedPhase));
-        //TODO return available players to steal from maybe.
 
-        return EventResult.of(serverEvents, Map.of());
+        Map<UUID, ServerEvent> serverEventMap = new HashMap<>();
+        if (!result.candidates().isEmpty()) {
+            serverEventMap.put(context.playerId(), new StealTargetRequiredEvent(result.candidates()));
+        }
+
+        return EventResult.of(serverEvents, serverEventMap);
     }
 
     private record MutationResult(
             Hex robbedHex,
+            List<UUID> candidates,
             GamePhase updatedPhase
     ) {
     }

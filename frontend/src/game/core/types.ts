@@ -1,7 +1,7 @@
-import type { Hex } from "@/game/utils/HexGeometry/Hex.ts";
-import type { Vertex } from "@/game/utils/HexGeometry/Vertex.ts";
-import type { Edge } from "@/game/utils/HexGeometry/Edge.ts";
-import type { TradeOfferPanelData } from "@/game/hud/panels/tradeOffer/types.ts";
+import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
+import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
+import type {Edge} from "@/game/utils/HexGeometry/Edge.ts";
+import type {TradeOfferPanelData} from "@/game/hud/panels/tradeOffer/types.ts";
 
 export interface Player {
     id: string;
@@ -147,6 +147,7 @@ export interface GameSnapshot {
     turnNumber: number;
     activeTradeOffers: TradeOfferPanelData[];
     discardSession: DiscardSession;
+    diceRoll?: { values: [number, number] };
 }
 
 export interface DiscardSession {

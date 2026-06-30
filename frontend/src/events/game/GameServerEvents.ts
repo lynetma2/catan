@@ -76,6 +76,9 @@ export const GameServerEvents = {
         },
         discardCards: {
             success: `${RESOURCE_GAME_SERVER}discardCards`,
+        },
+        discardComplete: {
+            success: `${RESOURCE_GAME_SERVER}discardComplete`,
         }
     },
     turn: {
@@ -88,7 +91,10 @@ export const GameServerEvents = {
     },
     robber: {
         placed: {
-            success: `${ROBBER_GAME_SERVER}robber`
+            success: `${ROBBER_GAME_SERVER}place`
+        },
+        stealTargetRequired: {
+            success: `${ROBBER_GAME_SERVER}stealTargetRequired`,
         }
     }
 } as const;
@@ -117,9 +123,11 @@ export interface GameServerEventMap {
     [GameServerEvents.resource.spent.success]: { playerId: string; resources: Resource[] };
     [GameServerEvents.resource.discardRequired.success]: { playerId: string, amount: number };
     [GameServerEvents.resource.discardCards.success]: { playerId: string, resources: Resource[] };
+    [GameServerEvents.resource.discardComplete.success]: { playerId: string };
     [GameServerEvents.turn.end.success]: { playerId: string };
     [GameServerEvents.turn.start.success]: { playerId: string };
     [GameServerEvents.robber.placed.success]: { playerId: string, hex: Hex };
+    [GameServerEvents.robber.stealTargetRequired.success]: { candidates: string[] };
 }
 
 export type GameServerEventValues =

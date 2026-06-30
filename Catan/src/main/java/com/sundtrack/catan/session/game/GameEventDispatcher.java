@@ -29,7 +29,7 @@ public class GameEventDispatcher {
         UUID playerId = PrincipalUtils.extractPlayerId(principal);
         return switch (event) {
             case GameStateAction e ->
-                    EventResult.directed(playerId, new GameFullStateEvent(UUID.randomUUID(), gameMapper.toSnapshotDTO(game), UUID.randomUUID())); //TODO hide player specific information.
+                    EventResult.directed(playerId, new GameFullStateEvent(UUID.randomUUID(), gameMapper.toSnapshotDTO(game, playerId), UUID.randomUUID())); //TODO hide player specific information.
             //case BuildRoadEvent e -> buildService.buildRoad(game, e);
             //case RollDiceEvent e  -> turnService.rollDice(game, e);
             //case EndTurnEvent e   -> turnService.endTurn(game, e);

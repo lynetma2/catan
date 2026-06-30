@@ -5,6 +5,7 @@ import com.sundtrack.catan.datalayer.domain.board.Vertex;
 import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
 import com.sundtrack.catan.datalayer.domain.building.Building;
 import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
+import com.sundtrack.catan.datalayer.domain.game.DiscardSession;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.game.GamePlayer;
 import com.sundtrack.catan.datalayer.dto.placement.CityPlacementDTO;
@@ -15,11 +16,13 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class GameMapper {
 
-    public GameSnapshotDTO toSnapshotDTO(Game game) {
+    public GameSnapshotDTO toSnapshotDTO(Game game, UUID playerId) {
         return new GameSnapshotDTO(
                 game.getId().toString(),
                 mapPlayers(game.getPlayers()),
@@ -28,7 +31,9 @@ public class GameMapper {
                 game.getCurrentPhase(),
                 game.getCurrentPlayerId().toString(),
                 game.getTurnNumber(),
-                game.getActiveTradeOffers()
+                game.getActiveTradeOffers(),
+                mapDiscardSession(game.getDiscardSession(), playerId),
+                mapDiceRoll(game.getDiceRoll())
         );
     }
 
@@ -89,5 +94,19 @@ public class GameMapper {
         });
 
         return new PlacementSnapshotDTO(roads, settlements, cityPlacements);
+    }
+
+    private DiscardSessionDTO mapDiscardSession(Optional<DiscardSession> discardSession, UUID playerId) {
+        if (discardSession.isEmpty()) {
+            return new DiscardSessionDTO(false, 0);
+        }
+        DiscardSession session = discardSession.get();
+        boolean mustDiscard = session.isPending(playerId);
+        int discardAmount = session.getRequiredCount(playerId);
+        return new DiscardSessionDTO(mustDiscard, discardAmount);
+    }
+
+    private List<Integer> mapDiceRoll(DiceRollDTO diceRoll) {
+        return diceRoll != null ? diceRoll.toList() : null;
     }
 }

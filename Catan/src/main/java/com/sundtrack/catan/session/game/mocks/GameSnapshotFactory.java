@@ -15,10 +15,7 @@ import com.sundtrack.catan.datalayer.domain.trade.TradeOfferResponseKind;
 import com.sundtrack.catan.datalayer.domain.trade.TradePlayerResponse;
 import com.sundtrack.catan.datalayer.dto.placement.RoadPlacementDTO;
 import com.sundtrack.catan.datalayer.dto.placement.SettlementPlacementDTO;
-import com.sundtrack.catan.datalayer.dto.snapshot.GameSnapshotDTO;
-import com.sundtrack.catan.datalayer.dto.snapshot.PlacementSnapshotDTO;
-import com.sundtrack.catan.datalayer.dto.snapshot.PlayerSnapshotDTO;
-import com.sundtrack.catan.datalayer.dto.snapshot.TileSnapshotDTO;
+import com.sundtrack.catan.datalayer.dto.snapshot.*;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -69,7 +66,9 @@ public class GameSnapshotFactory {
                 phase,
                 currentPlayerId,
                 4,
-                createActiveTradeOffers(players)
+                createActiveTradeOffers(players),
+                new DiscardSessionDTO(false, 0),
+                null
         );
     }
 

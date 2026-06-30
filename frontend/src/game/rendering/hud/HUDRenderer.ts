@@ -13,6 +13,10 @@ import {
     defaultTradeOfferRendererTheme,
     TradeOfferRenderer
 } from "@/game/rendering/hud/tradeOffer/TradeOfferRenderer.ts";
+import {
+    DEFAULT_ROBBER_STEAL_THEME,
+    RobberStealPanelRenderer
+} from "@/game/rendering/hud/robber/RobberStealPanelRenderer.ts";
 
 export class HudRenderer {
     private readonly buildPanelRenderer:    BuildPanelRenderer;
@@ -21,6 +25,7 @@ export class HudRenderer {
     private readonly dicePanelRenderer: DicePanelRenderer;
     private readonly toastRenderer:         ToastRenderer;
     private readonly tradeOfferRenderer: TradeOfferRenderer;
+    private readonly robberStealPanelRenderer: RobberStealPanelRenderer;
     private resolution: Resolution;
 
     constructor(
@@ -35,6 +40,7 @@ export class HudRenderer {
         this.dicePanelRenderer      = new DicePanelRenderer(ctx);
         this.toastRenderer          = new ToastRenderer(ctx, theme.toast);
         this.tradeOfferRenderer = new TradeOfferRenderer(ctx, defaultTradeOfferRendererTheme);
+        this.robberStealPanelRenderer = new RobberStealPanelRenderer(ctx, DEFAULT_ROBBER_STEAL_THEME);
 
         resolutionManager.onChange(r => { this.resolution = r; });
     }
@@ -45,6 +51,7 @@ export class HudRenderer {
         this.overviewPanelRenderer.render(state.panels.overview);
         this.dicePanelRenderer.render(state.panels.dice);
         this.tradeOfferRenderer.render(state.panels.tradeOffers);
+        this.robberStealPanelRenderer.render(state.panels.robberSteal);
         if (state.toast) this.toastRenderer.render(state.toast, this.resolution);
     }
 }

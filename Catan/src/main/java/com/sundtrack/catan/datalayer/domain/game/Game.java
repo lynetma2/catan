@@ -38,6 +38,9 @@ public class Game {
     public record SevenRolledAdvanceResult(GamePhase gamephase, Optional<DiscardSession> discardSession) {
     }
 
+    public record RobberPlacedAdvanceResult(GamePhase gamePhase, List<UUID> candidates) {
+    }
+
     private UUID id;
     private List<GamePlayer> players;
     private List<Tile> tiles;
@@ -320,13 +323,14 @@ public class Game {
         return new SevenRolledAdvanceResult(gamePhase, Optional.of(this.discardSession));
     }
 
-    public GamePhase advancePhaseAfterRobberPlacement(UUID retrievingPlayerId) {
+    public RobberPlacedAdvanceResult advancePhaseAfterRobberPlacement(UUID retrievingPlayerId) {
         GamePhase gamePhase = GamePhase.POST_ROLL;
-        if (stealActionPossible(retrievingPlayerId)) {
+        List<UUID> stealCandidates = stealActionCandidates(retrievingPlayerId);
+        if (!stealCandidates.isEmpty()) {
             gamePhase = GamePhase.ROBBER_STEAL;
         }
         this.setCurrentPhase(gamePhase);
-        return gamePhase;
+        return new RobberPlacedAdvanceResult(gamePhase, stealCandidates);
     }
 
     public GamePhase advancePhaseAfterRobberSteal() {
@@ -450,12 +454,13 @@ public class Game {
                 .orElseThrow(() -> new NoRobbedTileException("Called inside getRobbedTile"));
     }
 
-    private boolean stealActionPossible(UUID retrievingPlayerId) {
-        Set<UUID> playerIds = getAdjacentPlayerIds(getRobbedTile().getHex());
-        return playerIds
+    private List<UUID> stealActionCandidates(UUID retrievingPlayerId) {
+        Set<UUID> stealPlayerIds = getAdjacentPlayerIds(getRobbedTile().getHex());
+        return stealPlayerIds
                 .stream()
                 .filter(p -> !p.equals(retrievingPlayerId))
-                .anyMatch(p -> getPlayerOrThrow(p).hasResources());
+                .filter(p -> getPlayerOrThrow(p).hasResources())
+                .toList();
     }
 
     private void computeAndSetRequiredDiscards(List<GamePlayer> players) {

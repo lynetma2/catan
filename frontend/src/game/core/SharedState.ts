@@ -1,5 +1,13 @@
-import { GamePhase, type GameSnapshot, PieceType, type Player, type Resource } from "@/game/core/types.ts";
-import { DEV_CARD_COST, PIECE_COSTS, type ResourceCost } from "@/game/world/systems/build/BuildRules.ts";
+import {
+    GamePhase,
+    type GameSnapshot,
+    PieceType,
+    type Player,
+    type Resource,
+    type TileSnapshot
+} from "@/game/core/types.ts";
+import {DEV_CARD_COST, PIECE_COSTS, type ResourceCost} from "@/game/world/systems/build/BuildRules.ts";
+import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
 
 
 export class SharedState {
@@ -13,6 +21,8 @@ export class SharedState {
     private _players: Map<string, Player> = new Map();
     private _mustDiscard: boolean = false; //TODO create better abstraction for this.
     private _discardCount: number = 0; //Todo create better abstraction for this.
+    private _stealCandidateIds: string[] = [];
+    private _robberHex: Hex | null = null;
 
     // core/SharedState.ts
     loadFromSnapshot(payload: GameSnapshot, localPlayerId: string) {
@@ -26,6 +36,10 @@ export class SharedState {
             victoryPoints: p.victoryPoints
         })));
         this.setMustDiscard(payload.discardSession.mustDiscard, payload.discardSession.discardAmount);
+        const robbedHex = this.findRobbedHex(payload.tiles);
+        if (robbedHex !== null) {
+            this.setRobberHex(robbedHex);
+        }
 
         const local = payload.players.find(p => p.id === localPlayerId);
         if (local) this.setLocalPlayer(local);
@@ -60,6 +74,14 @@ export class SharedState {
     get isLocalPlayersTurn(): boolean {
         return this._localPlayerId !== null
             && this._localPlayerId === this._currentPlayerId;
+    }
+
+    get stealCandidateIds(): string[] {
+        return this._stealCandidateIds;
+    }
+
+    get robberHex(): Hex | null {
+        return this._robberHex;
     }
 
     // ─── Mutations — explicit, named, intentional ─────────────────────
@@ -108,6 +130,18 @@ export class SharedState {
     clearMustDiscard() {
         this._mustDiscard = false;
         this._discardCount = 0;
+    }
+
+    setStealCandidateIds(candidateIds: string[]) {
+        this._stealCandidateIds = candidateIds;
+    }
+
+    clearStealCandidateIds() {
+        this._stealCandidateIds = [];
+    }
+
+    setRobberHex(target: Hex) {
+        this._robberHex = target;
     }
 
     // Queries
@@ -173,6 +207,13 @@ export class SharedState {
                     .filter(r => r.resourceType === type)
                     .length >= (cost[type] ?? 0)
             );
+    }
+
+    private findRobbedHex(tiles: TileSnapshot[]): Hex | null {
+        for (const tile of tiles) {
+            if (tile.hasRobber) return tile.hex;
+        }
+        return null;
     }
 }
 

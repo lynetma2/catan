@@ -14,6 +14,8 @@ import {DicePanel} from "@/game/hud/panels/dice/DicePanel.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import {ResourcePanelManager} from "@/game/hud/panels/resource/ResourcePanelManager.ts";
 import {TradeOfferManager} from "@/game/hud/panels/tradeOffer/TradeOfferManager.ts";
+import {RobberStealPanel} from "@/game/hud/panels/robber/RobberStealPanel.ts";
+import type {Camera} from "@/game/core/Camera.ts";
 
 export class HUD implements InputLayer {
     readonly priority = 10;
@@ -23,18 +25,21 @@ export class HUD implements InputLayer {
     private readonly overviewPanel: PlayerOverviewPanel;
     private readonly dicePanel: DicePanel;
     private readonly tradeOfferPanel: TradeOfferManager;
+    private readonly robberStealPanel: RobberStealPanel;
 
     constructor(
         private readonly bus:        EventBus,
         private readonly shared:     SharedState,
         frameQueue: FrameQueue,
         resolution: ResolutionManager,
+        camera: Camera,
     ) {
         this.buildPanel    = new BuildPanel(frameQueue, shared, resolution, bus);
         this.resourcePanel = new ResourcePanelManager(shared, resolution, bus, frameQueue);
         this.overviewPanel = new PlayerOverviewPanel(bus, shared, resolution);
         this.dicePanel = new DicePanel(bus, frameQueue, shared, resolution);
         this.tradeOfferPanel = new TradeOfferManager(bus, shared, frameQueue, resolution);
+        this.robberStealPanel = new RobberStealPanel(bus, frameQueue, shared, camera);
 
         this.subscribeToEvents();
     }
@@ -78,6 +83,7 @@ export class HUD implements InputLayer {
             this.buildPanel.handleInput(event);
             this.resourcePanel.handleInput(event);
             this.dicePanel.handleInput(event);
+            this.resourcePanel.handleInput(event);
             return false;
         }
 
@@ -87,12 +93,16 @@ export class HUD implements InputLayer {
             this.buildPanel.handleInput(event);
             this.resourcePanel.handleInput(event);
             this.dicePanel.handleInput(event);
+            this.robberStealPanel.handleInput(event);
 
             // Consume if over any panel — prevents world hover underneath
             return this.isOverAnyPanel(event.screenPos);
         }
 
         // Click events — only forward if inside panel bounds
+        if (this.robberStealPanel.isOverAnyTarget(event.screenPos)) {
+            if (this.robberStealPanel.handleInput(event)) return true;
+        }
         if (containsPoint(this.buildPanel.getState().bounds, event.screenPos)) {
             if (this.buildPanel.handleInput(event)) return true;
         }
@@ -109,7 +119,8 @@ export class HUD implements InputLayer {
     private isOverAnyPanel(screenPos: Vec2): boolean {
         return containsPoint(this.buildPanel.getState().bounds,    screenPos)
             || containsPoint(this.resourcePanel.getState().bounds, screenPos)
-            || containsPoint(this.dicePanel.getState().layout.panel, screenPos);
+            || containsPoint(this.dicePanel.getState().layout.panel, screenPos)
+            || this.robberStealPanel.isOverAnyTarget(screenPos);
     }
 
     // ─── Update ───────────────────────────────────────────────────────
@@ -131,6 +142,7 @@ export class HUD implements InputLayer {
                 overview: this.overviewPanel.getState(),
                 dice:     this.dicePanel.getState(),
                 tradeOffers: this.tradeOfferPanel.getState(),
+                robberSteal: this.robberStealPanel.getState()
             }
         };
     }

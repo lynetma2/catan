@@ -27,6 +27,7 @@ export class HoverSystem {
     private validTargets: BuildTarget[] = [];
     private currentMode: HoverMode;
     private validSet: Set<string> = new Set();
+    private lastScreenPos: Vec2 | null = null; // ← track last mouse position
 
     constructor(
         private readonly board:  Board,
@@ -40,37 +41,34 @@ export class HoverSystem {
         const buildMode = this.shared.buildMode;
         const playerId  = this.shared.localPlayerId;
 
-        console.log('[HoverSystem] onModeChanged', { buildMode, playerId });
-
-        // ─── Robber mode ──────────────────────────────────────────────
         if (buildMode === "robber") {
             const robberHexes = this.board.getValidRobberHexes();
             this.validTargets = robberHexes.map(h => ({kind: BuildTargetKind.Hex, hex: h}));
             this.validSet = new Set(this.validTargets.map(t => this.targetKey(t)));
-            return;
-        }
-
-        // ─── Build modes ──────────────────────────────────────────────
-        if (!buildMode || !playerId) {
+        } else if (!buildMode || !playerId) {
             this.validTargets = [];
             this.validSet.clear();
-            return;
+        } else {
+            this.validTargets = this.buildValidator.validTargets(buildMode, playerId);
+            this.validSet = new Set(this.validTargets.map(t => this.targetKey(t)));
         }
 
-        this.validTargets = this.buildValidator.validTargets(buildMode, playerId);
-        console.log('[HoverSystem] validTargets count:', this.validTargets.length);
-        this.validSet     = new Set(this.validTargets.map(t => this.targetKey(t)));
+        // Recompute target immediately using the last known mouse position,
+        // instead of waiting for the next mousemove.
+        if (this.lastScreenPos) {
+            this.update(this.lastScreenPos, this.currentMode);
+        }
     }
 
     // ─── Update — called every mousemove from World ───────────────────
 
     update(screenPos: Vec2, mode: HoverMode) {
+        this.lastScreenPos = screenPos; // ← remember for re-evaluation on mode change
         this.currentMode = mode;
         if (mode === 'inspect') {
             this.target = this.findClosestFeature(screenPos);
         } else {
             const candidate = this.findCandidate(screenPos, mode);
-            // For build/robber, only accept if it's in the valid set
             this.target = (candidate && this.validSet.has(this.targetKey(candidate)))
                 ? candidate
                 : null;

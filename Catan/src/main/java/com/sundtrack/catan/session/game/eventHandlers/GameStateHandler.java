@@ -25,6 +25,6 @@ public class GameStateHandler implements GameActionHandler<GameStateAction> {
     public EventResult<ServerEvent> handle(GameContext context, GameStateAction action) {
         Game game = gameStore.get(context.gameId());
 
-        return EventResult.directed(context.playerId(), new GameFullStateEvent(context.gameId(), gameMapper.toSnapshotDTO(game), context.playerId()));
+        return EventResult.directed(context.playerId(), new GameFullStateEvent(context.gameId(), gameMapper.toSnapshotDTO(game, context.playerId()), context.playerId()));
     }
 }

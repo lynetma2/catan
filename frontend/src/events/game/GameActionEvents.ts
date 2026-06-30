@@ -27,6 +27,7 @@ export const GameActionEvents = {
     },
     robber: {
         place: `${ROBBER_GAME_ACTION}place`,
+        steal: `${ROBBER_GAME_ACTION}steal`,
     }
 } as const;
 
@@ -40,6 +41,7 @@ export interface GameActionEventMap {
     [GameActionEvents.developmentCard.draw]: Record<never, never>;
     [GameActionEvents.turn.end]: Record<never, never>;
     [GameActionEvents.robber.place]: { target: Hex };
+    [GameActionEvents.robber.steal]: { targetPlayerId: string };
 }
 
 export type GameActionEvent = EventUnion<GameActionEventMap>;
