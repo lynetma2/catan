@@ -79,7 +79,7 @@ public class GameRollDiceHandler implements GameActionHandler<RollDiceAction> {
     }
 
     private ServerEvent createRollDiceEvent(MutationResult result) {
-        return new RollDiceEvent(result.diceRoll.toList());
+        return new RollDiceEvent(result.diceRoll);
     }
 
     private List<ServerEvent> createResourceGrantEvents(MutationResult result) {

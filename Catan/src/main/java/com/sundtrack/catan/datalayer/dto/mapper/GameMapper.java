@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -34,9 +33,8 @@ public class GameMapper {
                 game.getTurnNumber(),
                 game.getActiveTradeOffers(),
                 mapDiscardSession(game.getDiscardSession(), playerId),
-                mapDiceRoll(game.getDiceRoll()),
+                game.getDiceRoll(),
                 mapStealSession(game.getStealSession())
-
         );
     }
 
@@ -103,10 +101,6 @@ public class GameMapper {
         boolean mustDiscard = discardSession.isPending(playerId);
         int discardAmount = discardSession.getRequiredCount(playerId);
         return new DiscardSessionDTO(mustDiscard, discardAmount);
-    }
-
-    private List<Integer> mapDiceRoll(DiceRollDTO diceRoll) {
-        return diceRoll != null ? diceRoll.toList() : null;
     }
 
     private StealSessionDTO mapStealSession(StealSession stealSession) {

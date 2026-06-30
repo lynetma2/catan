@@ -68,6 +68,7 @@ public class GameSnapshotFactory {
                 4,
                 createActiveTradeOffers(players),
                 new DiscardSessionDTO(false, 0),
+                null,
                 null
         );
     }

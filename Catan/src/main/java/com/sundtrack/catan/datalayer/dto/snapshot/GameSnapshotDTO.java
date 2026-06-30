@@ -18,7 +18,7 @@ public record GameSnapshotDTO(
         int turnNumber,
         List<TradeOffer> activeTradeOffers,
         DiscardSessionDTO discardSession,
-        List<Integer> diceRoll,
+        DiceRollDTO diceRoll,
         StealSessionDTO stealSession
 ) {
     public GameSnapshotDTO {

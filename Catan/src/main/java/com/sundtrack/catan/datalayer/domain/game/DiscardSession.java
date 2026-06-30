@@ -32,11 +32,11 @@ public class DiscardSession {
     }
 
     public boolean isPending(UUID playerId) {
-        return pendingPLayers.contains(playerId);
+        return pendingPLayers != null && pendingPLayers.contains(playerId);
     }
 
     public int getRequiredCount(UUID playerId) {
-        return requiredDiscards.getOrDefault(playerId, 0);
+        return requiredDiscards == null ? 0 : requiredDiscards.getOrDefault(playerId, 0);
     }
 
     public void markDiscarded(UUID playerId) {

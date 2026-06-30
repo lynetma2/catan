@@ -27,17 +27,19 @@ export class DicePanel {
     // ─── Subscriptions ────────────────────────────────────────────────
 
     private subscribeToEvents() {
-        this.bus.on(GameServerEvents.dice.roll.success, (payload) => this.onDiceRolled(payload));
+        this.bus.on(GameServerEvents.dice.roll.success, (payload) => this.onDiceRolled(payload.diceRoll));
         this.bus.on(GameServerEvents.turn.start.success, () => this.reset());
         this.bus.on(GameServerEvents.state.full.success, (state) => {
-            if (state.snapshot.diceRoll)
-                this.onDiceRolled(state.snapshot.diceRoll)
+            if (state.snapshot.diceRoll) {
+                this.onDiceRolled(state.snapshot.diceRoll);
+                console.log("Full snapshot arrived, logged from DicePanel state:", state);
+            }
         });
     }
 
-    private onDiceRolled(payload: GameEventMap[typeof GameServerEvents.dice.roll.success]) {
-        const valueDie1 = payload.values[0];
-        const valueDie2 = payload.values[1];
+    private onDiceRolled(diceRoll: { values: [number, number] }) {
+        const valueDie1 = diceRoll.values[0];
+        const valueDie2 = diceRoll.values[1];
 
         this.die1 = { value: valueDie1 };
         this.die2 = { value: valueDie2 };

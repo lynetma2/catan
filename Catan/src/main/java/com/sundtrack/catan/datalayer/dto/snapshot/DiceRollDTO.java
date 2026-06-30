@@ -1,19 +1,28 @@
 package com.sundtrack.catan.datalayer.dto.snapshot;
 
-import java.util.ArrayList;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
-public record DiceRollDTO(int die1, int die2) {
+public record DiceRollDTO(
+        @JsonIgnore int die1,
+        @JsonIgnore int die2
+) {
 
+    @JsonIgnore
     public int total() {
         return die1 + die2;
     }
 
+    @JsonIgnore
     public boolean isSeven() {
         return total() == 7;
     }
 
-    public List<Integer> toList() {
+    @JsonProperty("values")
+    public List<Integer> values() {
         return List.of(die1, die2);
     }
 }
+
