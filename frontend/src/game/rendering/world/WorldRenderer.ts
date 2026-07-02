@@ -1,16 +1,18 @@
 import {PieceRenderer, type PlayerColorLookup} from "@/game/rendering/world/PieceRenderer.ts";
 import {TileRenderer} from "@/game/rendering/world/TileRenderer.ts";
-import {HoverRenderer} from "@/game/rendering/world/HoverRenderer.ts";
 import type {Camera} from "@/game/core/Camera.ts";
 import {DEFAULT_WORLD_THEME, type WorldTheme} from "@/game/rendering/world/WorldTheme.ts";
 import type {WorldState} from "@/game/world/types.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 import {BuildTargetKind, TileKind} from "@/game/core/types.ts";
+import {BuildHoverRenderer} from "@/game/rendering/world/hover/BuildHoverRenderer.ts";
+import {RobberHoverRenderer} from "@/game/rendering/world/hover/RobberHoverRenderer.ts";
 
 export class WorldRenderer {
     private readonly tileRenderer:  TileRenderer;
     private readonly pieceRenderer: PieceRenderer;
-    private readonly hoverRenderer: HoverRenderer;
+    private readonly buildHoverRenderer: BuildHoverRenderer;
+    private readonly robberHoverRenderer: RobberHoverRenderer;
 
     constructor(
         private readonly ctx:    CanvasRenderingContext2D,
@@ -23,7 +25,8 @@ export class WorldRenderer {
 
         this.tileRenderer  = new TileRenderer(ctx, theme.tile, camera);
         this.pieceRenderer = new PieceRenderer(ctx, theme.piece, camera, playerColor);
-        this.hoverRenderer = new HoverRenderer(ctx, theme.hover, camera);
+        this.buildHoverRenderer = new BuildHoverRenderer(ctx, theme.hover, camera);
+        this.robberHoverRenderer = new RobberHoverRenderer(ctx, theme.hover, camera);
     }
 
     render(state: WorldState) {
@@ -42,16 +45,17 @@ export class WorldRenderer {
             .forEach(t => this.tileRenderer.render(t));
 
         // Layer 3 — hex hover (behind pieces)
-        if (state.hover.target?.kind === BuildTargetKind.Hex) {
-            this.hoverRenderer.render(state.hover);
+        if (state.buildHover.target?.kind === BuildTargetKind.Hex) {
+            this.buildHoverRenderer.render(state.buildHover);
         }
+        this.robberHoverRenderer.render(state.robberHover);
 
         // Layer 4 — pieces
         this.pieceRenderer.render(state.placements);
 
         // Layer 5 — vertex/edge hover and valid targets (in front of pieces)
-        if (state.hover.target?.kind !== BuildTargetKind.Hex) {
-            this.hoverRenderer.render(state.hover);
+        if (state.buildHover.target?.kind !== BuildTargetKind.Hex) {
+            this.buildHoverRenderer.render(state.buildHover);
         }
 
         this.ctx.restore();

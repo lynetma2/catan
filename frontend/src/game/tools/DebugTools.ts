@@ -253,6 +253,7 @@ export class DebugTools {
         this.debugPlayers();
         this.debugCamera();
         this.debugHud();
+        this.debugWorld();
         console.groupEnd();
     }
 
@@ -310,9 +311,15 @@ export class DebugTools {
 
     private debugHud() {
         console.group('%c[DEBUG] HUD', 'color: #50c0c0; font-weight: bold');
-        console.log('hover target:', this.world.getState().hover.target);
         console.log('hud state:   ', this.hud.getState());
         console.groupEnd();
+    }
+
+    private debugWorld() {
+        console.group('%c[DEBUG] Hover', 'color: #50c0c0; font-weight: bold');
+        console.log('world: ', this.world.getState());
+        console.log('buildHover: ', this.world.getState().buildHover);
+        console.log('robberHover: ', this.world.getState().robberHover);
     }
 
     private loadScenario(name: string) {

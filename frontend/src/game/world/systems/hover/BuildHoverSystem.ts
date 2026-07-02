@@ -1,7 +1,4 @@
-
-
-// ─── Types ────────────────────────────────────────────────────────────
-
+// world/systems/hover/BuildHoverSystem.ts
 import {type BuildTarget, BuildTargetKind, PieceType} from "@/game/core/types.ts";
 import type {Board} from "@/game/world/board/Board.ts";
 import type {Camera} from "@/game/core/Camera.ts";
@@ -11,41 +8,48 @@ import {vertex, type Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
 import {edge, type Edge} from "@/game/utils/HexGeometry/Edge.ts";
 import type {BuildValidator} from "@/game/world/systems/build/BuildValidator.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
+import type {EventBus} from "@/game/core/EventBus.ts";
+import type {GameEventMap} from "@/events/shared/AppEvents.ts";
+import {GameUiEvents} from "@/events/game/GameUiEvents.ts";
 
-export type HoverMode = BuildTargetKind | 'inspect' | "robber";
+export type BuildHoverMode = BuildTargetKind | 'inspect';
 
-export interface HoverState {
+export interface BuildHoverState {
     target: BuildTarget | null;
-    validTargets: BuildTarget[] | null;
-    mode: HoverMode | null;
+    validTargets: BuildTarget[];
+    mode: BuildHoverMode | null;
 }
 
-// ─── System ───────────────────────────────────────────────────────────
-
-export class HoverSystem {
+export class BuildHoverSystem {
     private target: BuildTarget | null = null;
     private validTargets: BuildTarget[] = [];
-    private currentMode: HoverMode;
+    private currentMode: BuildHoverMode = 'inspect';
     private validSet: Set<string> = new Set();
-    private lastScreenPos: Vec2 | null = null; // ← track last mouse position
+    private lastScreenPos: Vec2 | null = null;
 
     constructor(
-        private readonly board:  Board,
+        private readonly board: Board,
         private readonly camera: Camera,
         private readonly buildValidator: BuildValidator,
         private readonly shared: SharedState,
-    ) {}
+        bus: EventBus<GameEventMap>,
+    ) {
+        // Build hover owns its own subscriptions — World doesn't need to forward these.
+        // build.enter: new piece type selected → recompute valid targets for that piece
+        // build.exit:  selection cleared      → clear valid targets and hover state
+        bus.on(GameUiEvents.build.enter, () => this.onModeChanged());
+        bus.on(GameUiEvents.build.exit, () => this.clear());
+    }
 
-    //Added for performance.
+    // ─── Mode change ──────────────────────────────────────────────────
+    // Recomputes the valid-target set for the current buildMode.
+    // buildMode is now purely PieceType | null — no "robber" case here.
+
     onModeChanged() {
         const buildMode = this.shared.buildMode;
         const playerId  = this.shared.localPlayerId;
 
-        if (buildMode === "robber") {
-            const robberHexes = this.board.getValidRobberHexes();
-            this.validTargets = robberHexes.map(h => ({kind: BuildTargetKind.Hex, hex: h}));
-            this.validSet = new Set(this.validTargets.map(t => this.targetKey(t)));
-        } else if (!buildMode || !playerId) {
+        if (!buildMode || !playerId) {
             this.validTargets = [];
             this.validSet.clear();
         } else {
@@ -53,18 +57,17 @@ export class HoverSystem {
             this.validSet = new Set(this.validTargets.map(t => this.targetKey(t)));
         }
 
-        // Recompute target immediately using the last known mouse position,
-        // instead of waiting for the next mousemove.
         if (this.lastScreenPos) {
             this.update(this.lastScreenPos, this.currentMode);
         }
     }
 
-    // ─── Update — called every mousemove from World ───────────────────
+    // ─── Per-mousemove update ─────────────────────────────────────────
 
-    update(screenPos: Vec2, mode: HoverMode) {
-        this.lastScreenPos = screenPos; // ← remember for re-evaluation on mode change
+    update(screenPos: Vec2, mode: BuildHoverMode) {
+        this.lastScreenPos = screenPos;
         this.currentMode = mode;
+
         if (mode === 'inspect') {
             this.target = this.findClosestFeature(screenPos);
         } else {
@@ -81,7 +84,7 @@ export class HoverSystem {
         return this.target;
     }
 
-    getState(): HoverState {
+    getState(): BuildHoverState {
         return {
             target: this.target,
             validTargets: this.validTargets,
@@ -89,16 +92,24 @@ export class HoverSystem {
         };
     }
 
-    clear() {
+    clearHover() {
         this.target = null;
+        this.lastScreenPos = null;
     }
+
+    clear() {
+        this.validTargets = [];
+        this.validSet.clear();
+        this.clearHover();
+    }
+
+    // ─── Feature finding ──────────────────────────────────────────────
 
     private findClosestFeature(screenPos: Vec2): BuildTarget | null {
         const worldPos      = this.camera.toWorld(screenPos);
         const closestVertex = this.findVertex(screenPos);
         const closestEdge   = this.findEdge(screenPos);
 
-        // Filter to only valid targets
         const validVertex = closestVertex && this.isValidInspectTarget(closestVertex) ? closestVertex : null;
         const validEdge   = closestEdge   && this.isValidInspectTarget(closestEdge)   ? closestEdge   : null;
 
@@ -108,7 +119,6 @@ export class HoverSystem {
 
         const vertexPos  = this.vertexToWorld(validVertex.vertex);
         const edgePos    = this.edgeMidpoint(validEdge.edge);
-
         const vertexDist = Math.hypot(worldPos.x - vertexPos.x, worldPos.y - vertexPos.y);
         const edgeDist   = Math.hypot(worldPos.x - edgePos.x,   worldPos.y - edgePos.y);
 
@@ -119,119 +129,102 @@ export class HoverSystem {
         const playerId = this.shared.localPlayerId;
         if (!playerId) return false;
 
-        // Check if target is valid for any piece type
         switch (target.kind) {
             case BuildTargetKind.Vertex:
                 return this.buildValidator.canBuild(PieceType.Settlement, target, playerId)
                     || this.buildValidator.canBuild(PieceType.City,       target, playerId);
-
             case BuildTargetKind.Edge:
                 return this.buildValidator.canBuild(PieceType.Road, target, playerId);
-
             default:
                 return false;
         }
     }
 
-    // ─── Vertex finding ───────────────────────────────────────────────
-
     private findVertex(screenPos: Vec2): Extract<BuildTarget, { kind: BuildTargetKind.Vertex }> | null {
-        const worldPos    = this.camera.toWorld(screenPos);
-        const centerHex   = this.camera.screenToHex(screenPos);
-
-        // A vertex is shared by 3 hexes — check center hex and all neighbours
-        // to find which vertex the mouse is closest to
+        const worldPos = this.camera.toWorld(screenPos);
+        const centerHex = this.camera.screenToHex(screenPos);
         const candidateHexes = [
             centerHex,
-            ...hex.directions.map((_, dir) => hex.neighbor(centerHex, dir))
+            ...hex.directions.map((_, dir) => hex.neighbor(centerHex, dir)),
         ];
 
         let closestVertex:   Vertex | null = null;
         let closestDistance: number        = Infinity;
 
-        candidateHexes.forEach(h => {
-            if (!this.board.hexGrid.isValidHex(h)) return;
-
-            vertex.ofHex(h).forEach(v => {
-                // Only consider vertices on the valid board
-                if (!this.board.hexGrid.isValidVertex(v)) return;
-
+        for (const h of candidateHexes) {
+            if (!this.board.hexGrid.isValidHex(h)) continue;
+            for (const v of vertex.ofHex(h)) {
+                if (!this.board.hexGrid.isValidVertex(v)) continue;
                 const vPos     = this.vertexToWorld(v);
                 const distance = Math.hypot(worldPos.x - vPos.x, worldPos.y - vPos.y);
-
                 if (distance < closestDistance) {
                     closestDistance = distance;
                     closestVertex   = v;
                 }
-            });
-        });
+            }
+        }
 
-        // Snap threshold — only highlight if mouse is within range
         const snapThreshold = this.camera.hexToScreen(centerHex) !== null
             ? this.snapThreshold()
             : Infinity;
 
-        if (closestVertex && closestDistance <= snapThreshold) {
-            return { kind: BuildTargetKind.Vertex, vertex: closestVertex };
-        }
-
-        return null;
+        return (closestVertex && closestDistance <= snapThreshold)
+            ? {kind: BuildTargetKind.Vertex, vertex: closestVertex}
+            : null;
     }
 
-    // ─── Edge finding ─────────────────────────────────────────────────
-
     private findEdge(screenPos: Vec2): Extract<BuildTarget, { kind: BuildTargetKind.Edge }> | null {
-        const worldPos  = this.camera.toWorld(screenPos);
+        const worldPos = this.camera.toWorld(screenPos);
         const centerHex = this.camera.screenToHex(screenPos);
-
-        // An edge is shared by 2 hexes — check center hex and neighbours
         const candidateHexes = [
             centerHex,
-            ...hex.directions.map((_, dir) => hex.neighbor(centerHex, dir))
+            ...hex.directions.map((_, dir) => hex.neighbor(centerHex, dir)),
         ];
 
         let closestEdge:     Edge | null = null;
         let closestDistance: number      = Infinity;
 
-        candidateHexes.forEach(h => {
-            if (!this.board.hexGrid.isValidHex(h)) return;
-
-            edge.ofHex(h).forEach(e => {
-                if (!this.board.hexGrid.isValidEdge(e)) return;
-
+        for (const h of candidateHexes) {
+            if (!this.board.hexGrid.isValidHex(h)) continue;
+            for (const e of edge.ofHex(h)) {
+                if (!this.board.hexGrid.isValidEdge(e)) continue;
                 const midpoint = this.edgeMidpoint(e);
                 const distance = Math.hypot(worldPos.x - midpoint.x, worldPos.y - midpoint.y);
-
                 if (distance < closestDistance) {
                     closestDistance = distance;
                     closestEdge     = e;
                 }
-            });
-        });
-
-        if (closestEdge && closestDistance <= this.snapThreshold()) {
-            return { kind: BuildTargetKind.Edge, edge: closestEdge };
+            }
         }
 
-        return null;
+        return (closestEdge && closestDistance <= this.snapThreshold())
+            ? {kind: BuildTargetKind.Edge, edge: closestEdge}
+            : null;
     }
-
-    // ─── Hex finding ──────────────────────────────────────────────────
 
     private findHex(screenPos: Vec2): BuildTarget | null {
         const h = this.camera.screenToHex(screenPos);
+        return this.board.hexGrid.isValidHex(h)
+            ? {kind: BuildTargetKind.Hex, hex: h}
+            : null;
+    }
 
-        if (this.board.hexGrid.isValidHex(h)) {
-            return { kind: BuildTargetKind.Hex, hex: h };
+    private findCandidate(screenPos: Vec2, mode: BuildHoverMode): BuildTarget | null {
+        switch (mode) {
+            case BuildTargetKind.Vertex:
+                return this.findVertex(screenPos);
+            case BuildTargetKind.Edge:
+                return this.findEdge(screenPos);
+            case BuildTargetKind.Hex:
+                return this.findHex(screenPos);
+            case 'inspect':
+                return this.findClosestFeature(screenPos);
         }
-
-        return null;
     }
 
     // ─── Geometry helpers ─────────────────────────────────────────────
 
-    // Average of the 3 hex centers that share this vertex
-    private vertexToWorld(v: Vertex): Vec2 {
+    vertexToWorld(v: Vertex): Vec2 {
         const positions = v.hexes.map(h => this.camera.hexToWorld(h));
         return {
             x: positions.reduce((sum, p) => sum + p.x, 0) / 3,
@@ -239,30 +232,15 @@ export class HoverSystem {
         };
     }
 
-    // Average of the 2 vertex endpoints of this edge
-    private edgeMidpoint(e: Edge): Vec2 {
+    edgeMidpoint(e: Edge): Vec2 {
         const [v1, v2] = edge.vertices(e);
         const p1       = this.vertexToWorld(v1);
         const p2       = this.vertexToWorld(v2);
-        return {
-            x: (p1.x + p2.x) / 2,
-            y: (p1.y + p2.y) / 2,
-        };
+        return {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2};
     }
 
-    // Snap threshold scales with zoom — tighter when zoomed out
     private snapThreshold(): number {
         return 28 / this.camera.getZoom();
-    }
-
-    private findCandidate(screenPos: Vec2, mode: HoverMode): BuildTarget | null {
-        switch (mode) {
-            case BuildTargetKind.Vertex: return this.findVertex(screenPos);
-            case BuildTargetKind.Edge:   return this.findEdge(screenPos);
-            case BuildTargetKind.Hex:
-            case 'inspect':
-            case 'robber':              return this.findHex(screenPos);
-        }
     }
 
     private targetKey(target: BuildTarget): string {

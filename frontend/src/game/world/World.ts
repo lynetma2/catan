@@ -6,24 +6,26 @@ import type {Camera} from "@/game/core/Camera.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 import type {EventBus} from "@/game/core/EventBus.ts";
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
-import {type BuildTarget, BuildTargetKind, type GameSnapshot, PieceType, GamePhase} from "@/game/core/types.ts";
+import {type BuildTarget, BuildTargetKind, type GameSnapshot, PieceType} from "@/game/core/types.ts";
 import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {type BuildValidator, createBuildValidator} from "@/game/world/systems/build/BuildValidator.ts";
 import type {WorldState} from "@/game/world/types.ts";
-import {HoverSystem} from "@/game/world/systems/hover/HoverSystem.ts";
 
 // New event imports
 import {type GameServerEventMap, GameServerEvents} from "@/events/game/GameServerEvents";
 import {GameUiEvents} from "@/events/game/GameUiEvents";
 import {GameActionEventCreators} from "@/events/game/GameActionEvents";
 import type {GameEventMap} from "@/events/shared/AppEvents.ts";
+import {type BuildHoverMode, BuildHoverSystem} from "@/game/world/systems/hover/BuildHoverSystem.ts";
+import {RobberHoverSystem} from "@/game/world/systems/hover/RobberHoverSystem.ts";
 
 export class World implements InputLayer {
     readonly priority = 0;
 
     private readonly board: Board;
     private readonly buildSystem: BuildSystem;
-    private readonly hoverSystem: HoverSystem;
+    private readonly buildHoverSystem: BuildHoverSystem;
+    private readonly robberHoverSystem: RobberHoverSystem;
     private readonly buildValidator: BuildValidator;
 
     private isPanning: boolean = false;
@@ -39,8 +41,8 @@ export class World implements InputLayer {
         this.board = new Board();
         this.buildValidator = createBuildValidator(this.board, shared);
         this.buildSystem = new BuildSystem(bus, frameQueue, shared, this.gamePhaseManager, this.buildValidator);
-        this.hoverSystem = new HoverSystem(this.board, camera, this.buildValidator, shared);
-
+        this.buildHoverSystem = new BuildHoverSystem(this.board, camera, this.buildValidator, shared, bus);
+        this.robberHoverSystem = new RobberHoverSystem(this.board, camera, shared, bus);
         this.subscribeToEvents();
     }
 
@@ -66,23 +68,9 @@ export class World implements InputLayer {
             payload => this.onRoadBuilt(payload)
         );
         this.bus.on(
-            GameServerEvents.state.phase.change.success,
-            () => {
-                this.hoverSystem.onModeChanged();
-                if (this.shared.currentPhase !== GamePhase.RobberPlacement) {
-                    this.hoverSystem.clear();
-                }
-            }
-        );
-        this.bus.on(
             GameServerEvents.robber.placed.success,
             payload => this.onRobberPlaced(payload)
         );
-        this.bus.on(GameUiEvents.build.enter, () => this.hoverSystem.onModeChanged());
-        this.bus.on(GameUiEvents.build.exit, () => {
-            this.hoverSystem.onModeChanged();
-            this.hoverSystem.clear();
-        });
     }
 
     private onGameStateLoaded(payload: {
@@ -93,7 +81,8 @@ export class World implements InputLayer {
         const {snapshot} = payload;
         this.board.hexGrid.loadTiles(snapshot.tiles);
         this.board.loadFromSnapshot(snapshot.placements);
-        this.hoverSystem.onModeChanged();
+        this.buildHoverSystem.onModeChanged();
+        this.robberHoverSystem.onPhaseChanged(snapshot.currentPhase);
     }
 
     private onSettlementBuilt(
@@ -158,7 +147,12 @@ export class World implements InputLayer {
                 return true;
             }
 
-            this.hoverSystem.update(event.screenPos, this.resolveHoverMode());
+            // Route mousemove to whichever hover system is active
+            if (this.shared.mustPlaceRobber && this.shared.isLocalPlayersTurn) {
+                this.robberHoverSystem.update(event.screenPos);
+            } else {
+                this.buildHoverSystem.update(event.screenPos, this.resolveBuildHoverMode());
+            }
             return false;
         }
 
@@ -172,7 +166,8 @@ export class World implements InputLayer {
         }
 
         if (event.type === InputType.MouseLeave) {
-            this.hoverSystem.clear();
+            this.buildHoverSystem.clearHover();
+            this.robberHoverSystem.clearHover();
             return false;
         }
 
@@ -180,7 +175,17 @@ export class World implements InputLayer {
     }
 
     private handleClick(screenPos: { x: number; y: number }): boolean {
-        const target = this.hoverSystem.getTarget();
+        // Robber placement click — routed to its own system
+        if (this.shared.mustPlaceRobber && this.shared.isLocalPlayersTurn) {
+            const target = this.robberHoverSystem.getTarget();
+            if (!target) return false;
+            this.frameQueue.push(GameActionEventCreators.placeRobber(target.hex));
+            this.frameQueue.push({type: GameUiEvents.build.exit, payload: {}});
+            return true;
+        }
+
+        // Build/inspect click
+        const target = this.buildHoverSystem.getTarget();
         const buildMode = this.shared.buildMode;
 
         if (!target) return false;
@@ -204,18 +209,9 @@ export class World implements InputLayer {
                     this.frameQueue.push(GameActionEventCreators.placeSettlement(target.vertex));
                 }
                 break;
-            case "robber":
-                console.log("testing clicking on a hex, should send an event.!.!.!")
-                if (target.kind === BuildTargetKind.Hex) {
-                    this.frameQueue.push(GameActionEventCreators.placeRobber(target.hex))
-                }
         }
 
-        this.frameQueue.push({
-            type: GameUiEvents.build.exit,
-            payload: {},
-        });
-
+        this.frameQueue.push({type: GameUiEvents.build.exit, payload: {}});
         return true;
     }
 
@@ -241,7 +237,8 @@ export class World implements InputLayer {
 
     getState(): WorldState {
         return {
-            hover: this.hoverSystem.getState(),
+            buildHover: this.buildHoverSystem.getState(),
+            robberHover: this.robberHoverSystem.getState(),
             placements: this.board.placementMap.getState(),
             tiles: this.board.hexGrid.getState(),
         };
@@ -249,15 +246,13 @@ export class World implements InputLayer {
 
     // ─── Private helpers ──────────────────────────────────────────────
 
-    private resolveHoverMode() {
+    private resolveBuildHoverMode(): BuildHoverMode {
         switch (this.shared.buildMode) {
             case PieceType.Road:
                 return BuildTargetKind.Edge;
             case PieceType.Settlement:
             case PieceType.City:
                 return BuildTargetKind.Vertex;
-            case "robber":
-                return "robber";
             default:
                 return 'inspect';
         }
