@@ -29,9 +29,9 @@ public class GameMessagingService {
                 }
         );
         result.directed().forEach((playerId, event) -> {
-                    System.out.println("Sending directed to sessionId: " + sessionId + " destination: " + ApiRoutes.gameQueue() + " event: " + event);
+                    System.out.println("Sending directed to playerId: " + playerId + " destination: " + ApiRoutes.gameQueue() + " event: " + event);
                     OutgoingEventEnvelope envelope = outgoingEventEnvelopeFactory.create(event);
-                    messaging.sendToUser(sessionId, ApiRoutes.gameQueue(), envelope);
+                    messaging.sendToUser(playerId.toString(), ApiRoutes.gameQueue(), envelope);
                 }
         );
     }

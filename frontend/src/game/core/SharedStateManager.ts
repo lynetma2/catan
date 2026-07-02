@@ -39,6 +39,7 @@ export class SharedStateManager {
     }
 
     private onResourcesSpent(payload: GameEventMap[typeof GameServerEvents.resource.spent.success]) {
+        console.log("Resources spent event inside shared state manager: ", payload);
         if (payload.playerId !== this.shared.localPlayerId) return;
         const current = this.shared.localPlayer?.resources ?? [];
         this.shared.updateLocalPlayerResources(removeResources(current, payload.resources));
@@ -60,11 +61,17 @@ export class SharedStateManager {
 }
 
 function removeResources(current: Resource[], spent: Resource[]): Resource[] {
-    const remaining = [...current];
-    for (const res of spent) {
-        const idx = remaining.indexOf(res);
-        if (idx !== -1) {
-            remaining.splice(idx, 1);
+    const remaining = [];
+    for (const resource of current) {
+        let used: boolean = false;
+        for (const spentResource of spent) {
+            if (resource.uid === spentResource.uid) {
+                used = true;
+                console.log("Spent resource " + resource.uid);
+            }
+        }
+        if (!used) {
+            remaining.push(resource);
         }
     }
     return remaining;

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.sundtrack.catan.datalayer.domain.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.RollDiceAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.TurnEndAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceCityAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceRoadAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceSettlementAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
@@ -21,7 +22,7 @@ public enum GamePhase {
     PRE_ROLL("pre_roll",
             Set.of(RollDiceAction.class)),
     POST_ROLL("post_roll",
-            Set.of(TurnEndAction.class)),
+            Set.of(TurnEndAction.class, PlaceCityAction.class, PlaceRoadAction.class, PlaceSettlementAction.class)),
     ROBBER_PLACEMENT("robber_placement",
             Set.of(PlaceRobberAction.class)),
     ROBBER_STEAL("robber_steal",
