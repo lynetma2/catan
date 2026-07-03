@@ -2,7 +2,6 @@ package com.sundtrack.catan.session.game.eventHandlers.build;
 
 import com.sundtrack.catan.datalayer.domain.board.Edge;
 import com.sundtrack.catan.datalayer.domain.building.Building;
-import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceRoadAction;
@@ -12,6 +11,7 @@ import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseCha
 import com.sundtrack.catan.datalayer.domain.event.game.server.turn.TurnEndEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.turn.TurnStartEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
+import com.sundtrack.catan.datalayer.domain.game.GameFlow;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
@@ -47,16 +47,13 @@ public class GamePlaceRoadHandler implements GameActionHandler<PlaceRoadAction> 
     private void doValidations(Game game, GameContext context, PlaceRoadAction action) {
         game.validateCurrentPlayer(context.playerId());
         game.getCurrentPhase().validateAllowedAction(action);
-        game.validateBoardRoad(action.target(), context.playerId());
-        game.validateCanAfford(PieceType.ROAD, context.playerId());
     }
 
     private MutationResult doMutations(Game game, GameContext context, PlaceRoadAction action) {
-        List<Resource> deductedResources = game.deduct(PieceType.ROAD, context.playerId());
-        Building<Edge> road = game.addRoad(action.target(), context.playerId());
-        Optional<Game.PhaseAdvanceResult> phaseAdvance = game.advancePhaseAfterRoad();
+        Game.PlacementResult<Edge> placementResult = game.placeRoad(action.target(), context.playerId());
+        Optional<GameFlow.PhaseAdvanceResult> phaseAdvance = game.advancePhaseAfterRoad();
 
-        return new MutationResult(road, deductedResources, phaseAdvance);
+        return new MutationResult(placementResult.building(), placementResult.deductedResources(), phaseAdvance);
     }
 
     private EventResult<ServerEvent> createResults(GameContext context, MutationResult result) {
@@ -87,7 +84,7 @@ public class GamePlaceRoadHandler implements GameActionHandler<PlaceRoadAction> 
     private record MutationResult(
             Building<Edge> road,
             List<Resource> deductedResources,
-            Optional<Game.PhaseAdvanceResult> phaseAdvance
+            Optional<GameFlow.PhaseAdvanceResult> phaseAdvance
     ) {
     }
 }

@@ -43,9 +43,6 @@ public class GameRobberStealHandler implements GameActionHandler<RobberStealActi
     private void doValidations(Game game, GameContext context, RobberStealAction action) {
         game.validateCurrentPlayer(context.playerId());
         game.getCurrentPhase().validateAllowedAction(action);
-
-        //TODO Validate that the Target player has a building touching the robber.
-        game.validateRobberStealTargetPlayer(action.targetPlayerId());
     }
 
     private MutationResult doMutations(Game game, GameContext context, RobberStealAction action) {

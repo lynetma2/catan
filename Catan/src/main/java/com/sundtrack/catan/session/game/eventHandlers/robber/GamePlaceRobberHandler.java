@@ -8,6 +8,7 @@ import com.sundtrack.catan.datalayer.domain.event.game.server.robber.RobberPlace
 import com.sundtrack.catan.datalayer.domain.event.game.server.robber.StealTargetRequiredEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseChangedEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
+import com.sundtrack.catan.datalayer.domain.game.GameFlow;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
@@ -43,14 +44,13 @@ public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberActi
     private void doValidations(Game game, GameContext context, PlaceRobberAction action) {
         game.validateCurrentPlayer(context.playerId());
         game.getCurrentPhase().validateAllowedAction(action);
-        game.validateBoardRobber(action.target());
     }
 
     private MutationResult doMutations(Game game, GameContext context, PlaceRobberAction action) {
         //Update the position of the robber. (Set to false in old hex and true in new)
         game.moveRobber(action.target());
         //Update game phase to stealing or post roll.
-        Game.RobberPlacedAdvanceResult advanceResult = game.advancePhaseAfterRobberPlacement(context.playerId());
+        GameFlow.RobberPlacedAdvanceResult advanceResult = game.advancePhaseAfterRobberPlacement(context.playerId());
 
         return new MutationResult(action.target(), advanceResult.candidates(), advanceResult.gamePhase());
     }

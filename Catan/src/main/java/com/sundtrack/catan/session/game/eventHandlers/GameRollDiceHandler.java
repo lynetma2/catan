@@ -9,6 +9,7 @@ import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceG
 import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseChangedEvent;
 import com.sundtrack.catan.datalayer.domain.game.DiscardSession;
 import com.sundtrack.catan.datalayer.domain.game.Game;
+import com.sundtrack.catan.datalayer.domain.game.GameFlow;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.dto.snapshot.DiceRollDTO;
@@ -55,16 +56,6 @@ public class GameRollDiceHandler implements GameActionHandler<RollDiceAction> {
                 : handleNormalRoll(game, diceRoll);
     }
 
-    private MutationResult handleSevenRoll(Game game, DiceRollDTO diceRoll) {
-        Game.SevenRolledAdvanceResult result = game.advancePhaseAfterSevenRoll();
-        return new MutationResult(result.gamephase(), Collections.emptyMap(), diceRoll, result.discardSession());
-    }
-
-    private MutationResult handleNormalRoll(Game game, DiceRollDTO diceRoll) {
-        Map<UUID, List<Resource>> addedResources = game.grantResourcesForRoll(diceRoll.total());
-        return new MutationResult(game.advancePhaseAfterGrantResources(), addedResources, diceRoll, Optional.empty());
-    }
-
     private EventResult<ServerEvent> createResults(GameContext context, MutationResult result) {
         List<ServerEvent> events = new ArrayList<>();
         events.add(createPhaseChangedEvent(result));
@@ -72,6 +63,16 @@ public class GameRollDiceHandler implements GameActionHandler<RollDiceAction> {
         events.addAll(createResourceGrantEvents(result));
         events.addAll(createDiscardRequiredEvents(result));
         return EventResult.of(events, Map.of());
+    }
+
+    private MutationResult handleSevenRoll(Game game, DiceRollDTO diceRoll) {
+        GameFlow.SevenRolledAdvanceResult result = game.advancePhaseAfterSevenRoll();
+        return new MutationResult(result.gamePhase(), Collections.emptyMap(), diceRoll, result.discardSession());
+    }
+
+    private MutationResult handleNormalRoll(Game game, DiceRollDTO diceRoll) {
+        Map<UUID, List<Resource>> addedResources = game.grantResourcesForRoll(diceRoll.total());
+        return new MutationResult(game.advancePhaseAfterGrantResources(), addedResources, diceRoll, Optional.empty());
     }
 
     private ServerEvent createPhaseChangedEvent(MutationResult result) {

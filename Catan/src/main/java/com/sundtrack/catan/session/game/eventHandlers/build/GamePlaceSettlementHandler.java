@@ -2,7 +2,6 @@ package com.sundtrack.catan.session.game.eventHandlers.build;
 
 import com.sundtrack.catan.datalayer.domain.board.Vertex;
 import com.sundtrack.catan.datalayer.domain.building.Building;
-import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceSettlementAction;
@@ -46,16 +45,13 @@ public class GamePlaceSettlementHandler implements GameActionHandler<PlaceSettle
     private void doValidations(Game game, GameContext context, PlaceSettlementAction action) {
         game.validateCurrentPlayer(context.playerId());
         game.getCurrentPhase().validateAllowedAction(action);
-        game.validateBoardSettlement(action.target(), context.playerId());
-        game.validateCanAfford(PieceType.SETTLEMENT, context.playerId());
     }
 
     private MutationResult doMutations(Game game, GameContext context, PlaceSettlementAction action) {
-        List<Resource> deductedResources = game.deduct(PieceType.SETTLEMENT, context.playerId());
-        Building<Vertex> settlement = game.addSettlement(action.target(), context.playerId());
+        Game.PlacementResult<Vertex> placementResult = game.placeSettlement(action.target(), context.playerId());
         Optional<GamePhase> newPhase = game.advancePhaseAfterSettlement();
 
-        return new MutationResult(settlement, deductedResources, newPhase);
+        return new MutationResult(placementResult.building(), placementResult.deductedResources(), newPhase);
     }
 
     private EventResult<ServerEvent> createResults(GameContext context, MutationResult result) {

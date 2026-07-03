@@ -7,6 +7,7 @@ import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseCha
 import com.sundtrack.catan.datalayer.domain.event.game.server.turn.TurnEndEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.turn.TurnStartEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
+import com.sundtrack.catan.datalayer.domain.game.GameFlow;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.services.GameStore;
@@ -47,7 +48,7 @@ public class GameTurnEndHandler implements GameActionHandler<TurnEndAction> {
 
     private MutationResult doMutations(Game game, GameContext context, TurnEndAction action) {
         UUID endingPlayerId = context.playerId();
-        Game.TurnAdvanceResult turnAdvance = game.advanceTurn();
+        GameFlow.TurnAdvanceResult turnAdvance = game.advanceTurn();
 
         return new MutationResult(endingPlayerId, turnAdvance.newCurrentPlayerId(), turnAdvance.initialPhase());
     }

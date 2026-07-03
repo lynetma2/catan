@@ -1,7 +1,7 @@
 package com.sundtrack.catan.session.game.services;
 
+import com.sundtrack.catan.datalayer.domain.board.Board;
 import com.sundtrack.catan.datalayer.domain.board.BoardFactory;
-import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
 import com.sundtrack.catan.datalayer.domain.game.*;
 import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
 import com.sundtrack.catan.datalayer.domain.lobby.LobbyPlayer;
@@ -27,21 +27,19 @@ public class GameCreationServiceImpl implements GameCreationService {
         Lobby lobby = lobbyStore.get(id);
         Map<UUID, LobbyPlayer> lobbyPlayers = lobby.getPlayers();
 
-        List<Tile> tiles = boardFactory.createRandom();
+        Board board = boardFactory.createRandom();
         List<GamePlayer> gamePlayers = createPlayers(lobbyPlayers);
         TurnOrder turnOrder = TurnOrder.startingNewGame(lobbyPlayers.keySet().stream().toList());
-        DicePair dicePair = new  DicePair();
+        DicePair dicePair = new DicePair();
+        GameFlow flow = new GameFlow(GamePhase.SETUP_PLACE_SETTLEMENT, turnOrder, 0);
 
         return new Game(
                 id,
                 gamePlayers,
-                tiles,
-                new ArrayList<>(),
-                GamePhase.SETUP_PLACE_SETTLEMENT,
-                0,
+                board,
+                flow,
                 new ArrayList<>(),
                 new ArrayList<>(),
-                turnOrder,
                 dicePair
         );
     }

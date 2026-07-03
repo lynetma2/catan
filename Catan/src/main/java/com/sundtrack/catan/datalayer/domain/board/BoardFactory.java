@@ -1,8 +1,6 @@
 package com.sundtrack.catan.datalayer.domain.board;
 
-import com.sundtrack.catan.datalayer.domain.board.Hex;
 import com.sundtrack.catan.datalayer.domain.board.tile.*;
-import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -14,10 +12,10 @@ public class BoardFactory {
 
     // Standard Catan tile distribution
     private static final List<TileType> LAND_TILE_DISTRIBUTION = List.of(
-            TileType.FOREST,  TileType.FOREST,  TileType.FOREST,  TileType.FOREST,
+            TileType.FOREST, TileType.FOREST, TileType.FOREST, TileType.FOREST,
             TileType.FIELDS, TileType.FIELDS, TileType.FIELDS, TileType.FIELDS,
             TileType.PASTURE, TileType.PASTURE, TileType.PASTURE, TileType.PASTURE,
-            TileType.MOUNTAINS,   TileType.MOUNTAINS,   TileType.MOUNTAINS,
+            TileType.MOUNTAINS, TileType.MOUNTAINS, TileType.MOUNTAINS,
             TileType.HILLS, TileType.HILLS, TileType.HILLS,
             TileType.DESERT
     );
@@ -35,43 +33,43 @@ public class BoardFactory {
     // Standard Catan hex coordinates in cube format (q, r, s)
     private static final List<Hex> LAND_COORDINATES = List.of(
             // Center
-            new Hex( 0,  0,  0),
+            new Hex(0, 0, 0),
             // Inner ring
-            new Hex( 1, -1,  0), new Hex( 1,  0, -1),
-            new Hex( 0,  1, -1), new Hex(-1,  1,  0),
-            new Hex(-1,  0,  1), new Hex( 0, -1,  1),
+            new Hex(1, -1, 0), new Hex(1, 0, -1),
+            new Hex(0, 1, -1), new Hex(-1, 1, 0),
+            new Hex(-1, 0, 1), new Hex(0, -1, 1),
             // Outer ring
-            new Hex( 2, -2,  0), new Hex( 2, -1, -1),
-            new Hex( 2,  0, -2), new Hex( 1,  1, -2),
-            new Hex( 0,  2, -2), new Hex(-1,  2, -1),
-            new Hex(-2,  2,  0), new Hex(-2,  1,  1),
-            new Hex(-2,  0,  2), new Hex(-1, -1,  2),
-            new Hex( 0, -2,  2), new Hex( 1, -2,  1)
+            new Hex(2, -2, 0), new Hex(2, -1, -1),
+            new Hex(2, 0, -2), new Hex(1, 1, -2),
+            new Hex(0, 2, -2), new Hex(-1, 2, -1),
+            new Hex(-2, 2, 0), new Hex(-2, 1, 1),
+            new Hex(-2, 0, 2), new Hex(-1, -1, 2),
+            new Hex(0, -2, 2), new Hex(1, -2, 1)
     );
 
     private static final List<Hex> SEA_COORDINATES = List.of(
-            new Hex( 2, -3, 1), new Hex( 0,  -3, 3),
-            new Hex( -2,  -1, 3), new Hex( -3,  1, 2),
-            new Hex(-3,  3, 0),
-            new Hex(-1,  3,  -2), new Hex(1, 2,  -3),
-            new Hex( 3, 0,  -3), new Hex( 3, -2,  -1)
+            new Hex(2, -3, 1), new Hex(0, -3, 3),
+            new Hex(-2, -1, 3), new Hex(-3, 1, 2),
+            new Hex(-3, 3, 0),
+            new Hex(-1, 3, -2), new Hex(1, 2, -3),
+            new Hex(3, 0, -3), new Hex(3, -2, -1)
     );
 
     private static final List<Hex> PORT_COORDINATES = List.of(
-            new Hex( 3, -3,  0), new Hex( 1, -3, 2),
-            new Hex( -1,  -2, 3), new Hex(-3,  0, 3),
-            new Hex(-3,  2,  1), new Hex(-2,  3,  -1),
-            new Hex(0, 3,  -3), new Hex( 2, 1,  -3),
-            new Hex( 3, -1,  -2)
+            new Hex(3, -3, 0), new Hex(1, -3, 2),
+            new Hex(-1, -2, 3), new Hex(-3, 0, 3),
+            new Hex(-3, 2, 1), new Hex(-2, 3, -1),
+            new Hex(0, 3, -3), new Hex(2, 1, -3),
+            new Hex(3, -1, -2)
     );
 
     // Fixed layout for testing — always produces the same board
-    public List<Tile> createStatic() {
+    public Board createStatic() {
         return buildBoard(PORT_TILE_DISTRIBUTION, LAND_TILE_DISTRIBUTION, NUMBER_DISTRIBUTION);
     }
 
     // Seeded random — reproducible but shuffled
-    public List<Tile> createSeeded(long seed) {
+    public Board createSeeded(long seed) {
         Random random = new Random(seed);
         List<PortType> portTypes = shuffled(PORT_TILE_DISTRIBUTION, random);
         List<TileType> landTiles = shuffled(LAND_TILE_DISTRIBUTION, random);
@@ -80,11 +78,11 @@ public class BoardFactory {
     }
 
     // Fully random
-    public List<Tile> createRandom() {
+    public Board createRandom() {
         return createSeeded(new Random().nextLong());
     }
 
-    private List<Tile> buildBoard(List<PortType> portTiles, List<TileType> landTiles, List<Integer> numbers) {
+    private Board buildBoard(List<PortType> portTiles, List<TileType> landTiles, List<Integer> numbers) {
         List<Tile> tiles = new ArrayList<>();
 
         // 1. Map Hexes to TileTypes first (so we know where the Desert is)
@@ -129,7 +127,7 @@ public class BoardFactory {
             tiles.add(new SeaTile(coord));
         }
 
-        return tiles;
+        return new Board(tiles, List.of());
     }
 
     private boolean backtrackNumbers(int index, List<Hex> hexes, List<Integer> pool, Map<Hex, Integer> assignment) {
