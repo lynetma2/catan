@@ -28,8 +28,8 @@ public enum GamePhase {
     ROBBER_STEAL("robber_steal",
             Set.of(RobberStealAction.class)),
     DISCARD("discard", Set.of()),
-    END("end",
-            Set.of());
+    END("end", Set.of()),
+    ROAD_BUILDING("road_building", Set.of());
 
     //TODO finish this class!
 
@@ -41,15 +41,6 @@ public enum GamePhase {
         this.allowedActions = allowedActions;
     }
 
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    public Set<Class<? extends ClientAction>> getAllowedActions() {
-        return allowedActions;
-    }
-
     @JsonCreator
     public static GamePhase fromValue(String value) {
         for (GamePhase phase : GamePhase.values()) {
@@ -58,6 +49,15 @@ public enum GamePhase {
             }
         }
         throw new IllegalArgumentException("Unknown GamePhase: " + value);
+    }
+
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+
+    public Set<Class<? extends ClientAction>> getAllowedActions() {
+        return allowedActions;
     }
 
     public void validateAllowedAction(ClientAction action) {
