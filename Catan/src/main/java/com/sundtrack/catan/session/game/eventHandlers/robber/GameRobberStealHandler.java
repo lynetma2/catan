@@ -31,8 +31,10 @@ public class GameRobberStealHandler implements GameActionHandler<RobberStealActi
         Game game = gameStore.get(context.gameId());
 
         doValidations(game, context, action);
-        MutationResult result = doMutations(game, context, action);
-        EventResult<ServerEvent> events = createResults(context, result);
+
+        GamePhase phaseBefore = game.getCurrentPhase();
+        Resource stolen = game.stealResource(action, context.playerId());
+        EventResult<ServerEvent> events = createResults(context, game, action, stolen, phaseBefore);
 
         game.recordEvent(action, events, context);
         //gameStore.save(game);
@@ -45,34 +47,24 @@ public class GameRobberStealHandler implements GameActionHandler<RobberStealActi
         game.getCurrentPhase().validateAllowedAction(action);
     }
 
-    private MutationResult doMutations(Game game, GameContext context, RobberStealAction action) {
-        //Move a random resource from the targetPlayer to the current player.
-        Resource resource = game.stealResource(action.targetPlayerId(), context.playerId());
-        //Update the gamePhase to post roll.
-        GamePhase newPhase = game.advancePhaseAfterRobberSteal();
+    private EventResult<ServerEvent> createResults(GameContext context, Game game, RobberStealAction action,
+                                                   Resource stolen, GamePhase phaseBefore) {
+        List<ServerEvent> events = new ArrayList<>();
 
-        return new MutationResult(resource, action.targetPlayerId(), context.playerId(), newPhase);
-    }
+        GamePhase phaseAfter = game.getCurrentPhase();
+        if (!phaseBefore.equals(phaseAfter)) {
+            events.add(new GamePhaseChangedEvent(phaseAfter));
+        }
 
-    private EventResult<ServerEvent> createResults(GameContext context, MutationResult result) {
-        List<ServerEvent> serverEvents = new ArrayList<>();
+        UUID targetPlayerId = action.targetPlayerId();
+        UUID retrievingPlayerId = context.playerId();
 
-        serverEvents.add(new GamePhaseChangedEvent(result.updatedPhase));
-
-        Map<UUID, ServerEvent> serverEventMap = new HashMap<>();
-        serverEventMap.put(result.targetPlayerId, new ResourceSpentEvent(result.targetPlayerId, List.of(result.stolenResource)));
-        serverEventMap.put(result.retrievingPlayerId, new ResourceGrantEvent(result.retrievingPlayerId, List.of(result.stolenResource)));
+        Map<UUID, ServerEvent> directed = new HashMap<>();
+        directed.put(targetPlayerId, new ResourceSpentEvent(targetPlayerId, List.of(stolen)));
+        directed.put(retrievingPlayerId, new ResourceGrantEvent(retrievingPlayerId, List.of(stolen)));
 
         //TODO add global events telling people that the players has lost a card and gained a card
 
-        return EventResult.of(serverEvents, serverEventMap);
-    }
-
-    private record MutationResult(
-            Resource stolenResource,
-            UUID targetPlayerId,
-            UUID retrievingPlayerId,
-            GamePhase updatedPhase
-    ) {
+        return EventResult.of(events, directed);
     }
 }

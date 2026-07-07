@@ -2,7 +2,6 @@ package com.sundtrack.catan.datalayer.domain.game;
 
 import com.sundtrack.catan.datalayer.domain.board.Board;
 import com.sundtrack.catan.datalayer.domain.board.Edge;
-import com.sundtrack.catan.datalayer.domain.board.Hex;
 import com.sundtrack.catan.datalayer.domain.board.Vertex;
 import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
 import com.sundtrack.catan.datalayer.domain.building.Building;
@@ -10,9 +9,16 @@ import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
-import com.sundtrack.catan.datalayer.domain.exceptions.validation.InvalidStealTargetException;
+import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceRoadAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceSettlementAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.resource.GameDiscardAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.robber.RobberStealAction;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.NotPlayersTurnException;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.PlayerNotFoundException;
+import com.sundtrack.catan.datalayer.domain.game.subFlows.DiscardFlow;
+import com.sundtrack.catan.datalayer.domain.game.subFlows.RobberPlacementFlow;
+import com.sundtrack.catan.datalayer.domain.game.subFlows.RobberStealFlow;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.trade.TradeOffer;
 import com.sundtrack.catan.datalayer.dto.snapshot.DiceRollDTO;
@@ -44,16 +50,8 @@ public class Game {
         return id;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
     public List<GamePlayer> getPlayers() {
         return players;
-    }
-
-    public void setPlayers(List<GamePlayer> players) {
-        this.players = players;
     }
 
     public GamePhase getCurrentPhase() {
@@ -68,14 +66,6 @@ public class Game {
         return activeTradeOffers;
     }
 
-    public DiscardSession getDiscardSession() {
-        return flow.getDiscardSession();
-    }
-
-    public StealSession getStealSession() {
-        return flow.getStealSession();
-    }
-
     public List<Tile> getTiles() {
         return board.getTiles();
     }
@@ -84,45 +74,37 @@ public class Game {
         return board.getBuildings();
     }
 
-    public void moveRobber(Hex target) {
-        board.moveRobber(target);
-    }
-
     public DiceRollDTO getDiceRoll() {
         return dicePair.getDiceRollDTO();
     }
 
-    public DiceRollDTO rollDices() {
-        return dicePair.roll();
-    }
-
-    public void validateCurrentPlayer(UUID playerId) {
-        if (!getCurrentPlayerId().equals(playerId)) {
-            throw new NotPlayersTurnException(getCurrentPlayerId(), playerId);
+    public RollOutcome rollDice() {
+        DiceRollDTO roll = dicePair.roll();
+        if (roll.isSeven()) {
+            Map<UUID, Integer> required = computeRequiredDiscards();
+            flow.startSubFlow(new RobberPlacementFlow()); //Called first as the internals are a stack
+            if (!required.isEmpty()) {
+                flow.startSubFlow(new DiscardFlow(required));
+            }
+            return new RollOutcome(roll, Map.of());
         }
+        Map<UUID, List<Resource>> granted = grantResourcesForRoll(roll.total());
+        flow.enterPostRoll();
+        return new RollOutcome(roll, granted);
     }
 
-    public UUID getCurrentPlayerId() {
-        return flow.getCurrentPlayerId();
+    private Map<UUID, Integer> computeRequiredDiscards() {
+        Map<UUID, Integer> required = new HashMap<>();
+        for (GamePlayer p : players) {
+            int total = p.getResourceCount();
+            if (total > 7) {
+                required.put(p.getId(), total / 2);
+            }
+        }
+        return required;
     }
 
-    public Optional<GamePhase> advancePhaseAfterSettlement() {
-        return flow.advanceAfterSettlement();
-    }
-
-    public Optional<GameFlow.PhaseAdvanceResult> advancePhaseAfterRoad() {
-        return flow.advanceAfterRoad();
-    }
-
-    public GamePhase advancePhaseAfterEndTurn() {
-        return flow.advanceAfterEndTurn();
-    }
-
-    public void recordEvent(ClientAction action, EventResult<ServerEvent> resultingEvents, GameContext gameContext) {
-        gameEvents.add(new RecordedEvent(action, gameContext, resultingEvents, Instant.now()));
-    }
-
-    public Map<UUID, List<Resource>> grantResourcesForRoll(int rollTotal) {
+    private Map<UUID, List<Resource>> grantResourcesForRoll(int rollTotal) {
         Map<UUID, List<Resource>> granted = new HashMap<>();
         for (Tile tile : board.tilesProducingOn(rollTotal)) {
             for (Vertex vertex : tile.getAdjacentVertices()) {
@@ -147,83 +129,65 @@ public class Game {
                 .orElseThrow(() -> new PlayerNotFoundException(playerId));
     }
 
-    public GamePhase advancePhaseAfterGrantResources() {
-        return flow.advanceAfterGrantResources();
-    }
-
-    public GameFlow.SevenRolledAdvanceResult advancePhaseAfterSevenRoll() {
-        return flow.advanceAfterSevenRoll(computeRequiredDiscards());
-    }
-
-    private Map<UUID, Integer> computeRequiredDiscards() {
-        Map<UUID, Integer> required = new HashMap<>();
-        for (GamePlayer p : players) {
-            int total = p.getResourceCount();
-            if (total > 7) {
-                required.put(p.getId(), total / 2);
-            }
+    public void validateCurrentPlayer(UUID playerId) {
+        if (!getCurrentPlayerId().equals(playerId)) {
+            throw new NotPlayersTurnException(getCurrentPlayerId(), playerId);
         }
-        return required;
     }
 
-    public GameFlow.RobberPlacedAdvanceResult advancePhaseAfterRobberPlacement(UUID retrievingPlayerId) {
-        return flow.advanceAfterRobberPlacement(retrievingPlayerId, stealActionCandidates(retrievingPlayerId));
+    public UUID getCurrentPlayerId() {
+        return flow.getCurrentPlayerId();
     }
 
-    private List<UUID> stealActionCandidates(UUID retrievingPlayerId) {
-        Set<UUID> stealPlayerIds = board.getAdjacentPlayerIds(board.getRobbedTile().getHex());
-        return stealPlayerIds.stream()
-                .filter(p -> !p.equals(retrievingPlayerId))
-                .filter(p -> getPlayerOrThrow(p).hasResources())
-                .toList();
-    }
-
-    public GamePhase advancePhaseAfterRobberSteal() {
-        return flow.advanceAfterRobberSteal();
+    public void recordEvent(ClientAction action, EventResult<ServerEvent> resultingEvents, GameContext gameContext) {
+        gameEvents.add(new RecordedEvent(action, gameContext, resultingEvents, Instant.now()));
     }
 
     public GameFlow.TurnAdvanceResult advanceTurn() {
         return flow.advanceTurn();
     }
 
-    public Resource stealResource(UUID targetPlayerId, UUID retrievingPlayerId) {
-        validateRobberStealTargetPlayer(targetPlayerId);
-        GamePlayer targetPlayer = getPlayerOrThrow(targetPlayerId);
+    public Resource stealResource(RobberStealAction action, UUID retrievingPlayerId) {
+        flow.dispatch(action, retrievingPlayerId);
+        GamePlayer targetPlayer = getPlayerOrThrow(action.targetPlayerId());
         GamePlayer retrievingPlayer = getPlayerOrThrow(retrievingPlayerId);
         Resource resource = targetPlayer.steal();
         retrievingPlayer.addResource(resource);
         return resource;
     }
 
-    private void validateRobberStealTargetPlayer(UUID targetPlayerId) {
-        Set<UUID> players = board.getAdjacentPlayerIds(board.getRobbedTile().getHex());
-        if (!players.contains(targetPlayerId)) {
-            throw new InvalidStealTargetException(targetPlayerId);
-        }
-    }
-
-    public PlacementResult<Vertex> placeSettlement(Vertex vertex, UUID playerId) {
-        boolean isSetup = flow.isSetupPhase();
+    public PlacementResult<Vertex> placeSettlement(PlaceSettlementAction action, UUID playerId) {
+        boolean free = flow.isFreePlacement(PieceType.SETTLEMENT);
         List<Resource> deducted = List.of();
-        if (!isSetup) {
+
+        if (!free) {
             getPlayerOrThrow(playerId).validateCanAfford(PieceType.SETTLEMENT);
         }
-        Building<Vertex> settlement = board.placeSettlement(vertex, playerId, isSetup);
-        if (!isSetup) {
+        Building<Vertex> settlement = board.placeSettlement(action.target(), playerId, free);
+        if (!free) {
             deducted = getPlayerOrThrow(playerId).deduct(PieceType.SETTLEMENT);
+        }
+
+        if (flow.isInSubFlow()) {
+            flow.dispatch(action, playerId);
         }
         return new PlacementResult<>(settlement, deducted);
     }
 
-    public PlacementResult<Edge> placeRoad(Edge edge, UUID playerId) {
-        boolean isSetup = flow.isSetupPhase();
+    public PlacementResult<Edge> placeRoad(PlaceRoadAction action, UUID playerId) {
+        boolean free = flow.isFreePlacement(PieceType.ROAD);
         List<Resource> deducted = List.of();
-        if (!isSetup) {
+
+        if (!free) {
             getPlayerOrThrow(playerId).validateCanAfford(PieceType.ROAD);
         }
-        Building<Edge> road = board.placeRoad(edge, playerId, isSetup);
-        if (!isSetup) {
+        Building<Edge> road = board.placeRoad(action.target(), playerId, free);
+        if (!free) {
             deducted = getPlayerOrThrow(playerId).deduct(PieceType.ROAD);
+        }
+
+        if (flow.isInSubFlow()) {
+            flow.dispatch(action, playerId);
         }
         return new PlacementResult<>(road, deducted);
     }
@@ -235,6 +199,57 @@ public class Game {
         return new PlacementResult<>(city, deducted);
     }
 
+    public void placeRobber(PlaceRobberAction action, UUID retrievingPlayerId) {
+        flow.dispatch(action, retrievingPlayerId);
+        board.moveRobber(action.target());
+
+        List<UUID> candidates = stealActionCandidates(retrievingPlayerId);
+        if (!candidates.isEmpty()) {
+            flow.startSubFlow(new RobberStealFlow(retrievingPlayerId, candidates));
+        }
+    }
+
+    private List<UUID> stealActionCandidates(UUID retrievingPlayerId) {
+        Set<UUID> stealPlayerIds = board.getAdjacentPlayerIds(board.getRobbedTile().getHex());
+        return stealPlayerIds.stream()
+                .filter(p -> !p.equals(retrievingPlayerId))
+                .filter(p -> getPlayerOrThrow(p).hasResources())
+                .toList();
+    }
+
+    public List<Resource> discard(GameDiscardAction action, UUID playerId) {
+        List<Resource> removed = getPlayerOrThrow(playerId).removeResources(action.discardedResources());
+        flow.dispatch(action, playerId);
+        return removed;
+    }
+
+    public Map<UUID, Integer> getRequiredDiscards() {
+        return flow.getActiveDiscardFlow()
+                .map(DiscardFlow::getRequiredDiscards)
+                .orElse(Map.of());
+    }
+
+    public List<UUID> getStealCandidates() {
+        return flow.getActiveStealFlow()
+                .map(RobberStealFlow::getCandidates)
+                .orElse(List.of());
+    }
+
+    public boolean isDiscardPending(UUID playerId) {
+        return flow.getActiveDiscardFlow()
+                .map(discard -> discard.isPending(playerId))
+                .orElse(false);
+    }
+
+    public int getRequiredDiscardCount(UUID playerId) {
+        return flow.getActiveDiscardFlow()
+                .map(discard -> discard.getRequiredCount(playerId))
+                .orElse(0);
+    }
+
     public record PlacementResult<T>(Building<T> building, List<Resource> deductedResources) {
+    }
+
+    public record RollOutcome(DiceRollDTO roll, Map<UUID, List<Resource>> grantedResources) {
     }
 }

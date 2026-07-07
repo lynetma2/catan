@@ -1,9 +1,11 @@
 package com.sundtrack.catan.datalayer.domain.game.subFlows;
 
+import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface SubFlow {
     GamePhase currentPhase();
@@ -11,5 +13,9 @@ public interface SubFlow {
     /**
      * Returns the next state of this flow, or empty if it just completed.
      */
-    Optional<SubFlow> handle(ClientAction action);
+    Optional<SubFlow> handle(ClientAction action, UUID actingPlayerId);
+
+    default boolean isFreePlacement(PieceType pieceType) {
+        return false;
+    }
 }

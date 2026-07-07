@@ -31,7 +31,7 @@ public class GameCreationServiceImpl implements GameCreationService {
         List<GamePlayer> gamePlayers = createPlayers(lobbyPlayers);
         TurnOrder turnOrder = TurnOrder.startingNewGame(lobbyPlayers.keySet().stream().toList());
         DicePair dicePair = new DicePair();
-        GameFlow flow = new GameFlow(GamePhase.SETUP_PLACE_SETTLEMENT, turnOrder, 0);
+        GameFlow flow = new GameFlow(turnOrder, 0);
 
         return new Game(
                 id,
@@ -60,7 +60,7 @@ public class GameCreationServiceImpl implements GameCreationService {
                     colorPool.get(count % colorPool.size()),
                     new ArrayList<>(),
                     new ArrayList<>(),
-                    0, 0, 0, false, false, 0
+                    0, false, false, 0
             ));
             count++;
         }

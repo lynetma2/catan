@@ -7,18 +7,14 @@ import com.sundtrack.catan.datalayer.domain.event.game.server.RollDiceEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.DiscardRequiredEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceGrantEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseChangedEvent;
-import com.sundtrack.catan.datalayer.domain.game.DiscardSession;
 import com.sundtrack.catan.datalayer.domain.game.Game;
-import com.sundtrack.catan.datalayer.domain.game.GameFlow;
-import com.sundtrack.catan.datalayer.domain.game.GamePhase;
-import com.sundtrack.catan.datalayer.domain.resource.Resource;
-import com.sundtrack.catan.datalayer.dto.snapshot.DiceRollDTO;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.services.GameStore;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Component
 @HandlesEvent(RollDiceAction.class)
@@ -35,8 +31,8 @@ public class GameRollDiceHandler implements GameActionHandler<RollDiceAction> {
         Game game = gameStore.get(context.gameId());
 
         doValidations(game, context, action);
-        MutationResult result = doMutations(game, context);
-        EventResult<ServerEvent> events = createResults(context, result);
+        Game.RollOutcome result = doMutations(game);
+        EventResult<ServerEvent> events = createResults(game, result);
 
         game.recordEvent(action, events, context);
         //gameStore.save(game);
@@ -49,58 +45,22 @@ public class GameRollDiceHandler implements GameActionHandler<RollDiceAction> {
         game.getCurrentPhase().validateAllowedAction(action);
     }
 
-    private MutationResult doMutations(Game game, GameContext context) {
-        DiceRollDTO diceRoll = game.rollDices();
-        return diceRoll.isSeven()
-                ? handleSevenRoll(game, diceRoll)
-                : handleNormalRoll(game, diceRoll);
+    private Game.RollOutcome doMutations(Game game) {
+        return game.rollDice();
     }
 
-    private EventResult<ServerEvent> createResults(GameContext context, MutationResult result) {
+    private EventResult<ServerEvent> createResults(Game game, Game.RollOutcome outcome) {
         List<ServerEvent> events = new ArrayList<>();
-        events.add(createPhaseChangedEvent(result));
-        events.add(createRollDiceEvent(result));
-        events.addAll(createResourceGrantEvents(result));
-        events.addAll(createDiscardRequiredEvents(result));
+        events.add(new GamePhaseChangedEvent(game.getCurrentPhase()));
+        events.add(new RollDiceEvent(outcome.roll()));
+
+        outcome.grantedResources().forEach((playerId, resources) ->
+                events.add(new ResourceGrantEvent(playerId, resources)));
+
+        game.getRequiredDiscards().forEach((playerId, amount) ->
+                events.add(new DiscardRequiredEvent(playerId, amount)));
+
         return EventResult.of(events, Map.of());
     }
 
-    private MutationResult handleSevenRoll(Game game, DiceRollDTO diceRoll) {
-        GameFlow.SevenRolledAdvanceResult result = game.advancePhaseAfterSevenRoll();
-        return new MutationResult(result.gamePhase(), Collections.emptyMap(), diceRoll, result.discardSession());
-    }
-
-    private MutationResult handleNormalRoll(Game game, DiceRollDTO diceRoll) {
-        Map<UUID, List<Resource>> addedResources = game.grantResourcesForRoll(diceRoll.total());
-        return new MutationResult(game.advancePhaseAfterGrantResources(), addedResources, diceRoll, Optional.empty());
-    }
-
-    private ServerEvent createPhaseChangedEvent(MutationResult result) {
-        return new GamePhaseChangedEvent(result.gamePhase);
-    }
-
-    private ServerEvent createRollDiceEvent(MutationResult result) {
-        return new RollDiceEvent(result.diceRoll);
-    }
-
-    private List<ServerEvent> createResourceGrantEvents(MutationResult result) {
-        return result.resources.entrySet().stream()
-                .map(entry ->
-                        new ResourceGrantEvent(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList());
-    }
-
-    private List<ServerEvent> createDiscardRequiredEvents(MutationResult result) {
-        List<ServerEvent> discardEvents = new ArrayList<>();
-        result.discardSession.ifPresent(session ->
-                session.getRequiredDiscards().forEach((playerId, amount) ->
-                        discardEvents.add(new DiscardRequiredEvent(playerId, amount))
-                )
-        );
-        return discardEvents;
-    }
-
-    private record MutationResult(GamePhase gamePhase, Map<UUID, List<Resource>> resources, DiceRollDTO diceRoll,
-                                  Optional<DiscardSession> discardSession) {
-    }
 }

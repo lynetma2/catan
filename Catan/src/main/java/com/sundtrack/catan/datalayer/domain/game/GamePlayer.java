@@ -4,6 +4,7 @@ import com.sundtrack.catan.datalayer.domain.building.PieceCosts;
 import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.InsufficientResourcesException;
+import com.sundtrack.catan.datalayer.domain.exceptions.validation.ResourceNotOwnedException;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
 
@@ -12,27 +13,25 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class GamePlayer {
-    private UUID id;
+    private final UUID id;
+    private final List<Resource> resources;
+    private final List<DevelopmentCard> developmentCards;
     private String username;
     private String color;
-    private List<Resource> resources;
-    private List<DevelopmentCard> developmentCards;
-    private Integer victoryPoints;
-    private Integer cardCount;
-    private Integer developmentCardCount;
-    private Boolean hasLongestRoad;
-    private Boolean hasLargestArmy;
-    private Integer robbersUsed;
+    private int victoryPoints;
+    private boolean hasLongestRoad;
+    private boolean hasLargestArmy;
+    private int robbersUsed;
 
-    public GamePlayer(UUID id, String username, String color, List<Resource> resources, List<DevelopmentCard> developmentCards, Integer victoryPoints, Integer cardCount, Integer developmentCardCount, Boolean hasLongestRoad, Boolean hasLargestArmy, Integer robbersUsed) {
+    public GamePlayer(UUID id, String username, String color, List<Resource> resources,
+                      List<DevelopmentCard> developmentCards, int victoryPoints,
+                      boolean hasLongestRoad, boolean hasLargestArmy, int robbersUsed) {
         this.id = id;
         this.username = username;
         this.color = color;
         this.resources = resources;
         this.developmentCards = developmentCards;
         this.victoryPoints = victoryPoints;
-        this.cardCount = cardCount;
-        this.developmentCardCount = developmentCardCount;
         this.hasLongestRoad = hasLongestRoad;
         this.hasLargestArmy = hasLargestArmy;
         this.robbersUsed = robbersUsed;
@@ -40,10 +39,6 @@ public class GamePlayer {
 
     public UUID getId() {
         return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
     public String getUsername() {
@@ -62,74 +57,62 @@ public class GamePlayer {
         this.color = color;
     }
 
+    /**
+     * Read-only view — mutate via deduct/grant/steal/addResource/removeResources instead.
+     */
     public List<Resource> getResources() {
-        return resources;
+        return Collections.unmodifiableList(resources);
     }
 
-    public void setResources(List<Resource> resources) {
-        this.resources = resources;
-    }
-
+    /**
+     * Read-only view — mutate via development-card-specific methods once those exist.
+     */
     public List<DevelopmentCard> getDevelopmentCards() {
-        return developmentCards;
+        return Collections.unmodifiableList(developmentCards);
     }
 
-    public void setDevelopmentCards(List<DevelopmentCard> developmentCards) {
-        this.developmentCards = developmentCards;
-    }
-
-    public Integer getVictoryPoints() {
+    public int getVictoryPoints() {
         return victoryPoints;
     }
 
-    public void setVictoryPoints(Integer victoryPoints) {
+    public void setVictoryPoints(int victoryPoints) {
         this.victoryPoints = victoryPoints;
     }
 
-    public Integer getCardCount() {
-        return cardCount;
+    public int getCardCount() {
+        return resources.size();
     }
 
-    public void setCardCount(Integer cardCount) {
-        this.cardCount = cardCount;
+    public int getDevelopmentCardCount() {
+        return developmentCards.size();
     }
 
-    public Boolean getHasLongestRoad() {
+    public boolean getHasLongestRoad() {
         return hasLongestRoad;
     }
 
-    public void setHasLongestRoad(Boolean hasLongestRoad) {
+    public void setHasLongestRoad(boolean hasLongestRoad) {
         this.hasLongestRoad = hasLongestRoad;
     }
 
-    public Boolean getHasLargestArmy() {
+    public boolean getHasLargestArmy() {
         return hasLargestArmy;
     }
 
-    public void setHasLargestArmy(Boolean hasLargestArmy) {
+    public void setHasLargestArmy(boolean hasLargestArmy) {
         this.hasLargestArmy = hasLargestArmy;
     }
 
-    public Integer getRobbersUsed() {
+    public int getRobbersUsed() {
         return robbersUsed;
     }
 
-    public void setRobbersUsed(Integer robbersUsed) {
+    public void setRobbersUsed(int robbersUsed) {
         this.robbersUsed = robbersUsed;
     }
 
-    public Integer getDevelopmentCardCount() {
-        return developmentCardCount;
-    }
-
-    public void setDevelopmentCardCount(Integer developmentCardCount) {
-        this.developmentCardCount = developmentCardCount;
-    }
-
     public void validateCanAfford(PieceType pieceType) {
-        Map<ResourceType, Long> available = resources.stream()
-                .collect(Collectors.groupingBy(Resource::resourceType, Collectors.counting()));
-
+        Map<ResourceType, Long> available = countsByType();
         Map<ResourceType, Integer> cost = PieceCosts.of(pieceType);
 
         boolean canAfford = cost.entrySet().stream()
@@ -138,6 +121,11 @@ public class GamePlayer {
         if (!canAfford) {
             throw new InsufficientResourcesException(id, pieceType);
         }
+    }
+
+    private Map<ResourceType, Long> countsByType() {
+        return resources.stream()
+                .collect(Collectors.groupingBy(Resource::resourceType, Collectors.counting()));
     }
 
     public List<Resource> deduct(PieceType pieceType) {
@@ -159,8 +147,23 @@ public class GamePlayer {
             }
         }
 
-        this.cardCount = resources.size();
         return spent;
+    }
+
+    /**
+     * Removes specific resources by id — e.g. for discard, where the player chooses exact cards.
+     */
+    public List<Resource> removeResources(List<UUID> resourceIds) {
+        List<Resource> removed = new ArrayList<>();
+        for (UUID resourceId : resourceIds) {
+            Resource match = resources.stream()
+                    .filter(r -> r.uid().equals(resourceId))
+                    .findFirst()
+                    .orElseThrow(() -> new ResourceNotOwnedException(id, resourceId));
+            resources.remove(match);
+            removed.add(match);
+        }
+        return removed;
     }
 
     public List<Resource> grant(ResourceType resourceType, int amount) {
@@ -182,12 +185,7 @@ public class GamePlayer {
 
         // Choose a random index – each card has the same chance of being selected
         int index = ThreadLocalRandom.current().nextInt(resources.size());
-        Resource stolen = resources.remove(index);
-
-        // Keep the card count in sync
-        this.cardCount = resources.size();
-
-        return stolen;
+        return resources.remove(index);
     }
 
     public void addResource(Resource resource) {
@@ -198,7 +196,7 @@ public class GamePlayer {
         return !resources.isEmpty();
     }
 
-    public Integer getResourceCount() {
+    public int getResourceCount() {
         return resources.size();
     }
 }

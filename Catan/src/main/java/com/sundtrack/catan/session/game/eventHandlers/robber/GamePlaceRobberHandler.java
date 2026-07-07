@@ -1,6 +1,5 @@
 package com.sundtrack.catan.session.game.eventHandlers.robber;
 
-import com.sundtrack.catan.datalayer.domain.board.Hex;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
@@ -8,7 +7,6 @@ import com.sundtrack.catan.datalayer.domain.event.game.server.robber.RobberPlace
 import com.sundtrack.catan.datalayer.domain.event.game.server.robber.StealTargetRequiredEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseChangedEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
-import com.sundtrack.catan.datalayer.domain.game.GameFlow;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
@@ -32,8 +30,10 @@ public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberActi
         Game game = gameStore.get(context.gameId());
 
         doValidations(game, context, action);
-        MutationResult result = doMutations(game, context, action);
-        EventResult<ServerEvent> events = createResults(context, result);
+
+        GamePhase phaseBefore = game.getCurrentPhase();
+        game.placeRobber(action, context.playerId());
+        EventResult<ServerEvent> events = createResults(context, game, action, phaseBefore);
 
         game.recordEvent(action, events, context);
         //gameStore.save(game);
@@ -46,32 +46,21 @@ public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberActi
         game.getCurrentPhase().validateAllowedAction(action);
     }
 
-    private MutationResult doMutations(Game game, GameContext context, PlaceRobberAction action) {
-        //Update the position of the robber. (Set to false in old hex and true in new)
-        game.moveRobber(action.target());
-        //Update game phase to stealing or post roll.
-        GameFlow.RobberPlacedAdvanceResult advanceResult = game.advancePhaseAfterRobberPlacement(context.playerId());
+    private EventResult<ServerEvent> createResults(GameContext context, Game game,
+                                                   PlaceRobberAction action, GamePhase phaseBefore) {
+        List<ServerEvent> events = new ArrayList<>();
+        events.add(new RobberPlaceEvent(action.target()));
 
-        return new MutationResult(action.target(), advanceResult.candidates(), advanceResult.gamePhase());
-    }
-
-    private EventResult<ServerEvent> createResults(GameContext context, MutationResult result) {
-        List<ServerEvent> serverEvents = new ArrayList<>();
-        serverEvents.add(new RobberPlaceEvent(result.robbedHex));
-        serverEvents.add(new GamePhaseChangedEvent(result.updatedPhase));
-
-        Map<UUID, ServerEvent> serverEventMap = new HashMap<>();
-        if (!result.candidates().isEmpty()) {
-            serverEventMap.put(context.playerId(), new StealTargetRequiredEvent(result.candidates()));
+        GamePhase phaseAfter = game.getCurrentPhase();
+        if (!phaseBefore.equals(phaseAfter)) {
+            events.add(new GamePhaseChangedEvent(phaseAfter));
         }
 
-        return EventResult.of(serverEvents, serverEventMap);
-    }
-
-    private record MutationResult(
-            Hex robbedHex,
-            List<UUID> candidates,
-            GamePhase updatedPhase
-    ) {
+        Map<UUID, ServerEvent> directed = new HashMap<>();
+        List<UUID> candidates = game.getStealCandidates();
+        if (!candidates.isEmpty()) {
+            directed.put(context.playerId(), new StealTargetRequiredEvent(candidates));
+        }
+        return EventResult.of(events, directed);
     }
 }

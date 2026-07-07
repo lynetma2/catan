@@ -1,5 +1,6 @@
 package com.sundtrack.catan.datalayer.domain.game.subFlows;
 
+import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceRoadAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceSettlementAction;
@@ -8,6 +9,7 @@ import com.sundtrack.catan.datalayer.domain.game.GamePhase;
 import com.sundtrack.catan.datalayer.domain.game.TurnOrder;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public class SetupFlow implements SubFlow {
     private final TurnOrder turnOrder;
@@ -28,7 +30,7 @@ public class SetupFlow implements SubFlow {
     }
 
     @Override
-    public Optional<SubFlow> handle(ClientAction action) {
+    public Optional<SubFlow> handle(ClientAction action, UUID actingPlayerId) {
         if (phase == GamePhase.SETUP_PLACE_SETTLEMENT) {
             if (!(action instanceof PlaceSettlementAction)) throw new IllegalGamePhaseException(phase);
             return Optional.of(new SetupFlow(turnOrder, GamePhase.SETUP_PLACE_ROAD));
@@ -40,5 +42,10 @@ public class SetupFlow implements SubFlow {
             case SAME_PLAYER_AGAIN, NEXT_PLAYER ->
                     Optional.of(new SetupFlow(turnOrder, GamePhase.SETUP_PLACE_SETTLEMENT));
         };
+    }
+
+    @Override
+    public boolean isFreePlacement(PieceType pieceType) {
+        return pieceType == PieceType.SETTLEMENT || pieceType == PieceType.ROAD;
     }
 }
