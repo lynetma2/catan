@@ -50,16 +50,6 @@ public class GameMapper {
                 .toList();
     }
 
-    private List<DevCardSnapshotDTO> mapDevCards(List<DevelopmentCard> cards) {
-        return cards
-                .stream()
-                .map(card ->
-                        new DevCardSnapshotDTO(card.getId().toString(),
-                                card.getType(), card.isUsed(),
-                                card.isBoughtThisTurn()))
-                .toList();
-    }
-
     private List<TileSnapshotDTO> mapTiles(List<Tile> tiles) {
         return tiles
                 .stream()
@@ -105,5 +95,15 @@ public class GameMapper {
 
     private StealSessionDTO mapStealSession(StealSession stealSession) {
         return new StealSessionDTO(stealSession.isActive(), stealSession.getRetrievingPlayerId(), stealSession.getCandidates());
+    }
+
+    private List<DevCardSnapshotDTO> mapDevCards(List<DevelopmentCard> cards) {
+        return cards
+                .stream()
+                .map(card ->
+                        new DevCardSnapshotDTO(card.getId().toString(),
+                                card.getType(),
+                                card.isBoughtThisTurn()))
+                .toList();
     }
 }

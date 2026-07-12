@@ -60,7 +60,7 @@ public class GameCreationServiceImpl implements GameCreationService {
                     colorPool.get(count % colorPool.size()),
                     new ArrayList<>(),
                     new ArrayList<>(),
-                    0, false, false, 0
+                    false, false, 0
             ));
             count++;
         }

@@ -33,10 +33,13 @@ public class Game {
     private final List<TradeOffer> activeTradeOffers;
     private final List<RecordedEvent> gameEvents;
     private final DicePair dicePair;
+    private final DevelopmentCardBank developmentCardBank;
+    private final ResourceBank resourceBank;
+    private final GameConfiguration gameConfiguration;
     private UUID id;
     private List<GamePlayer> players;
 
-    public Game(UUID id, List<GamePlayer> players, Board board, GameFlow flow, List<TradeOffer> activeTradeOffers, List<RecordedEvent> gameEvents, DicePair dicePair) {
+    public Game(UUID id, List<GamePlayer> players, Board board, GameFlow flow, List<TradeOffer> activeTradeOffers, List<RecordedEvent> gameEvents, DicePair dicePair, DevelopmentCardBank developmentCardBank, ResourceBank resourceBank, GameConfiguration gameConfiguration) {
         this.id = id;
         this.players = players;
         this.board = board;
@@ -44,6 +47,9 @@ public class Game {
         this.activeTradeOffers = activeTradeOffers;
         this.gameEvents = gameEvents;
         this.dicePair = dicePair;
+        this.developmentCardBank = developmentCardBank;
+        this.resourceBank = resourceBank;
+        this.gameConfiguration = gameConfiguration;
     }
 
     public UUID getId() {
@@ -111,8 +117,9 @@ public class Game {
                 board.getBuildingAt(vertex).ifPresent(building -> {
                     GamePlayer owner = getPlayerOrThrow(building.getOwnerId());
                     int count = building.getKind() == PieceType.CITY ? 2 : 1;
-                    List<Resource> resources = owner.grant(tile.getType().getResourceType(), count);
-                    granted.merge(owner.getId(), resources, (existing, added) -> {
+                    List<Resource> drawn = resourceBank.draw(tile.getType().getResourceType(), count);
+                    owner.receive(drawn);
+                    granted.merge(owner.getId(), drawn, (existing, added) -> {
                         existing.addAll(added);
                         return existing;
                     });
@@ -166,6 +173,7 @@ public class Game {
         Building<Vertex> settlement = board.placeSettlement(action.target(), playerId, free);
         if (!free) {
             deducted = getPlayerOrThrow(playerId).deduct(PieceType.SETTLEMENT);
+            resourceBank.deposit(deducted);
         }
 
         if (flow.isInSubFlow()) {
@@ -184,6 +192,7 @@ public class Game {
         Building<Edge> road = board.placeRoad(action.target(), playerId, free);
         if (!free) {
             deducted = getPlayerOrThrow(playerId).deduct(PieceType.ROAD);
+            resourceBank.deposit(deducted);
         }
 
         if (flow.isInSubFlow()) {
@@ -196,6 +205,7 @@ public class Game {
         getPlayerOrThrow(playerId).validateCanAfford(PieceType.CITY);
         Building<Vertex> city = board.placeCity(vertex, playerId);
         List<Resource> deducted = getPlayerOrThrow(playerId).deduct(PieceType.CITY);
+        resourceBank.deposit(deducted);
         return new PlacementResult<>(city, deducted);
     }
 
@@ -219,6 +229,7 @@ public class Game {
 
     public List<Resource> discard(GameDiscardAction action, UUID playerId) {
         List<Resource> removed = getPlayerOrThrow(playerId).removeResources(action.discardedResources());
+        resourceBank.deposit(removed);
         flow.dispatch(action, playerId);
         return removed;
     }
@@ -245,6 +256,15 @@ public class Game {
         return flow.getActiveDiscardFlow()
                 .map(discard -> discard.getRequiredCount(playerId))
                 .orElse(0);
+    }
+
+    public long computeVictoryPoints(UUID playerId) {
+        GamePlayer player = getPlayerOrThrow(playerId);
+        long points = board.countSettlements(playerId) + board.countCities(playerId) * 2;
+        if (player.getHasLargestArmy()) points += 2;
+        if (player.getHasLongestRoad()) points += 2;
+        points += player.getVictoryPointCardCount();
+        return points;
     }
 
     public record PlacementResult<T>(Building<T> building, List<Resource> deductedResources) {

@@ -3,6 +3,7 @@ package com.sundtrack.catan.datalayer.domain.game;
 import com.sundtrack.catan.datalayer.domain.building.PieceCosts;
 import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
+import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCardType;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.InsufficientResourcesException;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.ResourceNotOwnedException;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
@@ -18,20 +19,18 @@ public class GamePlayer {
     private final List<DevelopmentCard> developmentCards;
     private String username;
     private String color;
-    private int victoryPoints;
     private boolean hasLongestRoad;
     private boolean hasLargestArmy;
     private int robbersUsed;
 
     public GamePlayer(UUID id, String username, String color, List<Resource> resources,
-                      List<DevelopmentCard> developmentCards, int victoryPoints,
+                      List<DevelopmentCard> developmentCards,
                       boolean hasLongestRoad, boolean hasLargestArmy, int robbersUsed) {
         this.id = id;
         this.username = username;
         this.color = color;
         this.resources = resources;
         this.developmentCards = developmentCards;
-        this.victoryPoints = victoryPoints;
         this.hasLongestRoad = hasLongestRoad;
         this.hasLargestArmy = hasLargestArmy;
         this.robbersUsed = robbersUsed;
@@ -69,14 +68,6 @@ public class GamePlayer {
      */
     public List<DevelopmentCard> getDevelopmentCards() {
         return Collections.unmodifiableList(developmentCards);
-    }
-
-    public int getVictoryPoints() {
-        return victoryPoints;
-    }
-
-    public void setVictoryPoints(int victoryPoints) {
-        this.victoryPoints = victoryPoints;
     }
 
     public int getCardCount() {
@@ -166,16 +157,8 @@ public class GamePlayer {
         return removed;
     }
 
-    public List<Resource> grant(ResourceType resourceType, int amount) {
-        List<Resource> addedResources = new ArrayList<>();
-
-        for (int i = 1; i <= amount; i++) {
-            Resource resource = new Resource(UUID.randomUUID(), resourceType);
-            this.resources.add(resource);
-            addedResources.add(resource);
-        }
-
-        return addedResources;
+    public void receive(List<Resource> resources) {
+        this.resources.addAll(resources);
     }
 
     public Resource steal() {
@@ -198,5 +181,12 @@ public class GamePlayer {
 
     public int getResourceCount() {
         return resources.size();
+    }
+
+    public long getVictoryPointCardCount() {
+        return developmentCards
+                .stream()
+                .filter(c -> c.getType() == DevelopmentCardType.VICTORY_POINT)
+                .count();
     }
 }

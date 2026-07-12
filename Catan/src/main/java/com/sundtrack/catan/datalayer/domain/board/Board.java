@@ -18,7 +18,7 @@ public class Board {
         this.tiles = tiles;
         this.buildings = buildings;
     }
-    
+
     public List<Tile> getTiles() {
         return tiles;
     }
@@ -186,5 +186,19 @@ public class Board {
         return tiles.stream()
                 .filter(t -> t.getNumber() != null && t.getNumber().equals(rollTotal) && !t.hasRobber())
                 .toList();
+    }
+
+    public long countSettlements(UUID playerId) {
+        return buildings
+                .stream()
+                .filter(b -> b.getKind() == PieceType.SETTLEMENT && b.getOwnerId() == playerId)
+                .count();
+    }
+
+    public long countCities(UUID playerId) {
+        return buildings
+                .stream()
+                .filter(b -> b.getKind() == PieceType.CITY && b.getOwnerId() == playerId)
+                .count();
     }
 }

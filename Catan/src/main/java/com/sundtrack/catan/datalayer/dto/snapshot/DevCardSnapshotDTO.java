@@ -5,6 +5,6 @@ import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCardType;
 public record DevCardSnapshotDTO(
         String uid,
         DevelopmentCardType type,
-        boolean isPlayed,
         boolean boughtThisTurn
-) {}
+) {
+}
