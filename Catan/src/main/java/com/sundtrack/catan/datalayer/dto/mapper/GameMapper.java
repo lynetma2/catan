@@ -46,7 +46,7 @@ public class GameMapper {
                         new PlayerSnapshotDTO(p.getId().toString(), p.getUsername(),
                                 p.getColor(), p.getResources(), mapDevCards(p.getDevelopmentCards()),
                                 p.getVictoryPoints(), p.getCardCount(), p.getDevelopmentCardCount(),
-                                p.getHasLongestRoad(), p.getHasLargestArmy(), p.getRobbersUsed()))
+                                p.getHasLongestRoad(), p.getHasLargestArmy(), p.getKnightsUsed()))
                 .toList();
     }
 

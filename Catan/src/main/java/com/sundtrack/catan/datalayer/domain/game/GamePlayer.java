@@ -21,11 +21,11 @@ public class GamePlayer {
     private String color;
     private boolean hasLongestRoad;
     private boolean hasLargestArmy;
-    private int robbersUsed;
+    private int knightsUsed;
 
     public GamePlayer(UUID id, String username, String color, List<Resource> resources,
                       List<DevelopmentCard> developmentCards,
-                      boolean hasLongestRoad, boolean hasLargestArmy, int robbersUsed) {
+                      boolean hasLongestRoad, boolean hasLargestArmy, int knightsUsed) {
         this.id = id;
         this.username = username;
         this.color = color;
@@ -33,7 +33,7 @@ public class GamePlayer {
         this.developmentCards = developmentCards;
         this.hasLongestRoad = hasLongestRoad;
         this.hasLargestArmy = hasLargestArmy;
-        this.robbersUsed = robbersUsed;
+        this.knightsUsed = knightsUsed;
     }
 
     public UUID getId() {
@@ -94,12 +94,12 @@ public class GamePlayer {
         this.hasLargestArmy = hasLargestArmy;
     }
 
-    public int getRobbersUsed() {
-        return robbersUsed;
+    public int getKnightsUsed() {
+        return knightsUsed;
     }
 
-    public void setRobbersUsed(int robbersUsed) {
-        this.robbersUsed = robbersUsed;
+    public void setKnightsUsed(int knightsUsed) {
+        this.knightsUsed = knightsUsed;
     }
 
     public void validateCanAfford(PieceType pieceType) {

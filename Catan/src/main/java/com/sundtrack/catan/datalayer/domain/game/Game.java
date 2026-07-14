@@ -258,13 +258,38 @@ public class Game {
                 .orElse(0);
     }
 
-    public long computeVictoryPoints(UUID playerId) {
+    public long computeTotalVictoryPoints(UUID playerId) {
+        GamePlayer player = getPlayerOrThrow(playerId);
+        long points = computePublicVictoryPoints(playerId);
+        points += player.getVictoryPointCardCount();
+        return points;
+    }
+
+    public long computePublicVictoryPoints(UUID playerId) {
         GamePlayer player = getPlayerOrThrow(playerId);
         long points = board.countSettlements(playerId) + board.countCities(playerId) * 2;
         if (player.getHasLargestArmy()) points += 2;
         if (player.getHasLongestRoad()) points += 2;
-        points += player.getVictoryPointCardCount();
+
         return points;
+    }
+
+    private void refreshLargestArmy() {
+        UUID currentHolder = players
+                .stream()
+                .filter(GamePlayer::getHasLargestArmy)
+                .map(GamePlayer::getId)
+                .findFirst()
+                .orElse(null);
+        int currentSize = currentHolder == null ? 0 : getPlayerOrThrow(currentHolder).getKnightsUsed();
+
+        for (GamePlayer player : players) {
+            if (player.getId().equals(currentHolder)) continue;
+            if (player.getKnightsUsed() >= this.gameConfiguration.getMinArmySize() && player.getKnightsUsed() > currentSize) {
+                if (currentHolder != null) getPlayerOrThrow(currentHolder).setHasLargestArmy(false);
+                player.setHasLargestArmy(true);
+            }
+        }
     }
 
     public record PlacementResult<T>(Building<T> building, List<Resource> deductedResources) {
