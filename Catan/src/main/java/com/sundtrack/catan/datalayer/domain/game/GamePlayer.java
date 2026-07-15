@@ -19,20 +19,15 @@ public class GamePlayer {
     private final List<DevelopmentCard> developmentCards;
     private String username;
     private String color;
-    private boolean hasLongestRoad;
-    private boolean hasLargestArmy;
     private int knightsUsed;
 
     public GamePlayer(UUID id, String username, String color, List<Resource> resources,
-                      List<DevelopmentCard> developmentCards,
-                      boolean hasLongestRoad, boolean hasLargestArmy, int knightsUsed) {
+                      List<DevelopmentCard> developmentCards, int knightsUsed) {
         this.id = id;
         this.username = username;
         this.color = color;
         this.resources = resources;
         this.developmentCards = developmentCards;
-        this.hasLongestRoad = hasLongestRoad;
-        this.hasLargestArmy = hasLargestArmy;
         this.knightsUsed = knightsUsed;
     }
 
@@ -78,28 +73,12 @@ public class GamePlayer {
         return developmentCards.size();
     }
 
-    public boolean getHasLongestRoad() {
-        return hasLongestRoad;
-    }
-
-    public void setHasLongestRoad(boolean hasLongestRoad) {
-        this.hasLongestRoad = hasLongestRoad;
-    }
-
-    public boolean getHasLargestArmy() {
-        return hasLargestArmy;
-    }
-
-    public void setHasLargestArmy(boolean hasLargestArmy) {
-        this.hasLargestArmy = hasLargestArmy;
-    }
-
     public int getKnightsUsed() {
         return knightsUsed;
     }
 
-    public void setKnightsUsed(int knightsUsed) {
-        this.knightsUsed = knightsUsed;
+    public void incrementKnightsUsed() {
+        this.knightsUsed++;
     }
 
     public void validateCanAfford(PieceType pieceType) {

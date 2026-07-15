@@ -26,6 +26,7 @@ import com.sundtrack.catan.session.game.eventHandlers.GameContext;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Game {
     private final Board board;
@@ -36,6 +37,7 @@ public class Game {
     private final DevelopmentCardBank developmentCardBank;
     private final ResourceBank resourceBank;
     private final GameConfiguration gameConfiguration;
+    private final GameAwards gameAwards;
     private UUID id;
     private List<GamePlayer> players;
 
@@ -50,6 +52,7 @@ public class Game {
         this.developmentCardBank = developmentCardBank;
         this.resourceBank = resourceBank;
         this.gameConfiguration = gameConfiguration;
+        gameAwards = new GameAwards(gameConfiguration);
     }
 
     public UUID getId() {
@@ -266,30 +269,56 @@ public class Game {
     }
 
     public long computePublicVictoryPoints(UUID playerId) {
-        GamePlayer player = getPlayerOrThrow(playerId);
         long points = board.countSettlements(playerId) + board.countCities(playerId) * 2;
-        if (player.getHasLargestArmy()) points += 2;
-        if (player.getHasLongestRoad()) points += 2;
-
+        if (hasLargestArmy(playerId)) points += 2;
+        if (hasLongestRoad(playerId)) points += 2;
         return points;
     }
 
-    private void refreshLargestArmy() {
-        UUID currentHolder = players
+    public Map<UUID, Integer> getLongestRoadLengths() {
+        return players
                 .stream()
-                .filter(GamePlayer::getHasLargestArmy)
-                .map(GamePlayer::getId)
-                .findFirst()
-                .orElse(null);
-        int currentSize = currentHolder == null ? 0 : getPlayerOrThrow(currentHolder).getKnightsUsed();
+                .collect(Collectors.toMap(GamePlayer::getId, p -> board.longestRoadLength(p.getId())));
+    }
 
+    public Map<UUID, Integer> getArmySizes() {
+        return players
+                .stream()
+                .collect(Collectors.toMap(GamePlayer::getId, GamePlayer::getKnightsUsed));
+    }
+
+    public boolean hasLongestRoad(UUID playerId) {
+        return gameAwards.hasLongestRoad(playerId);
+    }
+
+    public boolean hasLargestArmy(UUID playerId) {
+        return gameAwards.hasLargestArmy(playerId);
+    }
+
+    public Optional<UUID> getLongestRoadHolder() {
+        return gameAwards.getLongestRoadHolder();
+    }
+
+    public Optional<UUID> getLargestArmyHolder() {
+        return gameAwards.getLargestArmyHolder();
+    }
+
+    public boolean checkGameOver() {
         for (GamePlayer player : players) {
-            if (player.getId().equals(currentHolder)) continue;
-            if (player.getKnightsUsed() >= this.gameConfiguration.getMinArmySize() && player.getKnightsUsed() > currentSize) {
-                if (currentHolder != null) getPlayerOrThrow(currentHolder).setHasLargestArmy(false);
-                player.setHasLargestArmy(true);
+            long totalVictoryPoints = computeTotalVictoryPoints(player.getId());
+            if (totalVictoryPoints >= this.gameConfiguration.getWinScore()) {
+                return true;
             }
         }
+        return false;
+    }
+
+    private void refreshLargestArmy() {
+        gameAwards.refreshLargestArmy(getArmySizes());
+    }
+
+    private void refreshLongestRoadAward() {
+        gameAwards.refreshLongestRoad(getLongestRoadLengths());
     }
 
     public record PlacementResult<T>(Building<T> building, List<Resource> deductedResources) {

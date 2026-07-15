@@ -6,8 +6,10 @@ import com.sundtrack.catan.datalayer.domain.building.Building;
 import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.exceptions.NoRobbedTileException;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.*;
+import com.sundtrack.catan.datalayer.domain.game.LongestRoadCalculator;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Board {
 
@@ -200,5 +202,21 @@ public class Board {
                 .stream()
                 .filter(b -> b.getKind() == PieceType.CITY && b.getOwnerId() == playerId)
                 .count();
+    }
+
+    public int longestRoadLength(UUID playerId) {
+        List<Edge> playerRoads = buildings.stream()
+                .filter(b -> b.getOwnerId().equals(playerId))
+                .filter(b -> b.getLocation() instanceof Edge)
+                .map(b -> (Edge) b.getLocation())
+                .toList();
+
+        Set<Vertex> blockedVertices = buildings.stream()
+                .filter(b -> !b.getOwnerId().equals(playerId))
+                .filter(b -> b.getLocation() instanceof Vertex)
+                .map(b -> (Vertex) b.getLocation())
+                .collect(Collectors.toSet());
+
+        return new LongestRoadCalculator(playerRoads, blockedVertices).longestPathLength();
     }
 }
