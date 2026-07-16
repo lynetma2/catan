@@ -14,6 +14,7 @@ import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceSettlem
 import com.sundtrack.catan.datalayer.domain.event.game.action.resource.GameDiscardAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.RobberStealAction;
+import com.sundtrack.catan.datalayer.domain.exceptions.validation.NoAvailableBuildingException;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.NotPlayersTurnException;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.PlayerNotFoundException;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.DiscardFlow;
@@ -167,6 +168,7 @@ public class Game {
     }
 
     public PlacementResult<Vertex> placeSettlement(PlaceSettlementAction action, UUID playerId) {
+        validateAvailableBuildings(PieceType.SETTLEMENT, playerId);
         boolean free = flow.isFreePlacement(PieceType.SETTLEMENT);
         List<Resource> deducted = List.of();
 
@@ -185,7 +187,19 @@ public class Game {
         return new PlacementResult<>(settlement, deducted);
     }
 
+    private void validateAvailableBuildings(PieceType pieceType, UUID playerId) {
+        boolean hasNoAvailableBuilding = switch (pieceType) {
+            case ROAD -> board.countRoads(playerId) < gameConfiguration.getMaxNumberOfRoads();
+            case SETTLEMENT -> board.countSettlements(playerId) < gameConfiguration.getMaxNumberOfSettlements();
+            case CITY -> board.countCities(playerId) < gameConfiguration.getMaxNumberOfCities();
+        };
+        if (hasNoAvailableBuilding) {
+            throw new NoAvailableBuildingException(pieceType);
+        }
+    }
+
     public PlacementResult<Edge> placeRoad(PlaceRoadAction action, UUID playerId) {
+        validateAvailableBuildings(PieceType.ROAD, playerId);
         boolean free = flow.isFreePlacement(PieceType.ROAD);
         List<Resource> deducted = List.of();
 
@@ -205,8 +219,9 @@ public class Game {
     }
 
     public PlacementResult<Vertex> placeCity(Vertex vertex, UUID playerId) {
+        validateAvailableBuildings(PieceType.CITY, playerId);
         getPlayerOrThrow(playerId).validateCanAfford(PieceType.CITY);
-        Building<Vertex> city = board.placeCity(vertex, playerId);
+        Building<Vertex> city = board.upgradeSettlement(vertex, playerId);
         List<Resource> deducted = getPlayerOrThrow(playerId).deduct(PieceType.CITY);
         resourceBank.deposit(deducted);
         return new PlacementResult<>(city, deducted);
@@ -261,6 +276,16 @@ public class Game {
                 .orElse(0);
     }
 
+    public boolean checkGameOver() {
+        for (GamePlayer player : players) {
+            long totalVictoryPoints = computeTotalVictoryPoints(player.getId());
+            if (totalVictoryPoints >= this.gameConfiguration.getWinScore()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public long computeTotalVictoryPoints(UUID playerId) {
         GamePlayer player = getPlayerOrThrow(playerId);
         long points = computePublicVictoryPoints(playerId);
@@ -275,10 +300,16 @@ public class Game {
         return points;
     }
 
-    public Map<UUID, Integer> getLongestRoadLengths() {
-        return players
-                .stream()
-                .collect(Collectors.toMap(GamePlayer::getId, p -> board.longestRoadLength(p.getId())));
+    public boolean hasLargestArmy(UUID playerId) {
+        return gameAwards.hasLargestArmy(playerId);
+    }
+
+    public boolean hasLongestRoad(UUID playerId) {
+        return gameAwards.hasLongestRoad(playerId);
+    }
+
+    private void refreshLargestArmy() {
+        gameAwards.refreshLargestArmy(getArmySizes());
     }
 
     public Map<UUID, Integer> getArmySizes() {
@@ -287,38 +318,14 @@ public class Game {
                 .collect(Collectors.toMap(GamePlayer::getId, GamePlayer::getKnightsUsed));
     }
 
-    public boolean hasLongestRoad(UUID playerId) {
-        return gameAwards.hasLongestRoad(playerId);
-    }
-
-    public boolean hasLargestArmy(UUID playerId) {
-        return gameAwards.hasLargestArmy(playerId);
-    }
-
-    public Optional<UUID> getLongestRoadHolder() {
-        return gameAwards.getLongestRoadHolder();
-    }
-
-    public Optional<UUID> getLargestArmyHolder() {
-        return gameAwards.getLargestArmyHolder();
-    }
-
-    public boolean checkGameOver() {
-        for (GamePlayer player : players) {
-            long totalVictoryPoints = computeTotalVictoryPoints(player.getId());
-            if (totalVictoryPoints >= this.gameConfiguration.getWinScore()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void refreshLargestArmy() {
-        gameAwards.refreshLargestArmy(getArmySizes());
-    }
-
     private void refreshLongestRoadAward() {
         gameAwards.refreshLongestRoad(getLongestRoadLengths());
+    }
+
+    public Map<UUID, Integer> getLongestRoadLengths() {
+        return players
+                .stream()
+                .collect(Collectors.toMap(GamePlayer::getId, p -> board.longestRoadLength(p.getId())));
     }
 
     public record PlacementResult<T>(Building<T> building, List<Resource> deductedResources) {

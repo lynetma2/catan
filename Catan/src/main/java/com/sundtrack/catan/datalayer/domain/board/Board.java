@@ -133,7 +133,7 @@ public class Board {
                 });
     }
 
-    public Building<Vertex> placeCity(Vertex vertex, UUID playerId) {
+    public Building<Vertex> upgradeSettlement(Vertex vertex, UUID playerId) {
         validateBoardCity(vertex, playerId); // now private
         Building<Vertex> city = Building.city(playerId, vertex);
         buildings.add(city);
@@ -201,6 +201,13 @@ public class Board {
         return buildings
                 .stream()
                 .filter(b -> b.getKind() == PieceType.CITY && b.getOwnerId() == playerId)
+                .count();
+    }
+
+    public long countRoads(UUID playerId) {
+        return buildings
+                .stream()
+                .filter(b -> b.getKind() == PieceType.ROAD && b.getOwnerId() == playerId)
                 .count();
     }
 
