@@ -24,6 +24,7 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.UUID;
 
 @Controller
@@ -66,6 +67,7 @@ public class LobbyController {
 
         // Look for the LobbyStateEvent in the 'directed' map to find the new ID
         result.directed().values().stream()
+                .flatMap(List::stream)
                 .filter(e -> e instanceof LobbyStateEvent)
                 .map(e -> (LobbyStateEvent) e)
                 .findFirst()

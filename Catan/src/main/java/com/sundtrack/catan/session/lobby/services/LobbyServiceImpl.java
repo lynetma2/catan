@@ -104,7 +104,7 @@ public class LobbyServiceImpl implements LobbyService {
 
         return EventResult.of(
                 List.of(new PlayerJoinEvent(playerId, event.playerName())),
-                Map.of(playerId, new LobbyStateEvent(lobbyId, lobbyMapper.toSnapshotDTO(lobby), playerId))
+                Map.of(playerId, List.of(new LobbyStateEvent(lobbyId, lobbyMapper.toSnapshotDTO(lobby), playerId)))
         );
     }
 

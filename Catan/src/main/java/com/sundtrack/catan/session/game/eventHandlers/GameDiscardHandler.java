@@ -36,12 +36,8 @@ public class GameDiscardHandler implements GameActionHandler<GameDiscardAction> 
 
         GamePhase phaseBefore = game.getCurrentPhase();
         List<Resource> discarded = game.discard(action, context.playerId());
-        EventResult<ServerEvent> events = createResults(context, game, discarded, phaseBefore);
 
-        game.recordEvent(action, events, context);
-        //gameStore.save(game);
-
-        return events;
+        return createResults(context, game, discarded, phaseBefore);
     }
 
     private void doValidations(Game game, GameContext context, GameDiscardAction action) {
@@ -69,8 +65,8 @@ public class GameDiscardHandler implements GameActionHandler<GameDiscardAction> 
 
         //TODO broadcast that this player discarded (without revealing which cards) to other players
 
-        Map<UUID, ServerEvent> directed = Map.of(
-                context.playerId(), new ResourceSpentEvent(context.playerId(), discarded)
+        Map<UUID, List<ServerEvent>> directed = Map.of(
+                context.playerId(), List.of(new ResourceSpentEvent(context.playerId(), discarded))
         );
 
         return EventResult.of(events, directed);

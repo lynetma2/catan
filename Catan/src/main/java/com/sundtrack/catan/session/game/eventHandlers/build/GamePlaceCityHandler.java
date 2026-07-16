@@ -33,12 +33,7 @@ public class GamePlaceCityHandler implements GameActionHandler<PlaceCityAction> 
 
         doValidations(game, context, action);
         Game.PlacementResult<Vertex> result = doMutations(game, context, action);
-        EventResult<ServerEvent> events = createResults(context, result);
-
-        game.recordEvent(action, events, context);
-        //gameStore.save(game);
-
-        return events;
+        return createResults(context, result);
     }
 
     private void doValidations(Game game, GameContext context, PlaceCityAction action) {
@@ -58,9 +53,9 @@ public class GamePlaceCityHandler implements GameActionHandler<PlaceCityAction> 
         ));
         //TODO add events of the deducted amount of cards from the player. to opponents
 
-        Map<UUID, ServerEvent> directed = result.deductedResources().isEmpty()
+        Map<UUID, List<ServerEvent>> directed = result.deductedResources().isEmpty()
                 ? Map.of()
-                : Map.of(context.playerId(), new ResourceSpentEvent(context.playerId(), result.deductedResources()));
+                : Map.of(context.playerId(), List.of(new ResourceSpentEvent(context.playerId(), result.deductedResources())));
 
         return EventResult.of(serverEvents, directed);
     }

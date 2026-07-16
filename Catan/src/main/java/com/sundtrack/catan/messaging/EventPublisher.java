@@ -58,24 +58,26 @@ public class EventPublisher {
             String sessionId,
             EventResult<? extends ServerEvent> result) {
 
-        result.directed().forEach((playerId, event) -> {
+        result.directed().forEach((playerId, events) ->
+                events.forEach(event -> {
 
-            OutgoingEventEnvelope envelope =
-                    envelopeFactory.create(event);
+                    OutgoingEventEnvelope envelope =
+                            envelopeFactory.create(event);
 
-            System.out.println(
-                    "Sending directed to session: "
-                            + sessionId
-                            + " event: "
-                            + envelope.type()
-                            + " payload: "
-                            + envelope.payload());
+                    System.out.println(
+                            "Sending directed to session: "
+                                    + sessionId
+                                    + " event: "
+                                    + envelope.type()
+                                    + " payload: "
+                                    + envelope.payload());
 
-            messaging.sendToUser(
-                    sessionId,
-                    queue,
-                    envelope);
-        });
+                    messaging.sendToUser(
+                            sessionId,
+                            queue,
+                            envelope);
+                })
+        );
     }
 
     public void publishError(

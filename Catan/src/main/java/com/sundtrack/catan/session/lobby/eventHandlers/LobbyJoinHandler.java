@@ -61,7 +61,7 @@ public class LobbyJoinHandler implements LobbyActionHandler<LobbyJoinAction> {
 
         return EventResult.of(
                 List.of(new PlayerJoinEvent(playerId, action.playerName())),
-                Map.of(playerId, new LobbyStateEvent(lobbyId, lobbyMapper.toSnapshotDTO(lobby), playerId))
+                Map.of(playerId, List.of(new LobbyStateEvent(lobbyId, lobbyMapper.toSnapshotDTO(lobby), playerId)))
         );
     }
 }

@@ -32,12 +32,8 @@ public class GameRollDiceHandler implements GameActionHandler<RollDiceAction> {
 
         doValidations(game, context, action);
         Game.RollOutcome result = doMutations(game);
-        EventResult<ServerEvent> events = createResults(game, result);
 
-        game.recordEvent(action, events, context);
-        //gameStore.save(game);
-
-        return events;
+        return createResults(game, result);
     }
 
     private void doValidations(Game game, GameContext context, RollDiceAction action) {

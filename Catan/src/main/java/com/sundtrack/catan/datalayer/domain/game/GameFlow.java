@@ -62,6 +62,11 @@ public class GameFlow {
         basePhase = GamePhase.POST_ROLL;
     }
 
+    public void enterGameOver() {
+        basePhase = GamePhase.GAME_OVER;
+        activeFlows.clear();
+    }
+
     public TurnAdvanceResult advanceTurn() {
         UUID previousPlayerId = turnOrder.currentPlayerId();
         turnOrder.advance();

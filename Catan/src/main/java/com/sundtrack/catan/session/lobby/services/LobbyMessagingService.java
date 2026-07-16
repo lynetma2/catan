@@ -28,11 +28,12 @@ public class LobbyMessagingService {
                     messaging.broadcast(ApiRoutes.lobbyTopic(lobbyId), envelope);
                 }
         );
-        result.directed().forEach((playerId, event) -> {
+        result.directed().forEach((playerId, events) ->
+                events.forEach(event -> {
                     System.out.println("Sending directed to sessionId: " + sessionId + " destination: " + ApiRoutes.lobbyQueue() + " event: " + event);
                     OutgoingEventEnvelope envelope = envelopeFactory.create(event);
                     messaging.sendToUser(sessionId, ApiRoutes.lobbyQueue(), envelope);
-                }
+                })
         );
     }
 

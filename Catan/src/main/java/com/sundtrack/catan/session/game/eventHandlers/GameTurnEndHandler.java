@@ -33,12 +33,7 @@ public class GameTurnEndHandler implements GameActionHandler<TurnEndAction> {
 
         doValidations(game, context, action);
         MutationResult result = doMutations(game, context, action);
-        EventResult<ServerEvent> events = createResults(context, result);
-
-        game.recordEvent(action, events, context);
-        //gameStore.save(game);
-
-        return events;
+        return createResults(context, result);
     }
 
     private void doValidations(Game game, GameContext context, TurnEndAction action) {

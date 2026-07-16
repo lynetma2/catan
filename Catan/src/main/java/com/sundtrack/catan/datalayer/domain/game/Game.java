@@ -14,6 +14,7 @@ import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceSettlem
 import com.sundtrack.catan.datalayer.domain.event.game.action.resource.GameDiscardAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.RobberStealAction;
+import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseChangedEvent;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.NoAvailableBuildingException;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.NotPlayersTurnException;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.PlayerNotFoundException;
@@ -276,14 +277,18 @@ public class Game {
                 .orElse(0);
     }
 
-    public boolean checkGameOver() {
+    public Optional<ServerEvent> evaluateEndOfAction() {
+        refreshLargestArmy();
+        refreshLongestRoadAward();
+
         for (GamePlayer player : players) {
             long totalVictoryPoints = computeTotalVictoryPoints(player.getId());
             if (totalVictoryPoints >= this.gameConfiguration.getWinScore()) {
-                return true;
+                flow.enterGameOver();
+                return Optional.of(new GamePhaseChangedEvent(GamePhase.GAME_OVER));
             }
         }
-        return false;
+        return Optional.empty();
     }
 
     public long computeTotalVictoryPoints(UUID playerId) {

@@ -28,7 +28,7 @@ public enum GamePhase {
     ROBBER_STEAL("robber_steal",
             Set.of(RobberStealAction.class)),
     DISCARD("discard", Set.of()),
-    END("end", Set.of()),
+    GAME_OVER("end", Set.of()),
     ROAD_BUILDING("road_building", Set.of());
 
     //TODO finish this class!

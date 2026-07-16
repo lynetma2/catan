@@ -28,11 +28,12 @@ public class GameMessagingService {
                     messaging.broadcast(ApiRoutes.gameTopic(gameId), envelope);
                 }
         );
-        result.directed().forEach((playerId, event) -> {
+        result.directed().forEach((playerId, events) ->
+                events.forEach(event -> {
                     System.out.println("Sending directed to playerId: " + playerId + " destination: " + ApiRoutes.gameQueue() + " event: " + event);
                     OutgoingEventEnvelope envelope = outgoingEventEnvelopeFactory.create(event);
                     messaging.sendToUser(playerId.toString(), ApiRoutes.gameQueue(), envelope);
-                }
+                })
         );
     }
 

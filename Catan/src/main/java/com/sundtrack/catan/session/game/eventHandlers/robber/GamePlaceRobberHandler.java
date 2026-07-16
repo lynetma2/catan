@@ -33,12 +33,8 @@ public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberActi
 
         GamePhase phaseBefore = game.getCurrentPhase();
         game.placeRobber(action, context.playerId());
-        EventResult<ServerEvent> events = createResults(context, game, action, phaseBefore);
 
-        game.recordEvent(action, events, context);
-        //gameStore.save(game);
-
-        return events;
+        return createResults(context, game, action, phaseBefore);
     }
 
     private void doValidations(Game game, GameContext context, PlaceRobberAction action) {
@@ -56,10 +52,10 @@ public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberActi
             events.add(new GamePhaseChangedEvent(phaseAfter));
         }
 
-        Map<UUID, ServerEvent> directed = new HashMap<>();
+        Map<UUID, List<ServerEvent>> directed = new HashMap<>();
         List<UUID> candidates = game.getStealCandidates();
         if (!candidates.isEmpty()) {
-            directed.put(context.playerId(), new StealTargetRequiredEvent(candidates));
+            directed.put(context.playerId(), List.of(new StealTargetRequiredEvent(candidates)));
         }
         return EventResult.of(events, directed);
     }

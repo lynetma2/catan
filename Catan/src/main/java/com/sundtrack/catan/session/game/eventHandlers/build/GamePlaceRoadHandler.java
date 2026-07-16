@@ -40,12 +40,8 @@ public class GamePlaceRoadHandler implements GameActionHandler<PlaceRoadAction> 
         GamePhase phaseBefore = game.getCurrentPhase();
         UUID playerBefore = game.getCurrentPlayerId();
         Game.PlacementResult<Edge> result = game.placeRoad(action, context.playerId());
-        EventResult<ServerEvent> events = createResults(context, game, result, playerBefore, phaseBefore);
 
-        game.recordEvent(action, events, context);
-        //gameStore.save(game);
-
-        return events;
+        return createResults(context, game, result, playerBefore, phaseBefore);
     }
 
     private void doValidations(Game game, GameContext context, PlaceRoadAction action) {
@@ -72,9 +68,9 @@ public class GamePlaceRoadHandler implements GameActionHandler<PlaceRoadAction> 
 
         //TODO add events of the deducted amount of cards from the player.
 
-        Map<UUID, ServerEvent> directed = result.deductedResources().isEmpty()
+        Map<UUID, List<ServerEvent>> directed = result.deductedResources().isEmpty()
                 ? Map.of()
-                : Map.of(context.playerId(), new ResourceSpentEvent(context.playerId(), result.deductedResources()));
+                : Map.of(context.playerId(), List.of(new ResourceSpentEvent(context.playerId(), result.deductedResources())));
 
         return EventResult.of(events, directed);
     }
