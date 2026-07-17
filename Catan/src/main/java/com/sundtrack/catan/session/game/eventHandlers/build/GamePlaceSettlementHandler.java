@@ -34,9 +34,8 @@ public class GamePlaceSettlementHandler implements GameActionHandler<PlaceSettle
         Game game = gameStore.get(context.gameId());
 
         doValidations(game, context, action);
-        GamePhase phaseBefore = game.getCurrentPhase();
         Game.PlacementResult<Vertex> result = game.placeSettlement(action, context.playerId());
-        return createResults(context, game, result, phaseBefore);
+        return createResults(context, game, result);
     }
 
     private void doValidations(Game game, GameContext context, PlaceSettlementAction action) {
@@ -45,15 +44,10 @@ public class GamePlaceSettlementHandler implements GameActionHandler<PlaceSettle
     }
 
     private EventResult<ServerEvent> createResults(GameContext context, Game game,
-                                                   Game.PlacementResult<Vertex> result, GamePhase phaseBefore) {
+                                                   Game.PlacementResult<Vertex> result) {
         List<ServerEvent> events = new ArrayList<>();
 
         events.add(new BuildSettlementEvent(result.building().getLocation(), context.playerId()));
-        
-        GamePhase phaseAfter = game.getCurrentPhase();
-        if (!phaseBefore.equals(phaseAfter)) {
-            events.add(new GamePhaseChangedEvent(phaseAfter));
-        }
         //TODO add events of the deducted amount of cards from the player.
 
         Map<UUID, List<ServerEvent>> directed = result.deductedResources().isEmpty()

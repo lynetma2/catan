@@ -36,12 +36,8 @@ public class GamePlaceRoadHandler implements GameActionHandler<PlaceRoadAction> 
         Game game = gameStore.get(context.gameId());
 
         doValidations(game, context, action);
-
-        GamePhase phaseBefore = game.getCurrentPhase();
-        UUID playerBefore = game.getCurrentPlayerId();
         Game.PlacementResult<Edge> result = game.placeRoad(action, context.playerId());
-
-        return createResults(context, game, result, playerBefore, phaseBefore);
+        return createResults(context, game, result);
     }
 
     private void doValidations(Game game, GameContext context, PlaceRoadAction action) {
@@ -50,21 +46,10 @@ public class GamePlaceRoadHandler implements GameActionHandler<PlaceRoadAction> 
     }
 
     private EventResult<ServerEvent> createResults(GameContext context, Game game,
-                                                   Game.PlacementResult<Edge> result, UUID playerBefore, GamePhase phaseBefore) {
+                                                   Game.PlacementResult<Edge> result) {
         List<ServerEvent> events = new ArrayList<>();
 
         events.add(new BuildRoadEvent(result.building().getLocation(), context.playerId()));
-
-        GamePhase phaseAfter = game.getCurrentPhase();
-        if (!phaseBefore.equals(phaseAfter)) {
-            events.add(new GamePhaseChangedEvent(phaseAfter));
-        }
-
-        UUID playerAfter = game.getCurrentPlayerId();
-        if (!playerBefore.equals(playerAfter)) {
-            events.add(new TurnEndEvent(context.playerId()));
-            events.add(new TurnStartEvent(playerAfter));
-        }
 
         //TODO add events of the deducted amount of cards from the player.
 

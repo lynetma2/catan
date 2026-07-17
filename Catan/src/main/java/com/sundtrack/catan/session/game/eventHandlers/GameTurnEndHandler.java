@@ -32,35 +32,12 @@ public class GameTurnEndHandler implements GameActionHandler<TurnEndAction> {
         Game game = gameStore.get(context.gameId());
 
         doValidations(game, context, action);
-        MutationResult result = doMutations(game, context, action);
-        return createResults(context, result);
+        game.advanceTurn();
+        return EventResult.of(List.of(), Map.of());
     }
 
     private void doValidations(Game game, GameContext context, TurnEndAction action) {
         game.validateCurrentPlayer(context.playerId());
         game.getCurrentPhase().validateAllowedAction(action);
-    }
-
-    private MutationResult doMutations(Game game, GameContext context, TurnEndAction action) {
-        UUID endingPlayerId = context.playerId();
-        GameFlow.TurnAdvanceResult turnAdvance = game.advanceTurn();
-
-        return new MutationResult(endingPlayerId, turnAdvance.newCurrentPlayerId(), turnAdvance.initialPhase());
-    }
-
-    private EventResult<ServerEvent> createResults(GameContext context, MutationResult result) {
-        List<ServerEvent> serverEvents = new ArrayList<>();
-        serverEvents.add(new TurnEndEvent(result.endingPlayerId()));
-        serverEvents.add(new GamePhaseChangedEvent(result.newPhase));
-        serverEvents.add(new TurnStartEvent(result.newCurrentPlayerId()));
-
-        return EventResult.of(serverEvents, Map.of());
-    }
-
-    private record MutationResult(
-            UUID endingPlayerId,
-            UUID newCurrentPlayerId,
-            GamePhase newPhase
-    ) {
     }
 }

@@ -30,11 +30,8 @@ public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberActi
         Game game = gameStore.get(context.gameId());
 
         doValidations(game, context, action);
-
-        GamePhase phaseBefore = game.getCurrentPhase();
         game.placeRobber(action, context.playerId());
-
-        return createResults(context, game, action, phaseBefore);
+        return createResults(context, game, action);
     }
 
     private void doValidations(Game game, GameContext context, PlaceRobberAction action) {
@@ -43,14 +40,9 @@ public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberActi
     }
 
     private EventResult<ServerEvent> createResults(GameContext context, Game game,
-                                                   PlaceRobberAction action, GamePhase phaseBefore) {
+                                                   PlaceRobberAction action) {
         List<ServerEvent> events = new ArrayList<>();
         events.add(new RobberPlaceEvent(action.target()));
-
-        GamePhase phaseAfter = game.getCurrentPhase();
-        if (!phaseBefore.equals(phaseAfter)) {
-            events.add(new GamePhaseChangedEvent(phaseAfter));
-        }
 
         Map<UUID, List<ServerEvent>> directed = new HashMap<>();
         List<UUID> candidates = game.getStealCandidates();

@@ -31,11 +31,8 @@ public class GameRobberStealHandler implements GameActionHandler<RobberStealActi
         Game game = gameStore.get(context.gameId());
 
         doValidations(game, context, action);
-
-        GamePhase phaseBefore = game.getCurrentPhase();
         Resource stolen = game.stealResource(action, context.playerId());
-
-        return createResults(context, game, action, stolen, phaseBefore);
+        return createResults(context, game, action, stolen);
     }
 
     private void doValidations(Game game, GameContext context, RobberStealAction action) {
@@ -44,14 +41,7 @@ public class GameRobberStealHandler implements GameActionHandler<RobberStealActi
     }
 
     private EventResult<ServerEvent> createResults(GameContext context, Game game, RobberStealAction action,
-                                                   Resource stolen, GamePhase phaseBefore) {
-        List<ServerEvent> events = new ArrayList<>();
-
-        GamePhase phaseAfter = game.getCurrentPhase();
-        if (!phaseBefore.equals(phaseAfter)) {
-            events.add(new GamePhaseChangedEvent(phaseAfter));
-        }
-
+                                                   Resource stolen) {
         UUID targetPlayerId = action.targetPlayerId();
         UUID retrievingPlayerId = context.playerId();
 
@@ -61,6 +51,6 @@ public class GameRobberStealHandler implements GameActionHandler<RobberStealActi
 
         //TODO add global events telling people that the players has lost a card and gained a card
 
-        return EventResult.of(events, directed);
+        return EventResult.of(List.of(), directed);
     }
 }

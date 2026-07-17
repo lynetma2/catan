@@ -47,7 +47,6 @@ public class GameRollDiceHandler implements GameActionHandler<RollDiceAction> {
 
     private EventResult<ServerEvent> createResults(Game game, Game.RollOutcome outcome) {
         List<ServerEvent> events = new ArrayList<>();
-        events.add(new GamePhaseChangedEvent(game.getCurrentPhase()));
         events.add(new RollDiceEvent(outcome.roll()));
 
         outcome.grantedResources().forEach((playerId, resources) ->
