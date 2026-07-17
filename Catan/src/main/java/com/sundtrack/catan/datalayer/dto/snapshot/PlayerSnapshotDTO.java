@@ -12,14 +12,14 @@ public record PlayerSnapshotDTO(
         String id,
         String name,
         String color,
-        List<Resource> resources,
-        List<DevCardSnapshotDTO> devCards,
-        int victoryPoints,
+        List<Resource> resources, // empty for other players — see cardCount for their total
+        List<DevCardSnapshotDTO> devCards, // empty for other players — see devCardCount for their total
+        long victoryPoints,
         int cardCount,
         int devCardCount,
         boolean hasLongestRoad,
         boolean hasLargestArmy,
-        int usedRobbers
+        int knightsUsed
 ) {
     public PlayerSnapshotDTO {
         // Defensive copies to ensure immutability

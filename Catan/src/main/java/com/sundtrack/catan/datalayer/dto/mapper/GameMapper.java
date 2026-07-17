@@ -5,10 +5,9 @@ import com.sundtrack.catan.datalayer.domain.board.Vertex;
 import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
 import com.sundtrack.catan.datalayer.domain.building.Building;
 import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
-import com.sundtrack.catan.datalayer.domain.game.DiscardSession;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.game.GamePlayer;
-import com.sundtrack.catan.datalayer.domain.game.StealSession;
+import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.dto.placement.CityPlacementDTO;
 import com.sundtrack.catan.datalayer.dto.placement.RoadPlacementDTO;
 import com.sundtrack.catan.datalayer.dto.placement.SettlementPlacementDTO;
@@ -22,88 +21,75 @@ import java.util.UUID;
 @Component
 public class GameMapper {
 
-    public GameSnapshotDTO toSnapshotDTO(Game game, UUID playerId) {
+    public GameSnapshotDTO toSnapshotDTO(Game game, UUID viewingPlayerId) {
         return new GameSnapshotDTO(
                 game.getId().toString(),
-                mapPlayers(game.getPlayers()),
+                mapPlayers(game, viewingPlayerId),
                 mapTiles(game.getTiles()),
                 mapPlacements(game.getBuildings()),
                 game.getCurrentPhase(),
                 game.getCurrentPlayerId().toString(),
                 game.getTurnNumber(),
                 game.getActiveTradeOffers(),
-                mapDiscardSession(game.getDiscardSession(), playerId),
                 game.getDiceRoll(),
-                mapStealSession(game.getStealSession())
+                FlowStateMapper.toDTO(game)
         );
     }
 
-    private List<PlayerSnapshotDTO> mapPlayers(List<GamePlayer> players) {
-        // Map GamePlayer domain to PlayerSnapshotDTO
-        return players
-                .stream()
-                .map(p ->
-                        new PlayerSnapshotDTO(p.getId().toString(), p.getUsername(),
-                                p.getColor(), p.getResources(), mapDevCards(p.getDevelopmentCards()),
-                                p.getVictoryPoints(), p.getCardCount(), p.getDevelopmentCardCount(),
-                                p.getHasLongestRoad(), p.getHasLargestArmy(), p.getKnightsUsed()))
+    private List<PlayerSnapshotDTO> mapPlayers(Game game, UUID viewingPlayerId) {
+        return game.getPlayers().stream()
+                .map(p -> mapPlayer(game, p, p.getId().equals(viewingPlayerId)))
                 .toList();
     }
 
+    private PlayerSnapshotDTO mapPlayer(Game game, GamePlayer p, boolean isViewer) {
+        List<Resource> visibleResources = isViewer ? p.getResources() : List.of();
+        List<DevCardSnapshotDTO> visibleDevCards = isViewer ? mapDevCards(p.getDevelopmentCards()) : List.of();
+        long visibleVictoryPoints = isViewer ? game.computeTotalVictoryPoints(p.getId()) : game.computePublicVictoryPoints(p.getId());
+
+        return new PlayerSnapshotDTO(
+                p.getId().toString(),
+                p.getUsername(),
+                p.getColor(),
+                visibleResources,
+                visibleDevCards,
+                visibleVictoryPoints,
+                p.getCardCount(),
+                p.getDevelopmentCardCount(),
+                game.hasLongestRoad(p.getId()),
+                game.hasLargestArmy(p.getId()),
+                p.getKnightsUsed()
+        );
+    }
+
     private List<TileSnapshotDTO> mapTiles(List<Tile> tiles) {
-        return tiles
-                .stream()
-                .map(tile ->
-                        new TileSnapshotDTO(
-                                tile.getHex(), tile.getKind(), tile.getType(),
-                                tile.getNumber(), tile.hasRobber(), tile.isPort(),
-                                tile.getPortType(), tile.getPortFacing()
-                        ))
+        return tiles.stream()
+                .map(tile -> new TileSnapshotDTO(
+                        tile.getHex(), tile.getKind(), tile.getType(),
+                        tile.getNumber(), tile.hasRobber(), tile.isPort(),
+                        tile.getPortType(), tile.getPortFacing()))
                 .toList();
     }
 
     private PlacementSnapshotDTO mapPlacements(List<Building<?>> buildings) {
         List<RoadPlacementDTO> roads = new ArrayList<>();
         List<SettlementPlacementDTO> settlements = new ArrayList<>();
-        List<CityPlacementDTO> cityPlacements = new ArrayList<>();
+        List<CityPlacementDTO> cities = new ArrayList<>();
 
         buildings.forEach(building -> {
             switch (building.getKind()) {
-                case ROAD:
-                    RoadPlacementDTO road = new RoadPlacementDTO((Edge) building.getLocation(), building.getOwnerId().toString());
-                    roads.add(road);
-                    break;
-                case SETTLEMENT:
-                    SettlementPlacementDTO settlement = new SettlementPlacementDTO((Vertex) building.getLocation(), building.getOwnerId().toString());
-                    settlements.add(settlement);
-                    break;
-                case CITY:
-                    CityPlacementDTO city = new CityPlacementDTO((Vertex) building.getLocation(), building.getOwnerId().toString());
-                    cityPlacements.add(city);
-                    break;
+                case ROAD -> roads.add(new RoadPlacementDTO((Edge) building.getLocation(), building.getOwnerId().toString()));
+                case SETTLEMENT -> settlements.add(new SettlementPlacementDTO((Vertex) building.getLocation(), building.getOwnerId().toString()));
+                case CITY -> cities.add(new CityPlacementDTO((Vertex) building.getLocation(), building.getOwnerId().toString()));
             }
         });
 
-        return new PlacementSnapshotDTO(roads, settlements, cityPlacements);
-    }
-
-    private DiscardSessionDTO mapDiscardSession(DiscardSession discardSession, UUID playerId) {
-        boolean mustDiscard = discardSession.isPending(playerId);
-        int discardAmount = discardSession.getRequiredCount(playerId);
-        return new DiscardSessionDTO(mustDiscard, discardAmount);
-    }
-
-    private StealSessionDTO mapStealSession(StealSession stealSession) {
-        return new StealSessionDTO(stealSession.isActive(), stealSession.getRetrievingPlayerId(), stealSession.getCandidates());
+        return new PlacementSnapshotDTO(roads, settlements, cities);
     }
 
     private List<DevCardSnapshotDTO> mapDevCards(List<DevelopmentCard> cards) {
-        return cards
-                .stream()
-                .map(card ->
-                        new DevCardSnapshotDTO(card.getId().toString(),
-                                card.getType(),
-                                card.isBoughtThisTurn()))
+        return cards.stream()
+                .map(card -> new DevCardSnapshotDTO(card.getId().toString(), card.getType(), card.isBoughtThisTurn()))
                 .toList();
     }
 }

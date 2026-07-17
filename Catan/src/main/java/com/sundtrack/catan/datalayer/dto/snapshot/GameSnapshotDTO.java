@@ -2,6 +2,7 @@ package com.sundtrack.catan.datalayer.dto.snapshot;
 
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
 import com.sundtrack.catan.datalayer.domain.trade.TradeOffer;
+import com.sundtrack.catan.datalayer.dto.snapshot.subflow.FlowStateDTO;
 
 import java.util.List;
 
@@ -17,9 +18,8 @@ public record GameSnapshotDTO(
         String currentPlayerId,
         int turnNumber,
         List<TradeOffer> activeTradeOffers,
-        DiscardSessionDTO discardSession,
         DiceRollDTO diceRoll,
-        StealSessionDTO stealSession
+        FlowStateDTO activeFlowState
 ) {
     public GameSnapshotDTO {
         // Ensure all lists are immutable and null-safe

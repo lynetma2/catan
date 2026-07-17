@@ -19,6 +19,7 @@ import com.sundtrack.catan.datalayer.domain.exceptions.validation.NoAvailableBui
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.NotPlayersTurnException;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.PlayerNotFoundException;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.DiscardFlow;
+import com.sundtrack.catan.datalayer.domain.game.subFlows.RoadBuildingFlow;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.RobberPlacementFlow;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.RobberStealFlow;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
@@ -303,6 +304,22 @@ public class Game {
         if (hasLargestArmy(playerId)) points += 2;
         if (hasLongestRoad(playerId)) points += 2;
         return points;
+    }
+
+    public Optional<UUID> getRetrievingPlayerId() {
+        return flow.getActiveStealFlow().map(RobberStealFlow::getRetrievingPlayerId);
+    }
+
+    public int getRoadsPlaced() {
+        return flow.getActiveRoadBuildingFlow()
+                .map(RoadBuildingFlow::getRoadsPlaced)
+                .orElse(0);
+    }
+
+    public int getRoadsRequired() {
+        return flow.getActiveRoadBuildingFlow()
+                .map(RoadBuildingFlow::getRoadsRequired)
+                .orElse(0);
     }
 
     public boolean hasLargestArmy(UUID playerId) {

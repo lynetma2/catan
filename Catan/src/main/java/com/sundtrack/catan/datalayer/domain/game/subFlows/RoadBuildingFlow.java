@@ -10,30 +10,29 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class RoadBuildingFlow implements SubFlow {
+    private static final int REQUIRED_ROADS = 2;
     private final int roadsPlaced;
 
-    public RoadBuildingFlow() {
-        this(0);
-    }
+    public RoadBuildingFlow() { this(0); }
+    private RoadBuildingFlow(int roadsPlaced) { this.roadsPlaced = roadsPlaced; }
 
-    private RoadBuildingFlow(int roadsPlaced) {
-        this.roadsPlaced = roadsPlaced;
-    }
-
-    @Override
-    public GamePhase currentPhase() {
-        return GamePhase.ROAD_BUILDING;
-    }
+    @Override public GamePhase currentPhase() { return GamePhase.ROAD_BUILDING; }
 
     @Override
     public Optional<SubFlow> handle(ClientAction action, UUID actingPlayerId) {
-        if (!(action instanceof PlaceRoadAction)) throw new IllegalGamePhaseException(currentPhase());
+        if (!(action instanceof PlaceRoadAction)) {
+            throw new IllegalStateException(
+                    "RoadBuildingFlow.handle called with " + action.getClass().getSimpleName());
+        }
         int placed = roadsPlaced + 1;
-        return placed >= 2 ? Optional.empty() : Optional.of(new RoadBuildingFlow(placed));
+        return placed >= REQUIRED_ROADS ? Optional.empty() : Optional.of(new RoadBuildingFlow(placed));
     }
 
     @Override
     public boolean isFreePlacement(PieceType pieceType) {
         return pieceType == PieceType.ROAD;
     }
+
+    public int getRoadsPlaced() { return roadsPlaced; }
+    public int getRoadsRequired() { return REQUIRED_ROADS; }
 }

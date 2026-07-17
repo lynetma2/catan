@@ -2,10 +2,7 @@ package com.sundtrack.catan.datalayer.domain.game;
 
 import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.event.ClientAction;
-import com.sundtrack.catan.datalayer.domain.game.subFlows.DiscardFlow;
-import com.sundtrack.catan.datalayer.domain.game.subFlows.RobberStealFlow;
-import com.sundtrack.catan.datalayer.domain.game.subFlows.SetupFlow;
-import com.sundtrack.catan.datalayer.domain.game.subFlows.SubFlow;
+import com.sundtrack.catan.datalayer.domain.game.subFlows.*;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -88,6 +85,14 @@ public class GameFlow {
                 .stream()
                 .filter(RobberStealFlow.class::isInstance)
                 .map(RobberStealFlow.class::cast)
+                .findFirst();
+    }
+
+    public Optional<RoadBuildingFlow> getActiveRoadBuildingFlow() {
+        return activeFlows
+                .stream()
+                .filter(RoadBuildingFlow.class::isInstance)
+                .map(RoadBuildingFlow.class::cast)
                 .findFirst();
     }
 
