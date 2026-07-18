@@ -6,12 +6,12 @@ public class DevelopmentCard {
 
     private final UUID id;
     private final DevelopmentCardType type;
-    private boolean isBoughtThisTurn;
+    private final int purchasedOnTurn;
 
-    public DevelopmentCard(UUID id, DevelopmentCardType type) {
+    public DevelopmentCard(UUID id, DevelopmentCardType type, int purchasedOnTurn) {
         this.id = id;
         this.type = type;
-        this.isBoughtThisTurn = true;
+        this.purchasedOnTurn = purchasedOnTurn;
     }
 
     public UUID getId() {
@@ -22,7 +22,11 @@ public class DevelopmentCard {
         return type;
     }
 
-    public boolean isBoughtThisTurn() {
-        return isBoughtThisTurn;
+    public boolean isBoughtThisTurn(int currentTurn) {
+        return purchasedOnTurn == currentTurn;
+    }
+
+    public boolean isPlayable(int currentTurn) {
+        return purchasedOnTurn < currentTurn;
     }
 }

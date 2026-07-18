@@ -6,6 +6,7 @@ import com.sundtrack.catan.datalayer.domain.board.Vertex;
 import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
 import com.sundtrack.catan.datalayer.domain.building.Building;
 import com.sundtrack.catan.datalayer.domain.building.PieceType;
+import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
 import com.sundtrack.catan.datalayer.domain.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
@@ -15,6 +16,7 @@ import com.sundtrack.catan.datalayer.domain.event.game.action.resource.GameDisca
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.RobberStealAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseChangedEvent;
+import com.sundtrack.catan.datalayer.domain.exceptions.validation.InsufficientDevelopmentCardsException;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.NoAvailableBuildingException;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.NotPlayersTurnException;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.PlayerNotFoundException;
@@ -23,6 +25,7 @@ import com.sundtrack.catan.datalayer.domain.game.subFlows.RoadBuildingFlow;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.RobberPlacementFlow;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.RobberStealFlow;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
+import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
 import com.sundtrack.catan.datalayer.domain.trade.TradeOffer;
 import com.sundtrack.catan.datalayer.dto.snapshot.DiceRollDTO;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
@@ -190,12 +193,13 @@ public class Game {
     }
 
     private void validateAvailableBuildings(PieceType pieceType, UUID playerId) {
-        boolean hasNoAvailableBuilding = switch (pieceType) {
+        boolean hasAvailableBuilding = switch (pieceType) {
             case ROAD -> board.countRoads(playerId) < gameConfiguration.getMaxNumberOfRoads();
             case SETTLEMENT -> board.countSettlements(playerId) < gameConfiguration.getMaxNumberOfSettlements();
             case CITY -> board.countCities(playerId) < gameConfiguration.getMaxNumberOfCities();
+            case DEVELOPMENT_CARD -> false;
         };
-        if (hasNoAvailableBuilding) {
+        if (!hasAvailableBuilding) {
             throw new NoAvailableBuildingException(pieceType);
         }
     }
@@ -328,6 +332,23 @@ public class Game {
 
     public boolean hasLongestRoad(UUID playerId) {
         return gameAwards.hasLongestRoad(playerId);
+    }
+
+    public DevelopmentCard drawDevelopmentCard(UUID playerId) {
+        if (developmentCardBank.isEmpty()) {
+            throw new InsufficientDevelopmentCardsException();
+        }
+
+        GamePlayer player = getPlayerOrThrow(playerId);
+        player.validateCanAfford(PieceType.DEVELOPMENT_CARD);
+
+        List<Resource> deducted = player.deduct(PieceType.DEVELOPMENT_CARD);
+        resourceBank.deposit(deducted);
+
+        DevelopmentCard card = developmentCardBank.draw(getTurnNumber());
+        player.addDevelopmentCard(card);
+
+        return card;
     }
 
     private void refreshLargestArmy() {

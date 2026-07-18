@@ -20,6 +20,11 @@ public final class PieceCosts {
             PieceType.CITY, Map.of(
                     ResourceType.GRAIN, 2,
                     ResourceType.ORE, 3
+            ),
+            PieceType.DEVELOPMENT_CARD, Map.of(
+                    ResourceType.GRAIN, 1,
+                    ResourceType.WOOL, 1,
+                    ResourceType.ORE, 1
             )
     );
 

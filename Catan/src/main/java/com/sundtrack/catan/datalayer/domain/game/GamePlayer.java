@@ -4,8 +4,7 @@ import com.sundtrack.catan.datalayer.domain.building.PieceCosts;
 import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
 import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCardType;
-import com.sundtrack.catan.datalayer.domain.exceptions.validation.InsufficientResourcesException;
-import com.sundtrack.catan.datalayer.domain.exceptions.validation.ResourceNotOwnedException;
+import com.sundtrack.catan.datalayer.domain.exceptions.validation.*;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
 
@@ -154,6 +153,10 @@ public class GamePlayer {
         this.resources.add(resource);
     }
 
+    public void addDevelopmentCard(DevelopmentCard developmentCard) {
+        this.developmentCards.add(developmentCard);
+    }
+
     public boolean hasResources() {
         return !resources.isEmpty();
     }
@@ -167,5 +170,22 @@ public class GamePlayer {
                 .stream()
                 .filter(c -> c.getType() == DevelopmentCardType.VICTORY_POINT)
                 .count();
+    }
+
+    public DevelopmentCard useDevelopmentCard(UUID cardId, DevelopmentCardType expectedType, int currentTurn) {
+        DevelopmentCard card = developmentCards.stream()
+                .filter(c -> c.getId().equals(cardId))
+                .findFirst()
+                .orElseThrow(() -> new DevelopmentCardNotOwnedException(id, cardId));
+
+        if (card.getType() != expectedType) {
+            throw new WrongDevelopmentCardTypeException(cardId, expectedType, card.getType());
+        }
+        if (!card.isPlayable(currentTurn)) {
+            throw new DevelopmentCardNotPlayableException(cardId);
+        }
+
+        developmentCards.remove(card);
+        return card;
     }
 }

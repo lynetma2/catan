@@ -7,26 +7,26 @@ import com.sundtrack.catan.datalayer.domain.exceptions.validation.InsufficientDe
 import java.util.*;
 
 public class DevelopmentCardBank {
-    private final Deque<DevelopmentCard> deck;
+    private final Deque<DevelopmentCardType> deck;
 
-    public DevelopmentCardBank(Deque<DevelopmentCard> deck) {
+    public DevelopmentCardBank(Deque<DevelopmentCardType> deck) {
         this.deck = deck;
     }
 
     public static DevelopmentCardBank standard() {
-        List<DevelopmentCard> cards = new ArrayList<>();
-        addN(cards, DevelopmentCardType.KNIGHT, 14);
-        addN(cards, DevelopmentCardType.VICTORY_POINT, 5);
-        addN(cards, DevelopmentCardType.MONOPOLY, 2);
-        addN(cards, DevelopmentCardType.ROAD_BUILDING, 2);
-        addN(cards, DevelopmentCardType.YEAR_OF_PLENTY, 2);
-        Collections.shuffle(cards);
-        return new DevelopmentCardBank(new ArrayDeque<>(cards));
+        List<DevelopmentCardType> types = new ArrayList<>();
+        addN(types, DevelopmentCardType.KNIGHT, 14);
+        addN(types, DevelopmentCardType.VICTORY_POINT, 5);
+        addN(types, DevelopmentCardType.MONOPOLY, 2);
+        addN(types, DevelopmentCardType.ROAD_BUILDING, 2);
+        addN(types, DevelopmentCardType.YEAR_OF_PLENTY, 2);
+        Collections.shuffle(types);
+        return new DevelopmentCardBank(new ArrayDeque<>(types));
     }
 
-    private static void addN(List<DevelopmentCard> cards, DevelopmentCardType type, int amount) {
+    private static void addN(List<DevelopmentCardType> types, DevelopmentCardType type, int amount) {
         for (int i = 0; i < amount; i++) {
-            cards.add(new DevelopmentCard(UUID.randomUUID(), type));
+            types.add(type);
         }
     }
 
@@ -34,11 +34,12 @@ public class DevelopmentCardBank {
         return deck.size();
     }
 
-    public DevelopmentCard draw() {
+    public DevelopmentCard draw(int currentTurn) {
         if (isEmpty()) {
             throw new InsufficientDevelopmentCardsException();
         }
-        return deck.pop();
+        DevelopmentCardType type = deck.pop();
+        return new DevelopmentCard(UUID.randomUUID(), type, currentTurn);
     }
 
     public boolean isEmpty() {
