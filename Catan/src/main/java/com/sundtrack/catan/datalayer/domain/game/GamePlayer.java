@@ -153,6 +153,10 @@ public class GamePlayer {
         this.resources.add(resource);
     }
 
+    public void addResources(List<Resource> resources) {
+        this.resources.addAll(resources);
+    }
+
     public void addDevelopmentCard(DevelopmentCard developmentCard) {
         this.developmentCards.add(developmentCard);
     }
@@ -188,4 +192,19 @@ public class GamePlayer {
         developmentCards.remove(card);
         return card;
     }
+
+    public List<Resource> removeResourcesOfType(ResourceType resourceType) {
+        List<Resource> resourcesToRemove = resources
+                .stream()
+                .filter(r -> r.resourceType() == resourceType)
+                .toList();
+
+        for (Resource resource : resourcesToRemove) {
+            resources.remove(resource);
+        }
+
+        return resourcesToRemove;
+    }
+
+
 }

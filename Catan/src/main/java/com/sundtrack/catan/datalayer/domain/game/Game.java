@@ -7,6 +7,7 @@ import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
 import com.sundtrack.catan.datalayer.domain.building.Building;
 import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
+import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCardType;
 import com.sundtrack.catan.datalayer.domain.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
@@ -16,10 +17,7 @@ import com.sundtrack.catan.datalayer.domain.event.game.action.resource.GameDisca
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.RobberStealAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseChangedEvent;
-import com.sundtrack.catan.datalayer.domain.exceptions.validation.InsufficientDevelopmentCardsException;
-import com.sundtrack.catan.datalayer.domain.exceptions.validation.NoAvailableBuildingException;
-import com.sundtrack.catan.datalayer.domain.exceptions.validation.NotPlayersTurnException;
-import com.sundtrack.catan.datalayer.domain.exceptions.validation.PlayerNotFoundException;
+import com.sundtrack.catan.datalayer.domain.exceptions.validation.*;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.DiscardFlow;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.RoadBuildingFlow;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.RobberPlacementFlow;
@@ -207,12 +205,13 @@ public class Game {
     public PlacementResult<Edge> placeRoad(PlaceRoadAction action, UUID playerId) {
         validateAvailableBuildings(PieceType.ROAD, playerId);
         boolean free = flow.isFreePlacement(PieceType.ROAD);
+        boolean skipNetworkRule = false;
         List<Resource> deducted = List.of();
 
         if (!free) {
             getPlayerOrThrow(playerId).validateCanAfford(PieceType.ROAD);
         }
-        Building<Edge> road = board.placeRoad(action.target(), playerId, free);
+        Building<Edge> road = board.placeRoad(action.target(), playerId, skipNetworkRule);
         if (!free) {
             deducted = getPlayerOrThrow(playerId).deduct(PieceType.ROAD);
             resourceBank.deposit(deducted);
@@ -361,8 +360,82 @@ public class Game {
                 .collect(Collectors.toMap(GamePlayer::getId, GamePlayer::getKnightsUsed));
     }
 
+    public void playKnightCard(UUID playerId, UUID cardId) {
+        GamePlayer player = getPlayerOrThrow(playerId);
+        player.useDevelopmentCard(cardId, DevelopmentCardType.KNIGHT, getTurnNumber());
+        player.incrementKnightsUsed();
+
+        flow.startSubFlow(new RobberPlacementFlow());
+    }
+
+    public void playRoadBuildingCard(UUID playerId, UUID cardId) {
+        getPlayerOrThrow(playerId).useDevelopmentCard(cardId, DevelopmentCardType.ROAD_BUILDING, getTurnNumber());
+
+        int achievable = board.maxPlaceableRoads(playerId, roadSupplyCap(playerId));
+        if (achievable > 0) {
+            flow.startSubFlow(new RoadBuildingFlow(achievable));
+        }
+        // achievable == 0: card consumed, no legal placement exists — no flow entered, no phase change.
+    }
+
+    public Map<UUID, List<Resource>> playMonopolyCard(UUID playerId, UUID cardId, ResourceType resourceType) {
+        GamePlayer player = getPlayerOrThrow(playerId);
+        player.useDevelopmentCard(cardId, DevelopmentCardType.MONOPOLY, getTurnNumber());
+
+        Map<UUID, List<Resource>> resultMap = new HashMap<>();
+
+        //Steal the resources.
+        for (GamePlayer otherPlayer : players) {
+            if (otherPlayer.getId() == playerId) {
+                continue;
+            }
+            List<Resource> removedResources = otherPlayer.removeResourcesOfType(resourceType);
+            resultMap.put(otherPlayer.getId(), removedResources);
+        }
+
+        //Add the resources
+        List<Resource> addedResources = resultMap.values().stream().flatMap(Collection::stream).toList();
+        player.addResources(addedResources);
+
+        resultMap.put(playerId, addedResources);
+        return resultMap;
+    }
+
+    public List<Resource> playYearOfPlentyCard(UUID playerId, UUID cardId, ResourceType type1, ResourceType type2) {
+        GamePlayer player = getPlayerOrThrow(playerId);
+
+        int firstResourceAvailable = resourceBank.available(type1);
+        if (!(firstResourceAvailable > 0)) {
+            throw new InsufficientBankResourcesException(type1, 1, firstResourceAvailable);
+        }
+
+        int secondResourceAvailable = resourceBank.available(type2);
+        if (!(secondResourceAvailable > 0)) {
+            throw new InsufficientBankResourcesException(type2, 1, secondResourceAvailable);
+        }
+
+        player.useDevelopmentCard(cardId, DevelopmentCardType.YEAR_OF_PLENTY, getTurnNumber());
+        List<Resource> addedResources = new ArrayList<>();
+        addedResources.addAll(resourceBank.draw(type1, 1));
+        addedResources.addAll(resourceBank.draw(type2, 1));
+
+        player.addResources(addedResources);
+
+        return addedResources;
+    }
+
+    private int roadSupplyCap(UUID playerId) {
+        long remaining = gameConfiguration.getMaxNumberOfRoads() - board.countRoads(playerId);
+        return (int) Math.clamp(remaining, 0, 2);
+    }
+
     private void refreshLongestRoadAward() {
         gameAwards.refreshLongestRoad(getLongestRoadLengths());
+    }
+
+    private int roadBuildingAllowance(UUID playerId) {
+        long remainingSupply = gameConfiguration.getMaxNumberOfRoads() - board.countRoads(playerId);
+        return Math.clamp(remainingSupply, 0, 2);
     }
 
     public Map<UUID, Integer> getLongestRoadLengths() {

@@ -99,6 +99,7 @@ public class Board {
 
     private void validateRoadPlacement(Edge edge, UUID playerId, boolean skipNetworkRule) {
         if (isEdgeOccupied(edge)) throw new EdgeOccupiedException(edge);
+        if (!isEdgeBuildable(edge)) throw new InvalidEdgeException(edge);
         if (!skipNetworkRule && !isEdgeConnectedToPlayerNetwork(edge, playerId)) {
             throw new NoConnectedRoadException(edge, playerId);
         }
@@ -225,5 +226,73 @@ public class Board {
                 .collect(Collectors.toSet());
 
         return new LongestRoadCalculator(playerRoads, blockedVertices).longestPathLength();
+    }
+
+    public boolean isEdgeBuildable(Edge edge) {
+        return edge.hexes().stream().anyMatch(this::isLandHex);
+    }
+
+    private boolean isLandHex(Hex hex) {
+        return tiles.stream()
+                .filter(t -> t.getHex().equals(hex))
+                .findFirst()
+                .map(t -> t.getKind() != TileKind.SEA)
+                .orElse(false);
+    }
+
+    private Set<Hex> tileHexes() {
+        return tiles.stream().map(Tile::getHex).collect(Collectors.toSet());
+    }
+
+    private Set<Edge> allEdges() {
+        Set<Hex> hexSet = tileHexes();
+        Set<Edge> edges = new HashSet<>();
+        for (Tile tile : tiles) {
+            Hex hex = tile.getHex();
+            for (int dir = 0; dir < 6; dir++) {
+                Hex neighbor = hex.neighbor(dir);
+                if (hexSet.contains(neighbor)) {
+                    Edge edge = Edge.of(hex, neighbor);
+                    if (isEdgeBuildable(edge)) {
+                        edges.add(edge);
+                    }
+                }
+            }
+        }
+        return edges;
+    }
+
+    public int maxPlaceableRoads(UUID playerId, int limit) {
+        if (limit <= 0) return 0;
+
+        Set<Edge> candidates = allEdges().stream()
+                .filter(e -> !isEdgeOccupied(e))
+                .collect(Collectors.toSet());
+
+        return searchMaxRoads(playerId, candidates, Set.of(), limit);
+    }
+
+    private int searchMaxRoads(UUID playerId, Set<Edge> candidates, Set<Edge> chosen, int limit) {
+        if (chosen.size() >= limit) return chosen.size();
+
+        int best = chosen.size();
+        for (Edge candidate : candidates) {
+            if (chosen.contains(candidate)) continue;
+            if (!isEdgeConnectedToPlayerOrHypothetical(playerId, candidate, chosen)) continue;
+
+            Set<Edge> next = new HashSet<>(chosen);
+            next.add(candidate);
+            best = Math.max(best, searchMaxRoads(playerId, candidates, next, limit));
+            if (best >= limit) break; // maximum achievable already proven — stop searching
+        }
+        return best;
+    }
+
+    private boolean isEdgeConnectedToPlayerOrHypothetical(UUID playerId, Edge edge, Set<Edge> hypothetical) {
+        if (isEdgeConnectedToPlayerNetwork(edge, playerId)) return true;
+
+        List<Vertex> endpoints = edge.getVertices();
+        return hypothetical.stream()
+                .anyMatch(other -> other.getVertices().stream().anyMatch(endpoints::contains));
     }
 }

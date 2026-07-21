@@ -8,6 +8,8 @@ import com.sundtrack.catan.datalayer.domain.event.game.action.TurnEndAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceCityAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceRoadAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceSettlementAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.developmentCard.PlayKnightAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.developmentCard.PlayRoadBuildingAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.RobberStealAction;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.IllegalGamePhaseException;
@@ -22,14 +24,14 @@ public enum GamePhase {
     PRE_ROLL("pre_roll",
             Set.of(RollDiceAction.class)),
     POST_ROLL("post_roll",
-            Set.of(TurnEndAction.class, PlaceCityAction.class, PlaceRoadAction.class, PlaceSettlementAction.class)),
+            Set.of(PlayRoadBuildingAction.class, PlayKnightAction.class, TurnEndAction.class, PlaceCityAction.class, PlaceRoadAction.class, PlaceSettlementAction.class)),
     ROBBER_PLACEMENT("robber_placement",
             Set.of(PlaceRobberAction.class)),
     ROBBER_STEAL("robber_steal",
             Set.of(RobberStealAction.class)),
     DISCARD("discard", Set.of()),
     GAME_OVER("end", Set.of()),
-    ROAD_BUILDING("road_building", Set.of());
+    ROAD_BUILDING("road_building", Set.of(PlaceRoadAction.class));
 
     //TODO finish this class!
 

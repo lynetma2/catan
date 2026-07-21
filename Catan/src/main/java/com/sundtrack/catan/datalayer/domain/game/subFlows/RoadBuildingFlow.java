@@ -10,11 +10,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class RoadBuildingFlow implements SubFlow {
-    private static final int REQUIRED_ROADS = 2;
+    private final int roadsRequired;
     private final int roadsPlaced;
 
-    public RoadBuildingFlow() { this(0); }
-    private RoadBuildingFlow(int roadsPlaced) { this.roadsPlaced = roadsPlaced; }
+    public RoadBuildingFlow(int roadsRequired) {
+        this(0, roadsRequired);
+    }
+
+    private RoadBuildingFlow(int roadsPlaced, int roadsRequired) {
+        this.roadsPlaced = roadsPlaced;
+        this.roadsRequired = roadsRequired;
+    }
 
     @Override public GamePhase currentPhase() { return GamePhase.ROAD_BUILDING; }
 
@@ -25,7 +31,7 @@ public class RoadBuildingFlow implements SubFlow {
                     "RoadBuildingFlow.handle called with " + action.getClass().getSimpleName());
         }
         int placed = roadsPlaced + 1;
-        return placed >= REQUIRED_ROADS ? Optional.empty() : Optional.of(new RoadBuildingFlow(placed));
+        return placed >= roadsRequired ? Optional.empty() : Optional.of(new RoadBuildingFlow(placed));
     }
 
     @Override
@@ -34,5 +40,5 @@ public class RoadBuildingFlow implements SubFlow {
     }
 
     public int getRoadsPlaced() { return roadsPlaced; }
-    public int getRoadsRequired() { return REQUIRED_ROADS; }
+    public int getRoadsRequired() { return roadsRequired; }
 }
