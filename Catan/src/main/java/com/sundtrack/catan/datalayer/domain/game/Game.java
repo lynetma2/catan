@@ -22,9 +22,10 @@ import com.sundtrack.catan.datalayer.domain.game.subFlows.DiscardFlow;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.RoadBuildingFlow;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.RobberPlacementFlow;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.RobberStealFlow;
+import com.sundtrack.catan.datalayer.domain.game.trade.TradeOfferResponseKind;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
-import com.sundtrack.catan.datalayer.domain.trade.TradeOffer;
+import com.sundtrack.catan.datalayer.domain.game.trade.TradeOffer;
 import com.sundtrack.catan.datalayer.dto.snapshot.DiceRollDTO;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
 
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
 public class Game {
     private final Board board;
     private final GameFlow flow;
-    private final List<TradeOffer> activeTradeOffers;
+    private final TradeBook tradeBook;
     private final List<RecordedEvent> gameEvents;
     private final DicePair dicePair;
     private final DevelopmentCardBank developmentCardBank;
@@ -45,12 +46,12 @@ public class Game {
     private UUID id;
     private List<GamePlayer> players;
 
-    public Game(UUID id, List<GamePlayer> players, Board board, GameFlow flow, List<TradeOffer> activeTradeOffers, List<RecordedEvent> gameEvents, DicePair dicePair, DevelopmentCardBank developmentCardBank, ResourceBank resourceBank, GameConfiguration gameConfiguration) {
+    public Game(UUID id, List<GamePlayer> players, Board board, GameFlow flow, TradeBook tradeBook, List<RecordedEvent> gameEvents, DicePair dicePair, DevelopmentCardBank developmentCardBank, ResourceBank resourceBank, GameConfiguration gameConfiguration) {
         this.id = id;
         this.players = players;
         this.board = board;
         this.flow = flow;
-        this.activeTradeOffers = activeTradeOffers;
+        this.tradeBook = tradeBook;
         this.gameEvents = gameEvents;
         this.dicePair = dicePair;
         this.developmentCardBank = developmentCardBank;
@@ -76,7 +77,7 @@ public class Game {
     }
 
     public List<TradeOffer> getActiveTradeOffers() {
-        return activeTradeOffers;
+        return tradeBook.getActiveOffers();
     }
 
     public List<Tile> getTiles() {
@@ -251,7 +252,7 @@ public class Game {
     }
 
     public List<Resource> discard(GameDiscardAction action, UUID playerId) {
-        List<Resource> removed = getPlayerOrThrow(playerId).removeResources(action.discardedResources());
+        List<Resource> removed = getPlayerOrThrow(playerId).removeResourcesById(action.discardedResources());
         resourceBank.deposit(removed);
         flow.dispatch(action, playerId);
         return removed;
@@ -389,7 +390,7 @@ public class Game {
             if (otherPlayer.getId() == playerId) {
                 continue;
             }
-            List<Resource> removedResources = otherPlayer.removeResourcesOfType(resourceType);
+            List<Resource> removedResources = otherPlayer.removeAllResourcesOfType(resourceType);
             resultMap.put(otherPlayer.getId(), removedResources);
         }
 
@@ -442,6 +443,95 @@ public class Game {
         return players
                 .stream()
                 .collect(Collectors.toMap(GamePlayer::getId, p -> board.longestRoadLength(p.getId())));
+    }
+
+    public Resource bankTrade(UUID playerId, List<Resource> given, ResourceType wanted) {
+        //Plan
+        GamePlayer player = getPlayerOrThrow(playerId);
+        boolean sameResourceType =
+                given.isEmpty() ||
+                        given.stream()
+                                .allMatch(r -> r.resourceType() == given.getFirst().resourceType());
+
+        if (!sameResourceType) {
+            throw new GivenResourcesWrongTradeException();
+        }
+
+        if (given.getFirst().resourceType() == wanted) {
+            throw new SameResourceTradeException(wanted);
+        }
+
+        if (!player.ownsResources(given)) {
+            throw new InsufficientResourcesException(playerId, given);
+        }
+
+        int ratio = board.getBestTradeRatio(playerId, wanted);
+        if (given.size() != ratio) {
+            throw new GivenResourcesWrongTradeException();
+        }
+
+        if (resourceBank.isAvailable(wanted, 1)) {
+            throw new InsufficientBankResourcesException(wanted, 1);
+        }
+
+        player.removeResources(given);
+        List<Resource> addedResource = resourceBank.draw(wanted, 1);
+        player.addResources(addedResource);
+
+        return addedResource.getFirst();
+    }
+
+    public TradeOffer startTrade(UUID playerId, List<Resource> offered, List<ResourceType> wanted) {
+        GamePlayer player = getPlayerOrThrow(playerId);
+        if (!player.ownsResources(offered)) {
+            throw new InsufficientResourcesException(playerId, offered);
+        }
+
+        List<UUID> otherPlayerIds = this.players.
+                stream()
+                .map(GamePlayer::getId)
+                .filter(p -> !p.equals(playerId))
+                .toList();
+
+        return tradeBook.start(playerId, offered, wanted, otherPlayerIds);
+    }
+
+    public void respondToTrade(UUID playerId, UUID tradeOfferId, TradeOfferResponseKind kind) {
+        switch (kind) {
+            case TradeOfferResponseKind.ACCEPT -> {
+                List<ResourceType> wanted = tradeBook.getWantedResourceTypes(tradeOfferId);
+                getPlayerOrThrow(playerId).ownsResourcesOfTypeOrThrow(wanted);
+                tradeBook.addAcceptResponse(tradeOfferId, playerId);
+            }
+            case TradeOfferResponseKind.DECLINE -> tradeBook.addDeclineResponse(tradeOfferId, playerId);
+        }
+    }
+
+    public void cancelTradeOffer(UUID playerId, UUID tradeOfferId) {
+        tradeBook.cancel(tradeOfferId, playerId);
+    }
+
+    public TradeBook.TradeTerms confirmTrade(UUID playerId, UUID respondentId, UUID tradeOfferId) {
+        List<Resource> offeredResources = tradeBook.getOfferedResources(tradeOfferId);
+        GamePlayer initiator = getPlayerOrThrow(playerId);
+        GamePlayer respondent = getPlayerOrThrow(respondentId);
+
+        //Validate accepted player still has the resources
+        initiator.ownsResources(offeredResources);
+        //Validate initiator still has the resources
+        respondent.ownsResourcesOfTypeOrThrow(tradeBook.getWantedResourceTypes(tradeOfferId));
+
+        //Remove the resources
+        initiator.removeResources(offeredResources);
+        List<Resource> wantedResources = respondent.removeGivenTypes(tradeBook.getWantedResourceTypes(tradeOfferId));
+
+        //Add the resources
+        respondent.addResources(offeredResources);
+        initiator.addResources(wantedResources);
+
+        tradeBook.confirm(tradeOfferId, playerId, respondentId);
+
+        return new TradeBook.TradeTerms(offeredResources, wantedResources);
     }
 
     public record PlacementResult<T>(Building<T> building, List<Resource> deductedResources) {

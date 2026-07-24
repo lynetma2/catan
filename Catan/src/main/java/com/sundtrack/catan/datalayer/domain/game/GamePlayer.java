@@ -10,6 +10,7 @@ import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GamePlayer {
@@ -122,7 +123,7 @@ public class GamePlayer {
     /**
      * Removes specific resources by id — e.g. for discard, where the player chooses exact cards.
      */
-    public List<Resource> removeResources(List<UUID> resourceIds) {
+    public List<Resource> removeResourcesById(List<UUID> resourceIds) {
         List<Resource> removed = new ArrayList<>();
         for (UUID resourceId : resourceIds) {
             Resource match = resources.stream()
@@ -133,6 +134,10 @@ public class GamePlayer {
             removed.add(match);
         }
         return removed;
+    }
+
+    public void removeResources(List<Resource> resources) {
+        removeResourcesById(resources.stream().map(Resource::uid).toList());
     }
 
     public void receive(List<Resource> resources) {
@@ -193,7 +198,7 @@ public class GamePlayer {
         return card;
     }
 
-    public List<Resource> removeResourcesOfType(ResourceType resourceType) {
+    public List<Resource> removeAllResourcesOfType(ResourceType resourceType) {
         List<Resource> resourcesToRemove = resources
                 .stream()
                 .filter(r -> r.resourceType() == resourceType)
@@ -206,5 +211,54 @@ public class GamePlayer {
         return resourcesToRemove;
     }
 
+    public Resource removeResourceOfType(ResourceType resourceType) {
+        Resource resourceToRemove = resources
+                .stream()
+                .filter(r -> r.resourceType() == resourceType)
+                .findFirst()
+                .orElseThrow(() -> new InsufficientResourcesException(this.getId()));
 
+        resources.remove(resourceToRemove);
+        return resourceToRemove;
+    }
+
+    public List<Resource> removeGivenTypes(List<ResourceType> types) {
+        return types
+                .stream()
+                .map(this::removeResourceOfType)
+                .toList();
+    }
+
+    //TODO move the exception in here.
+    public boolean ownsResources(List<Resource> resources) {
+        return resources
+                .stream()
+                .anyMatch(resource -> !this.resources.contains(resource));
+    }
+
+    public void ownsResourcesOfTypeOrThrow(List<ResourceType> types) {
+        Map<ResourceType, Integer> holding =
+                getResourcesByType(resources.stream()
+                        .map(Resource::resourceType)
+                        .toList());
+
+        Map<ResourceType, Integer> needed = getResourcesByType(types);
+
+        boolean hasEnough = needed.entrySet().stream()
+                .allMatch(entry ->
+                        holding.getOrDefault(entry.getKey(), 0) >= entry.getValue());
+
+        if (!hasEnough) {
+            throw new InsufficientResourcesException(id);
+        }
+    }
+
+    private Map<ResourceType, Integer> getResourcesByType(List<ResourceType> types) {
+        return types.stream()
+                .collect(Collectors.toMap(
+                        Function.identity(),
+                        t -> 1,
+                        Integer::sum
+                ));
+    }
 }

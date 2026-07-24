@@ -1,4 +1,4 @@
-package com.sundtrack.catan.datalayer.domain.trade;
+package com.sundtrack.catan.datalayer.domain.game.trade;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

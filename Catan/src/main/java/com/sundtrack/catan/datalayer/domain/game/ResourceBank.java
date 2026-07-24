@@ -42,4 +42,8 @@ public class ResourceBank {
             this.resources.merge(resource.resourceType(), 1, Integer::sum);
         }
     }
+
+    public boolean isAvailable(ResourceType resourceType, int amount) {
+        return available(resourceType) >= amount;
+    }
 }

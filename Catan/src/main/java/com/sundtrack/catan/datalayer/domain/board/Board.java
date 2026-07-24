@@ -1,5 +1,6 @@
 package com.sundtrack.catan.datalayer.domain.board;
 
+import com.sundtrack.catan.datalayer.domain.board.tile.PortType;
 import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
 import com.sundtrack.catan.datalayer.domain.board.tile.TileKind;
 import com.sundtrack.catan.datalayer.domain.building.Building;
@@ -7,6 +8,7 @@ import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.exceptions.NoRobbedTileException;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.*;
 import com.sundtrack.catan.datalayer.domain.game.LongestRoadCalculator;
+import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -294,5 +296,27 @@ public class Board {
         List<Vertex> endpoints = edge.getVertices();
         return hypothetical.stream()
                 .anyMatch(other -> other.getVertices().stream().anyMatch(endpoints::contains));
+    }
+
+    public int getBestTradeRatio(UUID playerId, ResourceType resourceType) {
+        int best = 4;
+
+        for (Tile tile : tiles) {
+            if (!tile.isPort()) continue;
+
+            Edge harborEdge = Edge.of(tile.getHex(), tile.getHex().neighbor(tile.getPortFacing()));
+            for (Vertex vertex : harborEdge.getVertices()) {
+                Building<?> building = getBuildingAt(vertex).orElse(null);
+                if (building == null || !building.getOwnerId().equals(playerId)) continue;
+
+                PortType portType = tile.getPortType();
+                if (portType == PortType.ANY) {
+                    best = Math.min(best, 3);
+                } else if (portType.getResourceType() == resourceType) {
+                    best = Math.min(best, 2);
+                }
+            }
+        }
+        return best;
     }
 }
