@@ -7,54 +7,23 @@ import com.sundtrack.catan.datalayer.domain.board.tile.PortType;
 import com.sundtrack.catan.datalayer.domain.board.tile.TileKind;
 import com.sundtrack.catan.datalayer.domain.board.tile.TileType;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
+import com.sundtrack.catan.datalayer.domain.game.trade.TradeOffer;
+import com.sundtrack.catan.datalayer.domain.game.trade.TradeOfferResponseKind;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
-import com.sundtrack.catan.datalayer.domain.game.trade.TradeOffer;
-import com.sundtrack.catan.datalayer.domain.game.trade.TradeOfferKind;
-import com.sundtrack.catan.datalayer.domain.game.trade.TradeOfferResponseKind;
-import com.sundtrack.catan.datalayer.domain.game.trade.TradePlayerResponse;
 import com.sundtrack.catan.datalayer.dto.placement.RoadPlacementDTO;
 import com.sundtrack.catan.datalayer.dto.placement.SettlementPlacementDTO;
-import com.sundtrack.catan.datalayer.dto.snapshot.*;
+import com.sundtrack.catan.datalayer.dto.snapshot.GameSnapshotDTO;
+import com.sundtrack.catan.datalayer.dto.snapshot.PlacementSnapshotDTO;
+import com.sundtrack.catan.datalayer.dto.snapshot.PlayerSnapshotDTO;
+import com.sundtrack.catan.datalayer.dto.snapshot.TileSnapshotDTO;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class GameSnapshotFactory {
 
     // --- Helper Methods for Geometry ---
-
-    private static Vertex v(int q, int r, int dir1, int dir2) {
-        Hex center = Hex.fromQR(q, r);
-        Hex n1 = center.neighbor(dir1);
-        Hex n2 = center.neighbor(dir2);
-
-        List<Hex> sorted = Stream.of(center, n1, n2)
-                .sorted(Comparator.comparingInt(Hex::q)
-                        .thenComparingInt(Hex::r)
-                        .thenComparingInt(Hex::s))
-                .toList();
-
-        return new Vertex(sorted);
-    }
-
-    private static Edge e(int q, int r, int dir) {
-        Hex center = Hex.fromQR(q, r);
-        Hex neighbour = center.neighbor(dir);
-
-        List<Hex> sorted = Stream.of(center, neighbour)
-                .sorted(Comparator.comparingInt(Hex::q)
-                        .thenComparingInt(Hex::r)
-                        .thenComparingInt(Hex::s))
-                .toList();
-
-        return new Edge(sorted);
-    }
-
-    // --- Main Factory Methods ---
 
     public static GameSnapshotDTO createTestGameState(int playerCount, String currentPlayerId, GamePhase phase) {
         List<PlayerSnapshotDTO> players = createPlayers(playerCount);
@@ -86,6 +55,8 @@ public class GameSnapshotFactory {
         );
         return allPlayers.subList(0, Math.min(count, allPlayers.size()));
     }
+
+    // --- Main Factory Methods ---
 
     private static List<TileSnapshotDTO> createTiles() {
         List<TileSnapshotDTO> tiles = new ArrayList<>();
@@ -180,26 +151,51 @@ public class GameSnapshotFactory {
                 new Resource(UUID.randomUUID(), ResourceType.LUMBER),
                 new Resource(UUID.randomUUID(), ResourceType.LUMBER)
         );
-        List<Resource> wanted = List.of(
-                new Resource(UUID.randomUUID(), ResourceType.BRICK)
+        List<ResourceType> wanted = List.of(
+                ResourceType.BRICK
         );
 
-        List<TradePlayerResponse> responses = List.of(
-                new TradePlayerResponse("p1", TradeOfferResponseKind.ACCEPT),
-                new TradePlayerResponse("p3", TradeOfferResponseKind.DECLINE),
-                new TradePlayerResponse("p4", TradeOfferResponseKind.NO_ANSWER)
-        );
+        Map<UUID, TradeOfferResponseKind> responses = new HashMap<>();
+        responses.put(UUID.fromString("p1"), TradeOfferResponseKind.ACCEPT);
+        responses.put(UUID.fromString("p3"), TradeOfferResponseKind.DECLINE);
+        responses.put(UUID.fromString("p4"), TradeOfferResponseKind.NO_ANSWER);
 
         TradeOffer offer = new TradeOffer(
-                TradeOfferKind.INCOMING,
-                "trade-1",
-                "p2",
-                offered,
+                UUID.fromString("trade-1"),
+                UUID.fromString("p2"),
                 wanted,
+                offered,
                 responses
         );
 
         return List.of(offer);
+    }
+
+    private static Vertex v(int q, int r, int dir1, int dir2) {
+        Hex center = Hex.fromQR(q, r);
+        Hex n1 = center.neighbor(dir1);
+        Hex n2 = center.neighbor(dir2);
+
+        List<Hex> sorted = Stream.of(center, n1, n2)
+                .sorted(Comparator.comparingInt(Hex::q)
+                        .thenComparingInt(Hex::r)
+                        .thenComparingInt(Hex::s))
+                .toList();
+
+        return new Vertex(sorted);
+    }
+
+    private static Edge e(int q, int r, int dir) {
+        Hex center = Hex.fromQR(q, r);
+        Hex neighbour = center.neighbor(dir);
+
+        List<Hex> sorted = Stream.of(center, neighbour)
+                .sorted(Comparator.comparingInt(Hex::q)
+                        .thenComparingInt(Hex::r)
+                        .thenComparingInt(Hex::s))
+                .toList();
+
+        return new Edge(sorted);
     }
 
     // --- Internal DTOs for layout building ---

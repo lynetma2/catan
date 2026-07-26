@@ -35,13 +35,14 @@ public class GameCreationServiceImpl implements GameCreationService {
         DevelopmentCardBank developmentCardBank = DevelopmentCardBank.standard();
         ResourceBank resourceBank = ResourceBank.standard();
         GameConfiguration gameConfiguration = GameConfiguration.standard();
+        TradeBook tradeBook = new TradeBook();
 
         return new Game(
                 id,
                 gamePlayers,
                 board,
                 flow,
-                new ArrayList<>(),
+                tradeBook,
                 new ArrayList<>(),
                 dicePair,
                 developmentCardBank,

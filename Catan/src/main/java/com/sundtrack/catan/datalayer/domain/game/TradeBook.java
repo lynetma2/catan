@@ -17,6 +17,10 @@ public class TradeBook {
         this.activeOffers = new ArrayList<>(activeOffers);
     }
 
+    public TradeBook() {
+        this.activeOffers = new ArrayList<>();
+    }
+
     public List<TradeOffer> getActiveOffers() {
         return List.copyOf(activeOffers);
     }
@@ -32,6 +36,25 @@ public class TradeBook {
         requireNotOwner(offer, respondentId);
         requireInvited(offer, respondentId);
         offer.respond(respondentId, TradeOfferResponseKind.ACCEPT);
+    }
+
+    private TradeOffer getOrThrow(UUID tradeId) {
+        return activeOffers.stream()
+                .filter(o -> o.getTradeOfferId().equals(tradeId))
+                .findFirst()
+                .orElseThrow(() -> new TradeOfferNotFoundException(tradeId));
+    }
+
+    private void requireNotOwner(TradeOffer offer, UUID playerId) {
+        if (offer.getTradeOwnerId().equals(playerId)) {
+            throw new CannotRespondToOwnTradeException(offer.getTradeOfferId(), playerId);
+        }
+    }
+
+    private void requireInvited(TradeOffer offer, UUID playerId) {
+        if (!offer.getPlayerResponses().containsKey(playerId)) {
+            throw new PlayerNotInvitedToTradeException(offer.getTradeOfferId(), playerId);
+        }
     }
 
     public void addDeclineResponse(UUID tradeId, UUID respondentId) {
@@ -50,7 +73,15 @@ public class TradeBook {
         activeOffers.remove(offer);
     }
 
-    public record TradeTerms(List<Resource> offeredByInitiator, List<Resource> wantedFromRespondent) {}
+    private void requireOwner(TradeOffer offer, UUID playerId) {
+        if (!offer.getTradeOwnerId().equals(playerId)) {
+            throw new NotTradeOwnerException(offer.getTradeOfferId(), playerId);
+        }
+    }
+
+    private boolean hasAccepted(TradeOffer offer, UUID playerId) {
+        return offer.getPlayerResponses().get(playerId) == TradeOfferResponseKind.ACCEPT;
+    }
 
     public void cancel(UUID tradeId, UUID ownerId) {
         TradeOffer offer = getOrThrow(tradeId);
@@ -66,32 +97,6 @@ public class TradeBook {
         return getOrThrow(tradeOfferId).getOfferedResources();
     }
 
-    private TradeOffer getOrThrow(UUID tradeId) {
-        return activeOffers.stream()
-                .filter(o -> o.getTradeOfferId().equals(tradeId))
-                .findFirst()
-                .orElseThrow(() -> new TradeOfferNotFoundException(tradeId));
-    }
-
-    private void requireOwner(TradeOffer offer, UUID playerId) {
-        if (!offer.getTradeOwnerId().equals(playerId)) {
-            throw new NotTradeOwnerException(offer.getTradeOfferId(), playerId);
-        }
-    }
-
-    private void requireNotOwner(TradeOffer offer, UUID playerId) {
-        if (offer.getTradeOwnerId().equals(playerId)) {
-            throw new CannotRespondToOwnTradeException(offer.getTradeOfferId(), playerId);
-        }
-    }
-
-    private void requireInvited(TradeOffer offer, UUID playerId) {
-        if (!offer.getPlayerResponses().containsKey(playerId)) {
-            throw new PlayerNotInvitedToTradeException(offer.getTradeOfferId(), playerId);
-        }
-    }
-
-    private boolean hasAccepted(TradeOffer offer, UUID playerId) {
-        return offer.getPlayerResponses().get(playerId) == TradeOfferResponseKind.ACCEPT;
+    public record TradeTerms(List<Resource> offeredByInitiator, List<Resource> wantedFromRespondent) {
     }
 }

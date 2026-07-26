@@ -22,10 +22,10 @@ import com.sundtrack.catan.datalayer.domain.game.subFlows.DiscardFlow;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.RoadBuildingFlow;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.RobberPlacementFlow;
 import com.sundtrack.catan.datalayer.domain.game.subFlows.RobberStealFlow;
+import com.sundtrack.catan.datalayer.domain.game.trade.TradeOffer;
 import com.sundtrack.catan.datalayer.domain.game.trade.TradeOfferResponseKind;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
-import com.sundtrack.catan.datalayer.domain.game.trade.TradeOffer;
 import com.sundtrack.catan.datalayer.dto.snapshot.DiceRollDTO;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
 
@@ -43,8 +43,8 @@ public class Game {
     private final ResourceBank resourceBank;
     private final GameConfiguration gameConfiguration;
     private final GameAwards gameAwards;
-    private UUID id;
-    private List<GamePlayer> players;
+    private final UUID id;
+    private final List<GamePlayer> players;
 
     public Game(UUID id, List<GamePlayer> players, Board board, GameFlow flow, TradeBook tradeBook, List<RecordedEvent> gameEvents, DicePair dicePair, DevelopmentCardBank developmentCardBank, ResourceBank resourceBank, GameConfiguration gameConfiguration) {
         this.id = id;
@@ -70,10 +70,6 @@ public class Game {
 
     public GamePhase getCurrentPhase() {
         return flow.getCurrentPhase();
-    }
-
-    public Integer getTurnNumber() {
-        return flow.getTurnNumber();
     }
 
     public List<TradeOffer> getActiveTradeOffers() {
@@ -296,6 +292,14 @@ public class Game {
         return Optional.empty();
     }
 
+    private void refreshLargestArmy() {
+        gameAwards.refreshLargestArmy(getArmySizes());
+    }
+
+    private void refreshLongestRoadAward() {
+        gameAwards.refreshLongestRoad(getLongestRoadLengths());
+    }
+
     public long computeTotalVictoryPoints(UUID playerId) {
         GamePlayer player = getPlayerOrThrow(playerId);
         long points = computePublicVictoryPoints(playerId);
@@ -303,11 +307,31 @@ public class Game {
         return points;
     }
 
+    public Map<UUID, Integer> getArmySizes() {
+        return players
+                .stream()
+                .collect(Collectors.toMap(GamePlayer::getId, GamePlayer::getKnightsUsed));
+    }
+
+    public Map<UUID, Integer> getLongestRoadLengths() {
+        return players
+                .stream()
+                .collect(Collectors.toMap(GamePlayer::getId, p -> board.longestRoadLength(p.getId())));
+    }
+
     public long computePublicVictoryPoints(UUID playerId) {
         long points = board.countSettlements(playerId) + board.countCities(playerId) * 2;
         if (hasLargestArmy(playerId)) points += 2;
         if (hasLongestRoad(playerId)) points += 2;
         return points;
+    }
+
+    public boolean hasLargestArmy(UUID playerId) {
+        return gameAwards.hasLargestArmy(playerId);
+    }
+
+    public boolean hasLongestRoad(UUID playerId) {
+        return gameAwards.hasLongestRoad(playerId);
     }
 
     public Optional<UUID> getRetrievingPlayerId() {
@@ -324,14 +348,6 @@ public class Game {
         return flow.getActiveRoadBuildingFlow()
                 .map(RoadBuildingFlow::getRoadsRequired)
                 .orElse(0);
-    }
-
-    public boolean hasLargestArmy(UUID playerId) {
-        return gameAwards.hasLargestArmy(playerId);
-    }
-
-    public boolean hasLongestRoad(UUID playerId) {
-        return gameAwards.hasLongestRoad(playerId);
     }
 
     public DevelopmentCard drawDevelopmentCard(UUID playerId) {
@@ -351,14 +367,8 @@ public class Game {
         return card;
     }
 
-    private void refreshLargestArmy() {
-        gameAwards.refreshLargestArmy(getArmySizes());
-    }
-
-    public Map<UUID, Integer> getArmySizes() {
-        return players
-                .stream()
-                .collect(Collectors.toMap(GamePlayer::getId, GamePlayer::getKnightsUsed));
+    public Integer getTurnNumber() {
+        return flow.getTurnNumber();
     }
 
     public void playKnightCard(UUID playerId, UUID cardId) {
@@ -377,6 +387,11 @@ public class Game {
             flow.startSubFlow(new RoadBuildingFlow(achievable));
         }
         // achievable == 0: card consumed, no legal placement exists — no flow entered, no phase change.
+    }
+
+    private int roadSupplyCap(UUID playerId) {
+        long remaining = gameConfiguration.getMaxNumberOfRoads() - board.countRoads(playerId);
+        return (int) Math.clamp(remaining, 0, 2);
     }
 
     public Map<UUID, List<Resource>> playMonopolyCard(UUID playerId, UUID cardId, ResourceType resourceType) {
@@ -425,24 +440,9 @@ public class Game {
         return addedResources;
     }
 
-    private int roadSupplyCap(UUID playerId) {
-        long remaining = gameConfiguration.getMaxNumberOfRoads() - board.countRoads(playerId);
-        return (int) Math.clamp(remaining, 0, 2);
-    }
-
-    private void refreshLongestRoadAward() {
-        gameAwards.refreshLongestRoad(getLongestRoadLengths());
-    }
-
     private int roadBuildingAllowance(UUID playerId) {
         long remainingSupply = gameConfiguration.getMaxNumberOfRoads() - board.countRoads(playerId);
         return Math.clamp(remainingSupply, 0, 2);
-    }
-
-    public Map<UUID, Integer> getLongestRoadLengths() {
-        return players
-                .stream()
-                .collect(Collectors.toMap(GamePlayer::getId, p -> board.longestRoadLength(p.getId())));
     }
 
     public Resource bankTrade(UUID playerId, List<Resource> given, ResourceType wanted) {
