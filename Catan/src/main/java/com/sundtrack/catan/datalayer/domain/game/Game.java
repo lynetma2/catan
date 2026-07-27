@@ -90,6 +90,7 @@ public class Game {
 
     public RollOutcome rollDice() {
         DiceRollDTO roll = dicePair.roll();
+        flow.enterPostRoll();
         if (roll.isSeven()) {
             Map<UUID, Integer> required = computeRequiredDiscards();
             flow.startSubFlow(new RobberPlacementFlow()); //Called first as the internals are a stack
@@ -99,7 +100,6 @@ public class Game {
             return new RollOutcome(roll, Map.of());
         }
         Map<UUID, List<Resource>> granted = grantResourcesForRoll(roll.total());
-        flow.enterPostRoll();
         return new RollOutcome(roll, granted);
     }
 

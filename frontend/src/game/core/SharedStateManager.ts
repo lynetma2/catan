@@ -4,7 +4,7 @@ import {EventBus} from "@/game/core/EventBus.ts";
 import type {GameEventMap} from "@/events/shared/AppEvents.ts";
 import {GameServerEvents} from "@/events/game/GameServerEvents.ts";
 import {GameUiEvents} from "@/events/game/GameUiEvents.ts";
-import type {Resource} from "@/game/core/types.ts";
+import type {Resource, StealFlowState} from "@/game/core/types.ts";
 
 export class SharedStateManager {
     constructor(
@@ -50,7 +50,12 @@ export class SharedStateManager {
     }
 
     private onStealTargetRequired(payload: GameEventMap[typeof GameServerEvents.robber.stealTargetRequired.success]) {
-        this.shared.setStealCandidateIds(payload.candidates);
+        const state: StealFlowState = {
+            type: "steal",
+            retrievingPlayerId: payload.retrievingPlayerId,
+            candidates: payload.candidates
+        }
+        this.shared.setActiveFlowState(state);
     }
 
     private onRobberPlaced(payload: GameEventMap[typeof GameServerEvents.robber.placed.success]) {

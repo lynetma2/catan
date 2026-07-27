@@ -10,6 +10,7 @@ import static com.sundtrack.catan.datalayer.domain.event.EventDomainConstants.*;
 
 @EventType(SERVER + SEPARATOR + GAME + SEPARATOR + ROBBER + SEPARATOR + "stealTargetRequired")
 public record StealTargetRequiredEvent(
+        UUID retrievingPlayerId,
         List<UUID> candidates
 ) implements ServerEvent {
 }

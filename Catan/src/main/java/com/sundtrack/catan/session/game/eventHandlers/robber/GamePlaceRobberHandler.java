@@ -5,9 +5,7 @@ import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.robber.RobberPlaceEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.robber.StealTargetRequiredEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseChangedEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
-import com.sundtrack.catan.datalayer.domain.game.GamePhase;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
@@ -47,7 +45,7 @@ public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberActi
         Map<UUID, List<ServerEvent>> directed = new HashMap<>();
         List<UUID> candidates = game.getStealCandidates();
         if (!candidates.isEmpty()) {
-            directed.put(context.playerId(), List.of(new StealTargetRequiredEvent(candidates)));
+            directed.put(context.playerId(), List.of(new StealTargetRequiredEvent(context.playerId(), candidates)));
         }
         return EventResult.of(events, directed);
     }

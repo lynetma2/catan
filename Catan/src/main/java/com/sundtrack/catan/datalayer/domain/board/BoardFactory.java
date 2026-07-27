@@ -127,7 +127,7 @@ public class BoardFactory {
             tiles.add(new SeaTile(coord));
         }
 
-        return new Board(tiles, List.of());
+        return new Board(tiles);
     }
 
     private boolean backtrackNumbers(int index, List<Hex> hexes, List<Integer> pool, Map<Hex, Integer> assignment) {

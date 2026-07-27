@@ -1,10 +1,10 @@
 import {
+    type FlowState,
     GamePhase,
     type GameSnapshot,
     PieceType,
     type Player,
     type Resource,
-    type StealSession,
     type TileSnapshot
 } from "@/game/core/types.ts";
 import {DEV_CARD_COST, PIECE_COSTS, type ResourceCost} from "@/game/world/systems/build/BuildRules.ts";
@@ -19,33 +19,20 @@ export class SharedState {
     private _currentPlayerId: string | null = null;
     private _currentPhase: GamePhase | null = null;
     private _buildMode: PieceType | null = null;
-    private _players: Map<string, Player> = new Map();
-    private _mustDiscard: boolean = false; //TODO create better abstraction for this.
-    private _discardCount: number = 0; //Todo create better abstraction for this.
-    private _stealSession: StealSession | null = null;
+    private readonly _players: Map<string, Player> = new Map();
     private _robberHex: Hex | null = null;
+    private _activeFlowState: FlowState | null = null;
 
     // core/SharedState.ts
     loadFromSnapshot(payload: GameSnapshot, localPlayerId: string) {
         this.setCurrentPhase(payload.currentPhase);
         this.setCurrentPlayer(payload.currentPlayerId);
-        this.setPlayers(payload.players.map(p => ({
-            id: p.id,
-            name: p.name,
-            color: p.color,
-            resources: p.resources,
-            victoryPoints: p.victoryPoints
-        })));
-        this.setMustDiscard(payload.discardSession.mustDiscard, payload.discardSession.discardAmount);
+        this.setPlayers(payload.players);
+        this.setActiveFlowState(payload.activeFlowState);
         const robbedHex = this.findRobbedHex(payload.tiles);
         if (robbedHex !== null) {
             this.setRobberHex(robbedHex);
         }
-
-        if (payload.stealSession && payload.stealSession.retrievingPlayerId == this._localPlayerId) {
-            this._stealSession = payload.stealSession;
-        }
-
         const local = payload.players.find(p => p.id === localPlayerId);
         if (local) this.setLocalPlayer(local);
     }
@@ -56,6 +43,10 @@ export class SharedState {
     get currentPlayerId(): string | null { return this._currentPlayerId; }
     get currentPhase(): GamePhase | null { return this._currentPhase; }
 
+    get activeFlowState(): FlowState | null {
+        return this._activeFlowState;
+    }
+
     get buildMode(): PieceType | "robber" | null {
         if (this.mustPlaceRobber && this.isLocalPlayersTurn) {
             return "robber";
@@ -63,8 +54,6 @@ export class SharedState {
         return this._buildMode;
     }
     get players(): ReadonlyMap<string, Player> { return this._players; }
-    get mustDiscard(): boolean { return this._mustDiscard; }
-    get discardCount(): number { return this._discardCount; }
 
     get localPlayer(): Player | null {
         if (!this.localPlayerId) return null;
@@ -81,14 +70,36 @@ export class SharedState {
             && this._localPlayerId === this._currentPlayerId;
     }
 
-    get stealCandidateIds(): string[] {
-        if (this._stealSession === null) return [];
-        if (this._stealSession.candidates === null) return [];
-        return this._stealSession.candidates;
-    }
-
     get robberHex(): Hex | null {
         return this._robberHex;
+    }
+
+    get mustDiscard(): boolean {
+        if (this._activeFlowState?.type !== "discard") return false;
+        if (!this._localPlayerId) return false;
+        return this._activeFlowState.requiredDiscards[this._localPlayerId] !== undefined;
+    }
+
+    get discardCount(): number {
+        if (this._activeFlowState?.type !== "discard") return 0;
+        if (!this._localPlayerId) return 0;
+        return this._activeFlowState.requiredDiscards[this._localPlayerId] ?? 0;
+    }
+
+    get stealCandidateIds(): string[] {
+        return this._activeFlowState?.type === "steal" ? this._activeFlowState.candidates : [];
+    }
+
+    get retrievingPlayerId(): string | null {
+        return this._activeFlowState?.type === "steal" ? this._activeFlowState.retrievingPlayerId : null;
+    }
+
+    get roadsPlaced(): number {
+        return this._activeFlowState?.type === "roadBuilding" ? this._activeFlowState.roadsPlaced : 0;
+    }
+
+    get roadsRequired(): number {
+        return this._activeFlowState?.type === "roadBuilding" ? this._activeFlowState.roadsRequired : 0;
     }
 
     // ─── Mutations — explicit, named, intentional ─────────────────────
@@ -124,31 +135,13 @@ export class SharedState {
         players.forEach(p => this._players.set(p.id, p));
     }
 
+    setActiveFlowState(state: FlowState | null) {
+        this._activeFlowState = state;
+    }
+
     updatePlayer(playerId: string, update: Partial<Player>) {
         const existing = this._players.get(playerId);
         if (existing) this._players.set(playerId, { ...existing, ...update });
-    }
-
-    setMustDiscard(mustDiscard: boolean, amount: number) {
-        this._mustDiscard = mustDiscard;
-        this._discardCount = amount;
-    }
-
-    clearMustDiscard() {
-        this._mustDiscard = false;
-        this._discardCount = 0;
-    }
-
-    setStealCandidateIds(candidateIds: string[]) {
-        this._stealSession ??= {
-            isActive: true,
-            retrievingPlayerId: this.localPlayerId ?? "",
-            candidates: candidateIds
-        };
-    }
-
-    clearStealCandidateIds() {
-        this._stealSession = null;
     }
 
     setRobberHex(target: Hex) {
@@ -158,9 +151,6 @@ export class SharedState {
     // Queries
 
     isPlayersTurn(playerId: string): boolean {
-        console.log("Trying to build settlement");
-        console.log("player turn", this._currentPlayerId);
-        console.log("player id", playerId);
         return this._currentPlayerId === playerId;
     }
 
@@ -225,32 +215,5 @@ export class SharedState {
             if (tile.hasRobber) return tile.hex;
         }
         return null;
-    }
-}
-
-//TODO refactor to use an object like this:
-export interface GlobalState {
-    localPlayer: {
-        id: string;
-        name: string;
-        color: string;
-        resources: Resource[];
-        devCards: string;
-        //ETC
-    }
-    turnState: {
-        currentPlayerId: string;
-        currentPhase: string;
-        //TODO add something to handle the discard flow when needed.
-        //TODO add something to handle the robber flow when needed.
-    }
-    opponents: { //Should be a list
-        id: string;
-        name: string;
-        color: string;
-        resourceCount: number;
-        devCount: number;
-        robbersUsed: number;
-        //ETC
     }
 }

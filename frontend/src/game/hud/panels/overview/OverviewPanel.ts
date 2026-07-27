@@ -59,7 +59,7 @@ export class PlayerOverviewPanel {
                 devCardCount:   0,
                 hasLongestRoad: p.hasLongestRoad,
                 hasLargestArmy: p.hasLargestArmy,
-                usedRobbers: p.usedRobbers,
+                usedRobbers: p.knightsUsed,
                 isCurrentTurn: p.id === snapshot.currentPlayerId,
             });
         });

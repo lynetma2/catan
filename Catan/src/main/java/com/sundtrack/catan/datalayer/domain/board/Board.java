@@ -23,6 +23,11 @@ public class Board {
         this.buildings = buildings;
     }
 
+    public Board(List<Tile> tiles) {
+        this.tiles = tiles;
+        this.buildings = new ArrayList<>();
+    }
+
     public List<Tile> getTiles() {
         return tiles;
     }
@@ -113,6 +118,10 @@ public class Board {
                 .anyMatch(b -> b.getLocation().equals(edge));
     }
 
+    public boolean isEdgeBuildable(Edge edge) {
+        return edge.hexes().stream().anyMatch(this::isLandHex);
+    }
+
     public boolean isEdgeConnectedToPlayerNetwork(Edge edge, UUID playerId) {
         List<Vertex> endpoints = edge.getVertices(); // the two vertices at the ends of this edge
 
@@ -134,6 +143,14 @@ public class Board {
                     }
                     return false;
                 });
+    }
+
+    private boolean isLandHex(Hex hex) {
+        return tiles.stream()
+                .filter(t -> t.getHex().equals(hex))
+                .findFirst()
+                .map(t -> t.getKind() != TileKind.SEA)
+                .orElse(false);
     }
 
     public Building<Vertex> upgradeSettlement(Vertex vertex, UUID playerId) {
@@ -228,18 +245,6 @@ public class Board {
                 .collect(Collectors.toSet());
 
         return new LongestRoadCalculator(playerRoads, blockedVertices).longestPathLength();
-    }
-
-    public boolean isEdgeBuildable(Edge edge) {
-        return edge.hexes().stream().anyMatch(this::isLandHex);
-    }
-
-    private boolean isLandHex(Hex hex) {
-        return tiles.stream()
-                .filter(t -> t.getHex().equals(hex))
-                .findFirst()
-                .map(t -> t.getKind() != TileKind.SEA)
-                .orElse(false);
     }
 
     private Set<Hex> tileHexes() {

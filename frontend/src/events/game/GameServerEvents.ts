@@ -127,7 +127,7 @@ export interface GameServerEventMap {
     [GameServerEvents.turn.end.success]: { playerId: string };
     [GameServerEvents.turn.start.success]: { playerId: string };
     [GameServerEvents.robber.placed.success]: { playerId: string, hex: Hex };
-    [GameServerEvents.robber.stealTargetRequired.success]: { candidates: string[] };
+    [GameServerEvents.robber.stealTargetRequired.success]: { retrievingPlayerId: string, candidates: string[] };
 }
 
 export type GameServerEventValues =

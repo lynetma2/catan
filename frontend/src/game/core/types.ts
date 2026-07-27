@@ -1,7 +1,7 @@
 import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
 import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
 import type {Edge} from "@/game/utils/HexGeometry/Edge.ts";
-import type {TradeOfferPanelData} from "@/game/hud/panels/tradeOffer/types.ts";
+import type {TradeOfferPanelData} from "../hud/panels/tradeOffer/types";
 
 export interface Player {
     id: string;
@@ -127,15 +127,16 @@ export interface PlayerSnapshot {
     devCards: DevCardSnapshot[];
     victoryPoints: number;
     cardCount: number;
+    devCardCount: number;
     hasLongestRoad: boolean;
     hasLargestArmy: boolean;
-    usedRobbers: number;
+    knightsUsed: number;
 }
 
 export interface DevCardSnapshot {
     uid: string;
     type: DevCardType;
-    used: boolean;
+    boughtThisTurn: boolean;
 }
 
 export interface GameSnapshot {
@@ -145,10 +146,9 @@ export interface GameSnapshot {
     currentPhase: GamePhase;
     currentPlayerId: string;
     turnNumber: number;
-    activeTradeOffers: TradeOfferPanelData[];
-    discardSession: DiscardSession;
+    activeTradeOffers: TradeOfferPanelData[]; //TODO Update this!
     diceRoll?: { values: [number, number] };
-    stealSession: StealSession;
+    activeFlowState: FlowState | null;
 }
 
 export interface DiscardSession {
@@ -181,11 +181,10 @@ export enum GamePhase {
     /** robber placed — must choose player to steal from */
     RobberSteal = 'robber_steal',
 
-    /** active trade offer in progress */
-    Trading = 'trading',
-
     /** Seven Rolled - must discard half cards */
     Discard = 'discard',
+
+    RoadBuilding = 'roadBuilding',
 
     /** game over */
     End = 'end',
@@ -206,3 +205,22 @@ export const TileToResourceMap: Record<LandTileType, ResourceType> = {
     [TileType.Fields]: ResourceType.Grain,
     [TileType.Mountains]: ResourceType.Ore,
 };
+
+export interface DiscardFlowState {
+    type: "discard";
+    requiredDiscards: Record<string, number>;
+}
+
+export interface StealFlowState {
+    type: "steal";
+    retrievingPlayerId: string;
+    candidates: string[];
+}
+
+export interface RoadBuildingFlowState {
+    type: "roadBuilding";
+    roadsPlaced: number;
+    roadsRequired: number;
+}
+
+export type FlowState = DiscardFlowState | StealFlowState | RoadBuildingFlowState;
