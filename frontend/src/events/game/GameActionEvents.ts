@@ -10,6 +10,7 @@ export const BUILD_GAME_ACTION = `${GAME_ACTION}build${DOT_SEPARATOR}`;
 export const DEVELOPMENT_CARD_GAME_ACTION = `${GAME_ACTION}developmentCard${DOT_SEPARATOR}`;
 export const TURN_GAME_ACTION = `${GAME_ACTION}turn${DOT_SEPARATOR}`;
 export const ROBBER_GAME_ACTION = `${GAME_ACTION}robber${DOT_SEPARATOR}`;
+export const RESOURCE_GAME_ACTION = `${GAME_ACTION}resource${DOT_SEPARATOR}`;
 
 export const GameActionEvents = {
     state: `${GAME_ACTION}state`,
@@ -28,6 +29,9 @@ export const GameActionEvents = {
     robber: {
         place: `${ROBBER_GAME_ACTION}place`,
         steal: `${ROBBER_GAME_ACTION}steal`,
+    },
+    resource: {
+        discard: `${RESOURCE_GAME_ACTION}discard`,
     }
 } as const;
 
@@ -42,6 +46,7 @@ export interface GameActionEventMap {
     [GameActionEvents.turn.end]: Record<never, never>;
     [GameActionEvents.robber.place]: { target: Hex };
     [GameActionEvents.robber.steal]: { targetPlayerId: string };
+    [GameActionEvents.resource.discard]: { discardedResources: string[] };
 }
 
 export type GameActionEvent = EventUnion<GameActionEventMap>;
@@ -103,4 +108,12 @@ export const GameActionEventCreators = {
             payload: undefined,
         }
     },
+    discard(discardedResources: string[]) {
+        return {
+            type: GameActionEvents.resource.discard,
+            payload: {
+                discardedResources,
+            },
+        }
+    }
 } as const;

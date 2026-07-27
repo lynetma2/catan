@@ -13,7 +13,7 @@ import type {Resource} from "@/game/core/types.ts";
 import {resolveDiscardLayout} from "@/game/hud/panels/resource/Layout/ResourcePanelLayout.ts";
 import {resolveHandCards} from "@/game/hud/panels/resource/Layout/ResourceCardLayout.ts";
 import {findHitButton, findHitCard} from "@/game/hud/panels/resource/utils.ts";
-import {GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
+import {GameActionEventCreators} from "@/events/game/GameActionEvents.ts";
 
 export class DiscardMode implements ResourcePanelMode<DiscardModeState, number> {
     private readonly frameQueue: FrameQueue;
@@ -125,14 +125,8 @@ export class DiscardMode implements ResourcePanelMode<DiscardModeState, number> 
                     this.selectedCards.has(r.uid),
                 );
 
-                this.frameQueue.push({
-                    type: GameEventType.DISCARD_CONFIRMED,
-                    payload: {
-                        playerId: this.sharedState.localPlayerId!,
-                        resources: discarded,
-                    },
-                    source: GameEventSource.Hud,
-                });
+                const ids = discarded.map(d => d.uid);
+                this.frameQueue.push(GameActionEventCreators.discard(ids));
 
                 return true;
             }

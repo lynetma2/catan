@@ -10,6 +10,7 @@ import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceRoadAct
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceSettlementAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.developmentCard.PlayKnightAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.developmentCard.PlayRoadBuildingAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.resource.GameDiscardAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.RobberStealAction;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.IllegalGamePhaseException;
@@ -29,7 +30,7 @@ public enum GamePhase {
             Set.of(PlaceRobberAction.class)),
     ROBBER_STEAL("robber_steal",
             Set.of(RobberStealAction.class)),
-    DISCARD("discard", Set.of()),
+    DISCARD("discard", Set.of(GameDiscardAction.class)),
     GAME_OVER("end", Set.of()),
     ROAD_BUILDING("road_building", Set.of(PlaceRoadAction.class));
 
