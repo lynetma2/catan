@@ -1,5 +1,4 @@
 import type {InputLayer} from "@/game/core/Input/types.ts";
-import {GamePhaseManager} from "@/game/core/GamePhaseManager.ts";
 import type {Camera} from "@/game/core/Camera.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 import type {EventBus} from "@/game/core/EventBus.ts";
@@ -30,7 +29,6 @@ export class World implements InputLayer {
         private readonly frameQueue: FrameQueue<GameEventMap>,
         private readonly shared: SharedState,
         private readonly camera: Camera,
-        private readonly gamePhaseManager: GamePhaseManager,
     ) {
         this.buildHoverSystem = new BuildHoverSystem(camera, shared, bus);
         this.robberHoverSystem = new RobberHoverSystem(camera, shared, bus);

@@ -170,6 +170,10 @@ export class SharedState {
         this.board.placementMap.placeRoad(edge, playerId);
     }
 
+    clearFlowState() {
+        this._activeFlowState = null;
+    }
+
     // Queries
 
     isPlayersTurn(playerId: string): boolean {

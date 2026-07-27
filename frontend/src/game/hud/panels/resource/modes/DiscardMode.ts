@@ -97,7 +97,7 @@ export class DiscardMode implements ResourcePanelMode<DiscardModeState, number> 
             },
             counter: layout.counter,
             amountSelected: this.selectedCards.size,
-            mustDiscard: this.sharedState.discardCount,
+            discardCount: this.sharedState.discardCount,
             buttons: {
                 confirm: layout[DiscardButtonType.Confirm],
                 cancel: layout[DiscardButtonType.Cancel],

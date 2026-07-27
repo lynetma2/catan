@@ -34,10 +34,10 @@ export class DiscardModeRenderer {
         this.drawDiscardCounter(
             state.counter,
             state.amountSelected,
-            state.mustDiscard,
+            state.discardCount,
         );
 
-        const confirmEnabled = state.amountSelected === state.mustDiscard;
+        const confirmEnabled = state.amountSelected === state.discardCount;
 
         this.drawButton(
             state.buttons.cancel,

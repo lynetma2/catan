@@ -50,7 +50,7 @@ export interface DiscardModeState {
     kind: ResourcePanelModeKind.Discard;
     hand: { bounds: Rect; cards: ResourceCard[] };
     amountSelected: number;
-    mustDiscard: number;
+    discardCount: number;
     buttons: {
         confirm: Rect;
         cancel: Rect;

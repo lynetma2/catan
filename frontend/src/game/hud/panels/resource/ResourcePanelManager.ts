@@ -71,8 +71,10 @@ export class ResourcePanelManager {
             }
         });
 
-        this.bus.on(GameServerEvents.resource.discardComplete.success, () => {
-            this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
+        this.bus.on(GameServerEvents.resource.discardComplete.success, (payload) => {
+            if (payload.playerId === this.shared.localPlayerId) {
+                this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
+            }
         });
 
         // ------------------------------------------------------------------

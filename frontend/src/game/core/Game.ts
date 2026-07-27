@@ -12,7 +12,6 @@ import {createTestGameState, TEST_SCENARIOS} from "@/game/tools/testData.ts";
 import {World} from "@/game/world/World.ts";
 import {WorldRenderer} from "@/game/rendering/world/WorldRenderer.ts";
 import type {GameSnapshot} from "@/game/core/types.ts";
-import {GamePhaseManager} from "@/game/core/GamePhaseManager.ts";
 import {SharedStateManager} from "@/game/core/SharedStateManager.ts";
 import {DebugTools} from "@/game/tools/DebugTools.ts";
 import {GameSocketConnection} from "@/game/network/GameSocketClient.ts";
@@ -26,7 +25,6 @@ export class Game {
     private readonly bus: EventBus<GameEventMap>
     private readonly frameQueue: FrameQueue<GameEventMap>;
     private readonly sharedState: SharedState;
-    private readonly gamePhase: GamePhaseManager;
     private readonly sharedManager: SharedStateManager;
     private readonly connection: GameSocketConnection;
 
@@ -54,7 +52,6 @@ export class Game {
         this.frameQueue = new FrameQueue<GameEventMap>();
         this.sharedState = new SharedState();
         this.resolution  = new ResolutionManager(canvas);
-        this.gamePhase = new GamePhaseManager(this.bus, this.sharedState);
         this.sharedManager = new SharedStateManager(this.bus, this.sharedState);
         this.connection = new GameSocketConnection(this.gameId, ws, this.bus, this.frameQueue);
 
@@ -69,7 +66,7 @@ export class Game {
 
         // ── 3. Systems ─────────────────────────────────────────────────
         this.hud = new HUD(this.bus, this.sharedState, this.frameQueue, this.resolution, this.camera);
-        this.world = new World(this.bus, this.frameQueue, this.sharedState, this.camera, this.gamePhase);
+        this.world = new World(this.bus, this.frameQueue, this.sharedState, this.camera);
 
         // ── 4. Renderers ───────────────────────────────────────────────
         const ctx = canvas.getContext('2d')!;

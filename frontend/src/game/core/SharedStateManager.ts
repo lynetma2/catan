@@ -4,7 +4,7 @@ import {EventBus} from "@/game/core/EventBus.ts";
 import type {GameEventMap} from "@/events/shared/AppEvents.ts";
 import {GameServerEvents} from "@/events/game/GameServerEvents.ts";
 import {GameUiEvents} from "@/events/game/GameUiEvents.ts";
-import type {Resource, StealFlowState} from "@/game/core/types.ts";
+import {GamePhase, type Resource, type StealFlowState} from "@/game/core/types.ts";
 
 export class SharedStateManager {
     constructor(
@@ -91,6 +91,10 @@ export class SharedStateManager {
 
     private onPhaseChanged(payload: GameEventMap[typeof GameServerEvents.state.phase.change.success]) {
         this.shared.setCurrentPhase(payload.phase);
+        const nonSubflowPhases = [GamePhase.PostRoll, GamePhase.PreRoll, GamePhase.End];
+        if (nonSubflowPhases.includes(payload.phase)) {
+            this.shared.clearFlowState();
+        }
     }
 }
 
