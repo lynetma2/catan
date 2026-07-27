@@ -7,9 +7,8 @@ import java.util.UUID;
 
 import static com.sundtrack.catan.datalayer.domain.event.EventDomainConstants.*;
 
-@EventType(SERVER + SEPARATOR + GAME + SEPARATOR + RESOURCE + SEPARATOR + "discardRequired")
-public record DiscardRequiredEvent(
-        UUID playerId,
-        int amount
+@EventType(SERVER + SEPARATOR + GAME + SEPARATOR + RESOURCE + SEPARATOR + "discardComplete")
+public record DiscardCompleteEvent(
+        UUID playerId
 ) implements ServerEvent {
 }

@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public class FlowStateMapper {
-    private FlowStateMapper() {}
+    private FlowStateMapper() {
+    }
 
     public static FlowStateDTO toDTO(Game game) {
         return switch (game.getCurrentPhase()) {
@@ -24,7 +25,7 @@ public class FlowStateMapper {
 
     private static FlowStateDTO toDiscardDTO(Game game) {
         Map<String, Integer> required = new HashMap<>();
-        game.getRequiredDiscards().forEach((playerId, amount) -> required.put(playerId.toString(), amount));
+        game.getPendingRequiredDiscards().forEach((playerId, amount) -> required.put(playerId.toString(), amount));
         return new DiscardFlowStateDTO(required);
     }
 

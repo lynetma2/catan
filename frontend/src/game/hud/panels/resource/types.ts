@@ -38,6 +38,7 @@ export interface ResourceCard {
 export interface BrowseModeState {
     kind: ResourcePanelModeKind.Browse;
     hand: { bounds: Rect, cards: ResourceCard[] };
+    isAtDiscardRisk: boolean;
 }
 
 export enum DiscardButtonType {
@@ -54,6 +55,7 @@ export interface DiscardModeState {
         confirm: Rect;
         cancel: Rect;
     };
+    counter: Rect;
     hoveredButton: DiscardButtonType | null;
 }
 

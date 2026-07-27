@@ -11,6 +11,7 @@ export interface PlayerOverviewEntry {
     hasLargestArmy: boolean;
     usedRobbers:   number;
     isCurrentTurn: boolean;
+    discardStatus: 'none' | 'pending' | 'done';
 }
 
 export interface PlayerRowLayout {

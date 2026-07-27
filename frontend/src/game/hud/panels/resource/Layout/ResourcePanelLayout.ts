@@ -41,6 +41,7 @@ export interface DiscardLayout {
     [TradePanelKind.Hand]: Rect;
     [DiscardButtonType.Confirm]: Rect;
     [DiscardButtonType.Cancel]: Rect;
+    counter: Rect;
 }
 
 // ─── Hand panel ───────────────────────────────────────────────────────────────
@@ -138,9 +139,17 @@ export function resolveDiscardLayout(r: Resolution): DiscardLayout {
         height: BUTTON.height,
     };
 
+    const counter: Rect = {
+        x: hand.x,
+        y: buttonY - 30, // 30px above the buttons
+        width: hand.width,
+        height: 24,
+    };
+
     return {
         [TradePanelKind.Hand]: hand,
         [DiscardButtonType.Cancel]: cancelButton,
         [DiscardButtonType.Confirm]: confirmButton,
+        counter,
     };
 }

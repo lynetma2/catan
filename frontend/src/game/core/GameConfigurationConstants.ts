@@ -1,0 +1,1 @@
+export const DISCARD_RISK_THRESHOLD = 7;

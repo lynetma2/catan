@@ -254,9 +254,9 @@ public class Game {
         return removed;
     }
 
-    public Map<UUID, Integer> getRequiredDiscards() {
+    public Map<UUID, Integer> getPendingRequiredDiscards() {
         return flow.getActiveDiscardFlow()
-                .map(DiscardFlow::getRequiredDiscards)
+                .map(DiscardFlow::getPendingRequireDiscards)
                 .orElse(Map.of());
     }
 

@@ -7,6 +7,7 @@ import {GameServerEvents} from "@/events/game/GameServerEvents.ts";
 import type {PlayerOverviewEntry, PlayerOverviewState} from "@/game/hud/panels/overview/types.ts";
 import type {Resolution, ResolutionManager} from "@/game/core/ResolutionManager.ts";
 import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
+import {GamePhase} from "@/game/core/types.ts";
 
 export class PlayerOverviewPanel {
     private players: Map<string, PlayerOverviewEntry> = new Map();
@@ -41,6 +42,11 @@ export class PlayerOverviewPanel {
         this.bus.on(GameServerEvents.overview.longestRoad.success, (payload) => this.onLongestRoadChanged(payload));
         this.bus.on(GameServerEvents.overview.largestArmy.success, (payload) => this.onLargestArmyChanged(payload));
         this.bus.on(GameServerEvents.overview.victoryPoint.success, (payload) => this.onVictoryPointsChanged(payload));
+
+        //Discard related.
+        this.bus.on(GameServerEvents.resource.discardRequired.success, (payload) => this.onDiscardRequired(payload));
+        this.bus.on(GameServerEvents.resource.discardComplete.success, (payload) => this.onDiscardComplete(payload));
+        this.bus.on(GameServerEvents.state.phase.change.success, (payload) => this.onPhaseChanged(payload));
     }
 
     // ─── Event handlers ───────────────────────────────────────────────
@@ -49,6 +55,10 @@ export class PlayerOverviewPanel {
     ) {
         this.players.clear();
         const {snapshot} = payload;
+        const pending = snapshot.activeFlowState?.type === "discard"
+            ? new Set(Object.keys(snapshot.activeFlowState.requiredDiscards))
+            : new Set<string>();
+
         snapshot.players.forEach(p => {
             this.players.set(p.id, {
                 playerId:       p.id,
@@ -61,6 +71,7 @@ export class PlayerOverviewPanel {
                 hasLargestArmy: p.hasLargestArmy,
                 usedRobbers: p.knightsUsed,
                 isCurrentTurn: p.id === snapshot.currentPlayerId,
+                discardStatus: pending.has(p.id) ? 'pending' : 'none',
             });
         });
     }
@@ -124,6 +135,24 @@ export class PlayerOverviewPanel {
     ) {
         const player = this.players.get(payload.playerId);
         if (player) player.victoryPoints = payload.value;
+    }
+
+    private onDiscardRequired(payload: GameEventMap[typeof GameServerEvents.resource.discardRequired.success]) {
+        const player = this.players.get(payload.playerId);
+        if (player) player.discardStatus = 'pending';
+    }
+
+    private onDiscardComplete(payload: GameEventMap[typeof GameServerEvents.resource.discardComplete.success]) {
+        const player = this.players.get(payload.playerId);
+        if (player) player.discardStatus = 'done';
+    }
+
+    private onPhaseChanged(payload: GameEventMap[typeof GameServerEvents.state.phase.change.success]) {
+        if (payload.phase !== GamePhase.Discard) {
+            this.players.forEach(p => {
+                p.discardStatus = 'none';
+            });
+        }
     }
 
     // ─── Input ────────────────────────────────────────────────────────

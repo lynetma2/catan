@@ -15,12 +15,12 @@ import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
 import type {Edge} from "@/game/utils/HexGeometry/Edge.ts";
 import {Board} from "@/game/world/board/Board.ts";
 import type {BuildRejectionReason} from "@/game/events/GameEventTypes.ts";
+import {DISCARD_RISK_THRESHOLD} from "@/game/core/GameConfigurationConstants.ts";
 
 
 export class SharedState {
     // ─── Readonly from outside ────────────────────────────────────────
     // Private backing fields — only mutated through methods below
-
     private _localPlayerId: string | null = null;
     private _currentPlayerId: string | null = null;
     private _currentPhase: GamePhase | null = null;
@@ -254,8 +254,27 @@ export class SharedState {
         return [];
     }
 
+    get isAtDiscardRisk(): boolean {
+        return (this.localPlayerResources?.length ?? 0) > DISCARD_RISK_THRESHOLD;
+    }
+
     private meetsResourceCost(cost: Partial<ResourceCost>): boolean {
         return this.meetsResourceCostForResources(this.localPlayerResources ?? [], cost);
+    }
+
+    addRequiredDiscard(playerId: string, amount: number) {
+        const current = this._activeFlowState?.type === "discard" ? this._activeFlowState.requiredDiscards : {};
+        this._activeFlowState = {type: "discard", requiredDiscards: {...current, [playerId]: amount}};
+    }
+
+    markDiscardComplete(playerId: string) {
+        if (this._activeFlowState?.type !== "discard") return;
+        const {[playerId]: _, ...rest} = this._activeFlowState.requiredDiscards;
+        this._activeFlowState = Object.keys(rest).length > 0 ? {type: "discard", requiredDiscards: rest} : null;
+    }
+
+    get pendingDiscardPlayerIds(): string[] {
+        return this._activeFlowState?.type === "discard" ? Object.keys(this._activeFlowState.requiredDiscards) : [];
     }
 
     private meetsResourceCostForResources(resources: Resource[], cost: Partial<ResourceCost>): boolean {

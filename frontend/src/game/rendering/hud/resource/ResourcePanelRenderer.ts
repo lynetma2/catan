@@ -22,6 +22,12 @@ const RESOURCE_PANEL_THEME: PanelTheme = {
     titlePadding: 12,
 };
 
+const RESOURCE_PANEL_THEME_AT_RISK: PanelTheme = {
+    ...RESOURCE_PANEL_THEME,
+    background: 'rgba(64, 20, 16, 0.85)',   // warm red-brown, not alarm-red
+    borderColor: 'rgba(255, 120, 90, 0.25)', // subtly warmer border to reinforce it
+};
+
 export class ResourcePanelRenderer {
     private readonly cardRenderer:        ResourceCardRenderer;
     private readonly browseModeRenderer:  BrowseModeRenderer;
@@ -42,7 +48,7 @@ export class ResourcePanelRenderer {
 
         switch (modeState.kind) {
             case ResourcePanelModeKind.Browse:
-                this.renderHandChrome(modeState.hand);
+                this.renderHandChrome(modeState.hand, modeState.isAtDiscardRisk);
                 this.browseModeRenderer.render(modeState);
                 break;
             case ResourcePanelModeKind.Discard:
@@ -56,8 +62,9 @@ export class ResourcePanelRenderer {
         }
     }
 
-    private renderHandChrome(hand: { bounds: Rect; cards: ResourceCard[] }) {
-        drawPanelChrome(this.ctx, hand.bounds, 'Hand', RESOURCE_PANEL_THEME);
+    private renderHandChrome(hand: { bounds: Rect; cards: ResourceCard[] }, isAtDiscardRisk: boolean = false) {
+        const theme = isAtDiscardRisk ? RESOURCE_PANEL_THEME_AT_RISK : RESOURCE_PANEL_THEME;
+        drawPanelChrome(this.ctx, hand.bounds, 'Hand', theme);
 
         if (hand.cards.length > 0) {
             this.cardRenderer.renderCards(hand.cards);

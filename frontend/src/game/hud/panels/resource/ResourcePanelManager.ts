@@ -6,20 +6,20 @@ import {
     type ResourcePanelModeState,
     TradePanelKind
 } from "@/game/hud/panels/resource/types.ts";
-import type { SharedState } from "@/game/core/SharedState.ts";
-import type { ResolutionManager } from "@/game/core/ResolutionManager.ts";
-import type { EventBus } from "@/game/core/EventBus.ts";
-import type { FrameQueue } from "@/game/core/FrameQueue.ts";
-import { BrowseMode } from "@/game/hud/panels/resource/modes/BrowseMode.ts";
-import { type NormalizedInputEvent } from "@/game/core/Input/InputEvent.ts";
-import { GameEventType } from "@/game/events/GameEventTypes.ts";
-import { TradeMode } from "@/game/hud/panels/resource/modes/TradeMode.ts";
-import { DiscardMode } from "@/game/hud/panels/resource/modes/DiscardMode.ts";
-import { type Rect, unionRects } from "@/game/utils/Rect.ts";
-import type { GameEventMap } from "@/events/shared/AppEvents.ts";
-import { GameServerEvents } from "@/events/game/GameServerEvents.ts";
-import { GameUiEvents } from "@/events/game/GameUiEvents.ts";
-import { GamePhase } from "@/game/core/types";
+import type {SharedState} from "@/game/core/SharedState.ts";
+import type {ResolutionManager} from "@/game/core/ResolutionManager.ts";
+import type {EventBus} from "@/game/core/EventBus.ts";
+import type {FrameQueue} from "@/game/core/FrameQueue.ts";
+import {BrowseMode} from "@/game/hud/panels/resource/modes/BrowseMode.ts";
+import {type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
+import {GameEventType} from "@/game/events/GameEventTypes.ts";
+import {TradeMode} from "@/game/hud/panels/resource/modes/TradeMode.ts";
+import {DiscardMode} from "@/game/hud/panels/resource/modes/DiscardMode.ts";
+import {type Rect, unionRects} from "@/game/utils/Rect.ts";
+import type {GameEventMap} from "@/events/shared/AppEvents.ts";
+import {GameServerEvents} from "@/events/game/GameServerEvents.ts";
+import {GameUiEvents} from "@/events/game/GameUiEvents.ts";
+import {GamePhase} from "@/game/core/types";
 
 export class ResourcePanelManager {
     private mode: ResourcePanelMode<ResourcePanelModeState>;
@@ -41,8 +41,7 @@ export class ResourcePanelManager {
         this.bus.on(GameServerEvents.state.full.success, () => {
             if (this.shared.currentPhase === GamePhase.Discard && this.shared.mustDiscard) {
                 this.transitionTo(
-                    new DiscardMode(this.frameQueue, this.resolution, this.shared),
-                    this.shared.discardCount,
+                    new DiscardMode(this.frameQueue, this.resolution, this.shared)
                 );
             } else {
                 this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
@@ -67,14 +66,12 @@ export class ResourcePanelManager {
         this.bus.on(GameServerEvents.resource.discardRequired.success, (payload) => {
             if (payload.playerId === this.shared.localPlayerId) {
                 this.transitionTo(
-                    new DiscardMode(this.frameQueue, this.resolution, this.shared),
-                    payload.amount,
+                    new DiscardMode(this.frameQueue, this.resolution, this.shared)
                 );
             }
         });
 
         this.bus.on(GameServerEvents.resource.discardComplete.success, () => {
-            this.shared.clearMustDiscard();
             this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
         });
 
@@ -102,10 +99,10 @@ export class ResourcePanelManager {
         nextMode: ResourcePanelMode<TState, TArg>,
         arg: TArg,
     ): void;
-    private transitionTo(nextMode: ResourcePanelMode<any, any>, arg?: any): void {
+    private transitionTo(nextMode: ResourcePanelMode<any, any>): void {
         this.mode.onExit();
         this.mode = nextMode;
-        this.mode.onEnter(arg);
+        this.mode.onEnter();
     }
 
     // ─── Input ────────────────────────────────────────────────────────────────

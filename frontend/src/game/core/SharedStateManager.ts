@@ -22,6 +22,9 @@ export class SharedStateManager {
         this.bus.on(GameServerEvents.turn.start.success, (payload) => this.onTurnStarted(payload));
         this.bus.on(GameServerEvents.robber.stealTargetRequired.success, (payload) => this.onStealTargetRequired(payload));
         this.bus.on(GameServerEvents.robber.placed.success, (payload) => this.onRobberPlaced(payload));
+        this.bus.on(GameServerEvents.resource.discardComplete.success, (payload) => this.onDiscardComplete(payload));
+        this.bus.on(GameServerEvents.resource.discardRequired.success, (payload) => this.onDiscardRequired(payload))
+        this.bus.on(GameServerEvents.state.phase.change.success, (payload) => this.onPhaseChanged(payload));
 
         this.bus.on(GameServerEvents.build.settlement.success, (payload) => this.onSettlementBuilt(payload));
         this.bus.on(GameServerEvents.build.city.success, (payload) => this.onCityBuilt(payload));
@@ -78,7 +81,17 @@ export class SharedStateManager {
         this.shared.placeRoad(payload.edge, payload.playerId);
     }
 
-    //TODO add something to clear the steal candidates.
+    private onDiscardComplete(payload: GameEventMap[typeof GameServerEvents.resource.discardComplete.success]) {
+        this.shared.markDiscardComplete(payload.playerId);
+    }
+    
+    private onDiscardRequired(payload: GameEventMap[typeof GameServerEvents.resource.discardRequired.success]) {
+        this.shared.addRequiredDiscard(payload.playerId, payload.amount);
+    }
+
+    private onPhaseChanged(payload: GameEventMap[typeof GameServerEvents.state.phase.change.success]) {
+        this.shared.setCurrentPhase(payload.phase);
+    }
 }
 
 function removeResources(current: Resource[], spent: Resource[]): Resource[] {

@@ -24,6 +24,14 @@ public class DiscardFlow implements SubFlow {
         return pendingPlayers.contains(playerId);
     }
 
+    public Map<UUID, Integer> getPendingRequireDiscards() {
+        Map<UUID, Integer> pending = new HashMap<>();
+        for (UUID playerId : pendingPlayers) {
+            pending.put(playerId, getRequiredCount(playerId));
+        }
+        return pending;
+    }
+
     public int getRequiredCount(UUID playerId) {
         return requiredDiscards.getOrDefault(playerId, 0);
     }

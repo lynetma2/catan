@@ -15,10 +15,10 @@ export class PlayerRowRenderer {
         this.drawStats(player, layout.bounds);
         this.drawBadges(player, layout.bounds);
         if (player.isCurrentTurn) this.drawTurnIndicator(layout.bounds);
+        if (player.discardStatus !== 'none') this.drawDiscardStatus(player, layout.bounds);
     }
 
     // ─── Background ───────────────────────────────────────────────────
-
     private drawBackground(player: PlayerOverviewEntry, bounds: Rect) {
         const { ctx, theme } = this;
         const { x, y, width, height } = bounds;
@@ -34,7 +34,6 @@ export class PlayerRowRenderer {
     }
 
     // ─── Color pip ────────────────────────────────────────────────────
-
     private drawColorPip(player: PlayerOverviewEntry, bounds: Rect) {
         const { ctx, theme }  = this;
         const pipSize         = theme.colorPipSize;
@@ -55,7 +54,6 @@ export class PlayerRowRenderer {
     }
 
     // ─── Name ─────────────────────────────────────────────────────────
-
     private drawName(player: PlayerOverviewEntry, bounds: Rect) {
         const { ctx, theme } = this;
         const nameX = bounds.x + theme.colorPipSize + 14;
@@ -74,7 +72,6 @@ export class PlayerRowRenderer {
     }
 
     // ─── Stats row ────────────────────────────────────────────────────
-
     private drawStats(player: PlayerOverviewEntry, bounds: Rect) {
         const { ctx, theme } = this;
         const nameX = bounds.x + theme.colorPipSize + 14;
@@ -107,7 +104,6 @@ export class PlayerRowRenderer {
     }
 
     // ─── Badges ───────────────────────────────────────────────────────
-
     private drawBadges(player: PlayerOverviewEntry, bounds: Rect) {
         const { ctx, theme } = this;
         let badgeX = bounds.x + bounds.width - 6;
@@ -163,6 +159,22 @@ export class PlayerRowRenderer {
         ctx.shadowColor = '#FFD700';
         ctx.shadowBlur  = 6;
         ctx.fill();
+        ctx.restore();
+    }
+
+    private drawDiscardStatus(player: PlayerOverviewEntry, bounds: Rect) {
+        if (player.discardStatus === 'none') return;
+
+        const {ctx} = this;
+        const label = player.discardStatus === 'pending' ? '⏳' : '✓';
+        const color = player.discardStatus === 'pending' ? '#e0a050' : '#60c060';
+
+        ctx.save();
+        ctx.font = '11px monospace';
+        ctx.fillStyle = color;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, bounds.x + bounds.width - 34, bounds.y + bounds.height / 2);
         ctx.restore();
     }
 }

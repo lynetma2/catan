@@ -6,7 +6,6 @@ import com.sundtrack.catan.datalayer.domain.event.game.action.RollDiceAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.RollDiceEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.DiscardRequiredEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceGrantEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseChangedEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.services.GameStore;
@@ -52,7 +51,7 @@ public class GameRollDiceHandler implements GameActionHandler<RollDiceAction> {
         outcome.grantedResources().forEach((playerId, resources) ->
                 events.add(new ResourceGrantEvent(playerId, resources)));
 
-        game.getRequiredDiscards().forEach((playerId, amount) ->
+        game.getPendingRequiredDiscards().forEach((playerId, amount) ->
                 events.add(new DiscardRequiredEvent(playerId, amount)));
 
         return EventResult.of(events, Map.of());

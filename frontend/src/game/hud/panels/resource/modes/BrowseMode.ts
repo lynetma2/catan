@@ -3,14 +3,14 @@ import {
     type ResourcePanelMode,
     ResourcePanelModeKind,
 } from "@/game/hud/panels/resource/types.ts";
-import { InputType, type NormalizedInputEvent } from "@/game/core/Input/InputEvent.ts";
-import type { FrameQueue } from "@/game/core/FrameQueue.ts";
-import type { ResolutionManager } from "@/game/core/ResolutionManager.ts";
-import type { SharedState } from "@/game/core/SharedState.ts";
-import { resolveHandCards } from "@/game/hud/panels/resource/Layout/ResourceCardLayout.ts";
-import { GameEventSource, GameEventType } from "@/game/events/GameEventTypes.ts";
-import { findHitCard } from "@/game/hud/panels/resource/utils.ts";
-import { resolveHandPanelBounds } from "@/game/hud/panels/resource/Layout/ResourcePanelLayout.ts";
+import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
+import type {FrameQueue} from "@/game/core/FrameQueue.ts";
+import type {ResolutionManager} from "@/game/core/ResolutionManager.ts";
+import type {SharedState} from "@/game/core/SharedState.ts";
+import {resolveHandCards} from "@/game/hud/panels/resource/Layout/ResourceCardLayout.ts";
+import {GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
+import {findHitCard} from "@/game/hud/panels/resource/utils.ts";
+import {resolveHandPanelBounds} from "@/game/hud/panels/resource/Layout/ResourcePanelLayout.ts";
 
 
 export class BrowseMode implements ResourcePanelMode<BrowseModeState> {
@@ -67,6 +67,7 @@ export class BrowseMode implements ResourcePanelMode<BrowseModeState> {
                 bounds: resolveHandPanelBounds(r),
                 cards: resolveHandCards(this.sharedState.localPlayerResources ?? [], this.hoveredCardId, r),
             },
+            isAtDiscardRisk: this.sharedState.isAtDiscardRisk,
         };
     }
 }
