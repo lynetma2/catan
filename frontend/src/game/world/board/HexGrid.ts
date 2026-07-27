@@ -104,7 +104,7 @@ export class HexGrid {
         return Array.from(this.tiles.values())
             .filter((t): t is LandTile => t.kind === 'land' && t.number === number && !t.hasRobber);
     }
-    // ─── Queries used by BuildSystem ─────────────────────────────────
+    // ─── Queries used by SharedState and BuildRules ─────────────────
 
     getTile(hex: Hex): Tile | null {
         return this.tiles.get(this.hexKey(hex)) ?? null;

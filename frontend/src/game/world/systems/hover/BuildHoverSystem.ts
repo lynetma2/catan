@@ -1,12 +1,10 @@
 // world/systems/hover/BuildHoverSystem.ts
 import {type BuildTarget, BuildTargetKind, PieceType} from "@/game/core/types.ts";
-import type {Board} from "@/game/world/board/Board.ts";
 import type {Camera} from "@/game/core/Camera.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import {hex} from "@/game/utils/HexGeometry/Hex.ts";
 import {vertex, type Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
 import {edge, type Edge} from "@/game/utils/HexGeometry/Edge.ts";
-import type {BuildValidator} from "@/game/world/systems/build/BuildValidator.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 import type {EventBus} from "@/game/core/EventBus.ts";
 import type {GameEventMap} from "@/events/shared/AppEvents.ts";
@@ -28,9 +26,7 @@ export class BuildHoverSystem {
     private lastScreenPos: Vec2 | null = null;
 
     constructor(
-        private readonly board: Board,
         private readonly camera: Camera,
-        private readonly buildValidator: BuildValidator,
         private readonly shared: SharedState,
         bus: EventBus<GameEventMap>,
     ) {
@@ -53,7 +49,7 @@ export class BuildHoverSystem {
             this.validTargets = [];
             this.validSet.clear();
         } else {
-            this.validTargets = this.buildValidator.validTargets(buildMode, playerId);
+            this.validTargets = this.shared.getValidTargets(buildMode, playerId);
             this.validSet = new Set(this.validTargets.map(t => this.targetKey(t)));
         }
 
@@ -131,10 +127,10 @@ export class BuildHoverSystem {
 
         switch (target.kind) {
             case BuildTargetKind.Vertex:
-                return this.buildValidator.canBuild(PieceType.Settlement, target, playerId)
-                    || this.buildValidator.canBuild(PieceType.City,       target, playerId);
+                return this.shared.canBuild(PieceType.Settlement, target, playerId)
+                    || this.shared.canBuild(PieceType.City,       target, playerId);
             case BuildTargetKind.Edge:
-                return this.buildValidator.canBuild(PieceType.Road, target, playerId);
+                return this.shared.canBuild(PieceType.Road, target, playerId);
             default:
                 return false;
         }
@@ -152,9 +148,9 @@ export class BuildHoverSystem {
         let closestDistance: number        = Infinity;
 
         for (const h of candidateHexes) {
-            if (!this.board.hexGrid.isValidHex(h)) continue;
+            if (!this.shared.board.hexGrid.isValidHex(h)) continue;
             for (const v of vertex.ofHex(h)) {
-                if (!this.board.hexGrid.isValidVertex(v)) continue;
+                if (!this.shared.board.hexGrid.isValidVertex(v)) continue;
                 const vPos     = this.vertexToWorld(v);
                 const distance = Math.hypot(worldPos.x - vPos.x, worldPos.y - vPos.y);
                 if (distance < closestDistance) {
@@ -185,9 +181,9 @@ export class BuildHoverSystem {
         let closestDistance: number      = Infinity;
 
         for (const h of candidateHexes) {
-            if (!this.board.hexGrid.isValidHex(h)) continue;
+            if (!this.shared.board.hexGrid.isValidHex(h)) continue;
             for (const e of edge.ofHex(h)) {
-                if (!this.board.hexGrid.isValidEdge(e)) continue;
+                if (!this.shared.board.hexGrid.isValidEdge(e)) continue;
                 const midpoint = this.edgeMidpoint(e);
                 const distance = Math.hypot(worldPos.x - midpoint.x, worldPos.y - midpoint.y);
                 if (distance < closestDistance) {
@@ -204,7 +200,7 @@ export class BuildHoverSystem {
 
     private findHex(screenPos: Vec2): BuildTarget | null {
         const h = this.camera.screenToHex(screenPos);
-        return this.board.hexGrid.isValidHex(h)
+        return this.shared.board.hexGrid.isValidHex(h)
             ? {kind: BuildTargetKind.Hex, hex: h}
             : null;
     }

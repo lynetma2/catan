@@ -2,10 +2,9 @@
 
 // ─── Piece types ──────────────────────────────────────────────────────
 
-import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
-import type {Edge} from "@/game/utils/HexGeometry/Edge.ts";
 import {type BuildTarget, PieceType, ResourceType} from "@/game/core/types.ts";
 import {BuildRejectionReason} from "@/game/events/GameEventTypes.ts";
+import type {SharedState} from "@/game/core/SharedState.ts";
 
 export type ResourceCost = Partial<Record<ResourceType, number>>;
 
@@ -19,38 +18,7 @@ export const DEV_CARD_COST: Partial<ResourceCost> = {
     [ResourceType.Ore]: 1,
     [ResourceType.Grain]: 1,
     [ResourceType.Wool]: 1
-}
-
-// ─── Query interfaces ─────────────────────────────────────────────────
-
-export interface BoardQuery {
-    isValidVertex:               (vertex: Vertex)                   => boolean;
-    isValidEdge:                 (edge:   Edge)                     => boolean;
-    isVertexOccupied:            (vertex: Vertex)                   => boolean;
-    isEdgeOccupied:              (edge:   Edge)                     => boolean;
-    hasAdjacentRoad:             (vertex: Vertex, playerId: string) => boolean;
-    hasAdjacentRoadOrSettlement: (edge:   Edge,   playerId: string) => boolean;
-    respectsDistanceRule:        (vertex: Vertex)                   => boolean;
-    hasOwnSettlement:            (vertex: Vertex, playerId: string) => boolean;
-}
-
-export interface PlayerQuery {
-    canAfford: (playerId: string, cost: Partial<ResourceCost>) => boolean;
-}
-
-export interface GamePhaseQuery {
-    isPlayersTurn:   (playerId: string) => boolean;
-    isBuildingPhase: ()                 => boolean;
-    isSetupPhase:    ()                 => boolean;
-    canRollDice:     ()                 => boolean;
-    mustPlaceRobber: ()                 => boolean;
-}
-
-export interface BuildContext {
-    board:     BoardQuery;
-    player:    PlayerQuery;
-    gamePhase: GamePhaseQuery;
-}
+};
 
 // ─── Pure validation ──────────────────────────────────────────────────
 
@@ -60,58 +28,58 @@ export const buildRules = {
         pieceType: PieceType,
         target:    BuildTarget,
         playerId:  string,
-        ctx:       BuildContext,
+        shared:    SharedState,
     ): BuildRejectionReason | null => {
-        if (!ctx.gamePhase.isPlayersTurn(playerId))       return BuildRejectionReason.NOT_YOUR_TURN;
-        if (!ctx.gamePhase.isBuildingPhase() &&
-            !ctx.gamePhase.isSetupPhase())                return BuildRejectionReason.WRONG_PHASE;
+        if (!shared.isPlayersTurn(playerId))       return BuildRejectionReason.NOT_YOUR_TURN;
+        if (!shared.isBuildingPhase &&
+            !shared.isSetupPhase)                return BuildRejectionReason.WRONG_PHASE;
 
-        if (!ctx.gamePhase.isSetupPhase()) {
-            if (!ctx.player.canAfford(playerId, PIECE_COSTS[pieceType]))
+        if (!shared.isSetupPhase) {
+            if (!shared.canPlayerAfford(playerId, pieceType))
                 return BuildRejectionReason.INSUFFICIENT_RESOURCES;
         }
 
         switch (pieceType) {
-            case PieceType.Settlement: return buildRules.validateSettlement(target, playerId, ctx);
-            case PieceType.City:       return buildRules.validateCity(target, playerId, ctx);
-            case PieceType.Road:       return buildRules.validateRoad(target, playerId, ctx);
+            case PieceType.Settlement: return buildRules.validateSettlement(target, playerId, shared);
+            case PieceType.City:       return buildRules.validateCity(target, playerId, shared);
+            case PieceType.Road:       return buildRules.validateRoad(target, playerId, shared);
         }
     },
 
     validateSettlement: (
         target:   BuildTarget,
         playerId: string,
-        ctx:      BuildContext,
+        shared:   SharedState,
     ): BuildRejectionReason | null => {
-        if (target.kind !== 'vertex')                            return BuildRejectionReason.INVALID_LOCATION;
-        if (!ctx.board.isValidVertex(target.vertex))             return BuildRejectionReason.INVALID_LOCATION;
-        if (ctx.board.isVertexOccupied(target.vertex))           return BuildRejectionReason.SPOT_OCCUPIED;
-        if (!ctx.board.respectsDistanceRule(target.vertex))      return BuildRejectionReason.DISTANCE_RULE_VIOLATED;
-        if (!ctx.gamePhase.isSetupPhase() &&
-            !ctx.board.hasAdjacentRoad(target.vertex, playerId)) return BuildRejectionReason.NO_ADJACENT_ROAD;
+        if (target.kind !== 'vertex')                                   return BuildRejectionReason.INVALID_LOCATION;
+        if (!shared.board.hexGrid.isValidVertex(target.vertex))        return BuildRejectionReason.INVALID_LOCATION;
+        if (shared.board.placementMap.isVertexOccupied(target.vertex))  return BuildRejectionReason.SPOT_OCCUPIED;
+        if (!shared.board.placementMap.respectsDistanceRule(target.vertex)) return BuildRejectionReason.DISTANCE_RULE_VIOLATED;
+        if (!shared.isSetupPhase &&
+            !shared.board.placementMap.hasAdjacentRoad(target.vertex, playerId)) return BuildRejectionReason.NO_ADJACENT_ROAD;
         return null;
     },
 
     validateCity: (
         target:   BuildTarget,
         playerId: string,
-        ctx:      BuildContext,
+        shared:   SharedState,
     ): BuildRejectionReason | null => {
-        if (target.kind !== 'vertex')                             return BuildRejectionReason.INVALID_LOCATION;
-        if (!ctx.board.isValidVertex(target.vertex))              return BuildRejectionReason.INVALID_LOCATION;
-        if (!ctx.board.hasOwnSettlement(target.vertex, playerId)) return BuildRejectionReason.NO_SETTLEMENT_TO_UPGRADE;
+        if (target.kind !== 'vertex')                                   return BuildRejectionReason.INVALID_LOCATION;
+        if (!shared.board.hexGrid.isValidVertex(target.vertex))        return BuildRejectionReason.INVALID_LOCATION;
+        if (!shared.board.placementMap.hasOwnSettlement(target.vertex, playerId)) return BuildRejectionReason.NO_SETTLEMENT_TO_UPGRADE;
         return null;
     },
 
     validateRoad: (
         target:   BuildTarget,
         playerId: string,
-        ctx:      BuildContext,
+        shared:   SharedState,
     ): BuildRejectionReason | null => {
-        if (target.kind !== 'edge')                                        return BuildRejectionReason.INVALID_LOCATION;
-        if (!ctx.board.isValidEdge(target.edge))                           return BuildRejectionReason.INVALID_LOCATION;
-        if (ctx.board.isEdgeOccupied(target.edge))                         return BuildRejectionReason.SPOT_OCCUPIED;
-        if (!ctx.board.hasAdjacentRoadOrSettlement(target.edge, playerId)) return BuildRejectionReason.NO_ADJACENT_ROAD;
+        if (target.kind !== 'edge')                                     return BuildRejectionReason.INVALID_LOCATION;
+        if (!shared.board.hexGrid.isValidEdge(target.edge))            return BuildRejectionReason.INVALID_LOCATION;
+        if (shared.board.placementMap.isEdgeOccupied(target.edge))      return BuildRejectionReason.SPOT_OCCUPIED;
+        if (!shared.board.placementMap.hasAdjacentRoadOrSettlement(target.edge, playerId)) return BuildRejectionReason.NO_ADJACENT_ROAD;
         return null;
     },
 };

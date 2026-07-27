@@ -1,18 +1,15 @@
-import {Board} from "@/game/world/board/Board.ts";
 import type {InputLayer} from "@/game/core/Input/types.ts";
 import {GamePhaseManager} from "@/game/core/GamePhaseManager.ts";
-import {BuildSystem} from "@/game/world/systems/build/BuildSystem.ts";
 import type {Camera} from "@/game/core/Camera.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 import type {EventBus} from "@/game/core/EventBus.ts";
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
 import {type BuildTarget, BuildTargetKind, type GameSnapshot, PieceType} from "@/game/core/types.ts";
 import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
-import {type BuildValidator, createBuildValidator} from "@/game/world/systems/build/BuildValidator.ts";
 import type {WorldState} from "@/game/world/types.ts";
 
-// New event imports
-import {type GameServerEventMap, GameServerEvents} from "@/events/game/GameServerEvents";
+// Event imports
+import {GameServerEvents} from "@/events/game/GameServerEvents";
 import {GameUiEvents} from "@/events/game/GameUiEvents";
 import {GameActionEventCreators} from "@/events/game/GameActionEvents";
 import type {GameEventMap} from "@/events/shared/AppEvents.ts";
@@ -22,11 +19,8 @@ import {RobberHoverSystem} from "@/game/world/systems/hover/RobberHoverSystem.ts
 export class World implements InputLayer {
     readonly priority = 0;
 
-    private readonly board: Board;
-    private readonly buildSystem: BuildSystem;
     private readonly buildHoverSystem: BuildHoverSystem;
     private readonly robberHoverSystem: RobberHoverSystem;
-    private readonly buildValidator: BuildValidator;
 
     private isPanning: boolean = false;
     private lastPanPos: { x: number; y: number } | null = null;
@@ -38,38 +32,16 @@ export class World implements InputLayer {
         private readonly camera: Camera,
         private readonly gamePhaseManager: GamePhaseManager,
     ) {
-        this.board = new Board();
-        this.buildValidator = createBuildValidator(this.board, shared);
-        this.buildSystem = new BuildSystem(bus, frameQueue, shared, this.gamePhaseManager, this.buildValidator);
-        this.buildHoverSystem = new BuildHoverSystem(this.board, camera, this.buildValidator, shared, bus);
-        this.robberHoverSystem = new RobberHoverSystem(this.board, camera, shared, bus);
+        this.buildHoverSystem = new BuildHoverSystem(camera, shared, bus);
+        this.robberHoverSystem = new RobberHoverSystem(camera, shared, bus);
         this.subscribeToEvents();
     }
 
     // ─── Subscriptions ────────────────────────────────────────────────
 
     private subscribeToEvents() {
-        // World owns the board — it is responsible for mutating it
         this.bus.on(GameServerEvents.state.full.success, (payload) =>
             this.onGameStateLoaded(payload)
-        );
-        this.bus.on(
-            GameServerEvents.build.settlement.success,
-            payload => this.onSettlementBuilt(payload)
-        );
-
-        this.bus.on(
-            GameServerEvents.build.city.success,
-            payload => this.onCityBuilt(payload)
-        );
-
-        this.bus.on(
-            GameServerEvents.build.road.success,
-            payload => this.onRoadBuilt(payload)
-        );
-        this.bus.on(
-            GameServerEvents.robber.placed.success,
-            payload => this.onRobberPlaced(payload)
         );
     }
 
@@ -79,43 +51,8 @@ export class World implements InputLayer {
         localPlayerId: string;
     }) {
         const {snapshot} = payload;
-        this.board.hexGrid.loadTiles(snapshot.tiles);
-        this.board.loadFromSnapshot(snapshot.placements);
         this.buildHoverSystem.onModeChanged();
         this.robberHoverSystem.onPhaseChanged(snapshot.currentPhase);
-    }
-
-    private onSettlementBuilt(
-        payload: GameServerEventMap[typeof GameServerEvents.build.settlement.success]
-    ) {
-        this.board.placementMap.placeSettlement(
-            payload.vertex,
-            payload.playerId
-        );
-    }
-
-    private onCityBuilt(
-        payload: GameServerEventMap[typeof GameServerEvents.build.city.success]
-    ) {
-        this.board.placementMap.placeCity(
-            payload.vertex,
-            payload.playerId
-        );
-    }
-
-    private onRoadBuilt(
-        payload: GameServerEventMap[typeof GameServerEvents.build.road.success]
-    ) {
-        this.board.placementMap.placeRoad(
-            payload.edge,
-            payload.playerId
-        );
-    }
-
-    private onRobberPlaced(
-        payload: GameServerEventMap[typeof GameServerEvents.robber.placed.success]
-    ) {
-        this.board.hexGrid.moveRobber(payload.hex);
     }
 
     // ─── Input ────────────────────────────────────────────────────────
@@ -239,8 +176,8 @@ export class World implements InputLayer {
         return {
             buildHover: this.buildHoverSystem.getState(),
             robberHover: this.robberHoverSystem.getState(),
-            placements: this.board.placementMap.getState(),
-            tiles: this.board.hexGrid.getState(),
+            placements: this.shared.board.placementMap.getState(),
+            tiles: this.shared.board.hexGrid.getState(),
         };
     }
 
@@ -266,7 +203,7 @@ export class World implements InputLayer {
         const playerId = this.shared.localPlayerId;
         switch (target.kind) {
             case BuildTargetKind.Vertex:
-                if (playerId && this.buildValidator.canBuild(PieceType.City, target, playerId)) {
+                if (playerId && this.shared.canBuild(PieceType.City, target, playerId)) {
                     return PieceType.City;
                 }
                 return PieceType.Settlement;

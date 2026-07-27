@@ -23,6 +23,10 @@ export class SharedStateManager {
         this.bus.on(GameServerEvents.robber.stealTargetRequired.success, (payload) => this.onStealTargetRequired(payload));
         this.bus.on(GameServerEvents.robber.placed.success, (payload) => this.onRobberPlaced(payload));
 
+        this.bus.on(GameServerEvents.build.settlement.success, (payload) => this.onSettlementBuilt(payload));
+        this.bus.on(GameServerEvents.build.city.success, (payload) => this.onCityBuilt(payload));
+        this.bus.on(GameServerEvents.build.road.success, (payload) => this.onRoadBuilt(payload));
+
         // UI → shared state
         this.bus.on(GameUiEvents.build.enter, (payload) => this.shared.setBuildMode(payload.pieceType));
         this.bus.on(GameUiEvents.build.exit, () => this.shared.setBuildMode(null));
@@ -60,6 +64,18 @@ export class SharedStateManager {
 
     private onRobberPlaced(payload: GameEventMap[typeof GameServerEvents.robber.placed.success]) {
         this.shared.setRobberHex(payload.hex);
+    }
+
+    private onSettlementBuilt(payload: GameEventMap[typeof GameServerEvents.build.settlement.success]) {
+        this.shared.placeSettlement(payload.vertex, payload.playerId);
+    }
+
+    private onCityBuilt(payload: GameEventMap[typeof GameServerEvents.build.city.success]) {
+        this.shared.placeCity(payload.vertex, payload.playerId);
+    }
+
+    private onRoadBuilt(payload: GameEventMap[typeof GameServerEvents.build.road.success]) {
+        this.shared.placeRoad(payload.edge, payload.playerId);
     }
 
     //TODO add something to clear the steal candidates.

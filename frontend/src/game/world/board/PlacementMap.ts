@@ -27,7 +27,7 @@ export class PlacementMap {
         this.edges.clear();
     }
 
-    // ─── Queries used by BuildSystem ─────────────────────────────────
+    // ─── Queries used by SharedState and BuildRules ─────────────────
 
     isVertexOccupied(vertex: Vertex): boolean {
         return this.vertices.has(this.vertexKey(vertex));

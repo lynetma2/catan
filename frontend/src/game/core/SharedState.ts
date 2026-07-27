@@ -1,4 +1,6 @@
 import {
+    type BuildTarget,
+    BuildTargetKind,
     type FlowState,
     GamePhase,
     type GameSnapshot,
@@ -7,8 +9,12 @@ import {
     type Resource,
     type TileSnapshot
 } from "@/game/core/types.ts";
-import {DEV_CARD_COST, PIECE_COSTS, type ResourceCost} from "@/game/world/systems/build/BuildRules.ts";
+import {buildRules, DEV_CARD_COST, PIECE_COSTS, type ResourceCost} from "@/game/world/systems/build/BuildRules.ts";
 import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
+import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
+import type {Edge} from "@/game/utils/HexGeometry/Edge.ts";
+import {Board} from "@/game/world/board/Board.ts";
+import type {BuildRejectionReason} from "@/game/events/GameEventTypes.ts";
 
 
 export class SharedState {
@@ -22,6 +28,7 @@ export class SharedState {
     private readonly _players: Map<string, Player> = new Map();
     private _robberHex: Hex | null = null;
     private _activeFlowState: FlowState | null = null;
+    readonly board: Board = new Board();
 
     // core/SharedState.ts
     loadFromSnapshot(payload: GameSnapshot, localPlayerId: string) {
@@ -29,6 +36,8 @@ export class SharedState {
         this.setCurrentPlayer(payload.currentPlayerId);
         this.setPlayers(payload.players);
         this.setActiveFlowState(payload.activeFlowState);
+        this.board.hexGrid.loadTiles(payload.tiles);
+        this.board.loadFromSnapshot(payload.placements);
         const robbedHex = this.findRobbedHex(payload.tiles);
         if (robbedHex !== null) {
             this.setRobberHex(robbedHex);
@@ -146,6 +155,19 @@ export class SharedState {
 
     setRobberHex(target: Hex) {
         this._robberHex = target;
+        this.board.hexGrid.moveRobber(target);
+    }
+
+    placeSettlement(vertex: Vertex, playerId: string) {
+        this.board.placementMap.placeSettlement(vertex, playerId);
+    }
+
+    placeCity(vertex: Vertex, playerId: string) {
+        this.board.placementMap.placeCity(vertex, playerId);
+    }
+
+    placeRoad(edge: Edge, playerId: string) {
+        this.board.placementMap.placeRoad(edge, playerId);
     }
 
     // Queries
@@ -188,6 +210,11 @@ export class SharedState {
     }
 
     canAfford(pieceType: PieceType): boolean {
+        if (!this._localPlayerId) return false;
+        return this.canPlayerAfford(this._localPlayerId, pieceType);
+    }
+
+    canPlayerAfford(playerId: string, pieceType: PieceType): boolean {
         if (pieceType === PieceType.Settlement &&
             this._currentPhase === GamePhase.SetupPlaceSettlement) {
             return true;
@@ -195,13 +222,43 @@ export class SharedState {
             this._currentPhase === GamePhase.SetupPlaceRoad) {
             return true;
         } else {
-            return this.meetsResourceCost(PIECE_COSTS[pieceType]);
+            const player = this._players.get(playerId);
+            return this.meetsResourceCostForResources(player?.resources ?? [], PIECE_COSTS[pieceType]);
         }
     }
 
-    private meetsResourceCost(cost: Partial<ResourceCost>): boolean {
-        const resources = this.localPlayerResources ?? [];
+    validateBuild(pieceType: PieceType, target: BuildTarget, playerId: string): BuildRejectionReason | null {
+        return buildRules.validate(pieceType, target, playerId, this);
+    }
 
+    canBuild(pieceType: PieceType, target: BuildTarget, playerId: string): boolean {
+        return this.validateBuild(pieceType, target, playerId) === null;
+    }
+
+    getValidTargets(pieceType: PieceType | "robber", playerId: string): BuildTarget[] {
+        if (pieceType === "robber") {
+            return this.board.getValidRobberHexes().map(hex => ({ kind: BuildTargetKind.Hex, hex }));
+        }
+        switch (pieceType) {
+            case PieceType.Settlement:
+            case PieceType.City:
+                return this.board.hexGrid.getAllVertices()
+                    .filter(v => buildRules.validate(pieceType, { kind: BuildTargetKind.Vertex, vertex: v }, playerId, this) === null)
+                    .map(v => ({ kind: BuildTargetKind.Vertex, vertex: v }));
+
+            case PieceType.Road:
+                return this.board.hexGrid.getAllEdges()
+                    .filter(e => buildRules.validateRoad({ kind: BuildTargetKind.Edge, edge: e }, playerId, this) === null)
+                    .map(e => ({ kind: BuildTargetKind.Edge, edge: e }));
+        }
+        return [];
+    }
+
+    private meetsResourceCost(cost: Partial<ResourceCost>): boolean {
+        return this.meetsResourceCostForResources(this.localPlayerResources ?? [], cost);
+    }
+
+    private meetsResourceCostForResources(resources: Resource[], cost: Partial<ResourceCost>): boolean {
         return (Object.keys(cost) as (keyof typeof cost)[])
             .every(type =>
                 resources

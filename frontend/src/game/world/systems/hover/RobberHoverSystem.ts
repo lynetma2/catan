@@ -1,6 +1,5 @@
 // world/systems/hover/RobberHoverSystem.ts
 import {BuildTargetKind, GamePhase} from "@/game/core/types.ts";
-import type {Board} from "@/game/world/board/Board.ts";
 import type {Camera} from "@/game/core/Camera.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import {hex, type Hex} from "@/game/utils/HexGeometry/Hex.ts";
@@ -26,7 +25,6 @@ export class RobberHoverSystem {
     private lastScreenPos: Vec2 | null = null;
 
     constructor(
-        private readonly board: Board,
         private readonly camera: Camera,
         private readonly shared: SharedState,
         bus: EventBus<GameEventMap>,
@@ -50,7 +48,7 @@ export class RobberHoverSystem {
     }
 
     private onEnterRobberMode() {
-        const validHexes = this.board.getValidRobberHexes();
+        const validHexes = this.shared.board.getValidRobberHexes();
         this.validTargets = validHexes.map(h => ({kind: BuildTargetKind.Hex as const, hex: h}));
         this.validSet = new Set(validHexes.map(h => hex.toKey(h)));
 
@@ -97,7 +95,7 @@ export class RobberHoverSystem {
 
     private screenToHexTarget(screenPos: Vec2): HexTarget | null {
         const h = this.camera.screenToHex(screenPos);
-        return this.board.hexGrid.isValidHex(h)
+        return this.shared.board.hexGrid.isValidHex(h)
             ? {kind: BuildTargetKind.Hex as const, hex: h}
             : null;
     }
