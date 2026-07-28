@@ -1,12 +1,11 @@
 import {Client} from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 
 const client = new Client({
-    webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+    brokerURL: 'ws://localhost:8080/ws/websocket',
     debug: (str) => console.log('[STOMP]', str),
     reconnectDelay: 5000,
-    heartbeatIncoming: 0,
-    heartbeatOutgoing: 0,
+    heartbeatIncoming: 4000,
+    heartbeatOutgoing: 4000,
 });
 
 client.activate();

@@ -1,4 +1,4 @@
-import type {IMessage} from "@stomp/stompjs";
+import type {IMessage, StompSubscription} from "@stomp/stompjs";
 import type {EventBus} from "@/game/core/EventBus";
 import type {FrameQueue} from "@/game/core/FrameQueue";
 import {GameSocketInboundHandler} from "@/game/network/GameSocketInboundHandler";
@@ -10,6 +10,8 @@ export class GameSocketConnection {
     private readonly inbound: GameSocketInboundHandler;
     private readonly outbound: GameSocketOutboundHandler;
     private readonly webSocket: WebSocketContextValue;
+    private readonly subscriptions: StompSubscription[] = [];
+    private unregisterOnConnect: (() => void) | null = null;
 
     constructor(
         private readonly gameId: string,
@@ -36,6 +38,12 @@ export class GameSocketConnection {
     }
 
     public destroy(): void {
+        if (this.unregisterOnConnect) {
+            this.unregisterOnConnect();
+            this.unregisterOnConnect = null;
+        }
+        this.subscriptions.forEach((sub) => sub.unsubscribe());
+        this.subscriptions.length = 0;
         this.outbound.destroy();
     }
 
@@ -51,20 +59,22 @@ export class GameSocketConnection {
         if (this.webSocket.isConnected) {
             subscribeAndRequest();
         } else {
-            this.webSocket.onConnect(() => subscribeAndRequest());
+            this.unregisterOnConnect = this.webSocket.onConnect(() => subscribeAndRequest());
         }
     }
 
     private subscribe(_bus: EventBus<any>): void {
-        this.webSocket.subscribe(
+        const topicSub = this.webSocket.subscribe(
             `/topic/game/${this.gameId}`,
             (msg) => this.onMessage(msg),
         );
+        if (topicSub) this.subscriptions.push(topicSub);
 
-        this.webSocket.subscribe(
+        const userSub = this.webSocket.subscribe(
             `/user/queue/game`,
             (msg) => this.onMessage(msg),
         );
+        if (userSub) this.subscriptions.push(userSub);
     }
 
     private onMessage(msg: IMessage): void {

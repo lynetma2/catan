@@ -174,6 +174,31 @@ export class SharedState {
         this._activeFlowState = null;
     }
 
+    applyBankTrade(
+        playerId: string,
+        given: Resource[],
+        received: Resource[],
+    ) {
+        const player = this._players.get(playerId);
+        if (!player) return;
+
+        const remainingResources = [...player.resources];
+        // Remove given resources
+        for (const resource of given) {
+            const index = remainingResources.findIndex(
+                r => r.uid === resource.uid,
+            );
+            if (index !== -1) {
+                remainingResources.splice(index, 1);
+            }
+        }
+        // Add received resources
+        remainingResources.push(...received);
+        this.updatePlayer(playerId, {
+            resources: remainingResources,
+        });
+    }
+
     // Queries
 
     isPlayersTurn(playerId: string): boolean {

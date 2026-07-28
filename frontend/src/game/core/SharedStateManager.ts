@@ -23,8 +23,9 @@ export class SharedStateManager {
         this.bus.on(GameServerEvents.robber.stealTargetRequired.success, (payload) => this.onStealTargetRequired(payload));
         this.bus.on(GameServerEvents.robber.placed.success, (payload) => this.onRobberPlaced(payload));
         this.bus.on(GameServerEvents.resource.discardComplete.success, (payload) => this.onDiscardComplete(payload));
-        this.bus.on(GameServerEvents.resource.discardRequired.success, (payload) => this.onDiscardRequired(payload))
+        this.bus.on(GameServerEvents.resource.discardRequired.success, (payload) => this.onDiscardRequired(payload));
         this.bus.on(GameServerEvents.state.phase.change.success, (payload) => this.onPhaseChanged(payload));
+        this.bus.on(GameServerEvents.trade.bank.success, (payload) => this.onBankTrade(payload));
 
         this.bus.on(GameServerEvents.build.settlement.success, (payload) => this.onSettlementBuilt(payload));
         this.bus.on(GameServerEvents.build.city.success, (payload) => this.onCityBuilt(payload));
@@ -95,6 +96,10 @@ export class SharedStateManager {
         if (nonSubflowPhases.includes(payload.phase)) {
             this.shared.clearFlowState();
         }
+    }
+
+    private onBankTrade(payload: GameEventMap[typeof GameServerEvents.trade.bank.success]) {
+        this.shared.applyBankTrade(payload.playerId, payload.given, payload.received);
     }
 }
 

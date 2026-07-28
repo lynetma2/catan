@@ -64,12 +64,15 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         return null;
     };
 
-    const onConnect = (callback: () => void) => {
+    const onConnect = (callback: () => void): (() => void) => {
         if (stompClient.connected) {
             callback();
-        } else {
-            onConnectCallbacks.current.push(callback);
+            return () => {};
         }
+        onConnectCallbacks.current.push(callback);
+        return () => {
+            onConnectCallbacks.current = onConnectCallbacks.current.filter(cb => cb !== callback);
+        };
     };
 
     return (

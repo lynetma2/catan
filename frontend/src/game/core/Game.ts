@@ -102,6 +102,7 @@ export class Game {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
+        this.connection.destroy();
         this.resolution.destroy();
         this.inputManager.destroy();
     }

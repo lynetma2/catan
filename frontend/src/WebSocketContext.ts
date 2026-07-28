@@ -9,7 +9,7 @@ export interface WebSocketContextValue {
         destination: string,
         callback: (message: IMessage) => void
     ) => StompSubscription | null;
-    onConnect: (callback: () => void) => void;
+    onConnect: (callback: () => void) => () => void;
 }
 
 export const WebSocketContext = createContext<WebSocketContextValue | undefined>(undefined);

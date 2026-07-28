@@ -156,7 +156,7 @@ function LobbyView() {
             return;
         }
 
-        onConnect(() => {
+        const unregisterOnConnect = onConnect(() => {
             subscribeToLobbyTopic();
             // Only reconnect if we already have a lobby state;
             // otherwise the state.success event will be pushed by the server later.
@@ -166,6 +166,7 @@ function LobbyView() {
         });
 
         return () => {
+            unregisterOnConnect();
             topicSubscription.current?.unsubscribe();
             topicSubscription.current = null;
         };
