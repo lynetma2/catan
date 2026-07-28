@@ -4,7 +4,7 @@ import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 
 export enum TradeButtonType {
     Cancel = "Cancel",
-    ConfirmGlobal = "ConfirmGlobal",
+    ConfirmPublic = "ConfirmPublic",
     ConfirmBank = "ConfirmBank"
 }
 

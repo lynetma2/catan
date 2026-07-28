@@ -2,7 +2,6 @@ package com.sundtrack.catan.session.game.eventHandlers.trade;
 
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.action.trade.BankTradeAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.trade.StartPublicTradeAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.trade.PublicTradeStartedEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;

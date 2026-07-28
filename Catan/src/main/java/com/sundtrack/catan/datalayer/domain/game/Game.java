@@ -445,40 +445,58 @@ public class Game {
         return Math.clamp(remainingSupply, 0, 2);
     }
 
-    public Resource bankTrade(UUID playerId, List<Resource> given, ResourceType wanted) {
-        //Plan
+    public List<Resource> bankTrade(UUID playerId, List<Resource> given, List<ResourceType> wanted) {
         GamePlayer player = getPlayerOrThrow(playerId);
-        boolean sameResourceType =
-                given.isEmpty() ||
-                        given.stream()
-                                .allMatch(r -> r.resourceType() == given.getFirst().resourceType());
 
-        if (!sameResourceType) {
+        if (given.isEmpty() || wanted.isEmpty()) {
             throw new GivenResourcesWrongTradeException();
-        }
-
-        if (given.getFirst().resourceType() == wanted) {
-            throw new SameResourceTradeException(wanted);
         }
 
         if (!player.ownsResources(given)) {
             throw new InsufficientResourcesException(playerId, given);
         }
 
-        int ratio = board.getBestTradeRatio(playerId, wanted);
-        if (given.size() != ratio) {
-            throw new GivenResourcesWrongTradeException();
+        // Verify the bank can provide all requested resources.
+        for (ResourceType wantedType : wanted) {
+            if (!resourceBank.isAvailable(wantedType, 1)) {
+                throw new InsufficientBankResourcesException(wantedType, 1);
+            }
         }
 
-        if (resourceBank.isAvailable(wanted, 1)) {
-            throw new InsufficientBankResourcesException(wanted, 1);
+        // Create mutable pools of resources by type.
+        Map<ResourceType, Deque<Resource>> pools = given.stream()
+                .collect(Collectors.groupingBy(
+                        Resource::resourceType,
+                        Collectors.toCollection(ArrayDeque::new)
+                ));
+
+        // Simulate each trade by consuming resources from one pool.
+        for (ResourceType wantedType : wanted) {
+            int ratio = board.getBestTradeRatio(playerId, wantedType);
+
+            Deque<Resource> pool = pools.entrySet().stream()
+                    .filter(entry -> entry.getKey() != wantedType)
+                    .filter(entry -> entry.getValue().size() >= ratio)
+                    .map(Map.Entry::getValue)
+                    .findFirst()
+                    .orElseThrow(GivenResourcesWrongTradeException::new);
+
+            for (int i = 0; i < ratio; i++) {
+                pool.removeFirst();
+            }
         }
 
+        // Perform the trade.
         player.removeResources(given);
-        List<Resource> addedResource = resourceBank.draw(wanted, 1);
-        player.addResources(addedResource);
 
-        return addedResource.getFirst();
+        List<Resource> received = new ArrayList<>();
+        for (ResourceType wantedType : wanted) {
+            received.addAll(resourceBank.draw(wantedType, 1));
+        }
+
+        player.addResources(received);
+
+        return received;
     }
 
     public TradeOffer startTrade(UUID playerId, List<Resource> offered, List<ResourceType> wanted) {

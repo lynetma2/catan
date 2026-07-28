@@ -4,6 +4,7 @@ import {GAME_NAMESPACE} from "@/events/game/GameNamespace.ts";
 import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
 import type {Edge} from "@/game/utils/HexGeometry/Edge.ts";
 import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
+import {type Resource, ResourceType} from "@/game/core/types.ts";
 
 export const GAME_ACTION = `${ACTION}${DOT_SEPARATOR}${GAME_NAMESPACE}${DOT_SEPARATOR}`;
 export const BUILD_GAME_ACTION = `${GAME_ACTION}build${DOT_SEPARATOR}`;
@@ -11,6 +12,8 @@ export const DEVELOPMENT_CARD_GAME_ACTION = `${GAME_ACTION}developmentCard${DOT_
 export const TURN_GAME_ACTION = `${GAME_ACTION}turn${DOT_SEPARATOR}`;
 export const ROBBER_GAME_ACTION = `${GAME_ACTION}robber${DOT_SEPARATOR}`;
 export const RESOURCE_GAME_ACTION = `${GAME_ACTION}resource${DOT_SEPARATOR}`;
+export const TRADE_GAME_ACTION = `${GAME_ACTION}trade${DOT_SEPARATOR}`;
+export const PUBLIC_TRADE_GAME_ACTION = `${TRADE_GAME_ACTION}public${DOT_SEPARATOR}`;
 
 export const GameActionEvents = {
     state: `${GAME_ACTION}state`,
@@ -32,7 +35,17 @@ export const GameActionEvents = {
     },
     resource: {
         discard: `${RESOURCE_GAME_ACTION}discard`,
-    }
+    },
+    trade: {
+        bank: `${TRADE_GAME_ACTION}bank`,
+        public: {
+            start: `${PUBLIC_TRADE_GAME_ACTION}start`,
+            cancel: `${PUBLIC_TRADE_GAME_ACTION}cancel`,
+            confirm: `${PUBLIC_TRADE_GAME_ACTION}confirm`,
+            accept: `${PUBLIC_TRADE_GAME_ACTION}accept`,
+            decline: `${PUBLIC_TRADE_GAME_ACTION}decline`,
+        },
+    },
 } as const;
 
 // Flat event map – each leaf event name maps to its payload type
@@ -47,6 +60,15 @@ export interface GameActionEventMap {
     [GameActionEvents.robber.place]: { target: Hex };
     [GameActionEvents.robber.steal]: { targetPlayerId: string };
     [GameActionEvents.resource.discard]: { discardedResources: string[] };
+    [GameActionEvents.trade.bank]: { givenResources: Resource[]; wantedResourceType: ResourceType[] };
+    [GameActionEvents.trade.public.start]: {
+        offering: Resource[];
+        wanted: ResourceType[];
+    };
+    [GameActionEvents.trade.public.cancel]: { tradeId: string };
+    [GameActionEvents.trade.public.confirm]: { tradeId: string; responderId: string };
+    [GameActionEvents.trade.public.accept]: { tradeId: string };
+    [GameActionEvents.trade.public.decline]: { tradeId: string };
 }
 
 export type GameActionEvent = EventUnion<GameActionEventMap>;
@@ -115,5 +137,41 @@ export const GameActionEventCreators = {
                 discardedResources,
             },
         }
-    }
+    },
+    bankTrade(givenResources: Resource[], wanted: ResourceType[]) {
+        return {
+            type: GameActionEvents.trade.bank,
+            payload: {givenResources, wanted}
+        };
+    },
+    startPublicTrade(offered: Resource[], wanted: ResourceType[]) {
+        return {
+            type: GameActionEvents.trade.public.start,
+            payload: {offered, wanted}
+        };
+    },
+    cancelPublicTrade(tradeId: string) {
+        return {
+            type: GameActionEvents.trade.public.cancel,
+            payload: {tradeId}
+        };
+    },
+    confirmPublicTrade(tradeId: string, responderId: string) {
+        return {
+            type: GameActionEvents.trade.public.confirm,
+            payload: {tradeId, responderId}
+        };
+    },
+    acceptPublicTrade(tradeId: string) {
+        return {
+            type: GameActionEvents.trade.public.accept,
+            payload: {tradeId}
+        };
+    },
+    declinePublicTrade(tradeId: string) {
+        return {
+            type: GameActionEvents.trade.public.decline,
+            payload: {tradeId}
+        };
+    },
 } as const;

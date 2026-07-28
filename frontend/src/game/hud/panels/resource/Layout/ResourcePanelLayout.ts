@@ -33,7 +33,7 @@ export interface TradeLayout {
     [TradePanelKind.Selector]: Rect;
 
     [TradeButtonType.Cancel]:        Rect;
-    [TradeButtonType.ConfirmGlobal]:  Rect;
+    [TradeButtonType.ConfirmPublic]: Rect;
     [TradeButtonType.ConfirmBank]:    Rect;
 }
 
@@ -109,7 +109,7 @@ export function resolveTradeLayout(r: Resolution): TradeLayout {
         [TradePanelKind.Selector]: selector,
 
         [TradeButtonType.Cancel]:        cancelButton,
-        [TradeButtonType.ConfirmGlobal]: confirmGlobalButton,
+        [TradeButtonType.ConfirmPublic]: confirmGlobalButton,
         [TradeButtonType.ConfirmBank]:   confirmBankButton,
     };
 }

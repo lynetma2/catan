@@ -13,6 +13,10 @@ import com.sundtrack.catan.datalayer.domain.event.game.action.developmentCard.Pl
 import com.sundtrack.catan.datalayer.domain.event.game.action.resource.GameDiscardAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.RobberStealAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.trade.BankTradeAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.trade.CancelPublicTradeAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.trade.InitiatorConfirmPublicTradeAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.trade.StartPublicTradeAction;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.IllegalGamePhaseException;
 
 import java.util.Set;
@@ -25,7 +29,8 @@ public enum GamePhase {
     PRE_ROLL("pre_roll",
             Set.of(RollDiceAction.class)),
     POST_ROLL("post_roll",
-            Set.of(PlayRoadBuildingAction.class, PlayKnightAction.class, TurnEndAction.class, PlaceCityAction.class, PlaceRoadAction.class, PlaceSettlementAction.class)),
+            Set.of(PlayRoadBuildingAction.class, PlayKnightAction.class, TurnEndAction.class, PlaceCityAction.class, PlaceRoadAction.class, PlaceSettlementAction.class,
+                    BankTradeAction.class, CancelPublicTradeAction.class, InitiatorConfirmPublicTradeAction.class, StartPublicTradeAction.class)),
     ROBBER_PLACEMENT("robber_placement",
             Set.of(PlaceRobberAction.class)),
     ROBBER_STEAL("robber_steal",

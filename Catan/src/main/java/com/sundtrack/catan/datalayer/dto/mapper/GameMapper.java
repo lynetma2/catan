@@ -7,11 +7,13 @@ import com.sundtrack.catan.datalayer.domain.building.Building;
 import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.game.GamePlayer;
+import com.sundtrack.catan.datalayer.domain.game.trade.TradeOffer;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.dto.placement.CityPlacementDTO;
 import com.sundtrack.catan.datalayer.dto.placement.RoadPlacementDTO;
 import com.sundtrack.catan.datalayer.dto.placement.SettlementPlacementDTO;
 import com.sundtrack.catan.datalayer.dto.snapshot.*;
+import com.sundtrack.catan.datalayer.dto.trade.TradeOfferDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -30,7 +32,7 @@ public class GameMapper {
                 game.getCurrentPhase(),
                 game.getCurrentPlayerId().toString(),
                 game.getTurnNumber(),
-                game.getActiveTradeOffers(),
+                mapTradeOffers(game.getActiveTradeOffers()),
                 game.getDiceRoll(),
                 FlowStateMapper.toDTO(game)
         );
@@ -39,6 +41,40 @@ public class GameMapper {
     private List<PlayerSnapshotDTO> mapPlayers(Game game, UUID viewingPlayerId) {
         return game.getPlayers().stream()
                 .map(p -> mapPlayer(game, p, p.getId().equals(viewingPlayerId)))
+                .toList();
+    }
+
+    private List<TileSnapshotDTO> mapTiles(List<Tile> tiles) {
+        return tiles.stream()
+                .map(tile -> new TileSnapshotDTO(
+                        tile.getHex(), tile.getKind(), tile.getType(),
+                        tile.getNumber(), tile.hasRobber(), tile.isPort(),
+                        tile.getPortType(), tile.getPortFacing()))
+                .toList();
+    }
+
+    private PlacementSnapshotDTO mapPlacements(List<Building<?>> buildings) {
+        List<RoadPlacementDTO> roads = new ArrayList<>();
+        List<SettlementPlacementDTO> settlements = new ArrayList<>();
+        List<CityPlacementDTO> cities = new ArrayList<>();
+
+        buildings.forEach(building -> {
+            switch (building.getKind()) {
+                case ROAD ->
+                        roads.add(new RoadPlacementDTO((Edge) building.getLocation(), building.getOwnerId().toString()));
+                case SETTLEMENT ->
+                        settlements.add(new SettlementPlacementDTO((Vertex) building.getLocation(), building.getOwnerId().toString()));
+                case CITY ->
+                        cities.add(new CityPlacementDTO((Vertex) building.getLocation(), building.getOwnerId().toString()));
+            }
+        });
+
+        return new PlacementSnapshotDTO(roads, settlements, cities);
+    }
+
+    private List<TradeOfferDTO> mapTradeOffers(List<TradeOffer> offers) {
+        return offers.stream()
+                .map(TradeOfferDTO::new)
                 .toList();
     }
 
@@ -60,31 +96,6 @@ public class GameMapper {
                 game.hasLargestArmy(p.getId()),
                 p.getKnightsUsed()
         );
-    }
-
-    private List<TileSnapshotDTO> mapTiles(List<Tile> tiles) {
-        return tiles.stream()
-                .map(tile -> new TileSnapshotDTO(
-                        tile.getHex(), tile.getKind(), tile.getType(),
-                        tile.getNumber(), tile.hasRobber(), tile.isPort(),
-                        tile.getPortType(), tile.getPortFacing()))
-                .toList();
-    }
-
-    private PlacementSnapshotDTO mapPlacements(List<Building<?>> buildings) {
-        List<RoadPlacementDTO> roads = new ArrayList<>();
-        List<SettlementPlacementDTO> settlements = new ArrayList<>();
-        List<CityPlacementDTO> cities = new ArrayList<>();
-
-        buildings.forEach(building -> {
-            switch (building.getKind()) {
-                case ROAD -> roads.add(new RoadPlacementDTO((Edge) building.getLocation(), building.getOwnerId().toString()));
-                case SETTLEMENT -> settlements.add(new SettlementPlacementDTO((Vertex) building.getLocation(), building.getOwnerId().toString()));
-                case CITY -> cities.add(new CityPlacementDTO((Vertex) building.getLocation(), building.getOwnerId().toString()));
-            }
-        });
-
-        return new PlacementSnapshotDTO(roads, settlements, cities);
     }
 
     private List<DevCardSnapshotDTO> mapDevCards(List<DevelopmentCard> cards, int currentTurn) {

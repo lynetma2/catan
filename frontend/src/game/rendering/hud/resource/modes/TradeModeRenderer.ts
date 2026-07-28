@@ -20,10 +20,10 @@ const BUTTON_THEMES: Record<TradeButtonType, { fill: string; stroke: string; lab
         stroke: 'rgba(255, 100, 100, 0.6)',
         label:  'Cancel',
     },
-    [TradeButtonType.ConfirmGlobal]: {
+    [TradeButtonType.ConfirmPublic]: {
         fill:   'rgba(30, 100, 50, 0.85)',
         stroke: 'rgba(100, 255, 140, 0.6)',
-        label:  'Announce',
+        label: 'Trade Public',
     },
     [TradeButtonType.ConfirmBank]: {
         fill:   'rgba(30, 80, 160, 0.85)',
@@ -54,7 +54,7 @@ export class TradeModeRenderer {
 
         // ── Buttons ───────────────────────────────────────────────────────────
         this.drawButton(state.buttons.cancel, TradeButtonType.Cancel, true, state.hoveredButton === TradeButtonType.Cancel);
-        this.drawButton(state.buttons.confirmGlobal, TradeButtonType.ConfirmGlobal, true, state.hoveredButton === TradeButtonType.ConfirmGlobal);
+        this.drawButton(state.buttons.confirmGlobal, TradeButtonType.ConfirmPublic, true, state.hoveredButton === TradeButtonType.ConfirmPublic);
         this.drawButton(state.buttons.confirmBank, TradeButtonType.ConfirmBank, true, state.hoveredButton === TradeButtonType.ConfirmBank);
     }
 

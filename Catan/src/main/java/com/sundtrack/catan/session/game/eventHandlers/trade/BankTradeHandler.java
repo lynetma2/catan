@@ -2,7 +2,6 @@ package com.sundtrack.catan.session.game.eventHandlers.trade;
 
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.action.developmentCard.DrawDevelopmentCardAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.trade.BankTradeAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.trade.BankTradeEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
@@ -31,7 +30,7 @@ public class BankTradeHandler implements GameActionHandler<BankTradeAction> {
         Game game = gameStore.get(context.gameId());
 
         doValidations(game, context, action);
-        Resource received = game.bankTrade(context.playerId(), action.givenResources(), action.wanted());
+        List<Resource> received = game.bankTrade(context.playerId(), action.givenResources(), action.wanted());
 
         BankTradeEvent event = new BankTradeEvent(context.playerId(), action.givenResources(), received);
 

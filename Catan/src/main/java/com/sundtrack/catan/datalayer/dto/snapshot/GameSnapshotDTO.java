@@ -1,8 +1,8 @@
 package com.sundtrack.catan.datalayer.dto.snapshot;
 
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
-import com.sundtrack.catan.datalayer.domain.game.trade.TradeOffer;
 import com.sundtrack.catan.datalayer.dto.snapshot.subflow.FlowStateDTO;
+import com.sundtrack.catan.datalayer.dto.trade.TradeOfferDTO;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ public record GameSnapshotDTO(
         GamePhase currentPhase,
         String currentPlayerId,
         int turnNumber,
-        List<TradeOffer> activeTradeOffers,
+        List<TradeOfferDTO> activeTradeOffers,
         DiceRollDTO diceRoll,
         FlowStateDTO activeFlowState
 ) {

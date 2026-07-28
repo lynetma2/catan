@@ -12,7 +12,6 @@ import type {EventBus} from "@/game/core/EventBus.ts";
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
 import {BrowseMode} from "@/game/hud/panels/resource/modes/BrowseMode.ts";
 import {type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
-import {GameEventType} from "@/game/events/GameEventTypes.ts";
 import {TradeMode} from "@/game/hud/panels/resource/modes/TradeMode.ts";
 import {DiscardMode} from "@/game/hud/panels/resource/modes/DiscardMode.ts";
 import {type Rect, unionRects} from "@/game/utils/Rect.ts";
@@ -77,21 +76,15 @@ export class ResourcePanelManager {
             }
         });
 
-        // ------------------------------------------------------------------
-        // Events with no direct equivalent in the new system yet.
-        // Temporarily cast to any to keep them functional.
-        // ------------------------------------------------------------------
-        const bus = this.bus as EventBus<any>;
+        this.bus.on(GameServerEvents.trade.bank.success, () =>
+            this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared)),
+        );
 
-        bus.on(GameEventType.TRADE_CONFIRM_BANK_SENT_TO_SERVER, () =>
-            this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared)),
-        );
-        bus.on(GameEventType.TRADE_CONFIRM_GLOBAL_SENT_TO_SERVER, () =>
-            this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared)),
-        );
-        bus.on(GameEventType.DISCARD_CONFIRMED, () =>
-            this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared)),
-        );
+        this.bus.on(GameServerEvents.trade.public.start.success, (payload) => {
+            if (payload.tradeOfferDTO.tradeOwnerId === this.shared.localPlayerId) {
+                this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
+            }
+        });
     }
 
     private transitionTo<TState extends ResourcePanelModeState>(
@@ -101,10 +94,10 @@ export class ResourcePanelManager {
         nextMode: ResourcePanelMode<TState, TArg>,
         arg: TArg,
     ): void;
-    private transitionTo(nextMode: ResourcePanelMode<any, any>): void {
+    private transitionTo(nextMode: ResourcePanelMode<any, any>, arg?: any): void {
         this.mode.onExit();
         this.mode = nextMode;
-        this.mode.onEnter();
+        this.mode.onEnter(arg);
     }
 
     // ─── Input ────────────────────────────────────────────────────────────────

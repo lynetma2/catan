@@ -3,7 +3,7 @@ import {type Resolution} from '@/game/core/ResolutionManager';
 import {hudLayout, type PanelConfig} from '@/game/hud/HudLayout';
 import {Anchor} from '@/game/hud/types';
 import {type Rect} from '@/game/utils/Rect';
-import type {Resource} from "@/game/core/types.ts";
+import {type Resource} from "@/game/core/types.ts";
 import type {ResourceCard} from "@/game/hud/panels/resource/types.ts";
 import type {
     ButtonLayout,

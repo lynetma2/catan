@@ -17,9 +17,12 @@ public final class EventDomainConstants {
     public static final String OVERVIEW = "overview";
     public static final String DEVELOPMENT_CARD = "developmentCard";
     public static final String PLAY = "play";
+    public static final String TRADE = "trade";
+    public static final String PUBLIC = "public";
     // Status constants
     public static final String REJECTED = "rejected";
     public static final String ERROR = "error";
+
     private EventDomainConstants() {
     } // prevent instantiation
 }

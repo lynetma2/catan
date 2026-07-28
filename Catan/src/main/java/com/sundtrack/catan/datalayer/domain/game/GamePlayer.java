@@ -31,10 +31,6 @@ public class GamePlayer {
         this.knightsUsed = knightsUsed;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
     public String getUsername() {
         return username;
     }
@@ -120,6 +116,10 @@ public class GamePlayer {
         return spent;
     }
 
+    public void removeResources(List<Resource> resources) {
+        removeResourcesById(resources.stream().map(Resource::uid).toList());
+    }
+
     /**
      * Removes specific resources by id — e.g. for discard, where the player chooses exact cards.
      */
@@ -134,10 +134,6 @@ public class GamePlayer {
             removed.add(match);
         }
         return removed;
-    }
-
-    public void removeResources(List<Resource> resources) {
-        removeResourcesById(resources.stream().map(Resource::uid).toList());
     }
 
     public void receive(List<Resource> resources) {
@@ -211,6 +207,13 @@ public class GamePlayer {
         return resourcesToRemove;
     }
 
+    public List<Resource> removeGivenTypes(List<ResourceType> types) {
+        return types
+                .stream()
+                .map(this::removeResourceOfType)
+                .toList();
+    }
+
     public Resource removeResourceOfType(ResourceType resourceType) {
         Resource resourceToRemove = resources
                 .stream()
@@ -222,18 +225,13 @@ public class GamePlayer {
         return resourceToRemove;
     }
 
-    public List<Resource> removeGivenTypes(List<ResourceType> types) {
-        return types
-                .stream()
-                .map(this::removeResourceOfType)
-                .toList();
+    public UUID getId() {
+        return id;
     }
 
     //TODO move the exception in here.
     public boolean ownsResources(List<Resource> resources) {
-        return resources
-                .stream()
-                .anyMatch(resource -> !this.resources.contains(resource));
+        return new HashSet<>(this.resources).containsAll(resources);
     }
 
     public void ownsResourcesOfTypeOrThrow(List<ResourceType> types) {

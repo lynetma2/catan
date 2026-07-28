@@ -83,7 +83,7 @@ export class HUD implements InputLayer {
             this.buildPanel.handleInput(event);
             this.resourcePanel.handleInput(event);
             this.dicePanel.handleInput(event);
-            this.resourcePanel.handleInput(event);
+            this.tradeOfferPanel.handleInput(event);
             return false;
         }
 
@@ -93,6 +93,7 @@ export class HUD implements InputLayer {
             this.buildPanel.handleInput(event);
             this.resourcePanel.handleInput(event);
             this.dicePanel.handleInput(event);
+            this.tradeOfferPanel.handleInput(event);
             this.robberStealPanel.handleInput(event);
 
             // Consume if over any panel — prevents world hover underneath
@@ -112,6 +113,9 @@ export class HUD implements InputLayer {
         if (containsPoint(this.dicePanel.getState().layout.panel, event.screenPos)) {
             if (this.dicePanel.handleInput(event)) return true;
         }
+        if (this.tradeOfferPanel.isOverAnyPanel(event.screenPos)) {
+            if (this.tradeOfferPanel.handleInput(event)) return true;
+        }
 
         return false;
     }
@@ -120,6 +124,7 @@ export class HUD implements InputLayer {
         return containsPoint(this.buildPanel.getState().bounds,    screenPos)
             || containsPoint(this.resourcePanel.getState().bounds, screenPos)
             || containsPoint(this.dicePanel.getState().layout.panel, screenPos)
+            || this.tradeOfferPanel.isOverAnyPanel(screenPos)
             || this.robberStealPanel.isOverAnyTarget(screenPos);
     }
 

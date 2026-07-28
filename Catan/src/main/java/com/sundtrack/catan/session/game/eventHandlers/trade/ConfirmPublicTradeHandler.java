@@ -2,11 +2,9 @@ package com.sundtrack.catan.session.game.eventHandlers.trade;
 
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.action.trade.CancelPublicTradeAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.trade.InitiatorConfirmPublicTradeAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceGrantEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceSpentEvent;
-import com.sundtrack.catan.datalayer.domain.event.game.server.trade.PublicTradeCancelledEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.trade.PublicTradeConfirmedEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.game.TradeBook;
@@ -50,7 +48,7 @@ public class ConfirmPublicTradeHandler implements GameActionHandler<InitiatorCon
         UUID respondentId = action.responderId();
 
         List<ServerEvent> broadcast = List.of(
-                new PublicTradeConfirmedEvent(action.tradeId(), initiatorId, respondentId)
+                new PublicTradeConfirmedEvent(initiatorId, respondentId, action.tradeId())
         );
 
         Map<UUID, List<ServerEvent>> directed = Map.of(

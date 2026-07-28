@@ -15,12 +15,14 @@ import {
     TradePanelKind
 } from "@/game/hud/panels/resource/types.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
-import {GameEventSource, GameEventType} from "@/game/events/GameEventTypes.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 import {findHitButton, findHitCard} from "@/game/hud/panels/resource/utils.ts";
+import type {GameEventMap} from "@/events/shared/AppEvents.ts";
+import {GameUiEventCreators} from "@/events/game/GameUiEvents.ts";
+import {GameActionEventCreators} from "@/events/game/GameActionEvents.ts";
 
 export class TradeMode implements ResourcePanelMode<TradeModeState, string> {
-    private readonly frameQueue: FrameQueue;
+    private readonly frameQueue: FrameQueue<GameEventMap>;
     private readonly resolution: ResolutionManager;
     private readonly sharedState: SharedState;
     private hand: Resource[] = [];
@@ -29,7 +31,7 @@ export class TradeMode implements ResourcePanelMode<TradeModeState, string> {
     private hoveredButton: TradeButtonType | null = null;
     private hoveredCardId: string | null = null;
 
-    constructor(frameQueue: FrameQueue, resolution: ResolutionManager, sharedState: SharedState) {
+    constructor(frameQueue: FrameQueue<GameEventMap>, resolution: ResolutionManager, sharedState: SharedState) {
         this.frameQueue = frameQueue;
         this.resolution = resolution;
         this.sharedState = sharedState;
@@ -110,7 +112,7 @@ export class TradeMode implements ResourcePanelMode<TradeModeState, string> {
             [TradePanelKind.Selector]: {bounds: layout[TradePanelKind.Selector], cards: cards[TradePanelKind.Selector]},
             buttons: {
                 cancel: layout[TradeButtonType.Cancel],
-                confirmGlobal: layout[TradeButtonType.ConfirmGlobal],
+                confirmGlobal: layout[TradeButtonType.ConfirmPublic],
                 confirmBank: layout[TradeButtonType.ConfirmBank],
             },
             hoveredButton: this.hoveredButton,
@@ -124,7 +126,7 @@ export class TradeMode implements ResourcePanelMode<TradeModeState, string> {
     private hitTestingGlobal(pos: Vec2, layout: TradeLayout, cards: TradeCards): HitResult {
         const buttons = {
             [TradeButtonType.Cancel]: layout[TradeButtonType.Cancel],
-            [TradeButtonType.ConfirmGlobal]: layout[TradeButtonType.ConfirmGlobal],
+            [TradeButtonType.ConfirmPublic]: layout[TradeButtonType.ConfirmPublic],
             [TradeButtonType.ConfirmBank]: layout[TradeButtonType.ConfirmBank],
         };
 
@@ -170,36 +172,18 @@ export class TradeMode implements ResourcePanelMode<TradeModeState, string> {
             case TradeButtonType.Cancel: {
                 this.resetArrays();
                 targetHit = true;
-                this.frameQueue.push({
-                    type: GameEventType.TRADE_CANCELLED,
-                    payload: {},
-                    source: GameEventSource.Hud
-                });
+                this.frameQueue.push(GameUiEventCreators.tradeCancel());
                 break;
             }
-            case TradeButtonType.ConfirmGlobal: {
-                this.frameQueue.push({
-                    type: GameEventType.TRADE_CONFIRM_GLOBAL_SENT_TO_SERVER,
-                    payload: {
-                        playerId: this.sharedState.localPlayerId!,
-                        offered: this.offeredResources,
-                        wanted: this.wantedResources,
-                    },
-                    source: GameEventSource.Hud
-                });
+            case TradeButtonType.ConfirmPublic: {
+                const wantedTypes = this.wantedResources.map(wantedResource => wantedResource.resourceType);
+                this.frameQueue.push(GameActionEventCreators.startPublicTrade(this.offeredResources, wantedTypes));
                 targetHit = true;
                 break;
             }
             case TradeButtonType.ConfirmBank: {
-                this.frameQueue.push({
-                    type: GameEventType.TRADE_CONFIRM_BANK_SENT_TO_SERVER,
-                    payload: {
-                        playerId: this.sharedState.localPlayerId!,
-                        offered: this.offeredResources,
-                        wanted: this.wantedResources,
-                    },
-                    source: GameEventSource.Hud
-                });
+                const wantedTypes = this.wantedResources.map(wantedResource => wantedResource.resourceType);
+                this.frameQueue.push(GameActionEventCreators.bankTrade(this.offeredResources, wantedTypes))
                 targetHit = true;
                 break;
             }

@@ -1,12 +1,11 @@
-// hud/panels/overview/PlayerOverviewPanel.ts
-import {InputType, type NormalizedInputEvent} from '@/game/core/Input/InputEvent.ts';
-import {DiscardButtonType, type TradeButtonType} from "@/game/hud/panels/resource/types.ts";
+import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {
     type ButtonLayout,
     TradeOfferIncomingButtonType,
     type TradeOfferIncomingState,
     TradeOfferKind,
-    type TradeOfferPanelData
+    type TradeOfferPanelData,
+    TradeOfferResponseKind,
 } from "@/game/hud/panels/tradeOffer/types.ts";
 import type {ResolutionManager} from "@/game/core/ResolutionManager.ts";
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
@@ -16,105 +15,150 @@ import {
     resolvePlayerResponses,
     resolveResponseButtons,
     resolveTradeCards,
-    resolveTradeOfferPanelBounds
+    resolveTradeOfferPanelBounds,
 } from "@/game/hud/panels/tradeOffer/TradeOfferPanelLayout.ts";
 import {containsPoint} from "@/game/utils/Rect.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
+import type {GameEventMap} from "@/events/shared/AppEvents.ts";
+import {GameActionEventCreators} from "@/events/game/GameActionEvents.ts";
 
 export class TradeOfferIncomingPanel extends TradeOfferBasePanel<TradeOfferIncomingState> {
-    // // Panel owns this state — no other system needs it
     private hoveredButton: TradeOfferIncomingButtonType | undefined = undefined;
     private hoveredCardId: string | null = null;
-    private panelData: TradeOfferPanelData;
 
     constructor(
         protected readonly resolution: ResolutionManager,
-        protected readonly frameQueue: FrameQueue,
+        protected readonly frameQueue: FrameQueue<GameEventMap>,
         protected readonly sharedState: SharedState,
-        data: TradeOfferPanelData
+        data: TradeOfferPanelData,
     ) {
         super(resolution, frameQueue, sharedState, data);
-        this.panelData = data;
     }
 
     // ─── Input ────────────────────────────────────────────────────────
-
-    handleInput(event: NormalizedInputEvent, index: number): boolean {
-        const r = this.resolution.get();
-        const layout = resolveTradeOfferPanelBounds(r, index);
-        const buttons = resolveResponseButtons(layout, r);
+    handleInput(
+        event: NormalizedInputEvent,
+        index: number,
+    ): boolean {
+        const resolution = this.resolution.get();
+        const layout = resolveTradeOfferPanelBounds(
+            resolution,
+            index,
+        );
+        const buttons = resolveResponseButtons(
+            layout,
+            resolution,
+        );
 
         if (event.type === InputType.MouseMove) {
-            const hitButton = this.findHitButton(buttons, event.screenPos);
-
+            const hitButton = this.findHitButton(
+                buttons,
+                event.screenPos,
+            );
             this.hoveredButton = hitButton;
             return hitButton != null;
         }
 
         if (event.type === InputType.MouseClick) {
-            const hitButton = this.findHitButton(buttons, event.screenPos);
+            const hitButton = this.findHitButton(
+                buttons,
+                event.screenPos,
+            );
             if (hitButton != null) {
                 return this.handleButtonClick(hitButton);
             }
         }
-
         return false;
     }
+
 
     private findHitButton(
         buttons: ButtonLayout,
         pos: Vec2,
     ): TradeOfferIncomingButtonType | undefined {
         if (containsPoint(buttons.acceptBounds, pos)) {
-            return TradeOfferIncomingButtonType.Accept
-        } else if (containsPoint(buttons.rejectBounds, pos)) {
-            return TradeOfferIncomingButtonType.Decline
+            return TradeOfferIncomingButtonType.Accept;
+        }
+        if (containsPoint(buttons.rejectBounds, pos)) {
+            return TradeOfferIncomingButtonType.Decline;
         }
         return undefined;
     }
 
-    private handleButtonClick(hitButton: TradeOfferIncomingButtonType) {
+
+    private handleButtonClick(
+        hitButton: TradeOfferIncomingButtonType,
+    ): boolean {
         switch (hitButton) {
             case TradeOfferIncomingButtonType.Accept:
-                console.log("Accept clicked");
+                this.frameQueue.push(GameActionEventCreators.acceptPublicTrade(this.tradeOfferId))
                 return true;
+
             case TradeOfferIncomingButtonType.Decline:
-                console.log("Decline clicked");
+                this.frameQueue.push(GameActionEventCreators.declinePublicTrade(this.tradeOfferId))
                 return true;
         }
     }
 
+
     // ─── State ────────────────────────────────────────────────────────
-
     getState(index: number): TradeOfferIncomingState {
-        //TODO implement this.
-        const bounds = resolveTradeOfferPanelBounds(this.resolution.get(), index);
+        const resolution = this.resolution.get();
 
-        const tradeCards = resolveTradeCards(bounds,
-            this.panelData.wantedResources,
-            this.panelData.offeredResources,
+        const bounds = resolveTradeOfferPanelBounds(
+            resolution,
+            index,
+        );
+
+        const tradeCards = resolveTradeCards(
+            bounds,
+            this.wantedResources,
+            this.offeredResources,
             this.hoveredCardId,
-            this.resolution.get()
-            );
+            resolution,
+        );
 
-        const playerResponses = resolvePlayerResponses(bounds,
-            this.panelData.playerResponses, this.resolution.get());
+        const playerResponses = resolvePlayerResponses(
+            bounds,
+            [...this.playerResponses].map(
+                ([playerId, response]) => ({
+                    playerId,
+                    response,
+                }),
+            ),
+            resolution,
+        );
 
-        const buttons = resolveResponseButtons(bounds, this.resolution.get());
+        const buttons = resolveResponseButtons(
+            bounds,
+            resolution,
+        );
 
         return {
             kind: TradeOfferKind.Incoming,
             bounds,
             ...tradeCards,
             playerResponses,
-            tradeOfferId: this.panelData.tradeOfferId,
-            tradeOwnerId: this.panelData.tradeOwnerId,
-            timer: 0,
+            tradeOfferId: this.tradeOfferId,
+            tradeOwnerId: this.tradeOwnerId,
+            timer: this.timer,
             buttons: {
                 accept: buttons.acceptBounds,
-                decline: buttons.rejectBounds
+                decline: buttons.rejectBounds,
             },
-            hoveredButton: this.hoveredButton
-        }
+            hoveredButton: this.hoveredButton,
+        };
+    }
+
+
+    // ─── Response updates ─────────────────────────────────────────────
+    updatePlayerResponse(
+        playerId: string,
+        response: TradeOfferResponseKind,
+    ): void {
+        this.playerResponses.set(
+            playerId,
+            response,
+        );
     }
 }

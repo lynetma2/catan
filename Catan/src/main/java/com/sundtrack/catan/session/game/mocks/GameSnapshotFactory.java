@@ -17,6 +17,7 @@ import com.sundtrack.catan.datalayer.dto.snapshot.GameSnapshotDTO;
 import com.sundtrack.catan.datalayer.dto.snapshot.PlacementSnapshotDTO;
 import com.sundtrack.catan.datalayer.dto.snapshot.PlayerSnapshotDTO;
 import com.sundtrack.catan.datalayer.dto.snapshot.TileSnapshotDTO;
+import com.sundtrack.catan.datalayer.dto.trade.TradeOfferDTO;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -146,7 +147,7 @@ public class GameSnapshotFactory {
         );
     }
 
-    private static List<TradeOffer> createActiveTradeOffers(List<PlayerSnapshotDTO> players) {
+    private static List<TradeOfferDTO> createActiveTradeOffers(List<PlayerSnapshotDTO> players) {
         List<Resource> offered = List.of(
                 new Resource(UUID.randomUUID(), ResourceType.LUMBER),
                 new Resource(UUID.randomUUID(), ResourceType.LUMBER)
@@ -168,7 +169,7 @@ public class GameSnapshotFactory {
                 responses
         );
 
-        return List.of(offer);
+        return List.of(new TradeOfferDTO(offer));
     }
 
     private static Vertex v(int q, int r, int dir1, int dir2) {

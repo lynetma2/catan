@@ -1,4 +1,4 @@
-import {UI, DOT_SEPARATOR} from "@/events/shared/RootEventNamespaces.ts";
+import {DOT_SEPARATOR, UI} from "@/events/shared/RootEventNamespaces.ts";
 import type {EventUnion} from "@/events/shared/EventTypes.ts";
 import {GAME_NAMESPACE} from "@/events/game/GameNamespace.ts";
 import type {PieceType} from "@/game/core/types.ts";
@@ -47,6 +47,20 @@ export const GameUiEventCreators = {
         return {
             type: GameUiEvents.state,
             payload: undefined,
+        }
+    },
+    tradeStart(initialSelection: string) {
+        return {
+            type: GameUiEvents.trade.start,
+            payload: {
+                initialSelection: initialSelection
+            },
+        }
+    },
+    tradeCancel() {
+        return {
+            type: GameUiEvents.trade.cancel,
+            payload: {},
         }
     },
 } as const;

@@ -80,3 +80,9 @@ interface KeyUpEvent {
 interface MouseLeaveEvent {
     type: InputType.MouseLeave;
 }
+
+export function isPointerEvent(
+    event: NormalizedInputEvent,
+): event is MouseMoveEvent | MouseClickEvent | MouseDownEvent | MouseUpEvent | WheelEvent {
+    return "screenPos" in event;
+}

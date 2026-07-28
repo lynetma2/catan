@@ -6,6 +6,7 @@ import {BuildRejectionReason} from "@/game/events/GameEventTypes.ts";
 import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
 import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
 import type {Edge} from "@/game/utils/HexGeometry/Edge.ts";
+import type {TradeOfferDTO, TradeOfferResponseKind} from "@/game/hud/panels/tradeOffer/types.ts";
 
 export const GAME_SERVER = `${SERVER}${DOT_SEPARATOR}${GAME_NAMESPACE}${DOT_SEPARATOR}` as const;
 export const BUILD_GAME_SERVER = `${GAME_SERVER}build${DOT_SEPARATOR}` as const;
@@ -15,6 +16,8 @@ export const RESOURCE_GAME_SERVER = `${GAME_SERVER}resource${DOT_SEPARATOR}` as 
 export const TURN_GAME_SERVER = `${GAME_SERVER}turn${DOT_SEPARATOR}` as const;
 export const ROBBER_GAME_SERVER = `${GAME_SERVER}robber${DOT_SEPARATOR}` as const;
 export const STATE_GAME_SERVER = `${GAME_SERVER}state${DOT_SEPARATOR}` as const;
+export const TRADE_GAME_SERVER = `${GAME_SERVER}trade${DOT_SEPARATOR}` as const;
+export const PUBLIC_TRADE_GAME_SERVER = `${TRADE_GAME_SERVER}public${DOT_SEPARATOR}` as const;
 
 export const GameServerEvents = {
     state: {
@@ -96,7 +99,29 @@ export const GameServerEvents = {
         stealTargetRequired: {
             success: `${ROBBER_GAME_SERVER}stealTargetRequired`,
         }
-    }
+    },
+    trade: {
+        bank: {
+            success: `${TRADE_GAME_SERVER}bank`,
+        },
+        public: {
+            start: {
+                success: `${PUBLIC_TRADE_GAME_SERVER}start`,
+            },
+            cancel: {
+                success: `${PUBLIC_TRADE_GAME_SERVER}cancel`,
+            },
+            confirm: {
+                success: `${PUBLIC_TRADE_GAME_SERVER}confirm`,
+            },
+            responderAccept: {
+                success: `${PUBLIC_TRADE_GAME_SERVER}accept`,
+            },
+            responderDecline: {
+                success: `${PUBLIC_TRADE_GAME_SERVER}decline`,
+            },
+        },
+    },
 } as const;
 
 export interface GameServerEventMap {
@@ -128,6 +153,30 @@ export interface GameServerEventMap {
     [GameServerEvents.turn.start.success]: { playerId: string };
     [GameServerEvents.robber.placed.success]: { playerId: string, hex: Hex };
     [GameServerEvents.robber.stealTargetRequired.success]: { retrievingPlayerId: string, candidates: string[] };
+    [GameServerEvents.trade.bank.success]: {
+        playerId: string;
+        given: Resource[];
+        received: Resource[];
+    };
+    [GameServerEvents.trade.public.start.success]: {
+        tradeOfferDTO: TradeOfferDTO;
+    };
+    [GameServerEvents.trade.public.cancel.success]: { tradeId: string };
+    [GameServerEvents.trade.public.confirm.success]: {
+        tradeId: string;
+        ownerId: string;
+        respondentId: string;
+    };
+    [GameServerEvents.trade.public.responderAccept.success]: {
+        tradeId: string;
+        playerId: string;
+        response: TradeOfferResponseKind
+    };
+    [GameServerEvents.trade.public.responderDecline.success]: {
+        tradeId: string;
+        playerId: string;
+        response: TradeOfferResponseKind
+    };
 }
 
 export type GameServerEventValues =
