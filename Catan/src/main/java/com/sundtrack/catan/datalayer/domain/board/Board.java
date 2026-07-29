@@ -3,6 +3,7 @@ package com.sundtrack.catan.datalayer.domain.board;
 import com.sundtrack.catan.datalayer.domain.board.tile.PortType;
 import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
 import com.sundtrack.catan.datalayer.domain.board.tile.TileKind;
+import com.sundtrack.catan.datalayer.domain.board.tile.TileType;
 import com.sundtrack.catan.datalayer.domain.building.Building;
 import com.sundtrack.catan.datalayer.domain.building.PieceType;
 import com.sundtrack.catan.datalayer.domain.exceptions.NoRobbedTileException;
@@ -154,13 +155,15 @@ public class Board {
     }
 
     public Building<Vertex> upgradeSettlement(Vertex vertex, UUID playerId) {
-        validateBoardCity(vertex, playerId); // now private
+        Building<?> settlement = validateBoardCity(vertex, playerId); // now private
+        buildings.remove(settlement);
+
         Building<Vertex> city = Building.city(playerId, vertex);
         buildings.add(city);
         return city;
     }
 
-    private void validateBoardCity(Vertex vertex, UUID playerId) {
+    private Building<?> validateBoardCity(Vertex vertex, UUID playerId) {
         // 1. There must be a settlement at this vertex...
         Building<?> existing = getBuildingAt(vertex)
                 .orElseThrow(() -> new NoSettlementToUpgradeException(vertex));
@@ -174,6 +177,8 @@ public class Board {
         if (existing.getKind() != PieceType.SETTLEMENT) {
             throw new AlreadyCityException(vertex, existing);
         }
+        
+        return existing;
     }
 
     public void moveRobber(Hex target) {
@@ -213,22 +218,32 @@ public class Board {
     public long countSettlements(UUID playerId) {
         return buildings
                 .stream()
-                .filter(b -> b.getKind() == PieceType.SETTLEMENT && b.getOwnerId() == playerId)
+                .filter(b -> b.getKind() == PieceType.SETTLEMENT && Objects.equals(b.getOwnerId(), playerId))
                 .count();
     }
 
     public long countCities(UUID playerId) {
         return buildings
                 .stream()
-                .filter(b -> b.getKind() == PieceType.CITY && b.getOwnerId() == playerId)
+                .filter(b -> b.getKind() == PieceType.CITY && Objects.equals(b.getOwnerId(), playerId))
                 .count();
     }
 
     public long countRoads(UUID playerId) {
         return buildings
                 .stream()
-                .filter(b -> b.getKind() == PieceType.ROAD && b.getOwnerId() == playerId)
+                .filter(b -> b.getKind() == PieceType.ROAD && Objects.equals(b.getOwnerId(), playerId))
                 .count();
+    }
+
+    public List<ResourceType> adjacentResourceTypes(Vertex vertex) {
+        return vertex.hexes().stream()
+                .filter(tileHexes()::contains) // guard against a hex off the board (shouldn't happen for a legal vertex, but safe)
+                .map(this::getTileAt)
+                .map(Tile::getType)
+                .map(TileType::getResourceType)
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     public int longestRoadLength(UUID playerId) {

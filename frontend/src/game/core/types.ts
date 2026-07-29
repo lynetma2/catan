@@ -126,7 +126,7 @@ export interface PlayerSnapshot {
     resources: Resource[];
     devCards: DevCardSnapshot[];
     victoryPoints: number;
-    cardCount: number;
+    resCardCount: number;
     devCardCount: number;
     hasLongestRoad: boolean;
     hasLargestArmy: boolean;

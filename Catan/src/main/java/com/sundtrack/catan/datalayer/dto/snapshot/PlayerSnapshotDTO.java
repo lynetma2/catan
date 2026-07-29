@@ -12,10 +12,10 @@ public record PlayerSnapshotDTO(
         String id,
         String name,
         String color,
-        List<Resource> resources, // empty for other players — see cardCount for their total
+        List<Resource> resources, // empty for other players — see resCardCount for their total
         List<DevCardSnapshotDTO> devCards, // empty for other players — see devCardCount for their total
         long victoryPoints,
-        int cardCount,
+        int resCardCount,
         int devCardCount,
         boolean hasLongestRoad,
         boolean hasLargestArmy,

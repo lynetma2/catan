@@ -61,7 +61,7 @@ public class GamePlayer {
         return Collections.unmodifiableList(developmentCards);
     }
 
-    public int getCardCount() {
+    public int getResourceCardCount() {
         return resources.size();
     }
 

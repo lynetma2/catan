@@ -5,12 +5,13 @@ export interface PlayerOverviewEntry {
     name:          string;
     color:         string;
     victoryPoints: number;
-    cardCount:     number;
+    resCardCount: number;
     devCardCount:  number;
     hasLongestRoad: boolean;
     hasLargestArmy: boolean;
     usedRobbers:   number;
     isCurrentTurn: boolean;
+    isLocalPlayer: boolean;
     discardStatus: 'none' | 'pending' | 'done';
 }
 

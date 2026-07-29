@@ -170,6 +170,8 @@ public class Game {
     public PlacementResult<Vertex> placeSettlement(PlaceSettlementAction action, UUID playerId) {
         validateAvailableBuildings(PieceType.SETTLEMENT, playerId);
         boolean free = flow.isFreePlacement(PieceType.SETTLEMENT);
+        boolean isSecondSetupSettlement = free && flow.isFinalSetupRound();
+
         List<Resource> deducted = List.of();
 
         if (!free) {
@@ -181,10 +183,15 @@ public class Game {
             resourceBank.deposit(deducted);
         }
 
+        List<Resource> starterResources = List.of();
+        if (isSecondSetupSettlement) {
+            starterResources = grantStarterResources(action.target(), playerId);
+        }
+
         if (flow.isInSubFlow()) {
             flow.dispatch(action, playerId);
         }
-        return new PlacementResult<>(settlement, deducted);
+        return new PlacementResult<>(settlement, deducted, starterResources);
     }
 
     private void validateAvailableBuildings(PieceType pieceType, UUID playerId) {
@@ -197,6 +204,16 @@ public class Game {
         if (!hasAvailableBuilding) {
             throw new NoAvailableBuildingException(pieceType);
         }
+    }
+
+    private List<Resource> grantStarterResources(Vertex settlementVertex, UUID playerId) {
+        List<ResourceType> types = board.adjacentResourceTypes(settlementVertex);
+        List<Resource> granted = new ArrayList<>();
+        for (ResourceType type : types) {
+            granted.addAll(resourceBank.draw(type, 1));
+        }
+        getPlayerOrThrow(playerId).receive(granted);
+        return granted;
     }
 
     public PlacementResult<Edge> placeRoad(PlaceRoadAction action, UUID playerId) {
@@ -402,7 +419,7 @@ public class Game {
 
         //Steal the resources.
         for (GamePlayer otherPlayer : players) {
-            if (otherPlayer.getId() == playerId) {
+            if (Objects.equals(otherPlayer.getId(), playerId)) {
                 continue;
             }
             List<Resource> removedResources = otherPlayer.removeAllResourcesOfType(resourceType);
@@ -552,7 +569,11 @@ public class Game {
         return new TradeBook.TradeTerms(offeredResources, wantedResources);
     }
 
-    public record PlacementResult<T>(Building<T> building, List<Resource> deductedResources) {
+    public record PlacementResult<T>(Building<T> building, List<Resource> deductedResources,
+                                     List<Resource> grantedResources) {
+        public PlacementResult(Building<T> building, List<Resource> deductedResources) {
+            this(building, deductedResources, List.of());
+        }
     }
 
     public record RollOutcome(DiceRollDTO roll, Map<UUID, List<Resource>> grantedResources) {

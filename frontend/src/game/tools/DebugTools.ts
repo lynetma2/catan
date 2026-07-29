@@ -113,7 +113,7 @@ const DEBUG_EVENT_TEMPLATES: Record<string, DebugEventTemplate> = {
 
     // Overview / special cards
     "overview.largestArmy.success": {
-        type: GameServerEvents.overview.largestArmy.success,
+        type: GameServerEvents.state.overview.largestArmy.success,
         description: "Largest army changed",
         payload: () => ({
             playerId: "player1",
@@ -121,7 +121,7 @@ const DEBUG_EVENT_TEMPLATES: Record<string, DebugEventTemplate> = {
         }),
     },
     "overview.longestRoad.success": {
-        type: GameServerEvents.overview.longestRoad.success,
+        type: GameServerEvents.state.overview.longestRoad.success,
         description: "Longest road changed",
         payload: () => ({
             playerId: "player1",
@@ -129,7 +129,7 @@ const DEBUG_EVENT_TEMPLATES: Record<string, DebugEventTemplate> = {
         }),
     },
     "overview.victoryPoint.success": {
-        type: GameServerEvents.overview.victoryPoint.success,
+        type: GameServerEvents.state.overview.victoryPoint.success,
         description: "Victory point update",
         payload: () => ({
             playerId: "player1",

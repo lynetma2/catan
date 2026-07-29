@@ -5,6 +5,7 @@ import type {PanelTheme} from "@/game/rendering/theme/theme.ts";
 export interface PlayerRowTheme {
     background:       string;
     backgroundActive: string;   // current turn highlight
+    backgroundLocal: string;   // Local player highlight
     borderRadius:     number;
     colorPipSize:     number;
     nameFont:         string;
@@ -35,6 +36,7 @@ export const DEFAULT_OVERVIEW_THEME: PlayerOverviewTheme = {
     row: {
         background:       'rgba(255, 255, 255, 0.04)',
         backgroundActive: 'rgba(255, 220, 100, 0.10)',
+        backgroundLocal: 'rgba(120,170,255,0.10)',
         borderRadius:     6,
         colorPipSize:     10,
         nameFont:         'bold 11px monospace',

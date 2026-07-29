@@ -29,19 +29,15 @@ export class PlayerOverviewPanel {
         this.bus.on(GameServerEvents.turn.start.success, (payload) => this.onTurnStarted(payload));
 
         // Resource changes
-        this.bus.on(GameServerEvents.resource.grant.success, (payload) => this.onResourcesGranted(payload));
-        this.bus.on(GameServerEvents.resource.spent.success, (payload) => this.onResourcesSpent(payload));
-
-        // Building
-        this.bus.on(GameServerEvents.build.settlement.success, (payload) => this.onBuildPlaced(payload));
+        this.bus.on(GameServerEvents.state.overview.resource.success, (payload) => this.onResCardCountChanged(payload));
 
         // Development cards – opponentCard maps to dev card count
-        this.bus.on(GameServerEvents.overview.opponentCard.success, (payload) => this.onDevCardCountChanged(payload));
+        this.bus.on(GameServerEvents.state.overview.developmentCard.success, (payload) => this.onDevCardCountChanged(payload));
 
         // Special cards & victory points
-        this.bus.on(GameServerEvents.overview.longestRoad.success, (payload) => this.onLongestRoadChanged(payload));
-        this.bus.on(GameServerEvents.overview.largestArmy.success, (payload) => this.onLargestArmyChanged(payload));
-        this.bus.on(GameServerEvents.overview.victoryPoint.success, (payload) => this.onVictoryPointsChanged(payload));
+        this.bus.on(GameServerEvents.state.overview.longestRoad.success, (payload) => this.onLongestRoadChanged(payload));
+        this.bus.on(GameServerEvents.state.overview.largestArmy.success, (payload) => this.onLargestArmyChanged(payload));
+        this.bus.on(GameServerEvents.state.overview.victoryPoint.success, (payload) => this.onVictoryPointsChanged(payload));
 
         //Discard related.
         this.bus.on(GameServerEvents.resource.discardRequired.success, (payload) => this.onDiscardRequired(payload));
@@ -65,12 +61,13 @@ export class PlayerOverviewPanel {
                 name:           p.name,
                 color:          p.color,
                 victoryPoints: p.victoryPoints,
-                cardCount: p.cardCount,
-                devCardCount:   0,
+                resCardCount: p.resCardCount,
+                devCardCount: p.devCardCount,
                 hasLongestRoad: p.hasLongestRoad,
                 hasLargestArmy: p.hasLargestArmy,
                 usedRobbers: p.knightsUsed,
                 isCurrentTurn: p.id === snapshot.currentPlayerId,
+                isLocalPlayer: p.id === payload.localPlayerId,
                 discardStatus: pending.has(p.id) ? 'pending' : 'none',
             });
         });
@@ -84,38 +81,22 @@ export class PlayerOverviewPanel {
         });
     }
 
-    private onResourcesGranted(
-        payload: GameEventMap[typeof GameServerEvents.resource.grant.success]
-    ) {
-        const player = this.players.get(payload.playerId);
-        if (player) player.cardCount += payload.resources.length;
-    }
-
-    private onResourcesSpent(
-        payload: GameEventMap[typeof GameServerEvents.resource.spent.success]
-    ) {
-        const player = this.players.get(payload.playerId);
-        if (player) player.cardCount = Math.max(0, player.cardCount - payload.resources.length);
-    }
-
-    private onBuildPlaced(
-        payload: GameEventMap[typeof GameServerEvents.build.settlement.success]
-    ) {
-        const player = this.players.get(payload.playerId);
-        if (!player) return;
-        if (payload.pieceType === 'settlement') player.victoryPoints += 1;
-        if (payload.pieceType === 'city')       player.victoryPoints += 2;
-    }
-
     private onDevCardCountChanged(
-        payload: GameEventMap[typeof GameServerEvents.overview.opponentCard.success]
+        payload: GameEventMap[typeof GameServerEvents.state.overview.developmentCard.success]
     ) {
         const player = this.players.get(payload.playerId);
-        if (player) player.devCardCount = payload.value;
+        if (player) player.devCardCount = payload.developmentCards;
+    }
+
+    private onResCardCountChanged(
+        payload: GameEventMap[typeof GameServerEvents.state.overview.resource.success]
+    ) {
+        const player = this.players.get(payload.playerId);
+        if (player) player.resCardCount = payload.resourceCards;
     }
 
     private onLongestRoadChanged(
-        payload: GameEventMap[typeof GameServerEvents.overview.longestRoad.success]
+        payload: GameEventMap[typeof GameServerEvents.state.overview.longestRoad.success]
     ) {
         this.players.forEach((entry, id) => {
             entry.hasLongestRoad = id === payload.playerId;
@@ -123,7 +104,7 @@ export class PlayerOverviewPanel {
     }
 
     private onLargestArmyChanged(
-        payload: GameEventMap[typeof GameServerEvents.overview.largestArmy.success]
+        payload: GameEventMap[typeof GameServerEvents.state.overview.largestArmy.success]
     ) {
         this.players.forEach((entry, id) => {
             entry.hasLargestArmy = id === payload.playerId;
@@ -131,10 +112,10 @@ export class PlayerOverviewPanel {
     }
 
     private onVictoryPointsChanged(
-        payload: GameEventMap[typeof GameServerEvents.overview.victoryPoint.success]
+        payload: GameEventMap[typeof GameServerEvents.state.overview.victoryPoint.success]
     ) {
         const player = this.players.get(payload.playerId);
-        if (player) player.victoryPoints = payload.value;
+        if (player) player.victoryPoints = payload.victoryPoints;
     }
 
     private onDiscardRequired(payload: GameEventMap[typeof GameServerEvents.resource.discardRequired.success]) {
@@ -158,6 +139,7 @@ export class PlayerOverviewPanel {
     // ─── Input ────────────────────────────────────────────────────────
     handleInput(_event: NormalizedInputEvent): boolean {
         return false; // display only for now
+        //TODO add some extra text when hovering stats.
     }
 
     // ─── State ────────────────────────────────────────────────────────

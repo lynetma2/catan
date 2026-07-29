@@ -22,7 +22,9 @@ public class PlayerStatsDiff {
                     game.hasLongestRoad(id),
                     roadLengths.get(id),
                     game.hasLargestArmy(id),
-                    armySizes.get(id)
+                    armySizes.get(id),
+                    player.getDevelopmentCardCount(),
+                    player.getResourceCardCount()
             ));
         }
         return snapshot;
@@ -50,6 +52,12 @@ public class PlayerStatsDiff {
             }
             if (prev.hasLargestArmy() != curr.hasLargestArmy()) {
                 events.add(new LargestArmyAwardChangedEvent(playerId, curr.hasLargestArmy()));
+            }
+            if (prev.devCards() != curr.devCards()) {
+                events.add(new DevelopmentCardAmountChangedEvent(playerId, curr.devCards()));
+            }
+            if (prev.resourceCards() != curr.resourceCards()) {
+                events.add(new ResourceAmountChangedEvent(playerId, curr.resourceCards()));
             }
         }
         return events;

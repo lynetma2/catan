@@ -5,12 +5,6 @@ import java.util.UUID;
 
 public class TurnOrder {
 
-    public enum SetupAdvanceResult {
-        NEXT_PLAYER,
-        SAME_PLAYER_AGAIN,
-        SETUP_COMPLETE
-    }
-
     private final List<UUID> playerIds;
     private int index;
     private boolean reversed;
@@ -36,14 +30,6 @@ public class TurnOrder {
         return playerIds.get(index);
     }
 
-    public boolean isLastPlayer() {
-        return reversed ? index == 0 : index == playerIds.size() - 1;
-    }
-
-    public boolean isFirstPlayer() {
-        return index == 0;
-    }
-
     public void advance() {
         index = (index + 1) % playerIds.size();
     }
@@ -60,7 +46,15 @@ public class TurnOrder {
         return SetupAdvanceResult.NEXT_PLAYER;
     }
 
-    public boolean isReversed() {
+    public boolean isLastPlayer() {
+        return reversed ? index == 0 : index == playerIds.size() - 1;
+    }
+
+    public boolean isFirstPlayer() {
+        return index == 0;
+    }
+
+    public boolean isFinalSetupRound() {
         return reversed;
     }
 
@@ -70,5 +64,11 @@ public class TurnOrder {
 
     public List<UUID> getPlayerIds() {
         return playerIds;
+    }
+
+    public enum SetupAdvanceResult {
+        NEXT_PLAYER,
+        SAME_PLAYER_AGAIN,
+        SETUP_COMPLETE
     }
 }

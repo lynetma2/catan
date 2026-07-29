@@ -11,7 +11,7 @@ import type {TradeOfferDTO, TradeOfferResponseKind} from "@/game/hud/panels/trad
 export const GAME_SERVER = `${SERVER}${DOT_SEPARATOR}${GAME_NAMESPACE}${DOT_SEPARATOR}` as const;
 export const BUILD_GAME_SERVER = `${GAME_SERVER}build${DOT_SEPARATOR}` as const;
 export const DICE_GAME_SERVER = `${GAME_SERVER}dice${DOT_SEPARATOR}` as const;
-export const OVERVIEW_GAME_SERVER = `${GAME_SERVER}overview${DOT_SEPARATOR}` as const;
+export const OVERVIEW_GAME_SERVER = `${GAME_SERVER}state${DOT_SEPARATOR}overview${DOT_SEPARATOR}` as const;
 export const RESOURCE_GAME_SERVER = `${GAME_SERVER}resource${DOT_SEPARATOR}` as const;
 export const TURN_GAME_SERVER = `${GAME_SERVER}turn${DOT_SEPARATOR}` as const;
 export const ROBBER_GAME_SERVER = `${GAME_SERVER}robber${DOT_SEPARATOR}` as const;
@@ -31,7 +31,30 @@ export const GameServerEvents = {
             change: {
                 success: `${STATE_GAME_SERVER}phase.change`,
             }
-        }
+        },
+        overview: {
+            largestArmy: {
+                success: `${OVERVIEW_GAME_SERVER}largestArmy.change`,
+            },
+            armySize: {
+                success: `${OVERVIEW_GAME_SERVER}armySize.change`,
+            },
+            longestRoad: {
+                success: `${OVERVIEW_GAME_SERVER}longestRoad.change`,
+            },
+            roadLength: {
+                success: `${OVERVIEW_GAME_SERVER}roadLength.change`,
+            },
+            victoryPoint: {
+                success: `${OVERVIEW_GAME_SERVER}victoryPoints.change`,
+            },
+            developmentCard: {
+                success: `${OVERVIEW_GAME_SERVER}developmentCard.change`,
+            },
+            resource: {
+                success: `${OVERVIEW_GAME_SERVER}resource.change`,
+            }
+        },
     },
     build: {
         settlement: {
@@ -51,20 +74,6 @@ export const GameServerEvents = {
         roll: {
             success: `${DICE_GAME_SERVER}roll`,
             rejected: `${DICE_GAME_SERVER}roll.rejected`,
-        }
-    },
-    overview: {
-        largestArmy: {
-            success: `${OVERVIEW_GAME_SERVER}largestArmy`,
-        },
-        longestRoad: {
-            success: `${OVERVIEW_GAME_SERVER}longestRoad`,
-        },
-        victoryPoint: {
-            success: `${OVERVIEW_GAME_SERVER}victoryPoint`,
-        },
-        opponentCard: {
-            success: `${OVERVIEW_GAME_SERVER}opponentCard`,
         }
     },
     resource: {
@@ -140,10 +149,13 @@ export interface GameServerEventMap {
     [GameServerEvents.build.city.rejected]: { pieceType: PieceType; reason: BuildRejectionReason };
     [GameServerEvents.dice.roll.success]: { diceRoll: { values: [number, number] } };
     [GameServerEvents.dice.roll.rejected]: { reason: string };
-    [GameServerEvents.overview.largestArmy.success]: { playerId: string, value: number };
-    [GameServerEvents.overview.longestRoad.success]: { playerId: string, value: number };
-    [GameServerEvents.overview.victoryPoint.success]: { playerId: string, value: number };
-    [GameServerEvents.overview.opponentCard.success]: { playerId: string, value: number };
+    [GameServerEvents.state.overview.armySize.success]: { playerId: string, armySize: number };
+    [GameServerEvents.state.overview.largestArmy.success]: { playerId: string, hasLargestArmy: boolean };
+    [GameServerEvents.state.overview.longestRoad.success]: { playerId: string, hasLongestRoad: boolean };
+    [GameServerEvents.state.overview.roadLength.success]: { playerId: string, longestRoadLength: number };
+    [GameServerEvents.state.overview.victoryPoint.success]: { playerId: string, victoryPoints: number };
+    [GameServerEvents.state.overview.developmentCard.success]: { playerId: string, developmentCards: number };
+    [GameServerEvents.state.overview.resource.success]: { playerId: string, resourceCards: number };
     [GameServerEvents.resource.grant.success]: { playerId: string; resources: Resource[] };
     [GameServerEvents.resource.spent.success]: { playerId: string; resources: Resource[] };
     [GameServerEvents.resource.discardRequired.success]: { playerId: string, amount: number };

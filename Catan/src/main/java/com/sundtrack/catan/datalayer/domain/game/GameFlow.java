@@ -96,6 +96,10 @@ public class GameFlow {
                 .findFirst();
     }
 
+    public boolean isFinalSetupRound() {
+        return turnOrder.isFinalSetupRound();
+    }
+
     public record TurnAdvanceResult(UUID previousPlayerId, UUID newCurrentPlayerId, int newTurnNumber,
                                     GamePhase initialPhase) {
     }

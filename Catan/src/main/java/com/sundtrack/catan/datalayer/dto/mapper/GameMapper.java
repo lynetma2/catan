@@ -90,7 +90,7 @@ public class GameMapper {
                 visibleResources,
                 visibleDevCards,
                 visibleVictoryPoints,
-                p.getCardCount(),
+                p.getResourceCardCount(),
                 p.getDevelopmentCardCount(),
                 game.hasLongestRoad(p.getId()),
                 game.hasLargestArmy(p.getId()),

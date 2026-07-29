@@ -5,5 +5,8 @@ public record PlayerStats(
         boolean hasLongestRoad,
         int longestRoadLength,
         boolean hasLargestArmy,
-        int armySize
-) {}
+        int armySize,
+        int devCards,
+        int resourceCards
+) {
+}
