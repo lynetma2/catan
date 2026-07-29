@@ -1,9 +1,9 @@
 // hud/panels/resource/ResourceCardLayout.ts
 import {type Resolution} from '@/game/core/ResolutionManager.ts';
-import {type Resource, ResourceType} from '@/game/core/types.ts';
+import {DevelopmentCardType, type Resource, ResourceType} from '@/game/core/types.ts';
 import {type Rect} from '@/game/utils/Rect.ts';
 import {resolveHandPanelBounds, resolveTradeLayout,} from './ResourcePanelLayout.ts';
-import type {ResourceCard} from "@/game/hud/panels/resource/types.ts";
+import type {DevelopmentCard, ResourceCard} from "@/game/hud/panels/resource/types.ts";
 import {TradePanelKind} from "@/game/hud/panels/resource/types.ts";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -15,6 +15,8 @@ export const CARD = {
     hoverLift:   20,
     fanDistance: 35,
 } as const;
+
+const GAP_BETWEEN_DEV_AND_RES = 10;
 
 const TRADEABLE_RESOURCE_TYPES: ResourceType[] = [
     ResourceType.Brick,
@@ -73,6 +75,84 @@ export function resolveHandCards(
 ): ResourceCard[] {
     if (hand.length === 0) return [];
     return resolveCardsInRect(hand, resolveHandPanelBounds(r), hoveredId, 'fan');
+}
+
+/**
+ * Resolves both development and resource cards for the hand panel in Browse mode.
+ * Development cards appear to the left of resource cards, separated by a small gap.
+ * Both groups share the same "fan" layout when hovering.
+ */
+export function resolveBrowseHandCards(
+    resources: Resource[],
+    devs: { type: DevelopmentCardType; uid: string }[],
+    hoveredId: string | null,
+    r: Resolution,
+): { resCards: ResourceCard[]; devCards: DevelopmentCard[] } {
+    const bounds = resolveHandPanelBounds(r);
+    const resCount = resources.length;
+    const devCount = devs.length;
+    const totalCount = resCount + devCount;
+    const spacing = resolveSpacing(totalCount, bounds.width);
+    const hasBoth = devCount > 0 && resCount > 0;
+    const gap = hasBoth ? GAP_BETWEEN_DEV_AND_RES : 0;
+    const totalWidth = CARD.width + (totalCount - 1) * spacing + gap;
+    const startX = bounds.x + bounds.width / 2 - totalWidth / 2;
+    const baseY = bounds.y + bounds.height - CARD.height;
+
+    // find the hovered index in the combined sequence (devs come first)
+    const hoveredIndex = (() => {
+        if (hoveredId === null) return -1;
+        const devIdx = devs.findIndex(d => d.uid === hoveredId);
+        if (devIdx !== -1) return devIdx;
+        const resIdx = resources.findIndex(r => r.uid === hoveredId);
+        if (resIdx !== -1) return devCount + resIdx;
+        return -1;
+    })();
+
+    // x-coordinate for a sequential card index (0..totalCount-1)
+    const getX = (seqIdx: number): number => {
+        if (seqIdx < devCount) return startX + seqIdx * spacing;
+        return startX + devCount * spacing + gap + (seqIdx - devCount) * spacing;
+    };
+
+    // development cards
+    const devCards: DevelopmentCard[] = devs.map((dev, i) => {
+        const offset = resolveFanOffset(i, hoveredIndex, totalCount);
+        return {
+            developmentType: dev.type,
+            uid: dev.uid,
+            isHovered: i === hoveredIndex,
+            isSelected: false,
+            isDisabled: false,
+            bounds: {
+                x: getX(i) + offset.x,
+                y: baseY + offset.y,
+                width: CARD.width,
+                height: CARD.height,
+            },
+        };
+    });
+
+    // resource cards
+    const resCards: ResourceCard[] = resources.map((res, i) => {
+        const seqIdx = devCount + i;
+        const offset = resolveFanOffset(seqIdx, hoveredIndex, totalCount);
+        return {
+            resourceType: res.resourceType,
+            uid: res.uid,
+            isHovered: seqIdx === hoveredIndex,
+            isSelected: false,
+            isDisabled: false,
+            bounds: {
+                x: getX(seqIdx) + offset.x,
+                y: baseY + offset.y,
+                width: CARD.width,
+                height: CARD.height,
+            },
+        };
+    });
+
+    return {resCards, devCards};
 }
 
 // ─── Public — full trade layout ───────────────────────────────────────────────

@@ -26,6 +26,7 @@ import com.sundtrack.catan.datalayer.domain.game.trade.TradeOffer;
 import com.sundtrack.catan.datalayer.domain.game.trade.TradeOfferResponseKind;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
+import com.sundtrack.catan.datalayer.dto.snapshot.DevCardSnapshotDTO;
 import com.sundtrack.catan.datalayer.dto.snapshot.DiceRollDTO;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
 
@@ -367,7 +368,7 @@ public class Game {
                 .orElse(0);
     }
 
-    public DevelopmentCard drawDevelopmentCard(UUID playerId) {
+    public DevCardSnapshotDTO drawDevelopmentCard(UUID playerId) {
         if (developmentCardBank.isEmpty()) {
             throw new InsufficientDevelopmentCardsException();
         }
@@ -381,7 +382,7 @@ public class Game {
         DevelopmentCard card = developmentCardBank.draw(getTurnNumber());
         player.addDevelopmentCard(card);
 
-        return card;
+        return new DevCardSnapshotDTO(card, this.getTurnNumber());
     }
 
     public Integer getTurnNumber() {

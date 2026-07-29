@@ -8,12 +8,12 @@ import type {BuildPanelState} from "@/game/hud/panels/build/types.ts";
 import {BUTTON_CONFIGS, derivePanelBounds, hudLayout} from "@/game/hud/HudLayout.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import {containsPoint} from "@/game/utils/Rect.ts";
-import {PieceType, GamePhase} from "@/game/core/types.ts";
+import {GamePhase, PieceType} from "@/game/core/types.ts";
 import type {EventBus} from "@/game/core/EventBus";
 import type {GameEventMap} from "@/events/shared/AppEvents.ts";
 import {GameUiEvents} from "@/events/game/GameUiEvents.ts";
 import {GameServerEvents} from "@/events/game/GameServerEvents.ts";
-import {GameActionEvents} from "@/events/game/GameActionEvents.ts";
+import {GameActionEventCreators, GameActionEvents} from "@/events/game/GameActionEvents.ts";
 
 const ALL_BUTTONS: ButtonType[] = [
     ButtonType.putRoad,
@@ -94,10 +94,7 @@ export class BuildPanel {
 
             case ButtonType.drawDevelopmentCard:
                 this.selectedButton = button;
-                this.frameQueue.push({
-                    type: GameActionEvents.developmentCard.draw,
-                    payload: {},
-                });
+                this.frameQueue.push(GameActionEventCreators.drawDevelopmentCard());
                 break;
 
             case ButtonType.endTurn:

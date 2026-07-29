@@ -11,6 +11,7 @@ import {ResourceCardRenderer} from './ResourceCardRenderer';
 import {BrowseModeRenderer} from './modes/BrowseModeRenderer';
 import {DiscardModeRenderer} from './modes/DiscardModeRenderer';
 import {TradeModeRenderer} from './modes/TradeModeRenderer';
+import {DevelopmentCardRenderer} from "@/game/rendering/hud/resource/DevelopmentCardRenderer.ts";
 
 const RESOURCE_PANEL_THEME: PanelTheme = {
     background:   'rgba(28, 18, 10, 0.85)',
@@ -30,6 +31,7 @@ const RESOURCE_PANEL_THEME_AT_RISK: PanelTheme = {
 
 export class ResourcePanelRenderer {
     private readonly cardRenderer:        ResourceCardRenderer;
+    private readonly devCardRenderer: DevelopmentCardRenderer;
     private readonly browseModeRenderer:  BrowseModeRenderer;
     private readonly discardModeRenderer: DiscardModeRenderer;
     private readonly tradeModeRenderer:   TradeModeRenderer;
@@ -38,7 +40,8 @@ export class ResourcePanelRenderer {
         private readonly ctx: CanvasRenderingContext2D
     ) {
         this.cardRenderer = new ResourceCardRenderer(ctx);
-        this.browseModeRenderer = new BrowseModeRenderer(ctx, this.cardRenderer);
+        this.devCardRenderer = new DevelopmentCardRenderer(ctx)
+        this.browseModeRenderer = new BrowseModeRenderer(ctx, this.cardRenderer, this.devCardRenderer);
         this.discardModeRenderer = new DiscardModeRenderer(ctx);
         this.tradeModeRenderer = new TradeModeRenderer(ctx, this.cardRenderer);
     }
@@ -48,7 +51,6 @@ export class ResourcePanelRenderer {
 
         switch (modeState.kind) {
             case ResourcePanelModeKind.Browse:
-                this.renderHandChrome(modeState.hand, modeState.isAtDiscardRisk);
                 this.browseModeRenderer.render(modeState);
                 break;
             case ResourcePanelModeKind.Discard:

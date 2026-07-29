@@ -1,11 +1,11 @@
 package com.sundtrack.catan.session.game.eventHandlers.developmentCard;
 
-import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.action.developmentCard.DrawDevelopmentCardAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.developmentCard.DrawDevelopmentCardEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
+import com.sundtrack.catan.datalayer.dto.snapshot.DevCardSnapshotDTO;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
@@ -29,7 +29,7 @@ public class DrawDevelopmentCardHandler implements GameActionHandler<DrawDevelop
         Game game = gameStore.get(context.gameId());
 
         doValidations(game, context, action);
-        DevelopmentCard card = game.drawDevelopmentCard(context.playerId());
+        DevCardSnapshotDTO card = game.drawDevelopmentCard(context.playerId());
 
         return createResults(context, card);
     }
@@ -39,8 +39,9 @@ public class DrawDevelopmentCardHandler implements GameActionHandler<DrawDevelop
         game.getCurrentPhase().validateAllowedAction(action);
     }
 
-    private EventResult<ServerEvent> createResults(GameContext context, DevelopmentCard card) {
+    private EventResult<ServerEvent> createResults(GameContext context, DevCardSnapshotDTO card) {
         DrawDevelopmentCardEvent event = new DrawDevelopmentCardEvent(card);
+        //TODO create event of spent resources.
         return EventResult.of(List.of(), Map.of(context.playerId(), List.of(event)));
     }
 }

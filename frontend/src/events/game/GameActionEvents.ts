@@ -77,13 +77,13 @@ export const GameActionEventCreators = {
     state() {
         return {
             type: GameActionEvents.state,
-            payload: undefined,
+            payload: {},
         }
     },
     diceRoll() {
         return {
             type: GameActionEvents.diceRoll,
-            payload: undefined,
+            payload: {},
         }
     },
     placeSettlement(target: Vertex) {
@@ -121,13 +121,13 @@ export const GameActionEventCreators = {
     drawDevelopmentCard() {
         return {
             type: GameActionEvents.developmentCard.draw,
-            payload: undefined,
+            payload: {},
         }
     },
     endTurn() {
         return {
             type: GameActionEvents.turn.end,
-            payload: undefined,
+            payload: {},
         }
     },
     discard(discardedResources: string[]) {

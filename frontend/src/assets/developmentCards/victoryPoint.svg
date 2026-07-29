@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" fill="none">
+    <!-- Star -->
+    <polygon points="25,6 30,18 43,18 33,26 37,38 25,30 13,38 17,26 7,18 20,18"
+             fill="#FFD700" stroke="#B8860B" stroke-width="1.5"/>
+    <!-- Crown -->
+    <path d="M15 24 L12 16 L18 20 L25 14 L32 20 L38 16 L35 24 Z" fill="#FFD700" stroke="#B8860B" stroke-width="1.5"/>
+    <circle cx="25" cy="30" r="2" fill="#FFF"/>
+</svg>

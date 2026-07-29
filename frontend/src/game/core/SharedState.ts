@@ -1,6 +1,7 @@
 import {
     type BuildTarget,
     BuildTargetKind,
+    type DevelopmentCardId,
     type FlowState,
     GamePhase,
     type GameSnapshot,
@@ -72,6 +73,11 @@ export class SharedState {
     get localPlayerResources(): Resource[] | null {
         if (!this.localPlayer) return null;
         return this.localPlayer.resources;
+    }
+
+    get localPlayerDevCards(): DevelopmentCardId[] | null {
+        if (!this.localPlayer) return null;
+        return this.localPlayer.devCards;
     }
 
     get isLocalPlayersTurn(): boolean {

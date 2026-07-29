@@ -8,6 +8,7 @@ export interface Player {
     name: string;
     color: string;
     resources: Resource[];
+    devCards: DevelopmentCardId[]
     victoryPoints: number;
 }
 
@@ -22,6 +23,12 @@ export enum ResourceType {
 export interface Resource {
     resourceType: ResourceType,
     uid: string
+}
+
+export interface DevelopmentCardId {
+    type: DevelopmentCardType;
+    uid: string;
+    playableThisTurn: boolean;
 }
 
 export enum PieceType {
@@ -135,8 +142,8 @@ export interface PlayerSnapshot {
 
 export interface DevCardSnapshot {
     uid: string;
-    type: DevCardType;
-    boughtThisTurn: boolean;
+    type: DevelopmentCardType;
+    playableThisTurn: boolean;
 }
 
 export interface GameSnapshot {
@@ -190,7 +197,7 @@ export enum GamePhase {
     End = 'end',
 }
 
-export enum DevCardType {
+export enum DevelopmentCardType {
     Knight = 'knight',
     RoadBuilding = 'roadBuilding',
     YearOfPlenty = 'yearOfPlenty',

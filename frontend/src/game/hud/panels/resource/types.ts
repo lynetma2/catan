@@ -1,4 +1,4 @@
-import type {ResourceType} from "@/game/core/types.ts";
+import {DevelopmentCardType, type ResourceType} from "@/game/core/types.ts";
 import type {Rect} from "@/game/utils/Rect.ts";
 import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 
@@ -35,9 +35,18 @@ export interface ResourceCard {
     bounds: Rect;
 }
 
+export interface DevelopmentCard {
+    developmentType: DevelopmentCardType;
+    uid: string;
+    isHovered: boolean;
+    isSelected: boolean;
+    isDisabled: boolean;
+    bounds: Rect;
+}
+
 export interface BrowseModeState {
     kind: ResourcePanelModeKind.Browse;
-    hand: { bounds: Rect, cards: ResourceCard[] };
+    hand: { bounds: Rect, resCards: ResourceCard[], devCards: DevelopmentCard[] };
     isAtDiscardRisk: boolean;
 }
 

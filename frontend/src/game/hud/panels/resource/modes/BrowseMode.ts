@@ -7,11 +7,12 @@ import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
 import type {ResolutionManager} from "@/game/core/ResolutionManager.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
-import {resolveHandCards} from "@/game/hud/panels/resource/Layout/ResourceCardLayout.ts";
-import {findHitCard} from "@/game/hud/panels/resource/utils.ts";
+import {resolveBrowseHandCards} from "@/game/hud/panels/resource/Layout/ResourceCardLayout.ts";
 import {resolveHandPanelBounds} from "@/game/hud/panels/resource/Layout/ResourcePanelLayout.ts";
 import {GameUiEventCreators} from "@/events/game/GameUiEvents.ts";
 import type {GameEventMap} from "@/events/shared/AppEvents.ts";
+import type {Rect} from "@/game/utils/Rect.ts";
+import {DevelopmentCardType} from "@/game/core/types.ts";
 
 
 export class BrowseMode implements ResourcePanelMode<BrowseModeState> {
@@ -35,20 +36,43 @@ export class BrowseMode implements ResourcePanelMode<BrowseModeState> {
 
     handleInput(event: NormalizedInputEvent): boolean {
         const r = this.resolution.get();
-        const cards = resolveHandCards(this.sharedState.localPlayerResources ?? [], this.hoveredCardId, r);
+        const {resCards, devCards} = resolveBrowseHandCards(
+            this.sharedState.localPlayerResources ?? [],
+            this.sharedState.localPlayerDevCards ?? [],
+            this.hoveredCardId,
+            r,
+        );
+
+        // all cards for hit‑testing
+        const allCards: { bounds: Rect; uid: string }[] = [
+            ...devCards.map(d => ({bounds: d.bounds, uid: d.uid})),
+            ...resCards.map(c => ({bounds: c.bounds, uid: c.uid})),
+        ];
 
         if (event.type === InputType.MouseMove) {
-            const hit = findHitCard(cards, event.screenPos);
+            const hit = allCards.find(c => this.pointInRect(event.screenPos, c.bounds));
             this.hoveredCardId = hit?.uid ?? null;
             return hit != null;
         }
 
         if (event.type === InputType.MouseClick) {
+            const hit = allCards.find(c => this.pointInRect(event.screenPos, c.bounds));
+            if (!hit) return false;
+
+            // 1. Check if it's a development card
+            const devHit = devCards.find(d => d.uid === hit.uid);
+            if (devHit) {
+                this.handleDevCardClick(devHit.developmentType, devHit.uid);
+                return true;
+            }
+
+            // 2. Otherwise it's a resource card – require trade permission
             if (!this.sharedState.canInitiateTrade) return false;
 
-            const hit = findHitCard(cards, event.screenPos);
-            if (hit == null) return false;
-            this.frameQueue.push(GameUiEventCreators.tradeStart(hit.uid));
+            const resourceHit = resCards.find(c => c.uid === hit.uid);
+            if (!resourceHit) return false;
+
+            this.frameQueue.push(GameUiEventCreators.tradeStart(resourceHit.uid));
             return true;
         }
 
@@ -57,13 +81,67 @@ export class BrowseMode implements ResourcePanelMode<BrowseModeState> {
 
     getState(): BrowseModeState {
         const r = this.resolution.get();
+        const {resCards, devCards} = resolveBrowseHandCards(
+            this.sharedState.localPlayerResources ?? [],
+            this.sharedState.localPlayerDevCards ?? [],   // assumes this property exists
+            this.hoveredCardId,
+            r,
+        );
         return {
             kind: ResourcePanelModeKind.Browse,
             hand: {
                 bounds: resolveHandPanelBounds(r),
-                cards: resolveHandCards(this.sharedState.localPlayerResources ?? [], this.hoveredCardId, r),
+                resCards,
+                devCards,
             },
             isAtDiscardRisk: this.sharedState.isAtDiscardRisk,
         };
+    }
+
+    private pointInRect(p: { x: number; y: number }, r: Rect): boolean {
+        return p.x >= r.x && p.x <= r.x + r.width && p.y >= r.y && p.y <= r.y + r.height;
+    }
+
+    // ── Development card handlers (one per type) ──
+    private handleDevCardClick(type: DevelopmentCardType, uid: string): void {
+        switch (type) {
+            case DevelopmentCardType.Knight:
+                this.onKnightClicked(uid);
+                break;
+            case DevelopmentCardType.RoadBuilding:
+                this.onRoadBuildingClicked(uid);
+                break;
+            case DevelopmentCardType.YearOfPlenty:
+                this.onYearOfPlentyClicked(uid);
+                break;
+            case DevelopmentCardType.Monopoly:
+                this.onMonopolyClicked(uid);
+                break;
+            case DevelopmentCardType.VictoryPoint:
+                this.onVictoryPointClicked(uid);
+                break;
+        }
+    }
+
+    private onKnightClicked(uid: string): void {
+        console.log(`Knight card clicked: ${uid}`);
+        // future: send event or transition to knight flow
+    }
+
+    private onRoadBuildingClicked(uid: string): void {
+        console.log(`Road Building card clicked: ${uid}`);
+    }
+
+    private onYearOfPlentyClicked(uid: string): void {
+        console.log(`Year of Plenty card clicked: ${uid}`);
+    }
+
+    private onMonopolyClicked(uid: string): void {
+        console.log(`Monopoly card clicked: ${uid}`);
+    }
+
+    private onVictoryPointClicked(uid: string): void {
+        console.log(`Victory Point card clicked: ${uid}`);
+        // note: victory points are typically not "played", but we log for now
     }
 }

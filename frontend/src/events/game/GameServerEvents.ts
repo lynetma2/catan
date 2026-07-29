@@ -1,7 +1,7 @@
 import {DOT_SEPARATOR, SERVER} from "@/events/shared/RootEventNamespaces.ts";
 import type {DeepValues, EventUnion} from "@/events/shared/EventTypes.ts";
 import {GAME_NAMESPACE} from "@/events/game/GameNamespace.ts";
-import {GamePhase, type GameSnapshot, type PieceType, type Resource} from "@/game/core/types.ts";
+import {type DevCardSnapshot, GamePhase, type GameSnapshot, type PieceType, type Resource} from "@/game/core/types.ts";
 import {BuildRejectionReason} from "@/game/events/GameEventTypes.ts";
 import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
 import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
@@ -17,6 +17,7 @@ export const TURN_GAME_SERVER = `${GAME_SERVER}turn${DOT_SEPARATOR}` as const;
 export const ROBBER_GAME_SERVER = `${GAME_SERVER}robber${DOT_SEPARATOR}` as const;
 export const STATE_GAME_SERVER = `${GAME_SERVER}state${DOT_SEPARATOR}` as const;
 export const TRADE_GAME_SERVER = `${GAME_SERVER}trade${DOT_SEPARATOR}` as const;
+export const DEVELOPMENT_CARD_GAME_SERVER = `${GAME_SERVER}developmentCard${DOT_SEPARATOR}` as const;
 export const PUBLIC_TRADE_GAME_SERVER = `${TRADE_GAME_SERVER}public${DOT_SEPARATOR}` as const;
 
 export const GameServerEvents = {
@@ -131,6 +132,11 @@ export const GameServerEvents = {
             },
         },
     },
+    developmentCard: {
+        draw: {
+            success: `${DEVELOPMENT_CARD_GAME_SERVER}draw`
+        }
+    },
 } as const;
 
 export interface GameServerEventMap {
@@ -189,6 +195,9 @@ export interface GameServerEventMap {
         playerId: string;
         response: TradeOfferResponseKind
     };
+    [GameServerEvents.developmentCard.draw.success]: {
+        card: DevCardSnapshot
+    }
 }
 
 export type GameServerEventValues =

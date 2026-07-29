@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" fill="none">
+    <!-- 5 petals -->
+    <g fill="#FFD700" stroke="#DAA520" stroke-width="1.5">
+        <circle cx="25" cy="15" r="6"/>
+        <circle cx="34.5" cy="21.9" r="6"/>
+        <circle cx="30.9" cy="33.1" r="6"/>
+        <circle cx="19.1" cy="33.1" r="6"/>
+        <circle cx="15.5" cy="21.9" r="6"/>
+    </g>
+    <!-- Center -->
+    <circle cx="25" cy="25" r="5" fill="#FF8C00" stroke="#D2691E" stroke-width="1.5"/>
+</svg>

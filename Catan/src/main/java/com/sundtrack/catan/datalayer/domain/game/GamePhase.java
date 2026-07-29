@@ -8,6 +8,7 @@ import com.sundtrack.catan.datalayer.domain.event.game.action.TurnEndAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceCityAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceRoadAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceSettlementAction;
+import com.sundtrack.catan.datalayer.domain.event.game.action.developmentCard.DrawDevelopmentCardAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.developmentCard.PlayKnightAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.developmentCard.PlayRoadBuildingAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.resource.GameDiscardAction;
@@ -30,7 +31,7 @@ public enum GamePhase {
             Set.of(RollDiceAction.class)),
     POST_ROLL("post_roll",
             Set.of(PlayRoadBuildingAction.class, PlayKnightAction.class, TurnEndAction.class, PlaceCityAction.class, PlaceRoadAction.class, PlaceSettlementAction.class,
-                    BankTradeAction.class, CancelPublicTradeAction.class, InitiatorConfirmPublicTradeAction.class, StartPublicTradeAction.class)),
+                    BankTradeAction.class, CancelPublicTradeAction.class, InitiatorConfirmPublicTradeAction.class, StartPublicTradeAction.class, DrawDevelopmentCardAction.class)),
     ROBBER_PLACEMENT("robber_placement",
             Set.of(PlaceRobberAction.class)),
     ROBBER_STEAL("robber_steal",
