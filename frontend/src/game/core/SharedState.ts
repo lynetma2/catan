@@ -1,6 +1,7 @@
 import {
     type BuildTarget,
     BuildTargetKind,
+    type DevCardSnapshot,
     type DevelopmentCardId,
     type FlowState,
     GamePhase,
@@ -202,6 +203,22 @@ export class SharedState {
         remainingResources.push(...received);
         this.updatePlayer(playerId, {
             resources: remainingResources,
+        });
+    }
+
+    addDevCard(devCard: DevCardSnapshot) {
+        if (!this._localPlayerId) return;
+        const current = this.localPlayerDevCards ?? [];
+        this.updatePlayer(this._localPlayerId, {
+            devCards: [...current, devCard],
+        });
+    }
+
+    removeDevCard(devCardId: string) {
+        if (!this._localPlayerId) return;
+        const current = this.localPlayerDevCards ?? [];
+        this.updatePlayer(this._localPlayerId, {
+            devCards: current.filter(c => c.uid !== devCardId),
         });
     }
 

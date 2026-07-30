@@ -135,6 +135,9 @@ export const GameServerEvents = {
     developmentCard: {
         draw: {
             success: `${DEVELOPMENT_CARD_GAME_SERVER}draw`
+        },
+        spent: {
+            success: `${DEVELOPMENT_CARD_GAME_SERVER}spent`
         }
     },
 } as const;
@@ -195,9 +198,8 @@ export interface GameServerEventMap {
         playerId: string;
         response: TradeOfferResponseKind
     };
-    [GameServerEvents.developmentCard.draw.success]: {
-        card: DevCardSnapshot
-    }
+    [GameServerEvents.developmentCard.draw.success]: { card: DevCardSnapshot };
+    [GameServerEvents.developmentCard.spent.success]: { playerId: string, cardId: string };
 }
 
 export type GameServerEventValues =

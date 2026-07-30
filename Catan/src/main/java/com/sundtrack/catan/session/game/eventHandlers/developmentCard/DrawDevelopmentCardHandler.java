@@ -4,16 +4,18 @@ import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.action.developmentCard.DrawDevelopmentCardAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.developmentCard.DrawDevelopmentCardEvent;
+import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceSpentEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
-import com.sundtrack.catan.datalayer.dto.snapshot.DevCardSnapshotDTO;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
 import com.sundtrack.catan.session.game.services.GameStore;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 @HandlesEvent(DrawDevelopmentCardAction.class)
@@ -29,9 +31,9 @@ public class DrawDevelopmentCardHandler implements GameActionHandler<DrawDevelop
         Game game = gameStore.get(context.gameId());
 
         doValidations(game, context, action);
-        DevCardSnapshotDTO card = game.drawDevelopmentCard(context.playerId());
+        Game.DrawDevelopmentCardResult result = game.drawDevelopmentCard(context.playerId());
 
-        return createResults(context, card);
+        return createResults(context, result);
     }
 
     private void doValidations(Game game, GameContext context, DrawDevelopmentCardAction action) {
@@ -39,9 +41,13 @@ public class DrawDevelopmentCardHandler implements GameActionHandler<DrawDevelop
         game.getCurrentPhase().validateAllowedAction(action);
     }
 
-    private EventResult<ServerEvent> createResults(GameContext context, DevCardSnapshotDTO card) {
-        DrawDevelopmentCardEvent event = new DrawDevelopmentCardEvent(card);
-        //TODO create event of spent resources.
-        return EventResult.of(List.of(), Map.of(context.playerId(), List.of(event)));
+    private EventResult<ServerEvent> createResults(GameContext context, Game.DrawDevelopmentCardResult result) {
+        List<ServerEvent> directedToPlayer = new ArrayList<>();
+        directedToPlayer.add(new ResourceSpentEvent(context.playerId(), result.deductedResources()));
+        directedToPlayer.add(new DrawDevelopmentCardEvent(result.card()));
+
+        Map<UUID, List<ServerEvent>> directed = Map.of(context.playerId(), directedToPlayer);
+
+        return EventResult.of(List.of(), directed);
     }
 }

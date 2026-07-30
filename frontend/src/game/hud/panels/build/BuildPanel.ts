@@ -42,6 +42,9 @@ export class BuildPanel {
         this.bus.on(GameUiEvents.build.exit, () => this.clearSelection());
         // Piece placed on board (server confirms) → clear selection
         this.bus.on(GameServerEvents.build.settlement.success, () => this.clearSelection());
+        this.bus.on(GameServerEvents.build.road.success, () => this.clearSelection());
+        this.bus.on(GameServerEvents.build.city.success, () => this.clearSelection());
+        this.bus.on(GameServerEvents.developmentCard.draw.success, () => this.clearSelection());
     }
 
     // ─── Input ────────────────────────────────────────────────────────

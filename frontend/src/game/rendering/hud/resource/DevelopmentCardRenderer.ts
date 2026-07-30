@@ -58,7 +58,7 @@ export class DevelopmentCardRenderer {
         const {ctx} = this;
         const {x, y, width} = card.bounds;
         ctx.font = 'bold 9px monospace';
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fillStyle = 'rgba(128, 128, 128, 0.9)';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
         // friendly name

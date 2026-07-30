@@ -26,6 +26,8 @@ export class SharedStateManager {
         this.bus.on(GameServerEvents.resource.discardRequired.success, (payload) => this.onDiscardRequired(payload));
         this.bus.on(GameServerEvents.state.phase.change.success, (payload) => this.onPhaseChanged(payload));
         this.bus.on(GameServerEvents.trade.bank.success, (payload) => this.onBankTrade(payload));
+        this.bus.on(GameServerEvents.developmentCard.draw.success, (payload) => this.onDevCardDrawn(payload));
+        this.bus.on(GameServerEvents.developmentCard.spent.success, (payload) => this.onDevCardSpent(payload));
 
         this.bus.on(GameServerEvents.build.settlement.success, (payload) => this.onSettlementBuilt(payload));
         this.bus.on(GameServerEvents.build.city.success, (payload) => this.onCityBuilt(payload));
@@ -100,6 +102,15 @@ export class SharedStateManager {
 
     private onBankTrade(payload: GameEventMap[typeof GameServerEvents.trade.bank.success]) {
         this.shared.applyBankTrade(payload.playerId, payload.given, payload.received);
+    }
+
+    private onDevCardDrawn(payload: GameEventMap[typeof GameServerEvents.developmentCard.draw.success]) {
+        this.shared.addDevCard(payload.card);
+    }
+
+    private onDevCardSpent(payload: GameEventMap[typeof GameServerEvents.developmentCard.spent.success]) {
+        if (payload.playerId !== this.shared.localPlayerId) return;
+        this.shared.removeDevCard(payload.cardId);
     }
 }
 

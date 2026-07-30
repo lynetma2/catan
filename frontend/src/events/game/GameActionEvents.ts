@@ -9,6 +9,7 @@ import {type Resource, ResourceType} from "@/game/core/types.ts";
 export const GAME_ACTION = `${ACTION}${DOT_SEPARATOR}${GAME_NAMESPACE}${DOT_SEPARATOR}`;
 export const BUILD_GAME_ACTION = `${GAME_ACTION}build${DOT_SEPARATOR}`;
 export const DEVELOPMENT_CARD_GAME_ACTION = `${GAME_ACTION}developmentCard${DOT_SEPARATOR}`;
+export const PLAY_DEVELOPMENT_CARD_GAME_ACTION = `${GAME_ACTION}developmentCard${DOT_SEPARATOR}play${DOT_SEPARATOR}`;
 export const TURN_GAME_ACTION = `${GAME_ACTION}turn${DOT_SEPARATOR}`;
 export const ROBBER_GAME_ACTION = `${GAME_ACTION}robber${DOT_SEPARATOR}`;
 export const RESOURCE_GAME_ACTION = `${GAME_ACTION}resource${DOT_SEPARATOR}`;
@@ -25,6 +26,12 @@ export const GameActionEvents = {
     },
     developmentCard: {
         draw: `${DEVELOPMENT_CARD_GAME_ACTION}draw`,
+        play: {
+            knight: `${PLAY_DEVELOPMENT_CARD_GAME_ACTION}knight`,
+            monopoly: `${PLAY_DEVELOPMENT_CARD_GAME_ACTION}monopoly`,
+            roadBuilding: `${PLAY_DEVELOPMENT_CARD_GAME_ACTION}roadBuilding`,
+            yearOfPlenty: `${PLAY_DEVELOPMENT_CARD_GAME_ACTION}yearOfPlenty`,
+        }
     },
     turn: {
         end: `${TURN_GAME_ACTION}end`,
@@ -56,6 +63,14 @@ export interface GameActionEventMap {
     [GameActionEvents.build.road]: { target: Edge };
     [GameActionEvents.build.city]: { target: Vertex };
     [GameActionEvents.developmentCard.draw]: Record<never, never>;
+    [GameActionEvents.developmentCard.play.knight]: { cardId: string };
+    [GameActionEvents.developmentCard.play.monopoly]: { cardId: string, resourceType: ResourceType };
+    [GameActionEvents.developmentCard.play.roadBuilding]: { cardId: string };
+    [GameActionEvents.developmentCard.play.yearOfPlenty]: {
+        cardId: string,
+        firstResource: ResourceType,
+        secondResource: ResourceType
+    };
     [GameActionEvents.turn.end]: Record<never, never>;
     [GameActionEvents.robber.place]: { target: Hex };
     [GameActionEvents.robber.steal]: { targetPlayerId: string };
@@ -122,6 +137,41 @@ export const GameActionEventCreators = {
         return {
             type: GameActionEvents.developmentCard.draw,
             payload: {},
+        }
+    },
+    playKnight(cardId: string) {
+        return {
+            type: GameActionEvents.developmentCard.play.knight,
+            payload: {
+                cardId,
+            }
+        }
+    },
+    playMonopoly(cardId: string, resourceType: ResourceType) {
+        return {
+            type: GameActionEvents.developmentCard.play.monopoly,
+            payload: {
+                cardId,
+                resourceType,
+            }
+        }
+    },
+    playRoadBuilding(cardId: string) {
+        return {
+            type: GameActionEvents.developmentCard.play.roadBuilding,
+            payload: {
+                cardId,
+            }
+        }
+    },
+    playYearOfPlenty(cardId: string, firstResource: ResourceType, secondResource: ResourceType) {
+        return {
+            type: GameActionEvents.developmentCard.play.knight,
+            payload: {
+                cardId,
+                firstResource,
+                secondResource,
+            }
         }
     },
     endTurn() {

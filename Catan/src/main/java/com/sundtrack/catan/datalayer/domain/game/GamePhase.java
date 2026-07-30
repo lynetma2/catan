@@ -28,7 +28,7 @@ public enum GamePhase {
     SETUP_PLACE_ROAD("setup_place_road",
             Set.of(PlaceRoadAction.class)),
     PRE_ROLL("pre_roll",
-            Set.of(RollDiceAction.class)),
+            Set.of(RollDiceAction.class, PlayKnightAction.class)),
     POST_ROLL("post_roll",
             Set.of(PlayRoadBuildingAction.class, PlayKnightAction.class, TurnEndAction.class, PlaceCityAction.class, PlaceRoadAction.class, PlaceSettlementAction.class,
                     BankTradeAction.class, CancelPublicTradeAction.class, InitiatorConfirmPublicTradeAction.class, StartPublicTradeAction.class, DrawDevelopmentCardAction.class)),

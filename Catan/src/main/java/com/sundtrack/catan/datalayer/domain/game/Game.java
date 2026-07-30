@@ -368,7 +368,7 @@ public class Game {
                 .orElse(0);
     }
 
-    public DevCardSnapshotDTO drawDevelopmentCard(UUID playerId) {
+    public DrawDevelopmentCardResult drawDevelopmentCard(UUID playerId) {
         if (developmentCardBank.isEmpty()) {
             throw new InsufficientDevelopmentCardsException();
         }
@@ -382,7 +382,8 @@ public class Game {
         DevelopmentCard card = developmentCardBank.draw(getTurnNumber());
         player.addDevelopmentCard(card);
 
-        return new DevCardSnapshotDTO(card, this.getTurnNumber());
+        DevCardSnapshotDTO cardSnapshotDTO = new DevCardSnapshotDTO(card, this.getTurnNumber());
+        return new DrawDevelopmentCardResult(cardSnapshotDTO, deducted);
     }
 
     public Integer getTurnNumber() {
@@ -578,5 +579,8 @@ public class Game {
     }
 
     public record RollOutcome(DiceRollDTO roll, Map<UUID, List<Resource>> grantedResources) {
+    }
+
+    public record DrawDevelopmentCardResult(DevCardSnapshotDTO card, List<Resource> deductedResources) {
     }
 }
