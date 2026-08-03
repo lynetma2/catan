@@ -13,14 +13,20 @@ export class ResourceCardRenderer {
     }
 
     // ─── Card drawing ─────────────────────────────────────────────────────────
-
     private drawCard(card: ResourceCard) {
         const style = RESOURCE_STYLES[card.resourceType];
         this.ctx.save();
+
+        // Grey out disabled cards
+        if (card.isDisabled) {
+            this.ctx.globalAlpha = 0.35;
+        }
+
         this.drawBackground(card, style);
         this.drawIcon(card, style);
         this.drawLabel(card);
         if (card.isSelected) this.drawSelectionGlow(card);
+
         this.ctx.restore();
     }
 
@@ -50,17 +56,22 @@ export class ResourceCardRenderer {
         const padding = 5;
         const iconW = width - padding * 2;
         const iconY = y + (height - iconW) / 2;
+
         this.ctx.drawImage(img, x + padding, iconY, iconW, iconW);
     }
 
     private drawLabel(card: ResourceCard) {
-        if (!card.isHovered) return;
+        // Don't show label on disabled cards
+        if (!card.isHovered || card.isDisabled) return;
+
         const {ctx} = this;
         const { x, y, width } = card.bounds;
+
         ctx.font         = 'bold 10px monospace';
         ctx.fillStyle = 'rgba(128, 128, 128, 0.9)';
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'bottom';
+
         ctx.fillText(
             card.resourceType.charAt(0).toUpperCase() + card.resourceType.slice(1),
             x + width / 2,
@@ -71,12 +82,15 @@ export class ResourceCardRenderer {
     private drawSelectionGlow(card: ResourceCard) {
         const { ctx }                 = this;
         const { x, y, width, height } = card.bounds;
+
         ctx.shadowColor = '#FFD700';
         ctx.shadowBlur  = 10;
+
         ctx.beginPath();
         ctx.roundRect(x, y, width, height, 8);
         ctx.strokeStyle = 'transparent';
         ctx.stroke();
+
         ctx.shadowBlur  = 0;
     }
 

@@ -12,7 +12,7 @@ import {resolveHandPanelBounds} from "@/game/hud/panels/resource/Layout/Resource
 import {GameUiEventCreators} from "@/events/game/GameUiEvents.ts";
 import type {GameEventMap} from "@/events/shared/AppEvents.ts";
 import type {Rect} from "@/game/utils/Rect.ts";
-import {DevelopmentCardType, ResourceType} from "@/game/core/types.ts";
+import {DevelopmentCardType} from "@/game/core/types.ts";
 import {GameActionEventCreators} from "@/events/game/GameActionEvents.ts";
 
 
@@ -137,12 +137,12 @@ export class BrowseMode implements ResourcePanelMode<BrowseModeState> {
 
     private onYearOfPlentyClicked(uid: string): void {
         console.log(`Year of Plenty card clicked: ${uid}`);
-        this.frameQueue.push(GameActionEventCreators.playYearOfPlenty(uid, ResourceType.Ore, ResourceType.Lumber));
+        this.frameQueue.push(GameUiEventCreators.resourceSelectionStart(2, uid));
     }
 
     private onMonopolyClicked(uid: string): void {
         console.log(`Monopoly card clicked: ${uid}`);
-        this.frameQueue.push(GameActionEventCreators.playMonopoly(uid, ResourceType.Ore));
+        this.frameQueue.push(GameUiEventCreators.resourceSelectionStart(1, uid));
     }
 
     private onVictoryPointClicked(uid: string): void {

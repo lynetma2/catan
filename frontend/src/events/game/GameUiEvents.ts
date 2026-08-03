@@ -7,6 +7,7 @@ export const GAME_UI = `${UI}${DOT_SEPARATOR}${GAME_NAMESPACE}${DOT_SEPARATOR}` 
 export const BUILD_GAME_UI = `${GAME_UI}build` as const;
 export const PANEL_GAME_UI = `${GAME_UI}panel` as const;
 export const TRADE_GAME_UI = `${GAME_UI}trade` as const;
+export const RESOURCE_SELECTION_GAME_UI = `${GAME_UI}resourceSelection` as const;
 
 export const GameUiEvents = {
     state: `${GAME_UI}state`,
@@ -24,6 +25,11 @@ export const GameUiEvents = {
         start: `${TRADE_GAME_UI}start`,
         end: `${TRADE_GAME_UI}end`,
         cancel: `${TRADE_GAME_UI}cancel`,
+    },
+    resourceSelection: {
+        start: `${RESOURCE_SELECTION_GAME_UI}start`,
+        end: `${RESOURCE_SELECTION_GAME_UI}end`,
+        cancel: `${RESOURCE_SELECTION_GAME_UI}cancel`,
     }
 } as const;
 
@@ -38,6 +44,9 @@ export interface GameUiEventMap {
     [GameUiEvents.trade.start]: { initialSelection: string };
     [GameUiEvents.trade.end]: Record<never, never>;
     [GameUiEvents.trade.cancel]: Record<never, never>;
+    [GameUiEvents.resourceSelection.start]: { requiredCount: number, usedCardId: string };
+    [GameUiEvents.resourceSelection.end]: Record<never, never>;
+    [GameUiEvents.resourceSelection.cancel]: Record<never, never>;
 }
 
 export type GameUiEvent = EventUnion<GameUiEventMap>;
@@ -63,4 +72,19 @@ export const GameUiEventCreators = {
             payload: {},
         }
     },
+    resourceSelectionStart(requiredCount: number, usedCardId: string) {
+        return {
+            type: GameUiEvents.resourceSelection.start,
+            payload: {
+                requiredCount: requiredCount,
+                usedCardId: usedCardId
+            }
+        }
+    },
+    resourceSelectionCancel() {
+        return {
+            type: GameUiEvents.resourceSelection.cancel,
+            payload: {}
+        }
+    }
 } as const;

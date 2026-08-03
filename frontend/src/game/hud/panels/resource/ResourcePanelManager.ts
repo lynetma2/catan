@@ -14,6 +14,7 @@ import {BrowseMode} from "@/game/hud/panels/resource/modes/BrowseMode.ts";
 import {type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {TradeMode} from "@/game/hud/panels/resource/modes/TradeMode.ts";
 import {DiscardMode} from "@/game/hud/panels/resource/modes/DiscardMode.ts";
+import {ResourceSelectionMode} from "@/game/hud/panels/resource/modes/ResourceSelectionMode.ts"; // <-- Added
 import {type Rect, unionRects} from "@/game/utils/Rect.ts";
 import type {GameEventMap} from "@/events/shared/AppEvents.ts";
 import {GameServerEvents} from "@/events/game/GameServerEvents.ts";
@@ -61,6 +62,17 @@ export class ResourcePanelManager {
             this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
         });
 
+        // ─── Resource Selection UI events (Monopoly / Year of Plenty) ─────────
+        this.bus.on(GameUiEvents.resourceSelection.start, (payload) => {
+            this.transitionTo(
+                new ResourceSelectionMode(this.frameQueue, this.resolution, this.shared),
+                {requiredCount: payload.requiredCount, usedCardId: payload.usedCardId}
+            );
+        });
+        this.bus.on(GameUiEvents.resourceSelection.cancel, () => {
+            this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
+        });
+
         // Discard required
         this.bus.on(GameServerEvents.resource.discardRequired.success, (payload) => {
             if (payload.playerId === this.shared.localPlayerId) {
@@ -85,6 +97,16 @@ export class ResourcePanelManager {
                 this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
             }
         });
+
+        // ─── Server events to close Resource Selection upon successful play ───
+        // Note: Update these event names to match your actual server events for Monopoly/YearOfPlenty.
+        // If you have a generic dev card play success event, you can use that instead.
+        //TODO handle this.
+        // this.bus.on(GameServerEvents.developmentCard.play.success, () => {
+        //     if (this.mode.getState().kind === ResourcePanelModeKind.ResourceSelection) {
+        //         this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
+        //     }
+        // });
     }
 
     private transitionTo<TState extends ResourcePanelModeState>(
@@ -131,6 +153,14 @@ export class ResourcePanelManager {
                     state[TradePanelKind.Selector].bounds,
                     state.buttons.cancel,
                     state.buttons.confirmGlobal,
+                    state.buttons.confirmBank,
+                );
+
+            case ResourcePanelModeKind.ResourceSelection:
+                return unionRects(
+                    state[TradePanelKind.Selector].bounds,
+                    state[TradePanelKind.Wanted].bounds,
+                    state.buttons.cancel,
                     state.buttons.confirmBank,
                 );
         }

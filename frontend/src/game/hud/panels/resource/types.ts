@@ -8,6 +8,11 @@ export enum TradeButtonType {
     ConfirmBank = "ConfirmBank"
 }
 
+export enum ResourceButtonType {
+    Cancel = "Cancel",
+    Confirm = "Confirm"
+}
+
 export enum HitResultKind {
     None = "None",
     Card = "Card",
@@ -82,10 +87,23 @@ export interface TradeModeState {
     hoveredButton: TradeButtonType | null;
 }
 
+export interface ResourceSelectionState {
+    kind: ResourcePanelModeKind.ResourceSelection;
+    requiredCount: number;
+    [TradePanelKind.Selector]: { bounds: Rect; cards: ResourceCard[] };
+    [TradePanelKind.Wanted]: { bounds: Rect; cards: ResourceCard[] };
+    buttons: {
+        cancel: Rect;
+        confirmBank: Rect;
+    };
+    hoveredButton: TradeButtonType | null;
+}
+
 export type ResourcePanelModeState =
     | BrowseModeState
     | DiscardModeState
-    | TradeModeState;
+    | TradeModeState
+    | ResourceSelectionState;
 
 export interface ResourcePanelManagerState {
     modeState: ResourcePanelModeState;
@@ -96,6 +114,7 @@ export enum ResourcePanelModeKind {
     Browse = "Browse",
     Discard = "Discard",
     Trade = "Trade",
+    ResourceSelection = "ResourceSelection",
 }
 
 export interface ResourcePanelMode<

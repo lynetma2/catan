@@ -153,3 +153,49 @@ export function resolveDiscardLayout(r: Resolution): DiscardLayout {
         counter,
     };
 }
+
+// Add to your imports at the top if not already there:
+// import { type Rect } from '@/game/utils/Rect.ts';
+
+export interface ResourceSelectionLayout {
+    [TradePanelKind.Selector]: Rect;
+    [TradePanelKind.Wanted]: Rect;
+    [TradeButtonType.Cancel]: Rect;
+    [TradeButtonType.ConfirmBank]: Rect;
+}
+
+/**
+ * Layout for Monopoly / Year of Plenty selection.
+ * Selector sits at the bottom (like the Hand), Wanted sits directly above it.
+ * Buttons are aligned to the right of the Wanted row.
+ */
+export function resolveResourceSelectionLayout(r: Resolution): ResourceSelectionLayout {
+    const selector = resolveHandPanelBounds(r); // Bottom row
+    const wanted: Rect = {
+        ...selector,
+        y: selector.y - selector.height - ROW_GAP, // Row directly above Selector
+    };
+
+    const buttonX = selector.x + selector.width + ROW_GAP;
+    const buttonY = wanted.y; // Align buttons with the top row
+
+    const cancelButton: Rect = {
+        x: buttonX,
+        y: buttonY,
+        width: BUTTON.width,
+        height: BUTTON.height,
+    };
+    const confirmBankButton: Rect = {
+        x: buttonX,
+        y: buttonY + BUTTON.height + BUTTON.gap,
+        width: BUTTON.width,
+        height: BUTTON.height,
+    };
+
+    return {
+        [TradePanelKind.Selector]: selector,
+        [TradePanelKind.Wanted]: wanted,
+        [TradeButtonType.Cancel]: cancelButton,
+        [TradeButtonType.ConfirmBank]: confirmBankButton,
+    };
+}

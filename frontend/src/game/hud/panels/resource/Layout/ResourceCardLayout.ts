@@ -2,7 +2,7 @@
 import {type Resolution} from '@/game/core/ResolutionManager.ts';
 import {DevelopmentCardType, type Resource, ResourceType} from '@/game/core/types.ts';
 import {type Rect} from '@/game/utils/Rect.ts';
-import {resolveHandPanelBounds, resolveTradeLayout,} from './ResourcePanelLayout.ts';
+import {resolveHandPanelBounds, resolveResourceSelectionLayout, resolveTradeLayout,} from './ResourcePanelLayout.ts';
 import type {DevelopmentCard, ResourceCard} from "@/game/hud/panels/resource/types.ts";
 import {TradePanelKind} from "@/game/hud/panels/resource/types.ts";
 
@@ -277,4 +277,54 @@ function resolveFanOffset(
     );
 
     return { x: direction * fanAmount, y: 0 };
+}
+
+// Add to your imports at the top:
+// import { resolveResourceSelectionLayout } from './ResourcePanelLayout.ts';
+
+export interface ResourceSelectionCards {
+    [TradePanelKind.Selector]: ResourceCard[];
+    [TradePanelKind.Wanted]: ResourceCard[];
+}
+
+export function resolveResourceSelectionCards(
+    resources: {
+        [TradePanelKind.Wanted]: Resource[];
+    },
+    hoveredId: string | null,
+    r: Resolution,
+    isLimitReached: boolean
+): ResourceSelectionCards {
+    const layout = resolveResourceSelectionLayout(r);
+    const selectorResources = resolveSelectorResources();
+
+    const selectorCards = resolveCardsInRect(
+        selectorResources,
+        layout[TradePanelKind.Selector],
+        hoveredId,
+        'highlight'
+    );
+
+    const wantedCards = resolveCardsInRect(
+        resources[TradePanelKind.Wanted],
+        layout[TradePanelKind.Wanted],
+        hoveredId,
+        'fan'
+    );
+
+    // Apply visual states based on game logic
+    const patchedSelectorCards = selectorCards.map(c => ({
+        ...c,
+        isDisabled: isLimitReached // Greys out selector when max picks reached
+    }));
+
+    const patchedWantedCards = wantedCards.map(c => ({
+        ...c,
+        isSelected: true // Gives selected cards the golden glow
+    }));
+
+    return {
+        [TradePanelKind.Selector]: patchedSelectorCards,
+        [TradePanelKind.Wanted]: patchedWantedCards,
+    };
 }
