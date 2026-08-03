@@ -30,6 +30,12 @@ public class DevelopmentCardBank {
         }
     }
 
+    public static DevelopmentCardBank singleType(DevelopmentCardType type) {
+        List<DevelopmentCardType> types = new ArrayList<>();
+        addN(types, type, 25);
+        return new DevelopmentCardBank(new ArrayDeque<>(types));
+    }
+
     public int remaining() {
         return deck.size();
     }

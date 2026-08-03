@@ -154,6 +154,7 @@ export class BuildPanel {
         switch (type) {
             case ButtonType.putRoad:
                 if (phase === GamePhase.SetupPlaceRoad) return false;
+                if (phase === GamePhase.RoadBuilding) return false;
                 if (phase === GamePhase.PostRoll) return !this.sharedState.canAfford(PieceType.Road);
                 return true;
 

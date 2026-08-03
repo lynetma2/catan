@@ -191,7 +191,7 @@ export enum GamePhase {
     /** Seven Rolled - must discard half cards */
     Discard = 'discard',
 
-    RoadBuilding = 'roadBuilding',
+    RoadBuilding = 'road_building',
 
     /** game over */
     End = 'end',

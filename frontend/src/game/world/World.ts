@@ -3,7 +3,7 @@ import type {Camera} from "@/game/core/Camera.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 import type {EventBus} from "@/game/core/EventBus.ts";
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
-import {type BuildTarget, BuildTargetKind, type GameSnapshot, PieceType} from "@/game/core/types.ts";
+import {type BuildTarget, BuildTargetKind, GamePhase, type GameSnapshot, PieceType} from "@/game/core/types.ts";
 import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import type {WorldState} from "@/game/world/types.ts";
 
@@ -41,6 +41,8 @@ export class World implements InputLayer {
         this.bus.on(GameServerEvents.state.full.success, (payload) =>
             this.onGameStateLoaded(payload)
         );
+        this.bus.on(GameServerEvents.state.phase.change.success, () => this.buildHoverSystem.onModeChanged());
+        this.bus.on(GameServerEvents.build.road.success, () => this.buildHoverSystem.onModeChanged());
     }
 
     private onGameStateLoaded(payload: {
@@ -146,7 +148,9 @@ export class World implements InputLayer {
                 break;
         }
 
-        this.frameQueue.push({type: GameUiEvents.build.exit, payload: {}});
+        if (this.shared.currentPhase !== GamePhase.RoadBuilding) {
+            this.frameQueue.push({type: GameUiEvents.build.exit, payload: {}});
+        }
         return true;
     }
 

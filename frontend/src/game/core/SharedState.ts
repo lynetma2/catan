@@ -62,6 +62,9 @@ export class SharedState {
         if (this.mustPlaceRobber && this.isLocalPlayersTurn) {
             return "robber";
         }
+        if (this._currentPhase === GamePhase.RoadBuilding && this.isLocalPlayersTurn) {
+            return PieceType.Road;
+        }
         return this._buildMode;
     }
     get players(): ReadonlyMap<string, Player> { return this._players; }
@@ -133,6 +136,7 @@ export class SharedState {
     }
 
     setBuildMode(mode: PieceType | null) {
+        console.log("Setting build mode", mode);
         this._buildMode = mode;
     }
 
@@ -229,7 +233,7 @@ export class SharedState {
     }
 
     get isBuildingPhase(): boolean {
-        return this._currentPhase === GamePhase.PostRoll;
+        return this._currentPhase === GamePhase.PostRoll || this._currentPhase === GamePhase.RoadBuilding;
     }
 
     get isSetupPhase(): boolean {
@@ -271,7 +275,7 @@ export class SharedState {
             this._currentPhase === GamePhase.SetupPlaceSettlement) {
             return true;
         } else if (pieceType === PieceType.Road &&
-            this._currentPhase === GamePhase.SetupPlaceRoad) {
+            (this._currentPhase === GamePhase.SetupPlaceRoad || this._currentPhase === GamePhase.RoadBuilding)) {
             return true;
         } else {
             const player = this._players.get(playerId);
