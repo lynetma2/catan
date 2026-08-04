@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Component
@@ -39,8 +40,12 @@ public class GameMapper {
     }
 
     private List<PlayerSnapshotDTO> mapPlayers(Game game, UUID viewingPlayerId) {
+        Map<UUID, Integer> longestRoads = game.getLongestRoadLengths();
         return game.getPlayers().stream()
-                .map(p -> mapPlayer(game, p, p.getId().equals(viewingPlayerId)))
+                .map(p -> {
+                    int longestRoadLength = longestRoads.getOrDefault(p.getId(), 0);
+                    return mapPlayer(game, p, p.getId().equals(viewingPlayerId), longestRoadLength);
+                })
                 .toList();
     }
 
@@ -78,7 +83,7 @@ public class GameMapper {
                 .toList();
     }
 
-    private PlayerSnapshotDTO mapPlayer(Game game, GamePlayer p, boolean isViewer) {
+    private PlayerSnapshotDTO mapPlayer(Game game, GamePlayer p, boolean isViewer, int longestRoad) {
         List<Resource> visibleResources = isViewer ? p.getResources() : List.of();
         List<DevCardSnapshotDTO> visibleDevCards = isViewer ? mapDevCards(p.getDevelopmentCards()) : List.of();
         long visibleVictoryPoints = isViewer ? game.computeTotalVictoryPoints(p.getId()) : game.computePublicVictoryPoints(p.getId());
@@ -94,6 +99,7 @@ public class GameMapper {
                 p.getDevelopmentCardCount(),
                 game.hasLongestRoad(p.getId()),
                 game.hasLargestArmy(p.getId()),
+                longestRoad,
                 p.getKnightsUsed()
         );
     }

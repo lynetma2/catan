@@ -19,6 +19,7 @@ public record PlayerSnapshotDTO(
         int devCardCount,
         boolean hasLongestRoad,
         boolean hasLargestArmy,
+        int longestRoadLength,
         int knightsUsed
 ) {
     public PlayerSnapshotDTO {

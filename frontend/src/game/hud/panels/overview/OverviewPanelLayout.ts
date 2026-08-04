@@ -1,17 +1,19 @@
 // hud/panels/overview/PlayerOverviewLayout.ts
-import { type Resolution }        from '@/game/core/ResolutionManager';
-import { hudLayout, type PanelConfig } from '@/game/hud/HudLayout';
-import { Anchor }                 from '@/game/hud/types';
-import { type Rect }              from '@/game/utils/Rect';
-import type {PlayerOverviewEntry, PlayerRowLayout} from "@/game/hud/panels/overview/types.ts";
+import {type Resolution} from '@/game/core/ResolutionManager';
+import {hudLayout, type PanelConfig} from '@/game/hud/HudLayout';
+import {Anchor} from '@/game/hud/types';
+import {type Rect} from '@/game/utils/Rect';
+import type {OverviewStatKind, PlayerOverviewEntry, PlayerRowLayout} from "@/game/hud/panels/overview/types.ts";
 
 // ─── Config ───────────────────────────────────────────────────────────
 
-const ROW_HEIGHT  = 34;
+const ROW_HEIGHT = 44;
 const ROW_SPACING = 4;
-const PANEL_WIDTH = 160;
+const PANEL_WIDTH = 220;
 const PADDING     = 8;
-const HEADER_HEIGHT = 0; // no header title — panel speaks for itself visually
+const STAT_SLOT_WIDTH = 26;
+const STAT_SLOT_GAP = 6;
+const STAT_RIGHT_PADDING = 8;
 
 // ─── Panel bounds — driven by player count ────────────────────────────
 
@@ -55,4 +57,21 @@ export function resolvePlayerRows(
             height: ROW_HEIGHT,
         }
     }));
+}
+
+export function resolveStatRects(bounds: Rect): { kind: OverviewStatKind; rect: Rect }[] {
+    const rightToLeft: OverviewStatKind[] = ['road', 'knights', 'devCards', 'resources', 'victoryPoints'];
+    const statsY = bounds.y + bounds.height - 12; // second line of the row
+    let cursor = bounds.x + bounds.width - STAT_RIGHT_PADDING;
+
+    return rightToLeft.map(kind => {
+        const rect: Rect = {
+            x: cursor - STAT_SLOT_WIDTH,
+            y: statsY - 8,
+            width: STAT_SLOT_WIDTH,
+            height: 16,
+        };
+        cursor = rect.x - STAT_SLOT_GAP;
+        return {kind, rect};
+    });
 }

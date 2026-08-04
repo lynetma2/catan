@@ -1,5 +1,12 @@
 import type {Rect} from "@/game/utils/Rect.ts";
 
+export type OverviewStatKind = 'victoryPoints' | 'resources' | 'devCards' | 'knights' | 'road';
+
+export interface HoveredStat {
+    playerId: string;
+    stat: OverviewStatKind;
+}
+
 export interface PlayerOverviewEntry {
     playerId:      string;
     name:          string;
@@ -9,7 +16,8 @@ export interface PlayerOverviewEntry {
     devCardCount:  number;
     hasLongestRoad: boolean;
     hasLargestArmy: boolean;
-    usedRobbers:   number;
+    usedRobbers: number;
+    longestRoadLength: number;
     isCurrentTurn: boolean;
     isLocalPlayer: boolean;
     discardStatus: 'none' | 'pending' | 'done';
@@ -24,4 +32,5 @@ export interface PlayerOverviewState {
     bounds:  Rect;
     players: PlayerOverviewEntry[];
     rows:    PlayerRowLayout[];
+    hoveredStat: HoveredStat | null;
 }

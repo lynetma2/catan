@@ -144,6 +144,7 @@ export interface PlayerSnapshot {
     hasLongestRoad: boolean;
     hasLargestArmy: boolean;
     knightsUsed: number;
+    longestRoadLength: number;
 }
 
 export interface DevCardSnapshot {

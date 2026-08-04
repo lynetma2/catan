@@ -1,16 +1,21 @@
 // hud/panels/overview/PlayerOverviewPanel.ts
 import {EventBus} from '@/game/core/EventBus';
 import {SharedState} from '@/game/core/SharedState';
-import {resolveOverviewPanelBounds, resolvePlayerRows} from "@/game/hud/panels/overview/OverviewPanelLayout.ts";
+import {
+    resolveOverviewPanelBounds,
+    resolvePlayerRows,
+    resolveStatRects
+} from "@/game/hud/panels/overview/OverviewPanelLayout.ts";
 import type {GameEventMap} from "@/events/shared/AppEvents.ts";
 import {GameServerEvents} from "@/events/game/GameServerEvents.ts";
-import type {PlayerOverviewEntry, PlayerOverviewState} from "@/game/hud/panels/overview/types.ts";
+import type {HoveredStat, PlayerOverviewEntry, PlayerOverviewState} from "@/game/hud/panels/overview/types.ts";
 import type {Resolution, ResolutionManager} from "@/game/core/ResolutionManager.ts";
-import type {NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
+import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {GamePhase} from "@/game/core/types.ts";
 
 export class PlayerOverviewPanel {
     private players: Map<string, PlayerOverviewEntry> = new Map();
+    private hoveredStat: HoveredStat | null = null;
 
     constructor(
         private readonly bus: EventBus<GameEventMap>,
@@ -38,6 +43,8 @@ export class PlayerOverviewPanel {
         this.bus.on(GameServerEvents.state.overview.longestRoad.success, (payload) => this.onLongestRoadChanged(payload));
         this.bus.on(GameServerEvents.state.overview.largestArmy.success, (payload) => this.onLargestArmyChanged(payload));
         this.bus.on(GameServerEvents.state.overview.victoryPoint.success, (payload) => this.onVictoryPointsChanged(payload));
+        this.bus.on(GameServerEvents.state.overview.armySize.success, (payload) => this.onArmySizeChanged(payload));
+        this.bus.on(GameServerEvents.state.overview.roadLength.success, (payload) => this.onLongestRoadLengthChanged(payload));
 
         //Discard related.
         this.bus.on(GameServerEvents.resource.discardRequired.success, (payload) => this.onDiscardRequired(payload));
@@ -66,6 +73,7 @@ export class PlayerOverviewPanel {
                 hasLongestRoad: p.hasLongestRoad,
                 hasLargestArmy: p.hasLargestArmy,
                 usedRobbers: p.knightsUsed,
+                longestRoadLength: p.longestRoadLength,
                 isCurrentTurn: p.id === snapshot.currentPlayerId,
                 isLocalPlayer: p.id === payload.localPlayerId,
                 discardStatus: pending.has(p.id) ? 'pending' : 'none',
@@ -118,6 +126,20 @@ export class PlayerOverviewPanel {
         if (player) player.victoryPoints = payload.victoryPoints;
     }
 
+    private onLongestRoadLengthChanged(
+        payload: GameEventMap[typeof GameServerEvents.state.overview.roadLength.success]
+    ) {
+        const player = this.players.get(payload.playerId);
+        if (player) player.longestRoadLength = payload.longestRoadLength;
+    }
+
+    private onArmySizeChanged(
+        payload: GameEventMap[typeof GameServerEvents.state.overview.armySize.success]
+    ) {
+        const player = this.players.get(payload.playerId);
+        if (player) player.usedRobbers = payload.armySize;
+    }
+
     private onDiscardRequired(payload: GameEventMap[typeof GameServerEvents.resource.discardRequired.success]) {
         const player = this.players.get(payload.playerId);
         if (player) player.discardStatus = 'pending';
@@ -137,9 +159,25 @@ export class PlayerOverviewPanel {
     }
 
     // ─── Input ────────────────────────────────────────────────────────
-    handleInput(_event: NormalizedInputEvent): boolean {
-        return false; // display only for now
-        //TODO add some extra text when hovering stats.
+    handleInput(event: NormalizedInputEvent): boolean {
+        if (event.type === InputType.MouseMove) {
+            this.hoveredStat = this.resolveHoveredStat(event.screenPos);
+        }
+        return false; // still display-only for clicks
+    }
+
+    private resolveHoveredStat(pos: { x: number; y: number }): HoveredStat | null {
+        const r = this.resolution.get();
+        const rows = resolvePlayerRows(Array.from(this.players.values()), r);
+        for (const row of rows) {
+            for (const {kind, rect} of resolveStatRects(row.bounds)) {
+                if (pos.x >= rect.x && pos.x <= rect.x + rect.width &&
+                    pos.y >= rect.y && pos.y <= rect.y + rect.height) {
+                    return {playerId: row.playerId, stat: kind};
+                }
+            }
+        }
+        return null;
     }
 
     // ─── State ────────────────────────────────────────────────────────
@@ -151,6 +189,7 @@ export class PlayerOverviewPanel {
             bounds: resolveOverviewPanelBounds(players.length, r),
             players,
             rows: resolvePlayerRows(players, r),
+            hoveredStat: this.hoveredStat
         };
     }
 

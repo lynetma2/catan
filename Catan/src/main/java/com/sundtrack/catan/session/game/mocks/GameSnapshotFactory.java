@@ -48,11 +48,11 @@ public class GameSnapshotFactory {
                         new Resource(UUID.randomUUID(), ResourceType.LUMBER), new Resource(UUID.randomUUID(), ResourceType.LUMBER),
                         new Resource(UUID.randomUUID(), ResourceType.BRICK), new Resource(UUID.randomUUID(), ResourceType.WOOL),
                         new Resource(UUID.randomUUID(), ResourceType.GRAIN), new Resource(UUID.randomUUID(), ResourceType.BRICK)
-                ), List.of(), 2, 3, 0, true, false, 0),
+                ), List.of(), 2, 3, 0, true, false, 0, 0),
 
-                new PlayerSnapshotDTO("p2", "Bob", "#50a0e0", List.of(), List.of(), 2, 5, 1, false, true, 2),
-                new PlayerSnapshotDTO("p3", "Carol", "#50c050", List.of(), List.of(), 3, 2, 0, false, false, 0),
-                new PlayerSnapshotDTO("p4", "Dave", "#e0a030", List.of(), List.of(), 1, 0, 0, false, false, 0)
+                new PlayerSnapshotDTO("p2", "Bob", "#50a0e0", List.of(), List.of(), 2, 5, 1, false, true, 2, 0),
+                new PlayerSnapshotDTO("p3", "Carol", "#50c050", List.of(), List.of(), 3, 2, 0, false, false, 0, 0),
+                new PlayerSnapshotDTO("p4", "Dave", "#e0a030", List.of(), List.of(), 1, 0, 0, false, false, 0, 0)
         );
         return allPlayers.subList(0, Math.min(count, allPlayers.size()));
     }
