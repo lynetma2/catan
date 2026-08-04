@@ -22,6 +22,10 @@ public class DevelopmentCard {
         return type;
     }
 
+    public int getPurchasedOnTurn() {
+        return purchasedOnTurn;
+    }
+
     public boolean isBoughtThisTurn(int currentTurn) {
         return purchasedOnTurn == currentTurn;
     }

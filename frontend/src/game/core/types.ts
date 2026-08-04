@@ -8,7 +8,7 @@ export interface Player {
     name: string;
     color: string;
     resources: Resource[];
-    devCards: DevelopmentCardId[]
+    devCards: DevelopmentCardInternal[]
     victoryPoints: number;
 }
 
@@ -29,6 +29,12 @@ export interface DevelopmentCardId {
     type: DevelopmentCardType;
     uid: string;
     playableThisTurn: boolean;
+}
+
+export interface DevelopmentCardInternal {
+    type: DevelopmentCardType;
+    uid: string;
+    purchasedOnTurn: number;
 }
 
 export enum PieceType {
@@ -143,7 +149,7 @@ export interface PlayerSnapshot {
 export interface DevCardSnapshot {
     uid: string;
     type: DevelopmentCardType;
-    playableThisTurn: boolean;
+    purchasedOnTurn: number;
 }
 
 export interface GameSnapshot {

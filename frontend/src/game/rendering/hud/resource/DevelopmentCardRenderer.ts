@@ -34,11 +34,16 @@ export class DevelopmentCardRenderer {
         ctx.fill();
 
         ctx.lineWidth = card.isSelected ? 2.5 : 1.5;
-        ctx.strokeStyle = card.isSelected
-            ? '#FFD700'
-            : card.isHovered
-                ? 'rgba(255,255,255,0.6)'
-                : '#333333';
+
+        // Determine border color based on state
+        let strokeColor = '#333333';
+        if (card.isSelected) {
+            strokeColor = '#FFD700'; // Gold for selected
+        } else if (card.isHovered) {
+            // Orange if playable this turn, standard white-ish if not
+            strokeColor = card.playableThisTurn ? '#FF9800' : 'rgba(255,255,255,0.6)';
+        }
+        ctx.strokeStyle = strokeColor;
         ctx.stroke();
     }
 

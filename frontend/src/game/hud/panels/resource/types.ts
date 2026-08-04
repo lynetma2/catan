@@ -8,11 +8,6 @@ export enum TradeButtonType {
     ConfirmBank = "ConfirmBank"
 }
 
-export enum ResourceButtonType {
-    Cancel = "Cancel",
-    Confirm = "Confirm"
-}
-
 export enum HitResultKind {
     None = "None",
     Card = "Card",
@@ -46,6 +41,7 @@ export interface DevelopmentCard {
     isHovered: boolean;
     isSelected: boolean;
     isDisabled: boolean;
+    playableThisTurn: boolean;
     bounds: Rect;
 }
 

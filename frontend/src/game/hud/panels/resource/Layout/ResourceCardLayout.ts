@@ -1,6 +1,6 @@
 // hud/panels/resource/ResourceCardLayout.ts
 import {type Resolution} from '@/game/core/ResolutionManager.ts';
-import {DevelopmentCardType, type Resource, ResourceType} from '@/game/core/types.ts';
+import {type DevelopmentCardId, type Resource, ResourceType} from '@/game/core/types.ts';
 import {type Rect} from '@/game/utils/Rect.ts';
 import {resolveHandPanelBounds, resolveResourceSelectionLayout, resolveTradeLayout,} from './ResourcePanelLayout.ts';
 import type {DevelopmentCard, ResourceCard} from "@/game/hud/panels/resource/types.ts";
@@ -84,7 +84,7 @@ export function resolveHandCards(
  */
 export function resolveBrowseHandCards(
     resources: Resource[],
-    devs: { type: DevelopmentCardType; uid: string }[],
+    devs: DevelopmentCardId[],
     hoveredId: string | null,
     r: Resolution,
 ): { resCards: ResourceCard[]; devCards: DevelopmentCard[] } {
@@ -124,6 +124,7 @@ export function resolveBrowseHandCards(
             isHovered: i === hoveredIndex,
             isSelected: false,
             isDisabled: false,
+            playableThisTurn: dev.playableThisTurn,
             bounds: {
                 x: getX(i) + offset.x,
                 y: baseY + offset.y,

@@ -382,7 +382,7 @@ public class Game {
         DevelopmentCard card = developmentCardBank.draw(getTurnNumber());
         player.addDevelopmentCard(card);
 
-        DevCardSnapshotDTO cardSnapshotDTO = new DevCardSnapshotDTO(card, this.getTurnNumber());
+        DevCardSnapshotDTO cardSnapshotDTO = new DevCardSnapshotDTO(card);
         return new DrawDevelopmentCardResult(cardSnapshotDTO, deducted);
     }
 

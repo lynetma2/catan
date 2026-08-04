@@ -63,6 +63,9 @@ export class BrowseMode implements ResourcePanelMode<BrowseModeState> {
             // 1. Check if it's a development card
             const devHit = devCards.find(d => d.uid === hit.uid);
             if (devHit) {
+                if (!devHit.playableThisTurn) {
+                    return true;
+                }
                 this.handleDevCardClick(devHit.developmentType, devHit.uid);
                 return true;
             }

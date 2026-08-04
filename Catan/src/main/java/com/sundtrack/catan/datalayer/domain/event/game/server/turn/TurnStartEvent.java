@@ -9,6 +9,7 @@ import static com.sundtrack.catan.datalayer.domain.event.EventDomainConstants.*;
 
 @EventType(SERVER + SEPARATOR + GAME + SEPARATOR + TURN + SEPARATOR + "start")
 public record TurnStartEvent(
-        UUID playerId
+        UUID playerId,
+        int turnNumber
 ) implements ServerEvent {
 }

@@ -187,7 +187,7 @@ export interface GameServerEventMap {
     [GameServerEvents.resource.discardCards.success]: { playerId: string, resources: Resource[] };
     [GameServerEvents.resource.discardComplete.success]: { playerId: string };
     [GameServerEvents.turn.end.success]: { playerId: string };
-    [GameServerEvents.turn.start.success]: { playerId: string };
+    [GameServerEvents.turn.start.success]: { playerId: string, turnNumber: number };
     [GameServerEvents.robber.placed.success]: { playerId: string, hex: Hex };
     [GameServerEvents.robber.stealTargetRequired.success]: { retrievingPlayerId: string, candidates: string[] };
     [GameServerEvents.trade.bank.success]: {

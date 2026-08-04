@@ -73,6 +73,12 @@ public class GameDispatcher {
         return finalResult;
     }
 
+    private EventResult<ServerEvent> errorResult(GameContext context, ValidationErrorCode code,
+                                                 String message, Map<String, Object> details) {
+        GameErrorEvent error = new GameErrorEvent(code.toString(), message, details);
+        return EventResult.of(List.of(), Map.of(context.playerId(), List.of(error)));
+    }
+
     private EventResult<ServerEvent> mergeCrossCuttingEvents(Game game, DispatchSnapshot before,
                                                              EventResult<ServerEvent> result) {
         List<ServerEvent> events = new ArrayList<>();
@@ -85,7 +91,7 @@ public class GameDispatcher {
         UUID playerAfter = game.getCurrentPlayerId();
         if (!before.currentPlayerId().equals(playerAfter)) {
             events.add(new TurnEndEvent(before.currentPlayerId()));
-            events.add(new TurnStartEvent(playerAfter));
+            events.add(new TurnStartEvent(playerAfter, game.getTurnNumber()));
         }
 
         Map<UUID, PlayerStats> statsAfter = PlayerStatsDiff.capture(game);
@@ -99,12 +105,6 @@ public class GameDispatcher {
                 .map(EventResult::broadcast)
                 .map(result::merge)
                 .orElse(result);
-    }
-
-    private EventResult<ServerEvent> errorResult(GameContext context, ValidationErrorCode code,
-                                                 String message, Map<String, Object> details) {
-        GameErrorEvent error = new GameErrorEvent(code.toString(), message, details);
-        return EventResult.of(List.of(), Map.of(context.playerId(), List.of(error)));
     }
 
     private record DispatchSnapshot(GamePhase phase, UUID currentPlayerId, Map<UUID, PlayerStats> stats) {

@@ -57,6 +57,7 @@ export class SharedStateManager {
 
     private onTurnStarted(payload: GameEventMap[typeof GameServerEvents.turn.start.success]) {
         this.shared.setCurrentPlayer(payload.playerId);
+        this.shared.setTurnNumber(payload.turnNumber);
     }
 
     private onStealTargetRequired(payload: GameEventMap[typeof GameServerEvents.robber.stealTargetRequired.success]) {

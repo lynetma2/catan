@@ -6,14 +6,14 @@ import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCardType;
 public record DevCardSnapshotDTO(
         String uid,
         DevelopmentCardType type,
-        boolean playableThisTurn
+        int purchasedOnTurn
 ) {
 
-    public DevCardSnapshotDTO(DevelopmentCard card, int currentTurn) {
+    public DevCardSnapshotDTO(DevelopmentCard card) {
         this(
                 card.getId().toString(),
                 card.getType(),
-                card.isPlayable(currentTurn)
+                card.getPurchasedOnTurn()
         );
     }
 }

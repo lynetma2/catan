@@ -30,6 +30,7 @@ export class SharedState {
     private readonly _players: Map<string, Player> = new Map();
     private _robberHex: Hex | null = null;
     private _activeFlowState: FlowState | null = null;
+    private _turnNumber: number = 0;
     readonly board: Board = new Board();
 
     // core/SharedState.ts
@@ -41,6 +42,7 @@ export class SharedState {
         this.board.hexGrid.loadTiles(payload.tiles);
         this.board.loadFromSnapshot(payload.placements);
         const robbedHex = this.findRobbedHex(payload.tiles);
+        this._turnNumber = payload.turnNumber;
         if (robbedHex !== null) {
             this.setRobberHex(robbedHex);
         }
@@ -81,7 +83,12 @@ export class SharedState {
 
     get localPlayerDevCards(): DevelopmentCardId[] | null {
         if (!this.localPlayer) return null;
-        return this.localPlayer.devCards;
+
+        return this.localPlayer.devCards.map(card => ({
+            type: card.type,
+            uid: card.uid,
+            playableThisTurn: this.turnNumber > card.purchasedOnTurn,
+        }));
     }
 
     get isLocalPlayersTurn(): boolean {
@@ -121,6 +128,10 @@ export class SharedState {
         return this._activeFlowState?.type === "roadBuilding" ? this._activeFlowState.roadsRequired : 0;
     }
 
+    get turnNumber(): number {
+        return this._turnNumber;
+    }
+
     // ─── Mutations — explicit, named, intentional ─────────────────────
 
     setLocalPlayerId(id: string) {
@@ -157,6 +168,10 @@ export class SharedState {
 
     setActiveFlowState(state: FlowState | null) {
         this._activeFlowState = state;
+    }
+
+    setTurnNumber(turnNumber: number) {
+        this._turnNumber = turnNumber;
     }
 
     updatePlayer(playerId: string, update: Partial<Player>) {

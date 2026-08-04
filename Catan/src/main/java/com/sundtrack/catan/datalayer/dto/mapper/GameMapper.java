@@ -80,7 +80,7 @@ public class GameMapper {
 
     private PlayerSnapshotDTO mapPlayer(Game game, GamePlayer p, boolean isViewer) {
         List<Resource> visibleResources = isViewer ? p.getResources() : List.of();
-        List<DevCardSnapshotDTO> visibleDevCards = isViewer ? mapDevCards(p.getDevelopmentCards(), game.getTurnNumber()) : List.of();
+        List<DevCardSnapshotDTO> visibleDevCards = isViewer ? mapDevCards(p.getDevelopmentCards()) : List.of();
         long visibleVictoryPoints = isViewer ? game.computeTotalVictoryPoints(p.getId()) : game.computePublicVictoryPoints(p.getId());
 
         return new PlayerSnapshotDTO(
@@ -98,9 +98,9 @@ public class GameMapper {
         );
     }
 
-    private List<DevCardSnapshotDTO> mapDevCards(List<DevelopmentCard> cards, int currentTurn) {
+    private List<DevCardSnapshotDTO> mapDevCards(List<DevelopmentCard> cards) {
         return cards.stream()
-                .map(card -> new DevCardSnapshotDTO(card.getId().toString(), card.getType(), card.isPlayable(currentTurn)))
+                .map(DevCardSnapshotDTO::new)
                 .toList();
     }
 }
