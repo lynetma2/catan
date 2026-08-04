@@ -12,6 +12,7 @@ import type {HoveredStat, PlayerOverviewEntry, PlayerOverviewState} from "@/game
 import type {Resolution, ResolutionManager} from "@/game/core/ResolutionManager.ts";
 import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {GamePhase} from "@/game/core/types.ts";
+import {DISCARD_RISK_THRESHOLD} from "@/game/core/GameConfigurationConstants.ts";
 
 export class PlayerOverviewPanel {
     private players: Map<string, PlayerOverviewEntry> = new Map();
@@ -77,6 +78,7 @@ export class PlayerOverviewPanel {
                 isCurrentTurn: p.id === snapshot.currentPlayerId,
                 isLocalPlayer: p.id === payload.localPlayerId,
                 discardStatus: pending.has(p.id) ? 'pending' : 'none',
+                isAtDiscardRisk: p.resCardCount > DISCARD_RISK_THRESHOLD
             });
         });
     }

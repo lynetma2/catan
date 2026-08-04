@@ -235,7 +235,19 @@ public class Game {
         if (flow.isInSubFlow()) {
             flow.dispatch(action, playerId);
         }
+
+        refreshLongestRoadAward();
         return new PlacementResult<>(road, deducted);
+    }
+
+    private void refreshLongestRoadAward() {
+        gameAwards.refreshLongestRoad(getLongestRoadLengths());
+    }
+
+    public Map<UUID, Integer> getLongestRoadLengths() {
+        return players
+                .stream()
+                .collect(Collectors.toMap(GamePlayer::getId, p -> board.longestRoadLength(p.getId())));
     }
 
     public PlacementResult<Vertex> placeCity(Vertex vertex, UUID playerId) {
@@ -297,9 +309,6 @@ public class Game {
     }
 
     public Optional<ServerEvent> evaluateEndOfAction() {
-        refreshLargestArmy();
-        refreshLongestRoadAward();
-
         for (GamePlayer player : players) {
             long totalVictoryPoints = computeTotalVictoryPoints(player.getId());
             if (totalVictoryPoints >= this.gameConfiguration.getWinScore()) {
@@ -310,31 +319,11 @@ public class Game {
         return Optional.empty();
     }
 
-    private void refreshLargestArmy() {
-        gameAwards.refreshLargestArmy(getArmySizes());
-    }
-
-    private void refreshLongestRoadAward() {
-        gameAwards.refreshLongestRoad(getLongestRoadLengths());
-    }
-
     public long computeTotalVictoryPoints(UUID playerId) {
         GamePlayer player = getPlayerOrThrow(playerId);
         long points = computePublicVictoryPoints(playerId);
         points += player.getVictoryPointCardCount();
         return points;
-    }
-
-    public Map<UUID, Integer> getArmySizes() {
-        return players
-                .stream()
-                .collect(Collectors.toMap(GamePlayer::getId, GamePlayer::getKnightsUsed));
-    }
-
-    public Map<UUID, Integer> getLongestRoadLengths() {
-        return players
-                .stream()
-                .collect(Collectors.toMap(GamePlayer::getId, p -> board.longestRoadLength(p.getId())));
     }
 
     public long computePublicVictoryPoints(UUID playerId) {
@@ -394,8 +383,19 @@ public class Game {
         GamePlayer player = getPlayerOrThrow(playerId);
         player.useDevelopmentCard(cardId, DevelopmentCardType.KNIGHT, getTurnNumber());
         player.incrementKnightsUsed();
+        refreshLargestArmy();
 
         flow.startSubFlow(new RobberPlacementFlow());
+    }
+
+    private void refreshLargestArmy() {
+        gameAwards.refreshLargestArmy(getArmySizes());
+    }
+
+    public Map<UUID, Integer> getArmySizes() {
+        return players
+                .stream()
+                .collect(Collectors.toMap(GamePlayer::getId, GamePlayer::getKnightsUsed));
     }
 
     public void playRoadBuildingCard(UUID playerId, UUID cardId) {

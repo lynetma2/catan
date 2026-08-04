@@ -30,26 +30,31 @@ export class PlayerOverviewRenderer {
     }
 
     private drawTooltip(state: PlayerOverviewState) {
-        const hovered = state.hoveredStat!;
+        const hovered = state.hoveredStat;
+        if (!hovered) return;
+
         const row = state.rows.find(r => r.playerId === hovered.playerId);
         const player = state.players.find(p => p.playerId === hovered.playerId);
         if (!row || !player) return;
+
         const stat = resolveStatRects(row.bounds).find(s => s.kind === hovered.stat);
         if (!stat) return;
 
         const {ctx} = this;
-        const t = this.theme.tooltip; // <-- reads from the top-level section now
+        const t = this.theme.tooltip;
         const label = this.tooltipLabel(player, hovered.stat);
 
         ctx.save();
         ctx.font = t.font;
-        const w = ctx.measureText(label).width + 14;
-        const h = 20;
+        const textMetrics = ctx.measureText(label);
+        const w = textMetrics.width + 14;
+        const h = 22;
+
         // Right-align to the stat so it never overflows the screen edge
         const x = stat.rect.x + stat.rect.width - w;
         const y = stat.rect.y + stat.rect.height + 4;
 
-        // Drop shadow first, so the box visually lifts off the panel
+        // Drop shadow to lift it above the panel
         ctx.shadowColor = t.shadow;
         ctx.shadowBlur = 8;
         ctx.shadowOffsetY = 2;
@@ -59,12 +64,17 @@ export class PlayerOverviewRenderer {
         ctx.fillStyle = t.background;
         ctx.fill();
 
-        // Kill the shadow before border + text
+        // Kill the shadow before drawing the border and text
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
 
-        ctx.strokeStyle = t.border;
+        // Accent the border when warning about discard risk
+        const accent = hovered.stat === 'resources' && player.isAtDiscardRisk
+            ? this.theme.row.discardRiskColor
+            : t.border;
+
+        ctx.strokeStyle = accent;
         ctx.lineWidth = 1;
         ctx.stroke();
 
@@ -72,6 +82,7 @@ export class PlayerOverviewRenderer {
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.fillText(label, x + 7, y + h / 2 + 0.5);
+
         ctx.restore();
     }
 
@@ -80,7 +91,9 @@ export class PlayerOverviewRenderer {
             case 'victoryPoints':
                 return `Victory Points: ${player.victoryPoints}`;
             case 'resources':
-                return `Resource Cards: ${player.resCardCount}`;
+                return player.isAtDiscardRisk
+                    ? `Resource Cards: ${player.resCardCount} — Discard risk!`
+                    : `Resource Cards: ${player.resCardCount}`;
             case 'devCards':
                 return `Development Cards: ${player.devCardCount}`;
             case 'knights':

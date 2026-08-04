@@ -20,6 +20,7 @@ export interface PlayerOverviewEntry {
     longestRoadLength: number;
     isCurrentTurn: boolean;
     isLocalPlayer: boolean;
+    isAtDiscardRisk: boolean;
     discardStatus: 'none' | 'pending' | 'done';
 }
 

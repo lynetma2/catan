@@ -197,7 +197,11 @@ export class PlayerRowRenderer {
             case 'resources':
                 return {
                     text: `${player.resCardCount}`,
-                    color: player.resCardCount > 0 ? theme.statColor : theme.statMutedColor
+                    color: player.isAtDiscardRisk
+                        ? theme.discardRiskColor
+                        : player.resCardCount > 0
+                            ? theme.statColor
+                            : theme.statMutedColor,
                 };
             case 'devCards':
                 return {

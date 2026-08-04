@@ -33,7 +33,7 @@ public class GameCreationServiceImpl implements GameCreationService {
         TurnOrder turnOrder = TurnOrder.startingNewGame(lobbyPlayers.keySet().stream().toList());
         DicePair dicePair = new DicePair();
         GameFlow flow = new GameFlow(turnOrder, 0);
-        DevelopmentCardBank developmentCardBank = DevelopmentCardBank.singleType(DevelopmentCardType.MONOPOLY);
+        DevelopmentCardBank developmentCardBank = DevelopmentCardBank.singleType(DevelopmentCardType.KNIGHT);
         ResourceBank resourceBank = ResourceBank.standard();
         GameConfiguration gameConfiguration = GameConfiguration.standard();
         TradeBook tradeBook = new TradeBook();

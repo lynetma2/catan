@@ -19,6 +19,7 @@ export interface PlayerRowTheme {
     youBadgeColor: string;
     largestArmyColor: string;
     longestRoadColor: string;
+    discardRiskColor: string;
 }
 
 export interface TooltipTheme {
@@ -64,6 +65,7 @@ export const DEFAULT_OVERVIEW_THEME: PlayerOverviewTheme = {
         youBadgeColor: '#88DDFF',
         largestArmyColor: '#FFD700',
         longestRoadColor: '#50C8FF',
+        discardRiskColor: '#FF7043',
     },
     tooltip: {
         // Lighter "elevated" surface so it clearly floats above the dark panel
