@@ -166,7 +166,7 @@ export const GameActionEventCreators = {
     },
     playYearOfPlenty(cardId: string, firstResource: ResourceType, secondResource: ResourceType) {
         return {
-            type: GameActionEvents.developmentCard.play.knight,
+            type: GameActionEvents.developmentCard.play.yearOfPlenty,
             payload: {
                 cardId,
                 firstResource,

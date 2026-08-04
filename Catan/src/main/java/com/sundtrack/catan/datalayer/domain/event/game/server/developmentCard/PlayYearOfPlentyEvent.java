@@ -8,7 +8,7 @@ import java.util.UUID;
 
 import static com.sundtrack.catan.datalayer.domain.event.EventDomainConstants.*;
 
-@EventType(SERVER + SEPARATOR + GAME + SEPARATOR + DEVELOPMENT_CARD + SEPARATOR + PLAY + SEPARATOR + REJECTED + SEPARATOR + "yearOfPlenty")
+@EventType(SERVER + SEPARATOR + GAME + SEPARATOR + DEVELOPMENT_CARD + SEPARATOR + PLAY + SEPARATOR + "yearOfPlenty")
 public record PlayYearOfPlentyEvent(
         ResourceType firstResource,
         ResourceType secondResource,

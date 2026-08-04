@@ -98,15 +98,8 @@ export class ResourcePanelManager {
             }
         });
 
-        // ─── Server events to close Resource Selection upon successful play ───
-        // Note: Update these event names to match your actual server events for Monopoly/YearOfPlenty.
-        // If you have a generic dev card play success event, you can use that instead.
-        //TODO handle this.
-        // this.bus.on(GameServerEvents.developmentCard.play.success, () => {
-        //     if (this.mode.getState().kind === ResourcePanelModeKind.ResourceSelection) {
-        //         this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
-        //     }
-        // });
+        this.bus.on(GameServerEvents.developmentCard.play.monopoly.success, () => this.cancelResourceSelection());
+        this.bus.on(GameServerEvents.developmentCard.play.yearOfPlenty.success, () => this.cancelResourceSelection());
     }
 
     private transitionTo<TState extends ResourcePanelModeState>(
@@ -163,6 +156,12 @@ export class ResourcePanelManager {
                     state.buttons.cancel,
                     state.buttons.confirmBank,
                 );
+        }
+    }
+
+    private cancelResourceSelection(): void {
+        if (this.mode.getState().kind === ResourcePanelModeKind.ResourceSelection) {
+            this.transitionTo(new BrowseMode(this.frameQueue, this.resolution, this.shared));
         }
     }
 }

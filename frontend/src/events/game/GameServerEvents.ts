@@ -1,7 +1,14 @@
 import {DOT_SEPARATOR, SERVER} from "@/events/shared/RootEventNamespaces.ts";
 import type {DeepValues, EventUnion} from "@/events/shared/EventTypes.ts";
 import {GAME_NAMESPACE} from "@/events/game/GameNamespace.ts";
-import {type DevCardSnapshot, GamePhase, type GameSnapshot, type PieceType, type Resource} from "@/game/core/types.ts";
+import {
+    type DevCardSnapshot,
+    GamePhase,
+    type GameSnapshot,
+    type PieceType,
+    type Resource,
+    ResourceType
+} from "@/game/core/types.ts";
 import {BuildRejectionReason} from "@/game/events/GameEventTypes.ts";
 import type {Hex} from "@/game/utils/HexGeometry/Hex.ts";
 import type {Vertex} from "@/game/utils/HexGeometry/Vertex.ts";
@@ -18,6 +25,7 @@ export const ROBBER_GAME_SERVER = `${GAME_SERVER}robber${DOT_SEPARATOR}` as cons
 export const STATE_GAME_SERVER = `${GAME_SERVER}state${DOT_SEPARATOR}` as const;
 export const TRADE_GAME_SERVER = `${GAME_SERVER}trade${DOT_SEPARATOR}` as const;
 export const DEVELOPMENT_CARD_GAME_SERVER = `${GAME_SERVER}developmentCard${DOT_SEPARATOR}` as const;
+export const PLAY_DEVELOPMENT_CARD_GAME_SERVER = `${GAME_SERVER}developmentCard${DOT_SEPARATOR}play${DOT_SEPARATOR}` as const;
 export const PUBLIC_TRADE_GAME_SERVER = `${TRADE_GAME_SERVER}public${DOT_SEPARATOR}` as const;
 
 export const GameServerEvents = {
@@ -138,6 +146,14 @@ export const GameServerEvents = {
         },
         spent: {
             success: `${DEVELOPMENT_CARD_GAME_SERVER}spent`
+        },
+        play: {
+            monopoly: {
+                success: `${PLAY_DEVELOPMENT_CARD_GAME_SERVER}monopoly`,
+            },
+            yearOfPlenty: {
+                success: `${PLAY_DEVELOPMENT_CARD_GAME_SERVER}yearOfPlenty`,
+            },
         }
     },
 } as const;
@@ -200,6 +216,12 @@ export interface GameServerEventMap {
     };
     [GameServerEvents.developmentCard.draw.success]: { card: DevCardSnapshot };
     [GameServerEvents.developmentCard.spent.success]: { playerId: string, cardId: string };
+    [GameServerEvents.developmentCard.play.monopoly.success]: { playerId: string, resourceType: ResourceType };
+    [GameServerEvents.developmentCard.play.yearOfPlenty.success]: {
+        playerId: string,
+        firstResource: ResourceType,
+        secondResource: ResourceType
+    };
 }
 
 export type GameServerEventValues =
