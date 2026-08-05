@@ -1,6 +1,6 @@
 // hud/panels/resource/ResourceCardLayout.ts
 import {type Resolution} from '@/game/core/ResolutionManager.ts';
-import {type DevelopmentCardId, type Resource, ResourceType} from '@/game/core/types.ts';
+import {DevelopmentCardType, type Resource, ResourceType} from '@/game/core/types.ts';
 import {type Rect} from '@/game/utils/Rect.ts';
 import {resolveHandPanelBounds, resolveResourceSelectionLayout, resolveTradeLayout,} from './ResourcePanelLayout.ts';
 import type {DevelopmentCard, ResourceCard} from "@/game/hud/panels/resource/types.ts";
@@ -47,21 +47,6 @@ export interface TradeCards {
     [TradePanelKind.Selector]: ResourceCard[];
 }
 
-// ─── Public — top resource panel ─────────────────────────────────────────────
-
-/**
- * Resolves cards for the top resource panel.
- * Cards are evenly spaced and do not fan — hover is a highlight only.
- */
-export function resolveResourcePanelCards(
-    resources: Resource[],
-    hoveredId: string | null,
-    r:         Resolution,
-): ResourceCard[] {
-    if (resources.length === 0) return [];
-    return resolveCardsInRect(resources, resolveHandPanelBounds(r), hoveredId, 'highlight');
-}
-
 // ─── Public — single hand row (discard, browse, trade hand) ──────────────────
 
 /**
@@ -84,7 +69,7 @@ export function resolveHandCards(
  */
 export function resolveBrowseHandCards(
     resources: Resource[],
-    devs: DevelopmentCardId[],
+    devs: { type: DevelopmentCardType; uid: string; playableThisTurn: boolean }[], // Ensure playableThisTurn is mapped if you added it
     hoveredId: string | null,
     r: Resolution,
 ): { resCards: ResourceCard[]; devCards: DevelopmentCard[] } {
@@ -95,8 +80,13 @@ export function resolveBrowseHandCards(
     const spacing = resolveSpacing(totalCount, bounds.width);
     const hasBoth = devCount > 0 && resCount > 0;
     const gap = hasBoth ? GAP_BETWEEN_DEV_AND_RES : 0;
+
+    // Add horizontal padding so cards don't clip the panel edges when sliding
+    const horizontalPadding = 15;
+    const availableWidth = bounds.width - horizontalPadding * 2;
     const totalWidth = CARD.width + (totalCount - 1) * spacing + gap;
-    const startX = bounds.x + bounds.width / 2 - totalWidth / 2;
+    const startX = bounds.x + horizontalPadding + availableWidth / 2 - totalWidth / 2;
+
     const baseY = bounds.y + bounds.height - CARD.height;
 
     // find the hovered index in the combined sequence (devs come first)
@@ -201,9 +191,12 @@ function resolveCardsInRect(
 ): ResourceCard[] {
     const count      = resources.length;
     const spacing    = resolveSpacing(count, bounds.width);
-    const totalWidth = CARD.width + (count - 1) * spacing;
 
-    const startX = bounds.x + bounds.width / 2 - totalWidth / 2;
+    const horizontalPadding = 15;
+    const availableWidth = bounds.width - horizontalPadding * 2;
+    const totalWidth = CARD.width + (count - 1) * spacing;
+    const startX = bounds.x + horizontalPadding + availableWidth / 2 - totalWidth / 2;
+
     const baseY  = bounds.y + bounds.height - CARD.height;
 
     const hoveredIndex = hoveredId !== null
@@ -262,26 +255,24 @@ function resolveSpacing(count: number, panelWidth: number): number {
 function resolveFanOffset(
     index:        number,
     hoveredIndex: number,
-    total:        number,
 ): CardOffset {
     if (hoveredIndex === -1) return { x: 0, y: 0 };
 
-    if (index === hoveredIndex) {
-        return { x: 0, y: -CARD.hoverLift };
-    }
+    const distance = Math.abs(index - hoveredIndex);
 
-    const direction = index < hoveredIndex ? -1 : 1;
-    const distance  = Math.abs(index - hoveredIndex);
-    const fanAmount = Math.min(
-        CARD.fanDistance,
-        distance * (CARD.fanDistance / Math.max(total * 0.4, 1))
-    );
+    // 1. Vertical Arch: Hovered card lifts high, neighbors lift slightly
+    let yOffset = 0;
+    if (distance === 0) yOffset = -26;
+    else if (distance === 1) yOffset = -12;
+    else if (distance === 2) yOffset = -4;
 
-    return { x: direction * fanAmount, y: 0 };
+    // 2. Horizontal Slide: Pulling the card out of the hand
+    let xOffset = 0;
+    if (index < hoveredIndex) xOffset = -10;
+    else if (index > hoveredIndex) xOffset = 10;
+
+    return {x: xOffset, y: yOffset};
 }
-
-// Add to your imports at the top:
-// import { resolveResourceSelectionLayout } from './ResourcePanelLayout.ts';
 
 export interface ResourceSelectionCards {
     [TradePanelKind.Selector]: ResourceCard[];

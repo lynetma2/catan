@@ -10,10 +10,10 @@ import {DiscardButtonType, TradeButtonType, TradePanelKind} from "@/game/hud/pan
 const HAND_PANEL: PanelConfig = {
     anchorX: Anchor.Left,
     anchorY: Anchor.Bottom,
-    offsetX: 0,
-    offsetY: -20,
-    width:   500,
-    height:  110,
+    offsetX: 20,
+    offsetY: -5,
+    width: 540,
+    height: 130,
 };
 
 const BUTTON = {

@@ -17,12 +17,27 @@ export class ResourceCardRenderer {
         const style = RESOURCE_STYLES[card.resourceType];
         this.ctx.save();
 
-        // Grey out disabled cards
         if (card.isDisabled) {
             this.ctx.globalAlpha = 0.35;
         }
 
+        // 1. Apply shadow for the card body
+        if (card.isHovered && !card.isDisabled) {
+            this.ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+            this.ctx.shadowBlur = 15;
+            this.ctx.shadowOffsetX = 0;
+            this.ctx.shadowOffsetY = 8;
+        }
+
         this.drawBackground(card, style);
+
+        // This prevents the icon and text from casting shadows onto the card itself
+        this.ctx.shadowColor = 'transparent';
+        this.ctx.shadowBlur = 0;
+        this.ctx.shadowOffsetX = 0;
+        this.ctx.shadowOffsetY = 0;
+
+        // 3. Draw inner elements cleanly
         this.drawIcon(card, style);
         this.drawLabel(card);
         if (card.isSelected) this.drawSelectionGlow(card);

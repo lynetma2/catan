@@ -13,4 +13,6 @@ export interface Button {
 export interface BuildPanelState {
     bounds: Rect;
     buttons: Button[];
+    playerColor: string;
+    isMyTurn: boolean;
 }

@@ -133,6 +133,8 @@ export class BuildPanel {
         return {
             buttons,
             bounds: derivePanelBounds(buttons),
+            playerColor: this.sharedState.localPlayer?.color ?? '#888888',
+            isMyTurn,
         };
     }
 
