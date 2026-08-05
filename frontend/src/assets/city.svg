@@ -1,1 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 48 48"><mask id="ipSCity0"><g fill="none"><path stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M4 42h40"/><rect width="8" height="16" x="8" y="26" fill="#fff" stroke="#fff" stroke-linejoin="round" stroke-width="4" rx="2"/><path stroke="#000" stroke-linecap="square" stroke-linejoin="round" stroke-width="4" d="M12 34h1"/><rect width="24" height="38" x="16" y="4" fill="#fff" stroke="#fff" stroke-linejoin="round" stroke-width="4" rx="2"/><path fill="#000" d="M22 10h4v4h-4zm8 0h4v4h-4zm-8 7h4v4h-4zm8 0h4v4h-4zm0 7h4v4h-4zm0 7h4v4h-4z"/></g></mask><path fill="currentColor" d="M0 0h48v48H0z" mask="url(#ipSCity0)"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="-2 -2 52 52">
+    <mask id="cityOutline">
+        <g fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
+            <path stroke-linecap="round" stroke-width="9" d="M4 42h40"/>
+            <rect width="8" height="16" x="8" y="26" rx="2" stroke-width="9"/>
+            <rect width="24" height="38" x="16" y="4" rx="2" stroke-width="9"/>
+        </g>
+    </mask>
+
+    <mask id="cityBody">
+        <g fill="none">
+            <path stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M4 42h40"/>
+            <rect width="8" height="16" x="8" y="26" fill="#fff" stroke="#fff" stroke-linejoin="round" stroke-width="4"
+                  rx="2"/>
+            <path stroke="#000" stroke-linecap="square" stroke-linejoin="round" stroke-width="4" d="M12 34h1"/>
+            <rect width="24" height="38" x="16" y="4" fill="#fff" stroke="#fff" stroke-linejoin="round" stroke-width="4"
+                  rx="2"/>
+            <path fill="#000" d="M22 10h4v4h-4zm8 0h4v4h-4zm-8 7h4v4h-4zm8 0h4v4h-4zm0 7h4v4h-4zm0 7h4v4h-4z"/>
+        </g>
+    </mask>
+
+    <!-- Outline layer: transparent by default (UI), injected black on the board -->
+    <path style="fill: var(--piece-outline, transparent)" d="M-2 -2h52v52h-52z" mask="url(#cityOutline)"/>
+
+    <!-- Body layer -->
+    <path fill="currentColor" d="M-2 -2h52v52h-52z" mask="url(#cityBody)"/>
+</svg>
