@@ -1,66 +1,59 @@
 // hud/panels/dice/DicePanelLayout.ts
-import { type Resolution } from '@/game/core/ResolutionManager';
-import { type Rect }       from '@/game/utils/Rect';
-import { BUTTON_SIZE, BUTTON_PADDING, EDGE_MARGIN } from '@/game/hud/HudLayout';
+import {type Resolution} from '@/game/core/ResolutionManager';
+import {type Rect} from '@/game/utils/Rect';
+import {BUTTON_PADDING, BUTTON_SIZE, EDGE_MARGIN} from '@/game/hud/HudLayout';
 
-// ─── Config ───────────────────────────────────────────────────────────
+// ─── Config ──────────────────────────────────────────────────────────
+const DIE_SIZE = 56;
+const DIE_GAP = 12;
+const SIDE_PAD = 12;
+const TOP_PAD = 6;
+const BOTTOM_PAD = 10;
+const STATUS_HEIGHT = 16;  // top strip for the status text
+const STATUS_GAP = 4;
 
-const DIE_SIZE    = 48;
-const DIE_GAP     = 12;
-const PANEL_PAD   = 16;
-const PANEL_WIDTH = DIE_SIZE * 2 + DIE_GAP + PANEL_PAD * 2;
-const PANEL_HEIGHT = DIE_SIZE + PANEL_PAD * 2;
+const PANEL_WIDTH = DIE_SIZE * 2 + DIE_GAP + SIDE_PAD * 2;
+const PANEL_HEIGHT = TOP_PAD + STATUS_HEIGHT + STATUS_GAP + DIE_SIZE + BOTTOM_PAD;
 
-// ─── Layout ───────────────────────────────────────────────────────────
-
+// ─── Layout ──────────────────────────────────────────────────────────
 export interface DicePanelLayout {
     panel: Rect;
-    die1:  Rect;
-    die2:  Rect;
+    die1: Rect;
+    die2: Rect;
+    status: Rect; // top strip — status text lives here, above the dice
 }
 
-export function resolveDicePanelLayout(
-    r:                Resolution,
-): DicePanelLayout {
-    // Calculate the top of the build panel based on constants
-    // The build panel is anchored to the bottom with EDGE_MARGIN offset.
-    // Its height is BUTTON_SIZE + 2 * BUTTON_PADDING (derived from derivePanelBounds logic)
-    // y = r.cssHeight - (BUTTON_SIZE + BUTTON_PADDING * 2) - EDGE_MARGIN
-    
-    // However, derivePanelBounds adds padding around the buttons.
-    // The buttons are at y = r.cssHeight - BUTTON_SIZE - EDGE_MARGIN (roughly)
-    // Let's calculate the build panel's top Y coordinate explicitly using the constants.
-    
-    const buildPanelHeight = BUTTON_SIZE + BUTTON_PADDING * 2;
-    const buildPanelTopY = r.cssHeight - buildPanelHeight - EDGE_MARGIN + BUTTON_PADDING; 
-    // Note: The logic in HudLayout for buttons is:
-    // y = r.cssHeight - height + offset
-    // y = r.cssHeight - BUTTON_SIZE - EDGE_MARGIN
-    // The panel bounds start at minY - BUTTON_PADDING
-    // So panelTop = (r.cssHeight - BUTTON_SIZE - EDGE_MARGIN) - BUTTON_PADDING
-    
+export function resolveDicePanelLayout(r: Resolution): DicePanelLayout {
     const effectiveBuildPanelTop = r.cssHeight - BUTTON_SIZE - EDGE_MARGIN - BUTTON_PADDING;
 
     const panel: Rect = {
-        x:      r.cssWidth - PANEL_WIDTH - EDGE_MARGIN, // Align with right edge margin
-        y:      effectiveBuildPanelTop - PANEL_HEIGHT - 8, // 8px gap above build panel
+        x: r.cssWidth - PANEL_WIDTH - EDGE_MARGIN,
+        y: effectiveBuildPanelTop - PANEL_HEIGHT - 8,
         width:  PANEL_WIDTH,
         height: PANEL_HEIGHT,
     };
 
+    const status: Rect = {
+        x: panel.x,
+        y: panel.y + TOP_PAD,
+        width: PANEL_WIDTH,
+        height: STATUS_HEIGHT,
+    };
+
+    const diceY = panel.y + TOP_PAD + STATUS_HEIGHT + STATUS_GAP;
+
     const die1: Rect = {
-        x:      panel.x + PANEL_PAD,
-        y:      panel.y + PANEL_PAD,
+        x: panel.x + SIDE_PAD,
+        y: diceY,
         width:  DIE_SIZE,
         height: DIE_SIZE,
     };
-
     const die2: Rect = {
-        x:      panel.x + PANEL_PAD + DIE_SIZE + DIE_GAP,
-        y:      panel.y + PANEL_PAD,
+        x: panel.x + SIDE_PAD + DIE_SIZE + DIE_GAP,
+        y: diceY,
         width:  DIE_SIZE,
         height: DIE_SIZE,
     };
 
-    return { panel, die1, die2 };
+    return {panel, die1, die2, status};
 }

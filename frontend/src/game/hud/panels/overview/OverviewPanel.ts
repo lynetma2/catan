@@ -102,7 +102,10 @@ export class PlayerOverviewPanel {
         payload: GameEventMap[typeof GameServerEvents.state.overview.resource.success]
     ) {
         const player = this.players.get(payload.playerId);
-        if (player) player.resCardCount = payload.resourceCards;
+        if (player) {
+            player.resCardCount = payload.resourceCards;
+            player.isAtDiscardRisk = player.resCardCount > DISCARD_RISK_THRESHOLD;
+        }
     }
 
     private onLongestRoadChanged(

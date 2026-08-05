@@ -7,6 +7,7 @@ import type {SharedState} from "@/game/core/SharedState.ts";
 import {BuildTargetKind, TileKind} from "@/game/core/types.ts";
 import {BuildHoverRenderer} from "@/game/rendering/world/hover/BuildHoverRenderer.ts";
 import {RobberHoverRenderer} from "@/game/rendering/world/hover/RobberHoverRenderer.ts";
+import {debugFlags} from "@/game/rendering/world/debugFlags.ts";
 
 export class WorldRenderer {
     private readonly tileRenderer:  TileRenderer;
@@ -33,6 +34,13 @@ export class WorldRenderer {
         this.ctx.save();
         const dpr = window.devicePixelRatio ?? 1;
         this.camera.applyTransform(this.ctx, dpr);
+
+        // Debug layer
+        if (debugFlags.wireframe) {
+            state.tiles.tiles.forEach(t => this.tileRenderer.render(t));
+        } else {
+            // ...existing layered pipeline (sea, land, hover, pieces)...
+        }
 
         // Layer 1 — sea tiles
         state.tiles.tiles

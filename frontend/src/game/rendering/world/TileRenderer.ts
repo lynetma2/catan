@@ -4,6 +4,7 @@ import type {Camera} from "@/game/core/Camera.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import {hex} from "@/game/utils/HexGeometry/Hex.ts";
 import {RESOURCE_STYLES} from "@/game/rendering/theme/ResourceTheme.ts";
+import {debugFlags} from "@/game/rendering/world/debugFlags.ts";
 
 // Map your SVGs to the internal tile type strings
 const TILE_WATERMARK_RESOURCE: Partial<Record<Tile['type'], ResourceType>> = {
@@ -26,6 +27,12 @@ export class TileRenderer {
 
     render(tile: Tile) {
         const corners = this.camera.hexCornersWorld(tile.hex);
+
+        if (debugFlags.wireframe) {
+            this.drawWireframe(tile, corners);
+            return; // skip fill, watermark, token, robber, ports
+        }
+
         this.drawFill(tile, corners);
         this.drawStroke(corners);
 
@@ -357,6 +364,28 @@ export class TileRenderer {
             this.imageCache.set(src, img);
         }
         return this.imageCache.get(src)!;
+    }
+
+    // ─── Debug wireframe ─────────────────────────────────────────────
+    private drawWireframe(tile: Tile, corners: Vec2[]) {
+        const {ctx} = this;
+
+        // Outline only — sea tinted so coastlines are readable
+        ctx.beginPath();
+        this.tracePath(corners);
+        ctx.strokeStyle = tile.kind === TileKind.Sea
+            ? 'rgba(26, 111, 168, 0.6)'
+            : 'rgba(0, 0, 0, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Coordinates in the middle
+        const center = this.centerOf(corners);
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillText(`${tile.hex.q}, ${tile.hex.r}`, center.x, center.y);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────

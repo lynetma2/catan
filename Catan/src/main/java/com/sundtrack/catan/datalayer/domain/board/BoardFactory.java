@@ -63,6 +63,18 @@ public class BoardFactory {
             new Hex(3, -1, -2)
     );
 
+    private static final List<Integer> PORT_FACINGS = List.of(
+            4, // (3, -3, 0)
+            5, // (1, -3, 2)
+            0, // (-1, -2, 3)
+            0, // (-3, 0, 3)
+            1, // (-3, 2, 1)
+            1, // (-2, 3, -1)
+            2, // (0, 3, -3)
+            3, // (2, 1, -3)
+            3  // (3, -1, -2)
+    );
+
     // Fixed layout for testing — always produces the same board
     public Board createStatic() {
         return buildBoard(PORT_TILE_DISTRIBUTION, LAND_TILE_DISTRIBUTION, NUMBER_DISTRIBUTION);
@@ -118,10 +130,12 @@ public class BoardFactory {
             }
         }
 
-        // 4. Add Ports and Sea (Your existing logic)
+// 4. Add Ports and Sea
         List<PortType> portQueue = new ArrayList<>(portTiles);
-        for (Hex coord : PORT_COORDINATES) {
-            tiles.add(new PortTile(coord, portQueue.removeFirst(), 1));
+        for (int i = 0; i < PORT_COORDINATES.size(); i++) {
+            Hex coord = PORT_COORDINATES.get(i);
+            int facing = PORT_FACINGS.get(i);
+            tiles.add(new PortTile(coord, portQueue.removeFirst(), facing));
         }
         for (Hex coord : SEA_COORDINATES) {
             tiles.add(new SeaTile(coord));

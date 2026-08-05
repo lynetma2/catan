@@ -1,5 +1,5 @@
 // rendering/hud/panelChrome.ts
-import { type Rect }       from '@/game/utils/Rect';
+import {type Rect} from '@/game/utils/Rect';
 import type {PanelTheme} from "@/game/rendering/theme/theme.ts";
 
 export function drawPanelChrome(
@@ -21,6 +21,7 @@ export function drawPanelChrome(
 
     ctx.font         = theme.titleFont;
     ctx.fillStyle    = theme.titleColor;
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
     ctx.fillText(title.toUpperCase(), x + theme.titlePadding, y + theme.titlePadding);
     ctx.restore();
