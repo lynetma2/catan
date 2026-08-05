@@ -2,11 +2,21 @@ import {ResourceType, type SeaTile, type Tile, TileKind} from "@/game/core/types
 import type {TileTheme} from "@/game/rendering/world/WorldTheme.ts";
 import type {Camera} from "@/game/core/Camera.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
-import {hex, type Hex} from "@/game/utils/HexGeometry/Hex.ts";
+import {hex} from "@/game/utils/HexGeometry/Hex.ts";
 import {RESOURCE_STYLES} from "@/game/rendering/theme/ResourceTheme.ts";
+
+// Map your SVGs to the internal tile type strings
+const TILE_WATERMARK_RESOURCE: Partial<Record<Tile['type'], ResourceType>> = {
+    forest: ResourceType.Lumber,
+    hills: ResourceType.Brick,
+    pasture: ResourceType.Wool,
+    fields: ResourceType.Grain,
+    mountains: ResourceType.Ore,
+};
 
 export class TileRenderer {
     private readonly imageCache = new Map<string, HTMLImageElement>();
+    private readonly watermarkCache = new Map<string, HTMLCanvasElement>();
 
     constructor(
         private readonly ctx:   CanvasRenderingContext2D,
@@ -16,56 +26,56 @@ export class TileRenderer {
 
     render(tile: Tile) {
         const corners = this.camera.hexCornersWorld(tile.hex);
-
         this.drawFill(tile, corners);
         this.drawStroke(corners);
 
         if (tile.kind === TileKind.Land) {
-            this.drawToken(tile.number, tile.hex, tile.hasRobber);
+            this.drawWatermark(tile, corners);
+            this.drawToken(tile.number, corners);
         }
-
         if (tile.kind === TileKind.Sea && tile.isPort && tile.portFacing !== null) {
             this.drawDock(tile);
             this.drawPortIcon(tile);
         }
-
         if (tile.hasRobber) {
+            this.drawBlockedTint(corners);
             this.drawRobber(corners);
         }
     }
 
-    // ─── Fill ─────────────────────────────────────────────────────────
+    // ─── Watermark ─────────────────────────────────────────────────
+    private drawWatermark(tile: Tile, corners: Vec2[]) {
+        const watermark = this.getWatermark(tile.type);
+        if (!watermark) return; // unknown type or asset still loading
 
-    private drawFill(tile: Tile, corners: Vec2[]) {
         const { ctx, theme } = this;
+        const center = this.centerOf(corners);
+        const hexRadius = Math.hypot(corners[0].x - center.x, corners[0].y - center.y);
 
-        ctx.beginPath();
-        this.tracePath(corners);
-        ctx.fillStyle = theme.colors[tile.type];
-        ctx.fill();
+        const size = hexRadius * 0.36;
+
+        // Top-left pocket — diagonally opposite the robber.
+        const iconCenterX = center.x - hexRadius * 0.40;
+        const iconCenterY = center.y - hexRadius * 0.46;
+
+        ctx.save();
+        ctx.globalAlpha = theme.watermark?.opacity ?? 0.15;
+        ctx.drawImage(
+            watermark,
+            iconCenterX - size / 2,
+            iconCenterY - size / 2,
+            size,
+            size,
+        );
+        ctx.restore();
     }
 
-    // ─── Stroke ───────────────────────────────────────────────────────
-
-    private drawStroke(corners: Vec2[]) {
+// ─── Number token ──────────────────────────────────────────────
+    private drawToken(number: number, corners: Vec2[]) {
         const { ctx, theme } = this;
-
-        ctx.beginPath();
-        this.tracePath(corners);
-        ctx.strokeStyle = theme.strokeColor;
-        ctx.lineWidth   = theme.strokeWidth;
-        ctx.stroke();
-    }
-
-    // ─── Number token ─────────────────────────────────────────────────
-
-    private drawToken(number: number, hex: Hex, hasRobber: boolean) {
-        if (hasRobber) return;   // robber covers token
-
-        const { ctx, theme } = this;
-        const center         = this.camera.hexToWorld(hex);
-        const isRed          = number === 6 || number === 8;
-        const dotCount       = this.dotCount(number);
+        const center = this.centerOf(corners);
+        const isRed = number === 6 || number === 8;
+        const dotCount = this.dotCount(number);
 
         // Token background circle
         ctx.beginPath();
@@ -81,13 +91,12 @@ export class TileRenderer {
         ctx.fillText(String(number), center.x, center.y - 4);
 
         // Probability dots below number
-        const dotColor  = isRed ? theme.token.dotColorRed : theme.token.dotColor;
+        const dotColor = isRed ? theme.token.dotColorRed : theme.token.dotColor;
         const dotRadius = 2;
         const dotSpacing = 5;
         const totalWidth = (dotCount - 1) * dotSpacing;
         const startX     = center.x - totalWidth / 2;
         const dotY       = center.y + 6;
-
         for (let i = 0; i < dotCount; i++) {
             ctx.beginPath();
             ctx.arc(startX + i * dotSpacing, dotY, dotRadius, 0, Math.PI * 2);
@@ -96,122 +105,251 @@ export class TileRenderer {
         }
     }
 
-    // ─── Robber ───────────────────────────────────────────────────────
+    private getTintedIcon(resource: ResourceType, color: string): HTMLCanvasElement | null {
+        const src = RESOURCE_STYLES[resource].imageSrc;
+        const cacheKey = `${src}_${color}`;
 
-    private drawRobber(corners: Vec2[]) {
-        const { ctx, theme } = this;
-        const center = {
-            x: corners.reduce((sum, c) => sum + c.x, 0) / corners.length,
-            y: corners.reduce((sum, c) => sum + c.y, 0) / corners.length,
-        };
+        const cached = this.watermarkCache.get(cacheKey);
+        if (cached) return cached;
 
+        const img = this.getImage(src);
+        if (!img.complete || img.naturalWidth === 0) return null;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const wctx = canvas.getContext('2d')!;
+        wctx.drawImage(img, 0, 0);
+        wctx.globalCompositeOperation = 'source-in';
+        wctx.fillStyle = color;
+        wctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        this.watermarkCache.set(cacheKey, canvas);
+        return canvas;
+    }
+
+    private getWatermark(type: Tile['type']): HTMLCanvasElement | null {
+        const resource = TILE_WATERMARK_RESOURCE[type];
+        if (!resource) return null;
+        return this.getTintedIcon(resource, this.theme.watermark?.color ?? '#000000');
+    }
+
+    // ─── Fill ─────────────────────────────────────────────────
+    private drawFill(tile: Tile, corners: Vec2[]) {
+        const {ctx, theme} = this;
         ctx.beginPath();
-        ctx.arc(center.x, center.y, theme.robber.radius, 0, Math.PI * 2);
-        ctx.fillStyle   = theme.robber.fillColor;
+        this.tracePath(corners);
+        ctx.fillStyle = theme.colors[tile.type];
         ctx.fill();
-        ctx.strokeStyle = theme.robber.strokeColor;
-        ctx.lineWidth   = 2;
+    }
+
+    // ─── Stroke ───────────────────────────────────────────────
+    private drawStroke(corners: Vec2[]) {
+        const {ctx, theme} = this;
+        ctx.beginPath();
+        this.tracePath(corners);
+        ctx.strokeStyle = theme.strokeColor;
+        ctx.lineWidth = theme.strokeWidth;
         ctx.stroke();
     }
 
-    // ─── Port dock ────────────────────────────────────────────────────
+    // ─── Blocked tint ───────────────────────────────────────────────
+    private drawBlockedTint(corners: Vec2[]) {
+        const {ctx, theme} = this;
+        ctx.beginPath();
+        this.tracePath(corners);
+        ctx.fillStyle = theme.robber.blockedTint;
+        ctx.fill();
+    }
 
+    // ─── Robber ───────────────────────────────────────────────────────
+    private drawRobber(corners: Vec2[]) {
+        const { ctx, theme } = this;
+        const center = this.centerOf(corners);
+        const hexRadius = Math.hypot(corners[0].x - center.x, corners[0].y - center.y);
+
+        const x = center.x + hexRadius * 0.36;
+        const y = center.y + hexRadius * 0.34;
+        const r = hexRadius * 0.27;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(x, y + r * 0.85, r * 0.75, r * 0.28, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.fill();
+        ctx.restore();
+
+        this.drawRobberFigure(x, y, r, theme);
+    }
+
+    private drawRobberFigure(x: number, y: number, r: number, theme: TileTheme) {
+        const {ctx} = this;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle   = theme.robber.fillColor;
+        ctx.strokeStyle = theme.robber.strokeColor;
+        ctx.lineWidth = 1.5;
+
+        ctx.beginPath();
+        ctx.moveTo(0, -r * 0.45);
+        ctx.quadraticCurveTo(r * 0.9, r * 0.40, r * 0.62, r * 0.85);
+        ctx.quadraticCurveTo(0, r * 0.60, -r * 0.62, r * 0.85);
+        ctx.quadraticCurveTo(-r * 0.9, r * 0.40, 0, -r * 0.45);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.5, r * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.beginPath();
+        ctx.arc(-r * 0.15, -r * 0.52, r * 0.07, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(r * 0.15, -r * 0.52, r * 0.07, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    // ─── Port dock ────────────────────────────────────────────────────
     private drawDock(tile: SeaTile) {
         const { ctx, theme } = this;
-
         const center      = this.camera.hexToWorld(tile.hex);
         const neighbor    = hex.neighbor(tile.hex, tile.portFacing!);
         const neighborPos = this.camera.hexToWorld(neighbor);
 
-        // Direction vector from sea tile toward land
         const dx  = neighborPos.x - center.x;
         const dy  = neighborPos.y - center.y;
         const len = Math.hypot(dx, dy);
         const nx  = dx / len;
         const ny  = dy / len;
+        const px = -ny;
+        const py = nx;
 
-        // Dock starts near sea tile center, ends at the shared edge
-        const dockStart = {
-            x: center.x + nx * (len * 0.15),  // ← start close to center
-            y: center.y + ny * (len * 0.15),
-        };
-        const dockEnd = {
-            x: center.x + nx * (len * 0.52),  // ← end just at the edge
-            y: center.y + ny * (len * 0.52),
-        };
+        const halfWidth = theme.port?.dockWidth ?? 5;
 
-        const px       = -ny;
-        const py       =  nx;
-        const halfWidth = theme.port?.dockWidth ?? 6;
+        // Pier runs from the shared edge (t ≈ 0.50) to just before the badge
+        const edgeT = 0.50;
+        const innerT = 0.30;
+        const ex = center.x + nx * len * edgeT;
+        const ey = center.y + ny * len * edgeT;
+        const ix = center.x + nx * len * innerT;
+        const iy = center.y + ny * len * innerT;
 
+        const dockColor = theme.port?.dockColor ?? '#8B6914';
+        const strokeColor = theme.port?.dockStrokeColor ?? '#5C4510';
+
+        ctx.save();
+
+        // Deck — constant width, no wedge
         ctx.beginPath();
-        ctx.moveTo(dockStart.x + px * halfWidth,       dockStart.y + py * halfWidth);
-        ctx.lineTo(dockStart.x - px * halfWidth,       dockStart.y - py * halfWidth);
-        ctx.lineTo(dockEnd.x   - px * halfWidth * 0.5, dockEnd.y   - py * halfWidth * 0.5);
-        ctx.lineTo(dockEnd.x   + px * halfWidth * 0.5, dockEnd.y   + py * halfWidth * 0.5);
+        ctx.moveTo(ex + px * halfWidth, ey + py * halfWidth);
+        ctx.lineTo(ix + px * halfWidth, iy + py * halfWidth);
+        ctx.lineTo(ix - px * halfWidth, iy - py * halfWidth);
+        ctx.lineTo(ex - px * halfWidth, ey - py * halfWidth);
         ctx.closePath();
-
-        ctx.fillStyle   = theme.port?.dockColor       ?? '#8B6914';
+        ctx.fillStyle = dockColor;
         ctx.fill();
-        ctx.strokeStyle = theme.port?.dockStrokeColor ?? '#5C4510';
+        ctx.strokeStyle = strokeColor;
         ctx.lineWidth   = 1;
         ctx.stroke();
+
+        // Plank seams
+        ctx.lineWidth = 0.75;
+        for (const t of [0.35, 0.43]) {
+            const cx = center.x + nx * len * t;
+            const cy = center.y + ny * len * t;
+            ctx.beginPath();
+            ctx.moveTo(cx + px * halfWidth, cy + py * halfWidth);
+            ctx.lineTo(cx - px * halfWidth, cy - py * halfWidth);
+            ctx.stroke();
+        }
+
+        // Mooring posts at the seaward end
+        ctx.fillStyle = strokeColor;
+        for (const s of [-1, 1]) {
+            ctx.beginPath();
+            ctx.arc(ix + px * halfWidth * 1.15 * s, iy + py * halfWidth * 1.15 * s, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.restore();
     }
 
-    // ─── Port icon ────────────────────────────────────────────────────
-
+    // ─── Port badge ───────────────────────────────────────────────────
     private drawPortIcon(tile: SeaTile) {
-        const { ctx } = this;
+        const {ctx, theme} = this;
         if (!tile.portType) return;
 
         const center = this.camera.hexToWorld(tile.hex);
-        const ratio  = tile.portType === 'any' ? '3:1' : '2:1';
+        const ratio = tile.portType === 'any' ? '3:1' : '2:1';
+        const isGeneric = tile.portType === 'any';
 
-        // Draw resource icon if not generic port
-        if (tile.portType !== 'any') {
-            const style = RESOURCE_STYLES[tile.portType as ResourceType];
-            const image = this.getImage(style.imageSrc);
+        const r = 18;
 
-            if (image.complete) {
-                const iconSize = 18;
+        // Dark markings, like the rest of the board (tokens, watermarks, robber)
+        const markColor = theme.port?.badgeText ?? '#1a1a1a';
+
+        ctx.save();
+
+        // Soft water shadow under the badge
+        ctx.beginPath();
+        ctx.arc(center.x, center.y + 1.5, r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.fill();
+
+        // Disc — resource color, or token-like cream for 3:1 ports (swapped)
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = isGeneric
+            ? theme.port?.badgeBackground ?? 'rgba(245, 235, 215, 0.95)'
+            : RESOURCE_STYLES[tile.portType as ResourceType].fillColor;
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = theme.port?.discStroke ?? 'rgba(0, 0, 0, 0.4)';
+        ctx.stroke();
+
+        // Icon — top half of the disc, black tint like the board silhouettes
+        const iconSize = 18;
+        const iconY = center.y - 5;
+        if (!isGeneric) {
+            const icon = this.getTintedIcon(
+                tile.portType as ResourceType,
+                theme.port?.iconColor ?? '#000000',
+            );
+            if (icon) {
                 ctx.drawImage(
-                    image,
+                    icon,
                     center.x - iconSize / 2,
-                    center.y - iconSize - 2,
+                    iconY - iconSize / 2,
                     iconSize,
                     iconSize,
                 );
             }
         } else {
-            // Generic port — draw a simple star/asterisk
-            ctx.font         = '18px sans-serif';
+            // 3:1 — swapped: black star on the light disc
+            ctx.font = '14px sans-serif';
+            ctx.fillStyle = markColor;
             ctx.textAlign    = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle    = '#ffffff';
-            ctx.fillText('✦', center.x, center.y - 10);
+            ctx.fillText('✦', center.x, iconY);
         }
 
-        // Ratio badge below icon
-        const metrics    = ctx.measureText(ratio);
-        const textWidth  = metrics.width + 6;
-        const textHeight = 13;
-        const textX      = center.x - textWidth / 2;
-        const textY      = center.y + 2;
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-        ctx.beginPath();
-        ctx.roundRect(textX, textY, textWidth, textHeight, 3);
-        ctx.fill();
-
+        // Ratio text — bottom half of the disc
         ctx.font         = 'bold 10px monospace';
-        ctx.fillStyle    = '#ffffff';
+        ctx.fillStyle = markColor;
         ctx.textAlign    = 'center';
-        ctx.textBaseline = 'top';
-        ctx.fillText(ratio, center.x, textY + 2);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(ratio, center.x, center.y + 10);
+
+        ctx.restore();
     }
 
     // ─── Image cache ──────────────────────────────────────────────────
-
     private getImage(src: string): HTMLImageElement {
         if (!this.imageCache.has(src)) {
             const img = new Image();
@@ -222,6 +360,12 @@ export class TileRenderer {
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────
+    private centerOf(corners: Vec2[]): Vec2 {
+        return {
+            x: corners.reduce((sum, c) => sum + c.x, 0) / corners.length,
+            y: corners.reduce((sum, c) => sum + c.y, 0) / corners.length,
+        };
+    }
 
     private tracePath(corners: Vec2[]) {
         const { ctx } = this;
@@ -233,7 +377,6 @@ export class TileRenderer {
     }
 
     private dotCount(number: number): number {
-        // Probability dots: 2→1, 3→2, 4→3, 5→4, 6→5, 8→5, 9→4, 10→3, 11→2, 12→1
         return 6 - Math.abs(7 - number);
     }
 }

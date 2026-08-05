@@ -32,6 +32,7 @@ export interface TileTheme {
         fillColor:   string;
         strokeColor: string;
         radius:      number;
+        blockedTint: string;
     };
 
     // Port
@@ -39,6 +40,16 @@ export interface TileTheme {
         dockColor: string;
         dockStrokeColor: string;
         dockWidth: number;
+        badgeBackground?: string;
+        badgeText?: string;
+        iconColor?: string;
+        discStroke?: string;
+    }
+
+    // Watermark resource icon
+    watermark?: {
+        color: string;
+        opacity: number;
     }
 }
 
@@ -123,12 +134,22 @@ export const DEFAULT_WORLD_THEME: WorldTheme = {
             fillColor:   '#111111',
             strokeColor: '#444444',
             radius:      12,
+            blockedTint: 'rgba(0, 0, 0, 0.18)'
         },
 
         port: {
             dockColor:       '#8B6914',
             dockStrokeColor: '#5C4510',
             dockWidth:       6,
+            badgeBackground: 'rgba(245, 235, 215, 0.95)',
+            badgeText: '#1a1a1a',
+            iconColor: '#000000',
+            discStroke: 'rgba(0, 0, 0, 0.4)',
+        },
+
+        watermark: {
+            color: '#000000',
+            opacity: 0.25,
         },
     },
 
@@ -209,6 +230,12 @@ export const PARCHMENT_WORLD_THEME: WorldTheme = {
             fillColor:   '#1a1a1a',
             strokeColor: '#555555',
             radius:      14,
+            blockedTint: 'rgba(30, 15, 5, 0.15)'
+        },
+
+        watermark: {
+            color: '#3a2510',
+            opacity: 0.15,
         },
     },
 
