@@ -9,13 +9,14 @@ import {type HudState, type Toast} from "@/game/hud/types.ts";
 import {InputType, type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {containsPoint} from "@/game/utils/Rect.ts";
 import {PlayerOverviewPanel} from "@/game/hud/panels/overview/OverviewPanel.ts";
-import {GameEventType} from "@/game/events/GameEventTypes.ts";
 import {DicePanel} from "@/game/hud/panels/dice/DicePanel.ts";
 import type {Vec2} from "@/game/utils/Vec2.ts";
 import {ResourcePanelManager} from "@/game/hud/panels/resource/ResourcePanelManager.ts";
 import {TradeOfferManager} from "@/game/hud/panels/tradeOffer/TradeOfferManager.ts";
 import {RobberStealPanel} from "@/game/hud/panels/robber/RobberStealPanel.ts";
 import type {Camera} from "@/game/core/Camera.ts";
+import {GameServerEvents} from "@/events/game/GameServerEvents.ts";
+import type {GameEventMap} from "@/events/shared/AppEvents.ts";
 
 export class HUD implements InputLayer {
     readonly priority = 10;
@@ -47,29 +48,9 @@ export class HUD implements InputLayer {
     // ─── Subscriptions ────────────────────────────────────────────────
 
     private subscribeToEvents() {
-        this.bus.on(GameEventType.BUILD_REJECTED, e => {
-            const messages: Record<string, string> = {
-                NO_ADJACENT_ROAD:       'Must be connected to a road',
-                INSUFFICIENT_RESOURCES: 'Not enough resources',
-                SPOT_OCCUPIED:          'Already occupied',
-                DISTANCE_RULE_VIOLATED: 'Too close to another settlement',
-                NOT_YOUR_TURN:          'Not your turn',
-                WRONG_PHASE:            'Cannot build right now',
-            };
-            this.showToast(messages[e.payload.reason] ?? 'Cannot build here', 'error');
-        });
-        this.bus.on(GameEventType.BUILD_PLACED, e => {
-            this.showToast(`${e.payload.pieceType} placed!`, 'success');
-            this.buildPanel.clearSelection();
-        });
-        this.bus.on(GameEventType.RESOURCES_GRANTED, e => {
-            if (e.payload.playerId === this.shared.localPlayerId) {
-                this.showToast('Resources received!', 'info');
-            }
-        });
-        this.bus.on(GameEventType.TURN_STARTED, e => {
-            const isLocal = e.payload.playerId === this.shared.localPlayerId;
-            this.showToast(isLocal ? 'Your turn!' : `Player ${e.payload.playerId}'s turn`, 'info');
+        this.bus.on(GameServerEvents.error.success, (payload: GameEventMap[typeof GameServerEvents.error.success]) => {
+            const message = payload.message || payload.errorCode || 'An unknown error occurred';
+            this.showToast(message, 'error');
         });
     }
 

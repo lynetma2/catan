@@ -6,9 +6,8 @@ import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 import java.util.Map;
 
 import static com.sundtrack.catan.datalayer.domain.event.EventDomainConstants.*;
-import static com.sundtrack.catan.datalayer.domain.event.EventDomainConstants.SEPARATOR;
 
-@EventType(SERVER + SEPARATOR + GAME + SEPARATOR + "dice" + SEPARATOR + "roll")
+@EventType(SERVER + SEPARATOR + GAME + SEPARATOR + "error")
 public record GameErrorEvent(
         String errorCode,
         String message,

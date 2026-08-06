@@ -156,6 +156,9 @@ export const GameServerEvents = {
             },
         }
     },
+    error: {
+        success: `${GAME_SERVER}error`,
+    }
 } as const;
 
 export interface GameServerEventMap {
@@ -222,6 +225,7 @@ export interface GameServerEventMap {
         firstResource: ResourceType,
         secondResource: ResourceType
     };
+    [GameServerEvents.error.success]: { errorCode: string, message: string, details: Record<string, unknown> };
 }
 
 export type GameServerEventValues =
