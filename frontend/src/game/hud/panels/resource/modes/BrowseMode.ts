@@ -39,7 +39,7 @@ export class BrowseMode implements ResourcePanelMode<BrowseModeState> {
         const r = this.resolution.get();
         const {resCards, devCards} = resolveBrowseHandCards(
             this.sharedState.localPlayerResources ?? [],
-            this.sharedState.localPlayerDevCards ?? [],
+            this.sharedState.localPlayerDevCardsWithBoolean ?? [],
             this.hoveredCardId,
             r,
         );
@@ -87,7 +87,7 @@ export class BrowseMode implements ResourcePanelMode<BrowseModeState> {
         const r = this.resolution.get();
         const {resCards, devCards} = resolveBrowseHandCards(
             this.sharedState.localPlayerResources ?? [],
-            this.sharedState.localPlayerDevCards ?? [],   // assumes this property exists
+            this.sharedState.localPlayerDevCardsWithBoolean ?? [],   // assumes this property exists
             this.hoveredCardId,
             r,
         );

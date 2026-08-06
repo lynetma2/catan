@@ -81,7 +81,13 @@ export class SharedState {
         return this.localPlayer.resources;
     }
 
-    get localPlayerDevCards(): DevelopmentCardId[] | null {
+    get localPlayerDevCards(): DevCardSnapshot[] | null {
+        if (!this.localPlayer) return null;
+
+        return this.localPlayer.devCards;
+    }
+
+    get localPlayerDevCardsWithBoolean(): DevelopmentCardId[] | null {
         if (!this.localPlayer) return null;
 
         return this.localPlayer.devCards.map(card => ({
