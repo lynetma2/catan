@@ -97,6 +97,10 @@ export class Game {
         }
     }
 
+    public getEventBus(): EventBus<GameEventMap> {
+        return this.bus;
+    }
+
     public destroy() {
         if (this.animationFrameId !== null) {
             cancelAnimationFrame(this.animationFrameId);

@@ -3,6 +3,7 @@ import type {DeepValues, EventUnion} from "@/events/shared/EventTypes.ts";
 import {GAME_NAMESPACE} from "@/events/game/GameNamespace.ts";
 import {
     type DevCardSnapshot,
+    type EndGameSummary,
     GamePhase,
     type GameSnapshot,
     type PieceType,
@@ -167,7 +168,7 @@ export interface GameServerEventMap {
         snapshot: GameSnapshot;
         localPlayerId: string;
     };
-    [GameServerEvents.state.end.success]: Record<never, never>;
+    [GameServerEvents.state.end.success]: { endSummary: EndGameSummary };
     [GameServerEvents.state.phase.change.success]: { phase: GamePhase };
     [GameServerEvents.build.settlement.success]: { pieceType: PieceType; vertex: Vertex; playerId: string };
     [GameServerEvents.build.settlement.rejected]: { pieceType: PieceType; reason: BuildRejectionReason };

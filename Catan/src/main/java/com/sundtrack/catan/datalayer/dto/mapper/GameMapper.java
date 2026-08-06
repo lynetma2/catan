@@ -16,10 +16,7 @@ import com.sundtrack.catan.datalayer.dto.snapshot.*;
 import com.sundtrack.catan.datalayer.dto.trade.TradeOfferDTO;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 public class GameMapper {
@@ -108,5 +105,36 @@ public class GameMapper {
         return cards.stream()
                 .map(DevCardSnapshotDTO::new)
                 .toList();
+    }
+
+    public EndSummaryDTO toEndSummaryDTO(Game game) {
+        List<GamePlayer> players = game.getPlayers();
+
+        GamePlayer winner = players.stream()
+                .max(Comparator
+                        .comparingLong((GamePlayer p) -> game.computeTotalVictoryPoints(p.getId()))
+                        .thenComparingInt(GamePlayer::getResourceCardCount)
+                        .thenComparingInt(GamePlayer::getDevelopmentCardCount))
+                .orElseThrow(() -> new IllegalStateException("Cannot determine winner for a game with no players"));
+
+        List<EndPlayerSummaryDTO> playerSummaries = players.stream()
+                .map(p -> toEndPlayerSummaryDTO(game, p))
+                .toList();
+
+        return new EndSummaryDTO(
+                winner.getId().toString(),
+                playerSummaries
+        );
+    }
+
+    private EndPlayerSummaryDTO toEndPlayerSummaryDTO(Game game, GamePlayer p) {
+        return new EndPlayerSummaryDTO(
+                p.getId().toString(),
+                p.getUsername(),
+                p.getColor(),
+                (int) game.computeTotalVictoryPoints(p.getId()),
+                game.hasLongestRoad(p.getId()),
+                game.hasLargestArmy(p.getId())
+        );
     }
 }

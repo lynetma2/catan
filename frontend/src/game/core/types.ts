@@ -238,3 +238,17 @@ export interface RoadBuildingFlowState {
 }
 
 export type FlowState = DiscardFlowState | StealFlowState | RoadBuildingFlowState;
+
+export interface EndGamePlayerSummary {
+    id: string;
+    name: string;
+    color: string;
+    victoryPoints: number;
+    hasLongestRoad: boolean;
+    hasLargestArmy: boolean;
+}
+
+export interface EndGameSummary {
+    winnerId: string;
+    players: EndGamePlayerSummary[];
+}

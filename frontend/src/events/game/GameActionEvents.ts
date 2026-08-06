@@ -18,6 +18,7 @@ export const PUBLIC_TRADE_GAME_ACTION = `${TRADE_GAME_ACTION}public${DOT_SEPARAT
 
 export const GameActionEvents = {
     state: `${GAME_ACTION}state`,
+    endSummary: `${GAME_ACTION}endSummary`,
     diceRoll: `${GAME_ACTION}dice${DOT_SEPARATOR}roll`,
     build: {
         settlement: `${BUILD_GAME_ACTION}settlement`,
@@ -58,6 +59,7 @@ export const GameActionEvents = {
 // Flat event map – each leaf event name maps to its payload type
 export interface GameActionEventMap {
     [GameActionEvents.state]: Record<never, never>;
+    [GameActionEvents.endSummary]: Record<never, never>;
     [GameActionEvents.diceRoll]: Record<never, never>;
     [GameActionEvents.build.settlement]: { target: Vertex };
     [GameActionEvents.build.road]: { target: Edge };
