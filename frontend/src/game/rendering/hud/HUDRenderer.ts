@@ -9,10 +9,7 @@ import {DEFAULT_HUD_THEME, type HudTheme} from "@/game/rendering/theme/theme.ts"
 import type {HudState} from "@/game/hud/types.ts";
 import {PlayerOverviewRenderer} from "@/game/rendering/hud/overview/PlayerOverviewRenderer.ts";
 import {DicePanelRenderer} from "@/game/rendering/hud/dice/DicePanelRenderer.ts";
-import {
-    defaultTradeOfferRendererTheme,
-    TradeOfferRenderer
-} from "@/game/rendering/hud/tradeOffer/TradeOfferRenderer.ts";
+import {TradeOfferRenderer} from "@/game/rendering/hud/tradeOffer/TradeOfferRenderer.ts";
 import {
     DEFAULT_ROBBER_STEAL_THEME,
     RobberStealPanelRenderer
@@ -39,7 +36,7 @@ export class HudRenderer {
         this.overviewPanelRenderer  = new PlayerOverviewRenderer(ctx);
         this.dicePanelRenderer      = new DicePanelRenderer(ctx);
         this.toastRenderer          = new ToastRenderer(ctx, theme.toast);
-        this.tradeOfferRenderer = new TradeOfferRenderer(ctx, defaultTradeOfferRendererTheme);
+        this.tradeOfferRenderer = new TradeOfferRenderer(ctx);
         this.robberStealPanelRenderer = new RobberStealPanelRenderer(ctx, DEFAULT_ROBBER_STEAL_THEME);
 
         resolutionManager.onChange(r => { this.resolution = r; });

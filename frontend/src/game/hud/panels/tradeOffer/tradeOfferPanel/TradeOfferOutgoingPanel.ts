@@ -4,12 +4,14 @@ import type {FrameQueue} from "@/game/core/FrameQueue.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
 import {
     TradeOfferKind,
+    TradeOfferOutgoingButtonType,
     type TradeOfferOutgoingState,
     type TradeOfferPanelData,
     TradeOfferResponseKind,
 } from "@/game/hud/panels/tradeOffer/types.ts";
 import {TradeOfferBasePanel} from "@/game/hud/panels/tradeOffer/tradeOfferPanel/TradeOfferBasePanel.ts";
 import {
+    resolveOutgoingButtons,
     resolvePlayerResponses,
     resolveTradeCards,
     resolveTradeOfferPanelBounds,
@@ -17,9 +19,11 @@ import {
 import type {GameEventMap} from "@/events/shared/AppEvents.ts";
 import {vec2} from "@/game/utils/Vec2.ts";
 import {GameActionEventCreators} from "@/events/game/GameActionEvents.ts";
+import {containsPoint} from "@/game/utils/Rect.ts";
 
 export class TradeOfferOutgoingPanel extends TradeOfferBasePanel<TradeOfferOutgoingState> {
     private hoveredPlayerId: string | null = null;
+    private hoveredButton: TradeOfferOutgoingButtonType | null = null;
 
     constructor(
         protected readonly resolution: ResolutionManager,
@@ -34,37 +38,39 @@ export class TradeOfferOutgoingPanel extends TradeOfferBasePanel<TradeOfferOutgo
         if (!isPointerEvent(event)) {
             return false;
         }
-
         const resolution = this.resolution.get();
         const bounds = resolveTradeOfferPanelBounds(resolution, index);
         const playerResponses = resolvePlayerResponses(
             bounds,
-            [...this.playerResponses].map(([playerId, response]) => ({
-                playerId,
-                response,
-            })),
+            this.resolvePlayerResponseInputs(),
             resolution,
         );
+        const buttons = resolveOutgoingButtons(bounds, resolution);
 
         const hitAcceptedPlayer = playerResponses.playerResponseStates.find(pr => {
             if (pr.response !== TradeOfferResponseKind.Accept) return false;
             return vec2.distance(event.screenPos, {x: pr.chip.cx, y: pr.chip.cy}) <= pr.chip.radius;
         });
+        const hitCancel = containsPoint(buttons.cancel, event.screenPos);
 
         if (event.type === InputType.MouseMove) {
             this.hoveredPlayerId = hitAcceptedPlayer ? hitAcceptedPlayer.playerId : null;
-            return hitAcceptedPlayer != null;
+            this.hoveredButton = hitCancel ? TradeOfferOutgoingButtonType.Cancel : null;
+            return this.hoveredPlayerId !== null || this.hoveredButton !== null;
         }
 
         if (event.type === InputType.MouseClick) {
-            if (hitAcceptedPlayer != null) {
+            if (this.hoveredButton === TradeOfferOutgoingButtonType.Cancel) {
+                this.frameQueue.push(GameActionEventCreators.cancelPublicTrade(this.tradeOfferId));
+                return true;
+            }
+            if (hitAcceptedPlayer) {
                 this.frameQueue.push(GameActionEventCreators.confirmPublicTrade(
                     this.tradeOfferId, hitAcceptedPlayer.playerId
-                ))
+                ));
                 return true;
             }
         }
-
         return false;
     }
 
@@ -77,6 +83,7 @@ export class TradeOfferOutgoingPanel extends TradeOfferBasePanel<TradeOfferOutgo
 
     getState(index: number): TradeOfferOutgoingState {
         const resolution = this.resolution.get();
+
         const bounds = resolveTradeOfferPanelBounds(
             resolution,
             index,
@@ -92,12 +99,11 @@ export class TradeOfferOutgoingPanel extends TradeOfferBasePanel<TradeOfferOutgo
 
         const playerResponses = resolvePlayerResponses(
             bounds,
-            [...this.playerResponses].map(([playerId, response]) => ({
-                playerId,
-                response,
-            })),
+            this.resolvePlayerResponseInputs(),
             resolution,
         );
+
+        const buttons = resolveOutgoingButtons(bounds, resolution);
 
         return {
             kind: TradeOfferKind.Outgoing,
@@ -107,8 +113,9 @@ export class TradeOfferOutgoingPanel extends TradeOfferBasePanel<TradeOfferOutgo
             tradeOfferId: this.tradeOfferId,
             tradeOwnerId: this.tradeOwnerId,
             timer: this.timer,
+            buttons,
             hoveredResponse: this.hoveredPlayerId ?? "",
-            hoveredButton: "",
+            hoveredButton: this.hoveredButton,
         };
     }
 }

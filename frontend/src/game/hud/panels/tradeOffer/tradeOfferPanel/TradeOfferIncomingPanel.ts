@@ -71,7 +71,6 @@ export class TradeOfferIncomingPanel extends TradeOfferBasePanel<TradeOfferIncom
         return false;
     }
 
-
     private findHitButton(
         buttons: ButtonLayout,
         pos: Vec2,
@@ -84,7 +83,6 @@ export class TradeOfferIncomingPanel extends TradeOfferBasePanel<TradeOfferIncom
         }
         return undefined;
     }
-
 
     private handleButtonClick(
         hitButton: TradeOfferIncomingButtonType,
@@ -99,7 +97,6 @@ export class TradeOfferIncomingPanel extends TradeOfferBasePanel<TradeOfferIncom
                 return true;
         }
     }
-
 
     // ─── State ────────────────────────────────────────────────────────
     getState(index: number): TradeOfferIncomingState {
@@ -120,12 +117,7 @@ export class TradeOfferIncomingPanel extends TradeOfferBasePanel<TradeOfferIncom
 
         const playerResponses = resolvePlayerResponses(
             bounds,
-            [...this.playerResponses].map(
-                ([playerId, response]) => ({
-                    playerId,
-                    response,
-                }),
-            ),
+            this.resolvePlayerResponseInputs(),
             resolution,
         );
 
@@ -149,7 +141,6 @@ export class TradeOfferIncomingPanel extends TradeOfferBasePanel<TradeOfferIncom
             hoveredButton: this.hoveredButton,
         };
     }
-
 
     // ─── Response updates ─────────────────────────────────────────────
     updatePlayerResponse(

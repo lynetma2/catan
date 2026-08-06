@@ -1,57 +1,88 @@
 import {
-    type ButtonLayout,
     type TradeOfferBaseState,
     TradeOfferIncomingButtonType,
     type TradeOfferIncomingState,
     TradeOfferKind,
     type TradeOfferManagerState,
-    type TradeOfferOutgoingState
+    TradeOfferOutgoingButtonType,
+    type TradeOfferOutgoingState,
 } from "@/game/hud/panels/tradeOffer/types.ts";
 import {ResourceCardRenderer} from "@/game/rendering/hud/resource/ResourceCardRenderer.ts";
 import {ResponseRenderer} from "@/game/rendering/hud/tradeOffer/ResponseRenderer.ts";
-import {
-    ButtonRenderer,
-    type ButtonRenderState,
-    defaultButtonRendererTheme
-} from "@/game/rendering/hud/tradeOffer/ButtonRenderer.ts";
 import {defaultPlayerResponseTheme} from "@/game/rendering/hud/tradeOffer/PlayerResponseTheme.ts";
+import {drawPanelChrome} from "@/game/rendering/hud/panelChrome.ts";
+import {type PanelTheme} from "@/game/rendering/theme/theme.ts";
 import type {Rect} from "@/game/utils/Rect.ts";
 
-export interface TradeOfferRendererTheme {
-    panel: PanelColors;
-}
-
-export interface PanelColors {
-    background: string;
-    border:     string;
-    radius:     number;
-}
-
-export const defaultTradeOfferRendererTheme: TradeOfferRendererTheme = {
-    panel: {
-        background: "#1e1a14",
-        border:     "#3a3020",
-        radius:     6,
-    },
+const TRADE_PANEL_THEME: PanelTheme = {
+    background: 'rgba(28, 18, 10, 0.95)',
+    borderColor: 'rgba(255, 200, 100, 0.25)',
+    borderWidth: 1,
+    borderRadius: 10,
+    titleFont: 'bold 11px monospace',
+    titleColor: 'rgba(255, 200, 100, 0.6)',
+    titlePadding: 12,
 };
 
-export class TradeOfferRenderer {
-    private readonly buttonRenderer:   ButtonRenderer;
-    private readonly responseRenderer: ResponseRenderer;
-    private readonly cardRenderer:     ResourceCardRenderer;
+// ─── Text fitting helpers ─────────────────────────────────────────────
+function parseFontPx(font: string): number {
+    const match = /(\d+(?:\.\d+)?)px/.exec(font);
+    return match ? Number(match[1]) : 11;
+}
 
-    constructor(
-        private readonly ctx:   CanvasRenderingContext2D,
-        private readonly theme: TradeOfferRendererTheme = defaultTradeOfferRendererTheme,
-    ) {
-        this.buttonRenderer   = new ButtonRenderer(ctx, defaultButtonRendererTheme);
+function setFontPx(font: string, px: number): string {
+    const rounded = Math.max(1, Math.round(px));
+    if (!/\d+(?:\.\d+)?px/.test(font)) return `${rounded}px sans-serif`;
+    return font.replace(/\d+(?:\.\d+)?px/, `${rounded}px`);
+}
+
+/** Shrinks (and if needed truncates) text so it fits inside maxWidth. */
+function fitCanvasText(
+    ctx: CanvasRenderingContext2D,
+    rawText: string,
+    font: string,
+    maxWidth: number,
+    minFontSize = 9,
+): { font: string; text: string } {
+    const text = rawText.trim();
+    const basePx = parseFontPx(font);
+    let size = basePx;
+    let currentFont = setFontPx(font, size);
+    ctx.font = currentFont;
+
+    if (!text || maxWidth <= 0) return {font: currentFont, text};
+
+    while (size > minFontSize && ctx.measureText(text).width > maxWidth) {
+        size -= 1;
+        currentFont = setFontPx(font, size);
+        ctx.font = currentFont;
+    }
+
+    let fittedText = text;
+    if (ctx.measureText(fittedText).width > maxWidth) {
+        const ellipsis = "…";
+        while (fittedText.length > 0 && ctx.measureText(fittedText + ellipsis).width > maxWidth) {
+            fittedText = fittedText.slice(0, -1);
+        }
+        fittedText = fittedText.length > 0 ? fittedText + ellipsis : text.charAt(0);
+    }
+
+    return {font: currentFont, text: fittedText};
+}
+
+// ─── Renderer ─────────────────────────────────────────────────────────
+export class TradeOfferRenderer {
+    private readonly responseRenderer: ResponseRenderer;
+    private readonly cardRenderer: ResourceCardRenderer;
+
+    constructor(private readonly ctx: CanvasRenderingContext2D) {
         this.responseRenderer = new ResponseRenderer(ctx, defaultPlayerResponseTheme);
-        this.cardRenderer     = new ResourceCardRenderer(ctx);
+        this.cardRenderer = new ResourceCardRenderer(ctx);
     }
 
     render(state: TradeOfferManagerState): void {
         state.activeTradePanels.forEach(offer => {
-            if (offer.kind == TradeOfferKind.Incoming) {
+            if (offer.kind === TradeOfferKind.Incoming) {
                 this.renderIncoming(offer);
             } else {
                 this.renderOutgoing(offer);
@@ -60,87 +91,85 @@ export class TradeOfferRenderer {
     }
 
     renderIncoming(state: TradeOfferIncomingState): void {
-        this.renderPanel(state.bounds);
-        this.renderCards(state);
-        this.renderResponses(state);
-        this.renderButtons(state);
+        drawPanelChrome(this.ctx, state.bounds, 'Incoming Trade', TRADE_PANEL_THEME);
+        this.renderCards(state, "THEY OFFER", "THEY WANT");
+        this.responseRenderer.render(state.playerResponses.playerResponseStates, false, null);
+        this.renderIncomingButtons(state);
     }
 
     renderOutgoing(state: TradeOfferOutgoingState): void {
-        this.renderPanel(state.bounds);
-        this.renderCards(state);
-        this.renderResponses(state);
+        drawPanelChrome(this.ctx, state.bounds, 'Your Trade', TRADE_PANEL_THEME);
+        this.renderCards(state, "YOU OFFER", "YOU WANT");
+        this.responseRenderer.render(state.playerResponses.playerResponseStates, true, state.hoveredResponse);
+        this.renderOutgoingButtons(state);
     }
 
-    // ─── Private ──────────────────────────────────────────────────────────────
+    private renderCards(state: TradeOfferBaseState, offerLabel: string, wantLabel: string): void {
+        this.renderSection(state.offeredResources.bounds, offerLabel);
+        this.renderSection(state.wantedResources.bounds, wantLabel);
+        this.cardRenderer.renderCards(state.offeredResources.cards);
+        this.cardRenderer.renderCards(state.wantedResources.cards);
+    }
 
-    private renderPanel(bounds: Rect): void {
+    private renderIncomingButtons(state: TradeOfferIncomingState): void {
+        this.drawActionButton(state.buttons.accept, "Accept", "#2d6a2d", state.hoveredButton === TradeOfferIncomingButtonType.Accept);
+        this.drawActionButton(state.buttons.decline, "Decline", "#8a2a2a", state.hoveredButton === TradeOfferIncomingButtonType.Decline);
+    }
+
+    private renderOutgoingButtons(state: TradeOfferOutgoingState): void {
+        this.drawActionButton(state.buttons.cancel, "Cancel Offer", "#8a5a2a", state.hoveredButton === TradeOfferOutgoingButtonType.Cancel);
+    }
+
+    private drawActionButton(bounds: Rect, label: string, color: string, isHovered: boolean): void {
         const ctx = this.ctx;
-        const { x, y, width, height } = bounds;
+        ctx.save();
 
         ctx.beginPath();
-        ctx.roundRect(x, y, width, height, this.theme.panel.radius);
-        ctx.fillStyle = this.theme.panel.background;
+        ctx.roundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4);
+        ctx.fillStyle = color;
         ctx.fill();
 
-        ctx.beginPath();
-        ctx.roundRect(x, y, width, height, this.theme.panel.radius);
-        ctx.strokeStyle = this.theme.panel.border;
-        ctx.lineWidth = 0.5;
+        if (isHovered) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.fill();
+        }
+
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.lineWidth = 1;
         ctx.stroke();
-    }
 
-    private renderCards(state: TradeOfferBaseState): void {
-        // Sections first
-        this.renderSection(state.wantedResources.bounds, "WANTS");
-        this.renderSection(state.offeredResources.bounds, "OFFERS");
+        // Keep the label inside the button, with 8px padding each side
+        const maxWidth = bounds.width - 8 * 2;
+        const fitted = fitCanvasText(ctx, label, 'bold 11px monospace', maxWidth);
 
-        // Then cards on top
-        this.cardRenderer.renderCards(state.wantedResources.cards);
-        this.cardRenderer.renderCards(state.offeredResources.cards);
-    }
+        ctx.font = fitted.font;
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(fitted.text, bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
 
-    private renderResponses(state: TradeOfferBaseState): void {
-        this.responseRenderer.render(
-            state.playerResponses.playerResponseStates,
-        );
-    }
-
-    private renderButtons(state: TradeOfferIncomingState): void {
-        const buttonLayout: ButtonLayout = {
-            acceptBounds: state.buttons.accept,
-            rejectBounds: state.buttons.decline,
-        };
-
-        const interaction: ButtonRenderState = {
-            accept: state.hoveredButton === TradeOfferIncomingButtonType.Accept  ? "hovered" : "idle",
-            reject: state.hoveredButton === TradeOfferIncomingButtonType.Decline ? "hovered" : "idle",
-        };
-
-        this.buttonRenderer.render(buttonLayout, interaction);
+        ctx.restore();
     }
 
     private renderSection(bounds: Rect, label: string): void {
         const ctx = this.ctx;
+        ctx.save();
 
-        // Inner box
         ctx.beginPath();
-        ctx.roundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4);
-        ctx.fillStyle = "#2a241b"; // slightly lighter than panel
+        ctx.roundRect(bounds.x, bounds.y, bounds.width, bounds.height, 6);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
         ctx.fill();
-
-        ctx.beginPath();
-        ctx.roundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4);
-        ctx.strokeStyle = "#3f3526";
-        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = 'rgba(255, 200, 100, 0.1)';
+        ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Label
-        ctx.font = "10px sans-serif";
-        ctx.fillStyle = "#8a7a5a"; // muted gold-ish
-        ctx.textAlign = "left";
-        ctx.textBaseline = "bottom";
+        // Drawn inside the 14px SECTION_LABEL_HEIGHT reserved by the layout
+        ctx.font = 'bold 9px monospace';
+        ctx.fillStyle = 'rgba(255, 200, 100, 0.5)';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(label, bounds.x + 6, bounds.y - 4);
 
-        ctx.fillText(label, bounds.x + 6, bounds.y - 2);
+        ctx.restore();
     }
 }

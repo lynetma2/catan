@@ -6,34 +6,24 @@ export interface PlayerResponseTheme {
     ringWidth: number;
 }
 
+/** Only the status dot is response-colored now;
+ *  the chip body uses the player's own color. */
 export interface ResponseColors {
-    ring:        string;  // chip border
-    dot:         string;  // status dot fill
-    background:  string;  // chip fill
-    initial:     string;  // letter color
+    dot: string;
 }
 
 export const defaultPlayerResponseTheme: PlayerResponseTheme = {
     responseColors: {
         [TradeOfferResponseKind.Accept]: {
-            ring:       "#1D9E75",
-            dot:        "#1D9E75",
-            background: "#1a3d30",
-            initial:    "#5DCAA5",
+            dot: "#1D9E75",
         },
         [TradeOfferResponseKind.Decline]: {
-            ring:       "#E24B4A",
-            dot:        "#E24B4A",
-            background: "#3d1a1a",
-            initial:    "#F09595",
+            dot: "#E24B4A",
         },
         [TradeOfferResponseKind.NoAnswer]: {
-            ring:       "#5a4a30",
-            dot:        "#5a4a30",
-            background: "#2a2520",
-            initial:    "#8a7a58",
+            dot: "#5a4a30",
         },
     },
-    initialFont: "500 12px sans-serif",
-    ringWidth:   2,
+    initialFont: "700 14px sans-serif",
+    ringWidth: 2,
 };

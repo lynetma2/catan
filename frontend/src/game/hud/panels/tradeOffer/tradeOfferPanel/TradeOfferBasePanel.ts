@@ -2,18 +2,20 @@ import {type NormalizedInputEvent} from "@/game/core/Input/InputEvent.ts";
 import {type ResolutionManager} from "@/game/core/ResolutionManager.ts";
 import type {FrameQueue} from "@/game/core/FrameQueue.ts";
 import type {SharedState} from "@/game/core/SharedState.ts";
-import {type TradeOfferPanelData, TradeOfferResponseKind,} from "@/game/hud/panels/tradeOffer/types.ts";
+import {
+    type PlayerResponseInput,
+    type TradeOfferPanelData,
+    TradeOfferResponseKind,
+} from "@/game/hud/panels/tradeOffer/types.ts";
 import type {GameEventMap} from "@/events/shared/AppEvents.ts";
 import type {Resource, ResourceType} from "@/game/core/types.ts";
 
 export abstract class TradeOfferBasePanel<TState> {
     protected readonly offeredResources;
     protected readonly wantedResources;
-
     protected readonly tradeOfferId: string;
     protected readonly tradeOwnerId: string;
     protected readonly playerResponses: Map<string, TradeOfferResponseKind>;
-
     protected timer: number;
 
     constructor(
@@ -24,19 +26,32 @@ export abstract class TradeOfferBasePanel<TState> {
     ) {
         this.tradeOfferId = data.tradeOfferId;
         this.tradeOwnerId = data.tradeOwnerId;
-
         this.offeredResources = data.offeredResources;
         this.wantedResources = this.createFakeResources(data.wantedResources);
-
         this.playerResponses = new Map(
             data.playerResponses.map(r => [r.playerId, r.response]),
         );
-
         this.timer = 50;
     }
 
     public getTradeOfferId(): string {
         return this.tradeOfferId;
+    }
+
+    /**
+     * Maps raw responses to display-ready inputs using SharedState —
+     * the same source of truth the overview panel uses.
+     */
+    protected resolvePlayerResponseInputs(): PlayerResponseInput[] {
+        return [...this.playerResponses].map(([playerId, response]) => {
+            const player = this.sharedState.players.get(playerId);
+            return {
+                playerId,
+                response,
+                name: player?.name ?? playerId,
+                color: player?.color ?? "#8a7a58",
+            };
+        });
     }
 
     private createFakeResources(types: ResourceType[]): Resource[] {

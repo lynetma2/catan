@@ -15,6 +15,14 @@ export interface TradePlayerResponse {
     response: TradeOfferResponseKind;
 }
 
+/** Raw response enriched with display data resolved from SharedState. */
+export interface PlayerResponseInput {
+    playerId: string;
+    response: TradeOfferResponseKind;
+    name: string;
+    color: string;
+}
+
 export interface TradeOfferBaseState {
     bounds: Rect;
     wantedResources: { bounds: Rect; cards: ResourceCard[] };
@@ -36,6 +44,10 @@ export interface TradeOfferPanelCardsState {
 export enum TradeOfferIncomingButtonType {
     Accept = "accept",
     Decline = "decline"
+}
+
+export enum TradeOfferOutgoingButtonType {
+    Cancel = "cancel"
 }
 
 export enum TradeOfferResponseKind {
@@ -60,8 +72,11 @@ export interface TradeOfferIncomingState extends TradeOfferBaseState {
 
 export interface TradeOfferOutgoingState extends TradeOfferBaseState {
     kind: TradeOfferKind.Outgoing;
-    hoveredResponse: string; //PlayerId
-    hoveredButton: string;
+    hoveredResponse: string | null; //PlayerId
+    hoveredButton: TradeOfferOutgoingButtonType | null;
+    buttons: {
+        cancel: Rect;
+    }
 }
 
 export interface TradeOfferPanelData {
@@ -93,7 +108,10 @@ export interface ChipLayout {
     dotCx: number;
     dotCy: number;
     dotRadius: number;
-    initial: string;
+    initial: string;     // first letter of the player's NAME
+    color: string;       // real player color → ring & glow
+    background: string;  // darkened player color → chip fill & dot gap
+    textColor: string;   // lightened player color → letter
 }
 
 export interface ButtonLayout {
