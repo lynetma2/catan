@@ -2,7 +2,6 @@ package com.sundtrack.catan.session.game.services;
 
 import com.sundtrack.catan.datalayer.domain.board.Board;
 import com.sundtrack.catan.datalayer.domain.board.BoardFactory;
-import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCardType;
 import com.sundtrack.catan.datalayer.domain.game.*;
 import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
 import com.sundtrack.catan.datalayer.domain.lobby.LobbyPlayer;
@@ -33,7 +32,7 @@ public class GameCreationServiceImpl implements GameCreationService {
         TurnOrder turnOrder = TurnOrder.startingNewGame(lobbyPlayers.keySet().stream().toList());
         DicePair dicePair = new DicePair();
         GameFlow flow = new GameFlow(turnOrder, 0);
-        DevelopmentCardBank developmentCardBank = DevelopmentCardBank.singleType(DevelopmentCardType.KNIGHT);
+        DevelopmentCardBank developmentCardBank = DevelopmentCardBank.standard();
         ResourceBank resourceBank = ResourceBank.standard();
         GameConfiguration gameConfiguration = GameConfiguration.standard();
         TradeBook tradeBook = new TradeBook();
