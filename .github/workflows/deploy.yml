@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: oracle-arm-app   # ← your VPS
+    runs-on: [self-hosted, ARM64]   # ← your VPS
     steps:
       - uses: actions/checkout@v4
 
