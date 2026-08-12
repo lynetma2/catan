@@ -14,10 +14,19 @@ services:
     restart: always
     ports:
       - "80:80"
-      - "443:443"
+      - "443:443"     # <--- Added for HTTPS
+    environment:
+      - DOMAIN=hexa.sundtrack.com  # <--- PUT YOUR ACTUAL DOMAIN HERE
+    volumes:
+      - caddy_data:/data       # <--- Stores the Let's Encrypt Certs
+      - caddy_config:/config   # <--- Stores Caddy's internal state
     depends_on:
       - backend
 
 volumes:
   sqlite_data:
     name: catan_sqlite_data
+  caddy_data:
+    name: catan_caddy_data
+  caddy_config:
+    name: catan_caddy_config

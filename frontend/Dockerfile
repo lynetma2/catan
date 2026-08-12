@@ -1,4 +1,4 @@
-# 1. Build React app
+# --- Build stage (Same as before) ---
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package*.json ./
@@ -6,8 +6,8 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 RUN npm run build
 
-# 2. Serve with Nginx
-FROM nginx:alpine
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
+# --- Serve stage (Caddy instead of Nginx) ---
+FROM caddy:2-alpine
+COPY Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /app/dist /srv
+EXPOSE 80 443
