@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {useNavigate} from "react-router";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {Input} from "@/components/ui/input";
@@ -28,7 +28,10 @@ function IndexPage() {
     const [stats, setStats] = useState<GameStats | null>(null);
 
     const usernameJoinRef = useRef<HTMLInputElement>(null);
+    // Ref to hold the global subscription so we can clean it up on unmount
+    const lobbySubscription = useRef<any>(null);
 
+    // 1. Fetch global game stats on mount
     useEffect(() => {
         fetch('/api/games/stats')
             .then(res => res.ok ? res.json() : Promise.reject())
@@ -36,6 +39,7 @@ function IndexPage() {
             .catch(() => console.warn("Could not load game stats"));
     }, []);
 
+    // 2. Auto-focus username if joining via link without a saved username
     useEffect(() => {
         if (lobbyId && !username) {
             usernameJoinRef.current?.focus();
@@ -47,68 +51,62 @@ function IndexPage() {
         localStorage.setItem("username", value);
     };
 
-    const subscribeAndSend = (
-        destination: string,
-        payload: any,
-        setLoading: (val: boolean) => void,
-        context: 'create' | 'join'
-    ) => {
-        setLoading(true);
-        setError(null);
+    // 3. Centralized Event Router for all directed lobby messages
+    const handleLobbyEvent = useCallback((event: any) => {
+        if (event.type === LobbyServerEvents.state.success) {
+            sessionStorage.setItem("lobbyState", JSON.stringify(event));
+            sessionStorage.setItem("playerId", event.payload.localPlayerId);
+            navigate(`/lobby/${event.payload.lobbyId}`);
+            setIsCreating(false);
+            setIsJoining(false);
+        } else if (event.type === LobbyServerEvents.player.join.rejected) {
+            const reason = event.payload?.reason?.toLowerCase() ?? "";
+            setError(reason.includes("not found") ? "Lobby not found" : "Join request rejected");
+            setIsCreating(false);
+            setIsJoining(false);
+        } else if (event.type === LobbyServerEvents.initialized.error) {
+            setError("Lobby initialization error");
+            setIsCreating(false);
+            setIsJoining(false);
+        }
+    }, [navigate]);
 
-        onConnect(() => {
-            const sub = subscribe("/user/queue/lobby", (response) => {
-                try {
-                    const event = JSON.parse(response.body);
-
-                    if (event.type === LobbyServerEvents.state.success) {
-                        sub?.unsubscribe();
-                        sessionStorage.setItem("lobbyState", JSON.stringify(event));
-                        sessionStorage.setItem("playerId", event.payload.localPlayerId);
-                        navigate(`/lobby/${event.payload.lobbyId}`);
-                        return;
+    // 4. GLOBAL SUBSCRIPTION: Subscribe ONCE when component mounts and WebSocket connects.
+    // This entirely eliminates the race condition where the server replies before the subscription is registered.
+    useEffect(() => {
+        const unregister = onConnect(() => {
+            if (!lobbySubscription.current) {
+                lobbySubscription.current = subscribe("/user/queue/lobby", (response) => {
+                    try {
+                        const event = JSON.parse(response.body);
+                        handleLobbyEvent(event);
+                    } catch (err) {
+                        console.error("Error parsing lobby event", err);
                     }
-
-                    let errorMessage = "Unexpected error";
-                    if (event.type === LobbyServerEvents.player.join.rejected) {
-                        if (context === 'create') {
-                            errorMessage = "Lobby creation rejected";
-                        } else {
-                            const reason = event.payload?.reason?.toLowerCase() ?? "";
-                            errorMessage = reason.includes("not found") ? "Lobby not found" : "Join request rejected";
-                        }
-                    } else if (event.type === LobbyServerEvents.initialized.error) {
-                        errorMessage = `Lobby ${context === 'create' ? 'creation' : 'join'} error`;
-                    }
-
-                    sub?.unsubscribe();
-                    setError(errorMessage);
-                    setLoading(false);
-                } catch (err) {
-                    console.error(`Error processing lobby ${context} response:`, err);
-                    sub?.unsubscribe();
-                    setError(`Unexpected error while ${context === 'create' ? 'creating' : 'joining'} lobby`);
-                    setLoading(false);
-                }
-            });
-
-            sendMessage(destination, payload);
+                });
+            }
         });
-    };
 
+        return () => {
+            unregister();
+            lobbySubscription.current?.unsubscribe();
+            lobbySubscription.current = null;
+        };
+    }, [onConnect, subscribe, handleLobbyEvent]);
+
+    // 5. Simplified Button Handlers (No more subscribing inside clicks!)
     const createLobby = () => {
         if (!username || isCreating) return;
-        subscribeAndSend("/app/lobby", LobbyActionEventCreators.create(username), setIsCreating, 'create');
+        setIsCreating(true);
+        setError(null);
+        sendMessage("/app/lobby", LobbyActionEventCreators.create(username));
     };
 
     const joinLobby = () => {
         if (!lobbyId || !username || isJoining) return;
-        subscribeAndSend(
-            `/app/lobby/${lobbyId}/events`,
-            LobbyActionEventCreators.join(username),
-            setIsJoining,
-            'join'
-        );
+        setIsJoining(true);
+        setError(null);
+        sendMessage(`/app/lobby/${lobbyId}/events`, LobbyActionEventCreators.join(username));
     };
 
     return (
@@ -127,7 +125,7 @@ function IndexPage() {
                                 className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                         </span>
-                        Learning Project
+                        Open Source & Learning Project
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-black tracking-tight">
@@ -139,7 +137,8 @@ function IndexPage() {
                     </h1>
 
                     <p className="text-xl md:text-2xl text-muted-foreground font-light leading-relaxed">
-                        A modern, web-based implementation of the classic board game
+                        A modern, web-based implementation of the classic board game{" "}
+                        <span className="font-semibold text-foreground">Settlers of Catan</span>.
                     </p>
                 </div>
 
