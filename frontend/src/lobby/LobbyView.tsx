@@ -14,6 +14,7 @@ import type {StompSubscription} from '@stomp/stompjs';
 import {type LobbyPlayerServerEvent, type LobbyServerEvent, LobbyServerEvents,} from '@/events/lobby/LobbyServerEvents';
 import {assertNever} from '@/events/shared/EventTypes';
 import {applyLobbyEvent} from '@/lobby/ApplyLobbyEvent.ts';
+import {Check, Copy} from "lucide-react";
 
 /**
  * Normalise a server-sent lobby snapshot (which uses `id` for both
@@ -68,6 +69,7 @@ function LobbyView() {
     });
 
     const topicSubscription = useRef<StompSubscription | null>(null);
+    const [copied, setCopied] = React.useState(false);
 
     const username: string = useMemo(
         () => localStorage.getItem('username') ?? '',
@@ -81,6 +83,16 @@ function LobbyView() {
         sessionStorage.setItem('playerId', newId);
         return newId;
     }, []);
+
+    const handleCopyLobbyId = async () => {
+        try {
+            await navigator.clipboard.writeText(lobby?.lobbyId ?? "");
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (error) {
+            console.error("Failed to copy lobby ID", error);
+        }
+    }
 
     const actions = useLobbyActions(lobbyId);
     const myPlayer = lobby?.players[playerId];
@@ -202,7 +214,17 @@ function LobbyView() {
 
     return (
         <div className="flex flex-col items-center gap-4 p-4">
-            <p className="text-sm text-muted-foreground">Lobby ID: {lobby.lobbyId}</p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Lobby ID: {lobby.lobbyId}</span>
+                <Button variant="ghost" size="icon" onClick={handleCopyLobbyId} className="h-6 w-6">
+                    {copied ? (
+                        <Check className="h-3 w-3 text-green-500"/>
+                    ) : (
+                        <Copy className="h-3 w-3"/>
+                    )}
+                </Button>
+            </div>
+
             <PlayersView players={lobby.players}/>
             {isLeader ? (
                 <Button onClick={handleStartGame} disabled={!lobby}>

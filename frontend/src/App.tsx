@@ -1,18 +1,19 @@
 import {useEffect, useRef, useState} from 'react';
 import './App.css';
 import {Game} from "@/game/core/Game.ts";
-import {useParams} from "react-router";
+import {useNavigate, useParams} from "react-router"; // 1. Added useNavigate
 import {useWebSocket} from "@/WebSocketContext.ts";
 import {GameServerEvents} from "@/events/game/GameServerEvents.ts";
 import {GameActionEvents} from "@/events/game/GameActionEvents.ts";
 import {type EndGameSummary, GamePhase, type GameSnapshot} from "@/game/core/types.ts";
 import {EndScreen} from "@/game/hud/react/EndScreen.tsx";
-import type {GameEventMap} from "@/events/shared/AppEvents.ts"; // Your React component
+import type {GameEventMap} from "@/events/shared/AppEvents.ts";
 
 function App() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const gameLoopRef = useRef<Game | null>(null);
     const ws = useWebSocket();
+    const navigate = useNavigate(); // 2. Initialize navigate
     const { gameId } = useParams<{ gameId: string }>();
     const localPlayerId = sessionStorage.getItem('playerId');
 
@@ -31,21 +32,17 @@ function App() {
 
         const requestEndSummary = () => {
             if (endSummaryRequestedRef.current) return;
-
             endSummaryRequestedRef.current = true;
-
             bus.emit({
                 type: GameActionEvents.endSummary,
                 payload: {},
             });
         };
 
-        // Live game: phase transitions to End
         const handlePhaseChange = (payload: { phase: GamePhase }) => {
             if (payload.phase === GamePhase.End) requestEndSummary();
         };
 
-        // Refresh / reconnect: only the full snapshot arrives, no phase.change event
         const handleFullState = (payload: { snapshot: GameSnapshot }) => {
             if (payload.snapshot.currentPhase === GamePhase.End) requestEndSummary();
         };
@@ -66,8 +63,24 @@ function App() {
         };
     }, [gameId, localPlayerId, ws]);
 
+    // 3. Create the cleanup and navigation handler
+    const handleReturnToHomepage = () => {
+        // Clear the storage items that allow reconnecting/joining lobbies
+        sessionStorage.removeItem('playerId');
+        sessionStorage.removeItem('lobbyState');
+        localStorage.removeItem('username');
+
+        // Clean up the canvas game loop immediately so it doesn't run in the background
+        if (gameLoopRef.current) {
+            gameLoopRef.current.destroy();
+            gameLoopRef.current = null;
+        }
+
+        // Navigate back to the homepage
+        navigate('/');
+    };
+
     return (
-        // Parent container needs 'relative' so the absolute overlay positions correctly
         <div style={{width: '1000px', height: '1000px', position: 'relative'}}>
             <canvas
                 tabIndex={0}
@@ -75,14 +88,12 @@ function App() {
                 style={{ display: 'block', width: '100%', height: '100%' }}
             />
 
-            {/* Render the React Overlay when data arrives */}
             {endGameData && (
                 <EndScreen
                     data={endGameData}
                     localPlayerId={localPlayerId}
-                    onClose={() => {
-                        setEndGameData(null);
-                    }}
+                    // 4. Pass the new handler to the EndScreen
+                    onClose={handleReturnToHomepage}
                 />
             )}
         </div>
