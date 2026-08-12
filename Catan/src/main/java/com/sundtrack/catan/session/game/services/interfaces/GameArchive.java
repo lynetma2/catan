@@ -16,4 +16,6 @@ public interface GameArchive {
     Optional<EndSummaryDTO> findEndSummary(UUID gameId);
 
     boolean exists(UUID gameId);
+
+    long getArchivedGameCount();
 }

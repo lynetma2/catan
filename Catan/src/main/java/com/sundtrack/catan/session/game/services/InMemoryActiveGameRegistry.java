@@ -46,4 +46,9 @@ public class InMemoryActiveGameRegistry implements ActiveGameRegistry {
     public void unregister(UUID gameId) {
         activeGames.remove(gameId);
     }
+
+    @Override
+    public int getActiveGameCount() {
+        return activeGames.size();
+    }
 }

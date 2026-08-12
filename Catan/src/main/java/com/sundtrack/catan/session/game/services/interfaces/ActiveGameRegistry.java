@@ -16,4 +16,6 @@ public interface ActiveGameRegistry {
     boolean isActive(UUID gameId);
 
     void unregister(UUID gameId);
+
+    int getActiveGameCount();
 }

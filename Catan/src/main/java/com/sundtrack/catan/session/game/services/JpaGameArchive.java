@@ -93,4 +93,9 @@ public class JpaGameArchive implements GameArchive {
     public boolean exists(UUID gameId) {
         return repository.existsById(gameId);
     }
+
+    @Override
+    public long getArchivedGameCount() {
+        return repository.count();
+    }
 }
