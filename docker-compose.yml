@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  backend:
+    image: ghcr.io/YOUR_GITHUB_USERNAME/catan-backend:latest
+    restart: always
+    volumes:
+      - sqlite_data:/data  # Maps the persistent volume to /data in the container
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+
+  frontend:
+    image: ghcr.io/YOUR_GITHUB_USERNAME/catan-frontend:latest
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443" # If you add SSL later
+    depends_on:
+      - backend
+
+volumes:
+  sqlite_data: # This ensures your SQLite database survives updates!
