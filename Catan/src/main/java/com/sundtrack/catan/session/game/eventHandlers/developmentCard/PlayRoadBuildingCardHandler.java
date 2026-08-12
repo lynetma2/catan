@@ -9,7 +9,6 @@ import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
-import com.sundtrack.catan.session.game.services.GameStore;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -20,16 +19,9 @@ import java.util.UUID;
 @Component
 @HandlesEvent(PlayRoadBuildingAction.class)
 public class PlayRoadBuildingCardHandler implements GameActionHandler<PlayRoadBuildingAction> {
-    private final GameStore gameStore;
-
-    public PlayRoadBuildingCardHandler(GameStore gameStore) {
-        this.gameStore = gameStore;
-    }
 
     @Override
-    public EventResult<ServerEvent> handle(GameContext context, PlayRoadBuildingAction action) {
-        Game game = gameStore.get(context.gameId());
-
+    public EventResult<ServerEvent> handle(GameContext context, Game game, PlayRoadBuildingAction action) {
         doValidations(game, context, action);
         game.playRoadBuildingCard(context.playerId(), action.cardId());
 

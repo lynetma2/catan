@@ -10,7 +10,6 @@ import com.sundtrack.catan.datalayer.domain.exceptions.validation.PlayerNotPendi
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.messaging.HandlesEvent;
-import com.sundtrack.catan.session.game.services.GameStore;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -20,16 +19,9 @@ import java.util.UUID;
 @Component
 @HandlesEvent(GameDiscardAction.class)
 public class GameDiscardHandler implements GameActionHandler<GameDiscardAction> {
-    private final GameStore gameStore;
-
-    public GameDiscardHandler(GameStore gameStore) {
-        this.gameStore = gameStore;
-    }
 
     @Override
-    public EventResult<ServerEvent> handle(GameContext context, GameDiscardAction action) {
-        Game game = gameStore.get(context.gameId());
-
+    public EventResult<ServerEvent> handle(GameContext context, Game game, GameDiscardAction action) {
         doValidations(game, context, action);
         List<Resource> discarded = game.discard(action, context.playerId());
         return createResults(context, discarded);

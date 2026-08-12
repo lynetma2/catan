@@ -3,7 +3,9 @@ package com.sundtrack.catan.messaging.game;
 import com.sundtrack.catan.datalayer.domain.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
+import com.sundtrack.catan.datalayer.domain.event.game.action.EndSummaryAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.error.GameErrorEvent;
+import com.sundtrack.catan.datalayer.domain.event.game.server.state.EndSummaryEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.state.GamePhaseChangedEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.turn.TurnEndEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.turn.TurnStartEvent;
@@ -13,17 +15,16 @@ import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
 import com.sundtrack.catan.datalayer.domain.game.PlayerStats;
 import com.sundtrack.catan.datalayer.domain.game.PlayerStatsDiff;
+import com.sundtrack.catan.datalayer.dto.snapshot.EndSummaryDTO;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
-import com.sundtrack.catan.session.game.services.GameStore;
+import com.sundtrack.catan.session.game.services.interfaces.ActiveGameRegistry;
+import com.sundtrack.catan.session.game.services.interfaces.GameArchive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class GameDispatcher {
@@ -31,11 +32,13 @@ public class GameDispatcher {
     private static final Logger log = LoggerFactory.getLogger(GameDispatcher.class);
 
     private final GameHandlerRegistry registry;
-    private final GameStore gameStore;
+    private final ActiveGameRegistry activeGames;
+    private final GameArchive gameArchive;
 
-    public GameDispatcher(GameHandlerRegistry registry, GameStore gameStore) {
+    public GameDispatcher(GameHandlerRegistry registry, ActiveGameRegistry activeGames, GameArchive gameArchive) {
         this.registry = registry;
-        this.gameStore = gameStore;
+        this.activeGames = activeGames;
+        this.gameArchive = gameArchive;
     }
 
     public EventResult<ServerEvent> dispatch(GameContext context, ClientAction action) {
@@ -54,6 +57,12 @@ public class GameDispatcher {
 
     @SuppressWarnings("unchecked")
     private EventResult<ServerEvent> doDispatch(GameContext context, ClientAction action) {
+        Optional<Game> active = activeGames.findActive(context.gameId());
+
+        if (active.isEmpty()) {
+            return dispatchFinished(context, action);
+        }
+
         GameActionHandler<ClientAction> handler =
                 (GameActionHandler<ClientAction>) registry.get(action.getClass());
         if (handler == null) {
@@ -61,10 +70,10 @@ public class GameDispatcher {
                     "No handler registered for " + action.getClass().getSimpleName());
         }
 
-        Game game = gameStore.get(context.gameId());
+        Game game = active.get();
         DispatchSnapshot before = DispatchSnapshot.capture(game);
 
-        EventResult<ServerEvent> result = handler.handle(context, action);
+        EventResult<ServerEvent> result = handler.handle(context, game, action);
 
         EventResult<ServerEvent> withCrossCutting = mergeCrossCuttingEvents(game, before, result);
         EventResult<ServerEvent> finalResult = mergeEndOfActionEvents(game, withCrossCutting);
@@ -77,6 +86,17 @@ public class GameDispatcher {
                                                  String message, Map<String, Object> details) {
         GameErrorEvent error = new GameErrorEvent(code.toString(), message, details);
         return EventResult.of(List.of(), Map.of(context.playerId(), List.of(error)));
+    }
+
+    private EventResult<ServerEvent> dispatchFinished(GameContext context, ClientAction action) {
+        if (action instanceof EndSummaryAction) {
+            EndSummaryDTO summary = gameArchive.findEndSummary(context.gameId())
+                    .orElseThrow(() -> new IllegalStateException("Unknown game: " + context.gameId()));
+            return EventResult.directed(context.playerId(), new EndSummaryEvent(summary));
+        }
+
+        // Finished games only support historical reads — never mutations.
+        throw new IllegalStateException("Game is finished: " + context.gameId());
     }
 
     private EventResult<ServerEvent> mergeCrossCuttingEvents(Game game, DispatchSnapshot before,

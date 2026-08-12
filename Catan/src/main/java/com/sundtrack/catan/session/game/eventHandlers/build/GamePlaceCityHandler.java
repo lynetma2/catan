@@ -10,7 +10,6 @@ import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
-import com.sundtrack.catan.session.game.services.GameStore;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -21,16 +20,8 @@ import java.util.UUID;
 @Component
 @HandlesEvent(PlaceCityAction.class)
 public class GamePlaceCityHandler implements GameActionHandler<PlaceCityAction> {
-    private final GameStore gameStore;
-
-    public GamePlaceCityHandler(GameStore gameStore) {
-        this.gameStore = gameStore;
-    }
-
     @Override
-    public EventResult<ServerEvent> handle(GameContext context, PlaceCityAction action) {
-        Game game = gameStore.get(context.gameId());
-
+    public EventResult<ServerEvent> handle(GameContext context, Game game, PlaceCityAction action) {
         doValidations(game, context, action);
         Game.PlacementResult<Vertex> result = doMutations(game, context, action);
         return createResults(context, result);

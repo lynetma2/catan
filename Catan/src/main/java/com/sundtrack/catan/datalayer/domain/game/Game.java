@@ -117,21 +117,62 @@ public class Game {
 
     private Map<UUID, List<Resource>> grantResourcesForRoll(int rollTotal) {
         Map<UUID, List<Resource>> granted = new HashMap<>();
+        Map<UUID, Map<ResourceType, Integer>> pendingGrants = calculatePendingGrants(rollTotal);
+        Set<ResourceType> availableResourceTypes = payableResourceTypes(pendingGrants);
+
+        for (Map.Entry<UUID, Map<ResourceType, Integer>> entry : pendingGrants.entrySet()) {
+            GamePlayer owner = getPlayerOrThrow(entry.getKey());
+            for (Map.Entry<ResourceType, Integer> resourceEntry : entry.getValue().entrySet()) {
+                if (!availableResourceTypes.contains(resourceEntry.getKey())) {
+                    continue;
+                }
+                List<Resource> drawn = resourceBank.draw(resourceEntry.getKey(), resourceEntry.getValue());
+                owner.receive(drawn);
+                granted.merge(owner.getId(), drawn, (existing, added) -> {
+                    existing.addAll(added);
+                    return existing;
+                });
+            }
+        }
+
+        return granted;
+    }
+
+    private Map<UUID, Map<ResourceType, Integer>> calculatePendingGrants(int rollTotal) {
+        Map<UUID, Map<ResourceType, Integer>> pending = new HashMap<>();
         for (Tile tile : board.tilesProducingOn(rollTotal)) {
             for (Vertex vertex : tile.getAdjacentVertices()) {
                 board.getBuildingAt(vertex).ifPresent(building -> {
                     GamePlayer owner = getPlayerOrThrow(building.getOwnerId());
                     int count = building.getKind() == PieceType.CITY ? 2 : 1;
-                    List<Resource> drawn = resourceBank.draw(tile.getType().getResourceType(), count);
-                    owner.receive(drawn);
-                    granted.merge(owner.getId(), drawn, (existing, added) -> {
-                        existing.addAll(added);
-                        return existing;
-                    });
+                    pending.computeIfAbsent(owner.getId(), id -> new HashMap<>())
+                            .merge(tile.getType().getResourceType(), count, Integer::sum);
                 });
             }
         }
-        return granted;
+        return pending;
+    }
+
+    private Set<ResourceType> payableResourceTypes(Map<UUID, Map<ResourceType, Integer>> pending) {
+        Map<ResourceType, Integer> resourcesNeeded = new EnumMap<>(ResourceType.class);
+
+        for (Map<ResourceType, Integer> resources : pending.values()) {
+            for (Map.Entry<ResourceType, Integer> entry : resources.entrySet()) {
+                resourcesNeeded.merge(entry.getKey(), entry.getValue(), Integer::sum);
+            }
+        }
+
+        Set<ResourceType> payable = EnumSet.noneOf(ResourceType.class);
+        for (Map.Entry<ResourceType, Integer> entry : resourcesNeeded.entrySet()) {
+            ResourceType resourceType = entry.getKey();
+            int requiredAmount = entry.getValue();
+
+            if (resourceBank.isAvailable(resourceType, requiredAmount)) {
+                payable.add(resourceType);
+            }
+        }
+
+        return payable;
     }
 
     private GamePlayer getPlayerOrThrow(UUID playerId) {

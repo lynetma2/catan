@@ -107,6 +107,32 @@ public class GameMapper {
                 .toList();
     }
 
+    public GameSnapshotDTO toFullSnapshotDTO(Game game) {
+        return new GameSnapshotDTO(
+                game.getId().toString(),
+                mapAllPlayersFully(game), // Use the new method below
+                mapTiles(game.getTiles()),
+                mapPlacements(game.getBuildings()),
+                game.getCurrentPhase(),
+                game.getCurrentPlayerId().toString(),
+                game.getTurnNumber(),
+                mapTradeOffers(game.getActiveTradeOffers()),
+                game.getDiceRoll(),
+                FlowStateMapper.toDTO(game)
+        );
+    }
+
+    private List<PlayerSnapshotDTO> mapAllPlayersFully(Game game) {
+        Map<UUID, Integer> longestRoads = game.getLongestRoadLengths();
+        return game.getPlayers().stream()
+                .map(p -> {
+                    int longestRoadLength = longestRoads.getOrDefault(p.getId(), 0);
+                    // Force isViewer = true to expose ALL resources and dev cards for persistence
+                    return mapPlayer(game, p, true, longestRoadLength);
+                })
+                .toList();
+    }
+
     public EndSummaryDTO toEndSummaryDTO(Game game) {
         List<GamePlayer> players = game.getPlayers();
 

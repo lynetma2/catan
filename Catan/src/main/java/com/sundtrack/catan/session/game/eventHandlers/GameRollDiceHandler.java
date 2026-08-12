@@ -8,7 +8,6 @@ import com.sundtrack.catan.datalayer.domain.event.game.server.resource.DiscardRe
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceGrantEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.messaging.HandlesEvent;
-import com.sundtrack.catan.session.game.services.GameStore;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -19,16 +18,8 @@ import java.util.Map;
 @HandlesEvent(RollDiceAction.class)
 public class GameRollDiceHandler implements GameActionHandler<RollDiceAction> {
 
-    private final GameStore gameStore;
-
-    public GameRollDiceHandler(GameStore gameStore) {
-        this.gameStore = gameStore;
-    }
-
     @Override
-    public EventResult<ServerEvent> handle(GameContext context, RollDiceAction action) {
-        Game game = gameStore.get(context.gameId());
-
+    public EventResult<ServerEvent> handle(GameContext context, Game game, RollDiceAction action) {
         doValidations(game, context, action);
         Game.RollOutcome result = doMutations(game);
 

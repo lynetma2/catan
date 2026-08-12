@@ -9,7 +9,6 @@ import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
-import com.sundtrack.catan.session.game.services.GameStore;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -18,17 +17,9 @@ import java.util.Map;
 @Component
 @HandlesEvent(BankTradeAction.class)
 public class BankTradeHandler implements GameActionHandler<BankTradeAction> {
-    private final GameStore gameStore;
-
-    public BankTradeHandler(GameStore gameStore) {
-        this.gameStore = gameStore;
-    }
-
 
     @Override
-    public EventResult<ServerEvent> handle(GameContext context, BankTradeAction action) {
-        Game game = gameStore.get(context.gameId());
-
+    public EventResult<ServerEvent> handle(GameContext context, Game game, BankTradeAction action) {
         doValidations(game, context, action);
         List<Resource> received = game.bankTrade(context.playerId(), action.givenResources(), action.wanted());
 

@@ -43,6 +43,12 @@ public class ResourceBank {
         }
     }
 
+    public boolean isAvailable(Map<ResourceType, Integer> requiredResources) {
+        return requiredResources.entrySet()
+                .stream()
+                .allMatch(entry -> isAvailable(entry.getKey(), entry.getValue()));
+    }
+
     public boolean isAvailable(ResourceType resourceType, int amount) {
         return available(resourceType) >= amount;
     }

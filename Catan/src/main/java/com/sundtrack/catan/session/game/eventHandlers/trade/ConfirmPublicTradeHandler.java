@@ -11,7 +11,6 @@ import com.sundtrack.catan.datalayer.domain.game.TradeBook;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
-import com.sundtrack.catan.session.game.services.GameStore;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -21,16 +20,9 @@ import java.util.UUID;
 @Component
 @HandlesEvent(InitiatorConfirmPublicTradeAction.class)
 public class ConfirmPublicTradeHandler implements GameActionHandler<InitiatorConfirmPublicTradeAction> {
-    private final GameStore gameStore;
-
-    public ConfirmPublicTradeHandler(GameStore gameStore) {
-        this.gameStore = gameStore;
-    }
 
     @Override
-    public EventResult<ServerEvent> handle(GameContext context, InitiatorConfirmPublicTradeAction action) {
-        Game game = gameStore.get(context.gameId());
-
+    public EventResult<ServerEvent> handle(GameContext context, Game game, InitiatorConfirmPublicTradeAction action) {
         doValidations(game, context, action);
         TradeBook.TradeTerms tradeTerms = game.confirmTrade(context.playerId(), action.responderId(), action.tradeId());
 

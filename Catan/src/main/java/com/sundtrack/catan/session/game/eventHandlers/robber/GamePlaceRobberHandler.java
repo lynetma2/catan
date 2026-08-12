@@ -9,7 +9,6 @@ import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
-import com.sundtrack.catan.session.game.services.GameStore;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -17,16 +16,9 @@ import java.util.*;
 @Component
 @HandlesEvent(PlaceRobberAction.class)
 public class GamePlaceRobberHandler implements GameActionHandler<PlaceRobberAction> {
-    private final GameStore gameStore;
-
-    public GamePlaceRobberHandler(GameStore gameStore) {
-        this.gameStore = gameStore;
-    }
 
     @Override
-    public EventResult<ServerEvent> handle(GameContext context, PlaceRobberAction action) {
-        Game game = gameStore.get(context.gameId());
-
+    public EventResult<ServerEvent> handle(GameContext context, Game game, PlaceRobberAction action) {
         doValidations(game, context, action);
         game.placeRobber(action, context.playerId());
         return createResults(context, game, action);

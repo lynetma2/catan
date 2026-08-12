@@ -17,6 +17,7 @@ function App() {
     const localPlayerId = sessionStorage.getItem('playerId');
 
     const [endGameData, setEndGameData] = useState<EndGameSummary | null>(null);
+    const endSummaryRequestedRef = useRef<boolean | null>(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -29,6 +30,10 @@ function App() {
         const bus = game.getEventBus();
 
         const requestEndSummary = () => {
+            if (endSummaryRequestedRef.current) return;
+
+            endSummaryRequestedRef.current = true;
+
             bus.emit({
                 type: GameActionEvents.endSummary,
                 payload: {},

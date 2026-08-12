@@ -9,7 +9,6 @@ import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
-import com.sundtrack.catan.session.game.services.GameStore;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -20,16 +19,8 @@ import java.util.UUID;
 @Component
 @HandlesEvent(DrawDevelopmentCardAction.class)
 public class DrawDevelopmentCardHandler implements GameActionHandler<DrawDevelopmentCardAction> {
-    private final GameStore gameStore;
-
-    public DrawDevelopmentCardHandler(GameStore gameStore) {
-        this.gameStore = gameStore;
-    }
-
     @Override
-    public EventResult<ServerEvent> handle(GameContext context, DrawDevelopmentCardAction action) {
-        Game game = gameStore.get(context.gameId());
-
+    public EventResult<ServerEvent> handle(GameContext context, Game game, DrawDevelopmentCardAction action) {
         doValidations(game, context, action);
         Game.DrawDevelopmentCardResult result = game.drawDevelopmentCard(context.playerId());
 

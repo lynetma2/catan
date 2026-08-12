@@ -7,24 +7,19 @@ import com.sundtrack.catan.datalayer.domain.event.game.server.state.GameFullStat
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.dto.mapper.GameMapper;
 import com.sundtrack.catan.messaging.HandlesEvent;
-import com.sundtrack.catan.session.game.services.GameStore;
 import org.springframework.stereotype.Component;
 
 @Component
 @HandlesEvent(GameStateAction.class)
 public class GameStateHandler implements GameActionHandler<GameStateAction> {
-    private final GameStore gameStore;
     private final GameMapper gameMapper;
 
-    public GameStateHandler(GameStore gameStore, GameMapper gameMapper) {
-        this.gameStore = gameStore;
+    public GameStateHandler(GameMapper gameMapper) {
         this.gameMapper = gameMapper;
     }
 
     @Override
-    public EventResult<ServerEvent> handle(GameContext context, GameStateAction action) {
-        Game game = gameStore.get(context.gameId());
-
+    public EventResult<ServerEvent> handle(GameContext context, Game game, GameStateAction action) {
         return EventResult.directed(context.playerId(), new GameFullStateEvent(context.gameId(), gameMapper.toSnapshotDTO(game, context.playerId()), context.playerId()));
     }
 }
