@@ -1,17 +1,25 @@
 {$DOMAIN} {
-    # 1. Serve the React build
     root * /srv
-    file_server
-    try_files {path} /index.html  # Required for React Router
 
-    # 2. Proxy REST API to Spring Boot
-    handle /api/* {
+    # 1. Catch API requests and proxy to Spring Boot
+    @api {
+        path /api /api/*
+    }
+    handle @api {
         reverse_proxy backend:8080
     }
 
-    # 3. Proxy WebSockets to Spring Boot
-    # (Caddy automatically handles the WebSocket upgrade headers!)
-    handle /ws/* {
+    # 2. Catch WebSocket requests and proxy to Spring Boot
+    @ws {
+        path /ws /ws/*
+    }
+    handle @ws {
         reverse_proxy backend:8080
+    }
+
+    # 3. Fallback to React SPA for everything else
+    handle {
+        try_files {path} /index.html
+        file_server
     }
 }
