@@ -54,6 +54,9 @@ public class LobbyServiceImpl implements LobbyService {
     public EventResult<ServerEvent> handleDisconnect(Principal principal, UUID lobbyId) {
         UUID playerId = PrincipalUtils.extractPlayerId(principal);
         Lobby lobby = lobbyStore.get(lobbyId);
+        if (lobby == null) {
+            return EventResult.empty();
+        }
         lobby.removePlayer(playerId);
 
         if (lobby.isNotEmpty()) {
@@ -122,6 +125,28 @@ public class LobbyServiceImpl implements LobbyService {
         return EventResult.broadcast(new PlayerUnreadyEvent(playerId));
     }
 
+    private EventResult<ServerEvent> reconnectToLobby(UUID playerId, LobbyReconnectAction event) {
+        Lobby lobby = lobbyStore.get(event.lobbyId());
+        if (lobby == null) {
+            return EventResult.directed(
+                    playerId,
+                    new LobbyReconnectRejectedEvent(LobbyReconnectRejectionReason.PLAYER_NOT_IN_LOBBY)
+            );
+        }
+
+        if (!lobby.hasPlayer(playerId)) {
+            return EventResult.directed(
+                    playerId,
+                    new LobbyReconnectRejectedEvent(LobbyReconnectRejectionReason.PLAYER_NOT_IN_LOBBY)
+            );
+        }
+
+        return EventResult.directed(
+                playerId,
+                new LobbyStateEvent(event.lobbyId(), lobbyMapper.toSnapshotDTO(lobby), playerId)
+        );
+    }
+
     private EventResult<ServerEvent> startGame(UUID playerId, UUID lobbyId) {
         Lobby lobby = lobbyStore.get(lobbyId);
 
@@ -151,27 +176,5 @@ public class LobbyServiceImpl implements LobbyService {
         lobbyStore.remove(lobbyId);
 
         return EventResult.broadcast(new GameInitializedEvent());
-    }
-
-    private EventResult<ServerEvent> reconnectToLobby(UUID playerId, LobbyReconnectAction event) {
-        Lobby lobby = lobbyStore.get(event.lobbyId());
-        if (lobby == null) {
-            return EventResult.directed(
-                    playerId,
-                    new LobbyReconnectRejectedEvent(LobbyReconnectRejectionReason.PLAYER_NOT_IN_LOBBY)
-            );
-        }
-
-        if (!lobby.hasPlayer(playerId)) {
-            return EventResult.directed(
-                    playerId,
-                    new LobbyReconnectRejectedEvent(LobbyReconnectRejectionReason.PLAYER_NOT_IN_LOBBY)
-            );
-        }
-
-        return EventResult.directed(
-                playerId,
-                new LobbyStateEvent(event.lobbyId(), lobbyMapper.toSnapshotDTO(lobby), playerId)
-        );
     }
 }
