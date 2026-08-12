@@ -1,17 +1,23 @@
-#Build the JAR
-FROM gradle:8-jdk21 AS build
-WORKDIR /home/gradle/project
-COPY --chown=gradle:gradle . .
-RUN gradle bootJar --no-daemon
-LABEL authors="99sun"
-
-# Run the JAR
-FROM eclipse-temurin:21-jre-alpine
+# --- Build stage ---
+FROM eclipse-temurin:24-jdk AS build
 WORKDIR /app
-COPY --from=build /home/gradle/project/build/libs/*.jar app.jar
 
-# Create the dir for the SQLite volume
+# Install Gradle 8.14 (required for Java 24 support)
+RUN apt-get update && apt-get install -y wget unzip && \
+    wget -q https://services.gradle.org/distributions/gradle-8.14-bin.zip && \
+    unzip -q gradle-8.14-bin.zip -d /opt && \
+    rm gradle-8.14-bin.zip
+ENV PATH="/opt/gradle-8.14/bin:${PATH}"
+
+COPY . .
+RUN gradle bootJar --no-daemon
+
+# --- Run stage ---
+# Using standard JRE (Debian-based) because Alpine images for Java 24
+# are sometimes delayed or missing on Docker Hub.
+FROM eclipse-temurin:24-jre
+WORKDIR /app
+COPY --from=build /app/build/libs/*.jar app.jar
 RUN mkdir -p /data
-
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
