@@ -1,22 +1,23 @@
-version: '3.8'
-
 services:
   backend:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/catan-backend:latest
+    image: catan-backend:latest
+    build: ./Catan
     restart: always
     volumes:
-      - sqlite_data:/data  # Maps the persistent volume to /data in the container
+      - sqlite_data:/data
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
+      - SQLITE_URL=jdbc:sqlite:/data/catan_games.db
 
   frontend:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/catan-frontend:latest
+    image: catan-frontend:latest
+    build: ./frontend
     restart: always
     ports:
       - "80:80"
-      - "443:443" # If you add SSL later
+      - "443:443"
     depends_on:
       - backend
 
 volumes:
-  sqlite_data: # This ensures your SQLite database survives updates!
+  sqlite_data:
+    name: catan_sqlite_data
