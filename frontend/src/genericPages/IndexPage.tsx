@@ -54,7 +54,7 @@ function IndexPage() {
     // 3. Centralized Event Router for all directed lobby messages
     const handleLobbyEvent = useCallback((event: any) => {
         if (event.type === LobbyServerEvents.state.success) {
-            sessionStorage.setItem("lobbyState", JSON.stringify(event));
+            sessionStorage.setItem("lobbyState", JSON.stringify(event.payload));
             sessionStorage.setItem("playerId", event.payload.localPlayerId);
             navigate(`/lobby/${event.payload.lobbyId}`);
             setIsCreating(false);
