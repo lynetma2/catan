@@ -15,18 +15,18 @@ import static com.sundtrack.catan.messaging.routes.ApiRoutes.*;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker(TOPIC_PREFIX, QUEUE_PREFIX);
-        config.setApplicationDestinationPrefixes(APP_PREFIX);
-        config.setUserDestinationPrefix(USER_PREFIX);
-    }
-
-    @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint(WS_PREFIX)
                 .setHandshakeHandler(new AnonymousPrincipalHandshakeHandler())
                 .addInterceptors(new UuidCookieHandshakeInterceptor())
-                .setAllowedOrigins("http://localhost:5173")  // your Vite dev server
+                .setAllowedOriginPatterns("*")  // your Vite dev server
                 .withSockJS();
+    }
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config.enableSimpleBroker(TOPIC_PREFIX, QUEUE_PREFIX);
+        config.setApplicationDestinationPrefixes(APP_PREFIX);
+        config.setUserDestinationPrefix(USER_PREFIX);
     }
 }
