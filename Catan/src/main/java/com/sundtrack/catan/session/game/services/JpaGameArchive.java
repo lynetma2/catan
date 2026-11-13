@@ -12,7 +12,7 @@ import com.sundtrack.catan.session.game.services.interfaces.GameArchive;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -44,11 +44,11 @@ public class JpaGameArchive implements GameArchive {
                     .orElseGet(() -> {
                         GameRecord newRecord = new GameRecord();
                         newRecord.setId(game.getId());
-                        newRecord.setStartedAt(LocalDateTime.now());
+                        newRecord.setStartedAt(Instant.now());
                         return newRecord;
                     });
 
-            record.setFinishedAt(LocalDateTime.now());
+            record.setFinishedAt(Instant.now());
             record.setTotalTurns(game.getTurnNumber());
             record.setSnapshotJson(objectMapper.writeValueAsString(snapshot));
             record.setEndSummaryJson(objectMapper.writeValueAsString(endSummaryDTO));

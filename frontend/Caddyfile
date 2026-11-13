@@ -1,23 +1,20 @@
-{$DOMAIN} {
+http://:80 {
     root * /srv
 
-    # 1. Catch API requests and proxy to Spring Boot
     @api {
         path /api /api/*
     }
     handle @api {
-        reverse_proxy backend:8080
+        reverse_proxy {$BACKEND_URL}
     }
 
-    # 2. Catch WebSocket requests and proxy to Spring Boot
     @ws {
         path /ws /ws/*
     }
     handle @ws {
-        reverse_proxy backend:8080
+        reverse_proxy {$BACKEND_URL}
     }
 
-    # 3. Fallback to React SPA for everything else
     handle {
         try_files {path} /index.html
         file_server

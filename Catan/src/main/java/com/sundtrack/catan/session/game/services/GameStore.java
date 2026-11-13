@@ -6,11 +6,8 @@ import com.sundtrack.catan.datalayer.dao.GameHistoryRepository;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.dto.mapper.GameMapper;
 import com.sundtrack.catan.datalayer.dto.snapshot.GameSnapshotDTO;
-import com.sundtrack.catan.datalayer.persistance.GameRecord;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -40,35 +37,6 @@ public class GameStore {
 
     public void delete(UUID id) {
         activeGames.remove(id);
-    }
-
-    /**
-     * Saves the complete state of the game to SQLite.
-     */
-    @Transactional
-    public void persist(Game game) {
-        try {
-            // 1. Get the FULL snapshot (including hidden cards/resources of all players)
-            GameSnapshotDTO fullSnapshot = gameMapper.toFullSnapshotDTO(game);
-
-            // 2. Fetch existing record or create new
-            GameRecord record = repository.findById(game.getId()).orElse(new GameRecord());
-            record.setId(game.getId());
-            record.setFinishedAt(LocalDateTime.now());
-            record.setTotalTurns(game.getTurnNumber());
-
-            // Optional: If the game is over, calculate and save the winner ID here
-            // record.setWinnerId(determineWinnerId(game));
-
-            // 3. Serialize the DTO to a JSON string
-            record.setSnapshotJson(jacksonObjectMapper.writeValueAsString(fullSnapshot));
-
-            // 4. Save to SQLite
-            repository.save(record);
-
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize game state for persistence", e);
-        }
     }
 
     /**

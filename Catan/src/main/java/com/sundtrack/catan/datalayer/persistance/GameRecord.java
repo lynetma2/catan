@@ -1,8 +1,11 @@
 package com.sundtrack.catan.datalayer.persistance;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -12,15 +15,14 @@ public class GameRecord {
     @Id
     private UUID id;
 
-    private LocalDateTime startedAt;
-    private LocalDateTime finishedAt;
+    private Instant startedAt;
+    private Instant finishedAt;
 
     // Searchable metadata
     private UUID winnerId;
     private int totalTurns;
 
     // Stores the complex GameSnapshot as a JSON string
-    @Lob // Forces Hibernate to treat this as a large text object
     @Column(columnDefinition = "TEXT")
     private String snapshotJson;
 
@@ -39,19 +41,19 @@ public class GameRecord {
         this.id = id;
     }
 
-    public LocalDateTime getStartedAt() {
+    public Instant getStartedAt() {
         return startedAt;
     }
 
-    public void setStartedAt(LocalDateTime startedAt) {
+    public void setStartedAt(Instant startedAt) {
         this.startedAt = startedAt;
     }
 
-    public LocalDateTime getFinishedAt() {
+    public Instant getFinishedAt() {
         return finishedAt;
     }
 
-    public void setFinishedAt(LocalDateTime finishedAt) {
+    public void setFinishedAt(Instant finishedAt) {
         this.finishedAt = finishedAt;
     }
 
