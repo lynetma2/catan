@@ -1,9 +1,9 @@
 // core/Camera.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Camera } from './Camera';
-import { layout } from '@/game/utils/HexGeometry/Layout';
-import type { Orientation } from '@/game/utils/HexGeometry/Orientation';
-import type { Resolution, ResolutionManager } from '@/game/core/ResolutionManager';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {Camera} from './Camera';
+import {layout} from '@/game/utils/HexGeometry/Layout';
+import type {Orientation} from '@/game/utils/HexGeometry/Orientation';
+import type {Resolution, ResolutionManager} from '@/game/core/ResolutionManager';
 
 // Mock the layout utilities
 vi.mock('@/game/utils/HexGeometry/Layout', () => ({
@@ -153,19 +153,23 @@ describe('Camera', () => {
     });
 
     describe('Canvas Transform', () => {
-        it('applyTransform should call translate and scale on context', () => {
+        it('applyTransform should set the full transform matrix on the context', () => {
             const mockCtx = {
-                translate: vi.fn(),
-                scale: vi.fn()
+                setTransform: vi.fn()
             } as unknown as CanvasRenderingContext2D;
 
             camera.panBy({ x: 50, y: -50 });
             camera.zoomAt({ x: 0, y: 0 }, 1.5); // Sets zoom to 1.5
 
-            camera.applyTransform(mockCtx);
+            const dpr = 2;
+            camera.applyTransform(mockCtx, dpr);
 
-            expect(mockCtx.translate).toHaveBeenCalledWith(camera.getPan().x, camera.getPan().y);
-            expect(mockCtx.scale).toHaveBeenCalledWith(1.5, 1.5);
+            const pan = camera.getPan();
+            expect(mockCtx.setTransform).toHaveBeenCalledWith(
+                1.5 * dpr, 0,
+                0, 1.5 * dpr,
+                pan.x * dpr, pan.y * dpr
+            );
         });
     });
 });
