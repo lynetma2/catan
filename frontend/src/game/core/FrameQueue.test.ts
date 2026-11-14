@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
-import { FrameQueue } from './FrameQueue';
-import { EventBus } from './EventBus';
-import { GameEventSources } from '@/game/events/GameEventTypes';
-import type { GameEvent } from '@/game/events/GameEventTypes';
+import {describe, expect, it, vi} from 'vitest';
+import {FrameQueue} from './FrameQueue';
+import {EventBus} from './EventBus';
+import type {GameEvent} from '@/game/events/GameEventTypes';
+import {GameEventSource} from '@/game/events/GameEventTypes';
 
 describe('FrameQueue', () => {
     it('queues events and flushes them to the bus in order', () => {
@@ -15,13 +15,13 @@ describe('FrameQueue', () => {
         const event1: GameEvent<'DICE_ROLLED'> = {
             type: 'DICE_ROLLED',
             payload: { values: [1, 1], total: 2 },
-            source: GameEventSources.World
+            source: GameEventSource.World
         };
         
         const event2: GameEvent<'PLAYER_DISCONNECTED'> = {
             type: 'PLAYER_DISCONNECTED',
             payload: { playerId: 'p1' },
-            source: GameEventSources.Network
+            source: GameEventSource.Network
         };
 
         // Push events to queue
@@ -45,7 +45,7 @@ describe('FrameQueue', () => {
         const bus = new EventBus();
         const emitSpy = vi.spyOn(bus, 'emit');
 
-        queue.push({ type: 'TURN_STARTED', payload: { playerId: 'p1' }, source: GameEventSources.Network });
+        queue.push({type: 'TURN_STARTED', payload: {playerId: 'p1'}, source: GameEventSource.Network});
         
         queue.flush(bus);
         emitSpy.mockClear(); // Reset spy history

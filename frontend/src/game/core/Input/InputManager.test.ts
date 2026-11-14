@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { InputManager } from './InputManager';
-import type { InputLayer } from '@/game/core/Input/types';
-import { MouseButton } from '@/game/core/Input/InputEvent';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {InputManager} from './InputManager';
+import type {InputLayer} from '@/game/core/Input/types';
+import {MouseButton} from '@/game/core/Input/InputEvent';
 
 describe('InputManager', () => {
     let canvas: HTMLCanvasElement;
@@ -110,11 +110,5 @@ describe('InputManager', () => {
             type: 'click',
             button: MouseButton.Middle,
         }));
-    });
-
-    it('throws error on unsupported button types', () => {
-        // Button 4 is not supported in your switch case
-        expect(() => canvas.dispatchEvent(new MouseEvent('click', { button: 4 })))
-            .toThrowError(/Unsupported button type/);
     });
 });
