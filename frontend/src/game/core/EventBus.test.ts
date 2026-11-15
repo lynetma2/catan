@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
-import { EventBus } from './EventBus';
-import { GameEventSources } from '@/game/events/GameEventTypes';
-import type { GameEvent } from '@/game/events/GameEventTypes';
+import {describe, expect, it, vi} from 'vitest';
+import {EventBus} from './EventBus';
+import type {GameEvent} from '@/game/events/GameEventTypes';
+import {GameEventSource} from '@/game/events/GameEventTypes';
 
 describe('EventBus', () => {
     it('subscribes and emits events to the correct listener', () => {
@@ -14,13 +14,13 @@ describe('EventBus', () => {
         const event: GameEvent<'DICE_ROLLED'> = {
             type: 'DICE_ROLLED',
             payload: { values: [3, 4], total: 7 },
-            source: GameEventSources.World
+            source: GameEventSource.World
         };
 
         bus.emit(event);
 
         expect(callback).toHaveBeenCalledTimes(1);
-        expect(callback).toHaveBeenCalledWith(event);
+        expect(callback).toHaveBeenCalledWith(event.payload);
     });
 
     it('handles multiple listeners for the same event type', () => {
@@ -34,7 +34,7 @@ describe('EventBus', () => {
         bus.emit({
             type: 'PLAYER_JOINED',
             payload: { playerId: 'p1', name: 'Alice' },
-            source: GameEventSources.Network
+            source: GameEventSource.Network
         });
 
         expect(cb1).toHaveBeenCalled();
@@ -46,7 +46,7 @@ describe('EventBus', () => {
         const callback = vi.fn();
 
         bus.on('TURN_STARTED', callback);
-        bus.emit({ type: 'TURN_ENDED', payload: { playerId: 'p1' }, source: GameEventSources.Network });
+        bus.emit({type: 'TURN_ENDED', payload: {playerId: 'p1'}, source: GameEventSource.Network});
 
         expect(callback).not.toHaveBeenCalled();
     });

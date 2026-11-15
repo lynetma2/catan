@@ -1,10 +1,11 @@
 // core/ResolutionManager.test.ts
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ResolutionManager } from './ResolutionManager';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {ResolutionManager} from './ResolutionManager';
 
 describe('ResolutionManager', () => {
     let canvas: HTMLCanvasElement;
     let mockScale: any;
+    let mockSetTransform: any;
     let resizeCallback: ResizeObserverCallback;
     let mockDisconnect: any;
 
@@ -30,8 +31,11 @@ describe('ResolutionManager', () => {
 
         // 2. Intercept getContext to spy on the 2D context API
         mockScale = vi.fn();
-        vi.spyOn(canvas, 'getContext').mockReturnValue({ scale: mockScale } as any);
-
+        mockSetTransform = vi.fn();
+        vi.spyOn(canvas, 'getContext').mockReturnValue({
+            scale: mockScale,
+            setTransform: mockSetTransform,
+        } as any);
         // 3. Set devicePixelRatio on the happy-dom window
         vi.stubGlobal('devicePixelRatio', 2);
 
@@ -71,7 +75,7 @@ describe('ResolutionManager', () => {
             // Verify mutations on the actual canvas element
             expect(canvas.width).toBe(1600);
             expect(canvas.height).toBe(1200);
-            expect(mockScale).toHaveBeenCalledWith(2, 2);
+            expect(mockSetTransform).toHaveBeenCalledWith(2, 0, 0, 2, 0, 0);
         });
 
         it('should default to dpr 1 if window.devicePixelRatio is undefined', () => {
@@ -116,7 +120,7 @@ describe('ResolutionManager', () => {
 
             expect(listener).toHaveBeenCalledWith(expectedResolution);
             expect(canvas.width).toBe(2000);
-            expect(mockScale).toHaveBeenCalledTimes(2); // Initial + Resize
+            expect(mockSetTransform).toHaveBeenCalledTimes(2); // Initial + Resize
         });
 
         it('should ignore resize events if CSS dimensions have not changed', () => {
@@ -128,7 +132,7 @@ describe('ResolutionManager', () => {
             resizeCallback([] as any, null as any);
 
             expect(listener).not.toHaveBeenCalled();
-            expect(mockScale).toHaveBeenCalledTimes(1);
+            expect(mockSetTransform).toHaveBeenCalledTimes(1);
         });
     });
 
