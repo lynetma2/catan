@@ -1,0 +1,14 @@
+### IntelliJ: Ignore everything by default ###
+.idea/*
+
+### Whitelist the shareable project configs ###
+!.idea/runConfigurations/
+!.idea/gradle.xml
+!.idea/vcs.xml
+!.idea/codeStyles/
+!.idea/inspectionProfiles/
+!.idea/encodings.xml
+
+### Regenerable module files ###
+*.iml
+**/*.iml
