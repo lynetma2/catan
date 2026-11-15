@@ -8,6 +8,7 @@
 !.idea/codeStyles/
 !.idea/inspectionProfiles/
 !.idea/encodings.xml
+/.idea/inspectionProfiles/Project_Default.xml
 
 ### Regenerable module files ###
 *.iml
