@@ -11,9 +11,9 @@ import com.sundtrack.catan.datalayer.domain.event.lobby.reason.LobbyReconnectRej
 import com.sundtrack.catan.datalayer.domain.event.lobby.server.*;
 import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
 import com.sundtrack.catan.datalayer.domain.lobby.LobbyPlayer;
-import com.sundtrack.catan.datalayer.dto.mapper.GameMapper;
+import com.sundtrack.catan.game.dto.mapper.GameMapper;
 import com.sundtrack.catan.datalayer.dto.mapper.LobbyMapper;
-import com.sundtrack.catan.session.game.services.interfaces.GameService;
+import com.sundtrack.catan.game.application.port.GameService;
 import com.sundtrack.catan.session.lobby.services.interfaces.LobbyService;
 import org.springframework.stereotype.Service;
 

@@ -8,7 +8,7 @@ import com.sundtrack.catan.datalayer.domain.event.lobby.server.GameInitializedEv
 import com.sundtrack.catan.datalayer.domain.event.lobby.server.GameStartRejectedEvent;
 import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
 import com.sundtrack.catan.shared.ws.HandlesEvent;
-import com.sundtrack.catan.session.game.services.interfaces.GameService;
+import com.sundtrack.catan.game.application.port.GameService;
 import com.sundtrack.catan.session.lobby.services.LobbyStore;
 import org.springframework.stereotype.Component;
 

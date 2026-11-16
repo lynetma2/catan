@@ -1,7 +1,7 @@
 package com.sundtrack.catan.messaging.game;
 
 import com.sundtrack.catan.shared.ws.HandlesEvent;
-import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
+import com.sundtrack.catan.game.application.handler.GameActionHandler;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;

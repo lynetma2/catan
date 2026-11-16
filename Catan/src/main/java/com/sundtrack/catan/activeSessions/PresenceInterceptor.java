@@ -1,6 +1,6 @@
 package com.sundtrack.catan.activeSessions;
 
-import com.sundtrack.catan.session.game.services.RoomLifecycleService;
+import com.sundtrack.catan.game.application.RoomLifecycleService;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;

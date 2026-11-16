@@ -1,0 +1,77 @@
+package com.sundtrack.catan.game.application;
+
+import com.sundtrack.catan.game.domain.board.Board;
+import com.sundtrack.catan.game.domain.board.BoardFactory;
+import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
+import com.sundtrack.catan.datalayer.domain.lobby.LobbyPlayer;
+import com.sundtrack.catan.game.domain.*;
+import com.sundtrack.catan.game.application.port.GameCreationService;
+import com.sundtrack.catan.session.lobby.services.LobbyStore;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+
+@Service
+public class GameCreationServiceImpl implements GameCreationService {
+
+    private final BoardFactory boardFactory;
+    private final LobbyStore lobbyStore;
+
+    public GameCreationServiceImpl(BoardFactory boardFactory, LobbyStore lobbyStore) {
+        this.boardFactory = boardFactory;
+        this.lobbyStore = lobbyStore;
+    }
+
+    @Override
+    public Game createGame(UUID id) {
+        Lobby lobby = lobbyStore.get(id);
+        Map<UUID, LobbyPlayer> lobbyPlayers = lobby.getPlayers();
+
+        Board board = boardFactory.createRandom();
+        List<GamePlayer> gamePlayers = createPlayers(lobbyPlayers);
+        TurnOrder turnOrder = TurnOrder.startingNewGame(lobbyPlayers.keySet().stream().toList());
+        DicePair dicePair = new DicePair();
+        GameFlow flow = new GameFlow(turnOrder, 0);
+        DevelopmentCardBank developmentCardBank = DevelopmentCardBank.standard();
+        ResourceBank resourceBank = ResourceBank.standard();
+        GameConfiguration gameConfiguration = GameConfiguration.standard();
+        TradeBook tradeBook = new TradeBook();
+
+        return new Game(
+                id,
+                gamePlayers,
+                board,
+                flow,
+                tradeBook,
+                new ArrayList<>(),
+                dicePair,
+                developmentCardBank,
+                resourceBank,
+                gameConfiguration
+        );
+    }
+
+    private List<GamePlayer> createPlayers(Map<UUID, LobbyPlayer> lobbyPlayers) {
+        List<String> colorPool = new ArrayList<>(List.of(
+                "#E63946", "#457B9D", "#F1FAEE", "#FB8500", "#2A9D8F", "#7B3F00"
+        ));
+        Collections.shuffle(colorPool);
+
+        List<GamePlayer> gamePlayers = new ArrayList<>();
+        int count = 0;
+
+        for (LobbyPlayer lobbyPlayer : lobbyPlayers.values()) {
+            gamePlayers.add(new GamePlayer(
+                    lobbyPlayer.getId(),
+                    lobbyPlayer.getUsername(),
+                    colorPool.get(count % colorPool.size()),
+                    new ArrayList<>(),
+                    new ArrayList<>(),
+                    0
+            ));
+            count++;
+        }
+
+        return gamePlayers;
+    }
+}
