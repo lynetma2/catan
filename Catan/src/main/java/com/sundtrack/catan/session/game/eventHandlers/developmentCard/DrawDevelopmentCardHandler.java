@@ -6,6 +6,7 @@ import com.sundtrack.catan.datalayer.domain.event.game.action.developmentCard.Dr
 import com.sundtrack.catan.datalayer.domain.event.game.server.developmentCard.DrawDevelopmentCardEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceSpentEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
+import com.sundtrack.catan.datalayer.dto.snapshot.DevCardSnapshotDTO;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
@@ -35,7 +36,7 @@ public class DrawDevelopmentCardHandler implements GameActionHandler<DrawDevelop
     private EventResult<ServerEvent> createResults(GameContext context, Game.DrawDevelopmentCardResult result) {
         List<ServerEvent> directedToPlayer = new ArrayList<>();
         directedToPlayer.add(new ResourceSpentEvent(context.playerId(), result.deductedResources()));
-        directedToPlayer.add(new DrawDevelopmentCardEvent(result.card()));
+        directedToPlayer.add(new DrawDevelopmentCardEvent(new DevCardSnapshotDTO(result.card())));
 
         Map<UUID, List<ServerEvent>> directed = Map.of(context.playerId(), directedToPlayer);
 

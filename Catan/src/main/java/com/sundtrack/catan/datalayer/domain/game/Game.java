@@ -26,7 +26,6 @@ import com.sundtrack.catan.datalayer.domain.game.trade.TradeOffer;
 import com.sundtrack.catan.datalayer.domain.game.trade.TradeOfferResponseKind;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
-import com.sundtrack.catan.datalayer.dto.snapshot.DevCardSnapshotDTO;
 
 import java.time.Instant;
 import java.util.*;
@@ -410,8 +409,7 @@ public class Game {
         DevelopmentCard card = developmentCardBank.draw(getTurnNumber());
         player.addDevelopmentCard(card);
 
-        DevCardSnapshotDTO cardSnapshotDTO = new DevCardSnapshotDTO(card);
-        return new DrawDevelopmentCardResult(cardSnapshotDTO, deducted);
+        return new DrawDevelopmentCardResult(card, deducted);
     }
 
     public Integer getTurnNumber() {
@@ -620,6 +618,6 @@ public class Game {
     public record RollOutcome(DiceRoll roll, Map<UUID, List<Resource>> grantedResources) {
     }
 
-    public record DrawDevelopmentCardResult(DevCardSnapshotDTO card, List<Resource> deductedResources) {
+    public record DrawDevelopmentCardResult(DevelopmentCard card, List<Resource> deductedResources) {
     }
 }
