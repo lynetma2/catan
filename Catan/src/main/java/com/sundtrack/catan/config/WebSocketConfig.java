@@ -1,6 +1,6 @@
 package com.sundtrack.catan.config;
 
-import com.sundtrack.catan.activeSessions.PresenceInterceptor;
+import com.sundtrack.catan.presence.web.PresenceInterceptor;
 import com.sundtrack.catan.shared.ws.AnonymousPrincipalHandshakeHandler;
 import com.sundtrack.catan.shared.ws.UuidCookieHandshakeInterceptor;
 import org.springframework.context.annotation.Configuration;

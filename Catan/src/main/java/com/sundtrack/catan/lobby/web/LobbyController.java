@@ -10,7 +10,7 @@ import com.sundtrack.catan.shared.event.ServerEvent;
 import com.sundtrack.catan.lobby.domain.event.action.LobbyCreateAction;
 import com.sundtrack.catan.lobby.domain.event.server.GameInitializedEvent;
 import com.sundtrack.catan.lobby.domain.event.server.LobbyStateEvent;
-import com.sundtrack.catan.datalayer.domain.presence.PlayerContext;
+import com.sundtrack.catan.presence.domain.PlayerContext;
 import com.sundtrack.catan.shared.ws.EventDeserializer;
 import com.sundtrack.catan.lobby.application.LobbyDispatcher;
 import com.sundtrack.catan.lobby.application.LobbyContext;

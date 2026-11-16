@@ -1,6 +1,6 @@
 package com.sundtrack.catan.game.application;
 
-import com.sundtrack.catan.activeSessions.GameSessionRegistry;
+import com.sundtrack.catan.presence.application.GameSessionRegistry;
 import com.sundtrack.catan.game.domain.Game;
 import com.sundtrack.catan.game.domain.GamePhase;
 import com.sundtrack.catan.game.application.port.ActiveGameRegistry;

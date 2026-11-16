@@ -1,4 +1,4 @@
-package com.sundtrack.catan.datalayer.domain.presence;
+package com.sundtrack.catan.presence.domain;
 
 public enum PlayerContext {
     IN_LOBBY,

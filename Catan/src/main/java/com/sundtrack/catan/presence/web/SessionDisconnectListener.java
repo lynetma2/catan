@@ -1,6 +1,7 @@
-package com.sundtrack.catan.activeSessions;
+package com.sundtrack.catan.presence.web;
 
 import com.sundtrack.catan.game.application.RoomLifecycleService;
+import com.sundtrack.catan.presence.application.GameSessionRegistry;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;

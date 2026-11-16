@@ -1,4 +1,4 @@
-package com.sundtrack.catan.activeSessions;
+package com.sundtrack.catan.presence.application;
 
 import org.springframework.stereotype.Component;
 
