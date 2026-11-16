@@ -511,7 +511,6 @@ public class Game {
         if (given.isEmpty() || wanted.isEmpty()) {
             throw new GivenResourcesWrongTradeException();
         }
-
         if (!player.ownsResources(given)) {
             throw new InsufficientResourcesException(playerId, given);
         }
@@ -532,22 +531,21 @@ public class Game {
 
         // Simulate each trade by consuming resources from one pool.
         for (ResourceType wantedType : wanted) {
-            int ratio = board.getBestTradeRatio(playerId, wantedType);
-
-            Deque<Resource> pool = pools.entrySet().stream()
+            Map.Entry<ResourceType, Deque<Resource>> payment = pools.entrySet().stream()
                     .filter(entry -> entry.getKey() != wantedType)
-                    .filter(entry -> entry.getValue().size() >= ratio)
-                    .map(Map.Entry::getValue)
+                    .filter(entry -> entry.getValue().size() >= board.getBestTradeRatio(playerId, entry.getKey()))
                     .findFirst()
                     .orElseThrow(GivenResourcesWrongTradeException::new);
 
+            int ratio = board.getBestTradeRatio(playerId, payment.getKey());
             for (int i = 0; i < ratio; i++) {
-                pool.removeFirst();
+                payment.getValue().removeFirst();
             }
         }
 
         // Perform the trade.
         player.removeResources(given);
+        resourceBank.deposit(given);
 
         List<Resource> received = new ArrayList<>();
         for (ResourceType wantedType : wanted) {
@@ -594,9 +592,11 @@ public class Game {
         GamePlayer initiator = getPlayerOrThrow(playerId);
         GamePlayer respondent = getPlayerOrThrow(respondentId);
 
-        //Validate accepted player still has the resources
-        initiator.ownsResources(offeredResources);
-        //Validate initiator still has the resources
+        // Validate the initiator still owns the offered cards — BEFORE anything moves.
+        if (!initiator.ownsResources(offeredResources)) {
+            throw new InsufficientResourcesException(playerId, offeredResources);
+        }
+        // Validate the respondent still has the wanted resources.
         respondent.ownsResourcesOfTypeOrThrow(tradeBook.getWantedResourceTypes(tradeOfferId));
 
         //Remove the resources
