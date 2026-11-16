@@ -1,9 +1,9 @@
-package com.sundtrack.catan.messaging;
+package com.sundtrack.catan.shared.ws;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sundtrack.catan.datalayer.domain.event.ClientAction;
-import com.sundtrack.catan.datalayer.domain.event.EventEnvelope;
+import com.sundtrack.catan.shared.event.ClientAction;
+import com.sundtrack.catan.shared.event.EventEnvelope;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.InvocationTargetException;

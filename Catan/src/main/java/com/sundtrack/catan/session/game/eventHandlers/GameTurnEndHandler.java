@@ -1,10 +1,10 @@
 package com.sundtrack.catan.session.game.eventHandlers;
 
-import com.sundtrack.catan.datalayer.domain.event.EventResult;
-import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
+import com.sundtrack.catan.shared.event.EventResult;
+import com.sundtrack.catan.shared.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.action.TurnEndAction;
 import com.sundtrack.catan.datalayer.domain.game.Game;
-import com.sundtrack.catan.messaging.HandlesEvent;
+import com.sundtrack.catan.shared.ws.HandlesEvent;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.sundtrack.catan.common.interceptors;
+package com.sundtrack.catan.shared.ws;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
@@ -10,7 +10,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.util.Map;
 
-import static com.sundtrack.catan.common.WebSocketConstants.UUID_COOKIE_NAME;
+import static com.sundtrack.catan.shared.ws.WebSocketConstants.UUID_COOKIE_NAME;
 
 public class UuidCookieHandshakeInterceptor implements HandshakeInterceptor {
 

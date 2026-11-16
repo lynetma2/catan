@@ -1,6 +1,4 @@
-package com.sundtrack.catan.messaging;
-
-import com.sundtrack.catan.datalayer.domain.event.ClientAction;
+package com.sundtrack.catan.shared.event;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -9,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface HandlesEvent {
+public @interface EventType {
 
-    Class<? extends ClientAction> value();
+    String value();
 }

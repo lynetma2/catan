@@ -1,8 +1,8 @@
 package com.sundtrack.catan.messaging.game;
 
-import com.sundtrack.catan.datalayer.domain.event.ClientAction;
-import com.sundtrack.catan.datalayer.domain.event.EventResult;
-import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
+import com.sundtrack.catan.shared.event.ClientAction;
+import com.sundtrack.catan.shared.event.EventResult;
+import com.sundtrack.catan.shared.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.action.EndSummaryAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.error.GameErrorEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.state.EndSummaryEvent;

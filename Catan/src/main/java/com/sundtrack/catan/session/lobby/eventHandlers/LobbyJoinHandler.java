@@ -1,7 +1,7 @@
 package com.sundtrack.catan.session.lobby.eventHandlers;
 
-import com.sundtrack.catan.datalayer.domain.event.EventResult;
-import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
+import com.sundtrack.catan.shared.event.EventResult;
+import com.sundtrack.catan.shared.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.lobby.action.LobbyJoinAction;
 import com.sundtrack.catan.datalayer.domain.event.lobby.reason.LobbyJoinRejectionReason;
 import com.sundtrack.catan.datalayer.domain.event.lobby.server.LobbyJoinRejectedEvent;
@@ -10,7 +10,7 @@ import com.sundtrack.catan.datalayer.domain.event.lobby.server.PlayerJoinEvent;
 import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
 import com.sundtrack.catan.datalayer.domain.lobby.LobbyPlayer;
 import com.sundtrack.catan.datalayer.dto.mapper.LobbyMapper;
-import com.sundtrack.catan.messaging.HandlesEvent;
+import com.sundtrack.catan.shared.ws.HandlesEvent;
 import com.sundtrack.catan.session.lobby.services.LobbyStore;
 import org.springframework.stereotype.Component;
 

@@ -1,6 +1,6 @@
 package com.sundtrack.catan.datalayer.domain.game;
 
-import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
+import com.sundtrack.catan.shared.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.overview.*;
 
 import java.util.*;

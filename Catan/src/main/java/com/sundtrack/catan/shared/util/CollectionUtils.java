@@ -1,4 +1,4 @@
-package com.sundtrack.catan.common;
+package com.sundtrack.catan.shared.util;
 
 import java.util.ArrayList;
 import java.util.Collections;

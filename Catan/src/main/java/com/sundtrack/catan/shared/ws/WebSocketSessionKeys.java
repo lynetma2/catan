@@ -1,4 +1,4 @@
-package com.sundtrack.catan.common.handlers;
+package com.sundtrack.catan.shared.ws;
 
 public final class WebSocketSessionKeys {
 

@@ -1,6 +1,6 @@
-package com.sundtrack.catan.messaging;
+package com.sundtrack.catan.shared.ws;
 
-import com.sundtrack.catan.datalayer.domain.event.EventType;
+import com.sundtrack.catan.shared.event.EventType;
 import org.reflections.Reflections;
 import org.springframework.stereotype.Component;
 

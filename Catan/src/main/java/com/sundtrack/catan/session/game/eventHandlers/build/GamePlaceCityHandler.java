@@ -1,13 +1,13 @@
 package com.sundtrack.catan.session.game.eventHandlers.build;
 
 import com.sundtrack.catan.datalayer.domain.board.Vertex;
-import com.sundtrack.catan.datalayer.domain.event.EventResult;
-import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
+import com.sundtrack.catan.shared.event.EventResult;
+import com.sundtrack.catan.shared.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceCityAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.build.BuildCityEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceSpentEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
-import com.sundtrack.catan.messaging.HandlesEvent;
+import com.sundtrack.catan.shared.ws.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
 import com.sundtrack.catan.session.game.eventHandlers.GameContext;
 import org.springframework.stereotype.Component;

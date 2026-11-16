@@ -1,6 +1,6 @@
-package com.sundtrack.catan.messaging;
+package com.sundtrack.catan.shared.ws;
 
-import com.sundtrack.catan.datalayer.domain.event.OutgoingEventEnvelope;
+import com.sundtrack.catan.shared.event.OutgoingEventEnvelope;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 

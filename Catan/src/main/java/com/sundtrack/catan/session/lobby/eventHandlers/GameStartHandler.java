@@ -1,13 +1,13 @@
 package com.sundtrack.catan.session.lobby.eventHandlers;
 
-import com.sundtrack.catan.datalayer.domain.event.EventResult;
-import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
+import com.sundtrack.catan.shared.event.EventResult;
+import com.sundtrack.catan.shared.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.lobby.action.GameStartAction;
 import com.sundtrack.catan.datalayer.domain.event.lobby.reason.GameStartRejectionReason;
 import com.sundtrack.catan.datalayer.domain.event.lobby.server.GameInitializedEvent;
 import com.sundtrack.catan.datalayer.domain.event.lobby.server.GameStartRejectedEvent;
 import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
-import com.sundtrack.catan.messaging.HandlesEvent;
+import com.sundtrack.catan.shared.ws.HandlesEvent;
 import com.sundtrack.catan.session.game.services.interfaces.GameService;
 import com.sundtrack.catan.session.lobby.services.LobbyStore;
 import org.springframework.stereotype.Component;

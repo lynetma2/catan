@@ -1,7 +1,7 @@
 package com.sundtrack.catan.datalayer.domain.game.subFlows;
 
 import com.sundtrack.catan.datalayer.domain.building.PieceType;
-import com.sundtrack.catan.datalayer.domain.event.ClientAction;
+import com.sundtrack.catan.shared.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
 
 import java.util.Optional;

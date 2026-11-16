@@ -1,12 +1,12 @@
 package com.sundtrack.catan.datalayer.domain.event.game.action.resource;
 
-import com.sundtrack.catan.datalayer.domain.event.ClientAction;
-import com.sundtrack.catan.datalayer.domain.event.EventType;
+import com.sundtrack.catan.shared.event.ClientAction;
+import com.sundtrack.catan.shared.event.EventType;
 
 import java.util.List;
 import java.util.UUID;
 
-import static com.sundtrack.catan.datalayer.domain.event.EventDomainConstants.*;
+import static com.sundtrack.catan.shared.event.EventDomainConstants.*;
 
 @EventType(ACTION + SEPARATOR + GAME + SEPARATOR + RESOURCE + SEPARATOR + "discard")
 public record GameDiscardAction(

@@ -1,9 +1,9 @@
 package com.sundtrack.catan.session.game.services;
 
-import com.sundtrack.catan.common.PrincipalUtils;
-import com.sundtrack.catan.datalayer.domain.event.ClientAction;
-import com.sundtrack.catan.datalayer.domain.event.EventResult;
-import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
+import com.sundtrack.catan.shared.util.PrincipalUtils;
+import com.sundtrack.catan.shared.event.ClientAction;
+import com.sundtrack.catan.shared.event.EventResult;
+import com.sundtrack.catan.shared.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
 import com.sundtrack.catan.messaging.game.GameDispatcher;

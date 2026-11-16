@@ -1,7 +1,7 @@
 package com.sundtrack.catan.session.game.eventHandlers;
 
-import com.sundtrack.catan.datalayer.domain.event.EventResult;
-import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
+import com.sundtrack.catan.shared.event.EventResult;
+import com.sundtrack.catan.shared.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.action.RollDiceAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.RollDiceEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.DiscardRequiredEvent;
@@ -9,7 +9,7 @@ import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceG
 import com.sundtrack.catan.datalayer.domain.game.DiceRoll;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.dto.snapshot.DiceRollDTO;
-import com.sundtrack.catan.messaging.HandlesEvent;
+import com.sundtrack.catan.shared.ws.HandlesEvent;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

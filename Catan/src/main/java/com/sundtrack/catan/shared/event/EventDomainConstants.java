@@ -1,4 +1,4 @@
-package com.sundtrack.catan.datalayer.domain.event;
+package com.sundtrack.catan.shared.event;
 
 public final class EventDomainConstants {
     // Top-level domains

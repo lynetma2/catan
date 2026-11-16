@@ -1,7 +1,7 @@
 package com.sundtrack.catan.datalayer.domain.game.subFlows;
 
 import com.sundtrack.catan.datalayer.domain.building.PieceType;
-import com.sundtrack.catan.datalayer.domain.event.ClientAction;
+import com.sundtrack.catan.shared.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceRoadAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceSettlementAction;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.IllegalGamePhaseException;

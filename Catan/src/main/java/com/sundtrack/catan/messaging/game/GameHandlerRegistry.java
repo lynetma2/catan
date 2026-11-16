@@ -1,6 +1,6 @@
 package com.sundtrack.catan.messaging.game;
 
-import com.sundtrack.catan.messaging.HandlesEvent;
+import com.sundtrack.catan.shared.ws.HandlesEvent;
 import com.sundtrack.catan.session.game.eventHandlers.GameActionHandler;
 import org.springframework.stereotype.Component;
 

@@ -1,6 +1,6 @@
 package com.sundtrack.catan.datalayer.domain.game.subFlows;
 
-import com.sundtrack.catan.datalayer.domain.event.ClientAction;
+import com.sundtrack.catan.shared.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.resource.GameDiscardAction;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.PlayerNotPendingDiscardException;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;

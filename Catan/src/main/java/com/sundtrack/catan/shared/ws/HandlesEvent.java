@@ -1,4 +1,6 @@
-package com.sundtrack.catan.datalayer.domain.event;
+package com.sundtrack.catan.shared.ws;
+
+import com.sundtrack.catan.shared.event.ClientAction;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,7 +9,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface EventType {
+public @interface HandlesEvent {
 
-    String value();
+    Class<? extends ClientAction> value();
 }

@@ -1,6 +1,6 @@
-package com.sundtrack.catan.common;
+package com.sundtrack.catan.shared.util;
 
-import com.sundtrack.catan.common.handlers.AnonymousPrincipalHandshakeHandler;
+import com.sundtrack.catan.shared.ws.AnonymousPrincipalHandshakeHandler;
 import java.security.Principal;
 import java.util.UUID;
 

@@ -2,7 +2,7 @@ package com.sundtrack.catan.datalayer.domain.game;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.sundtrack.catan.datalayer.domain.event.ClientAction;
+import com.sundtrack.catan.shared.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.RollDiceAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.TurnEndAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceCityAction;

@@ -1,6 +1,6 @@
 package com.sundtrack.catan.messaging.lobby;
 
-import com.sundtrack.catan.messaging.HandlesEvent;
+import com.sundtrack.catan.shared.ws.HandlesEvent;
 import com.sundtrack.catan.session.lobby.eventHandlers.LobbyActionHandler;
 import org.springframework.stereotype.Component;
 

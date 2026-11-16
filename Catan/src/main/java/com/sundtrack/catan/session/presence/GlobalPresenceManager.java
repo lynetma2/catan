@@ -1,6 +1,6 @@
 package com.sundtrack.catan.session.presence;
 
-import com.sundtrack.catan.common.handlers.WebSocketSessionKeys;
+import com.sundtrack.catan.shared.ws.WebSocketSessionKeys;
 import com.sundtrack.catan.datalayer.domain.presence.PlayerContext;
 import com.sundtrack.catan.session.lobby.services.LobbyMessagingService;
 import com.sundtrack.catan.session.lobby.services.interfaces.LobbyService;

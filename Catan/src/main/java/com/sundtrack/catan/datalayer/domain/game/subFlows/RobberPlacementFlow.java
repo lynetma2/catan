@@ -1,6 +1,6 @@
 package com.sundtrack.catan.datalayer.domain.game.subFlows;
 
-import com.sundtrack.catan.datalayer.domain.event.ClientAction;
+import com.sundtrack.catan.shared.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.event.game.action.robber.PlaceRobberAction;
 import com.sundtrack.catan.datalayer.domain.exceptions.validation.IllegalGamePhaseException;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;

@@ -1,4 +1,4 @@
-package com.sundtrack.catan.datalayer.domain.event;
+package com.sundtrack.catan.shared.event;
 
 import java.util.*;
 

@@ -1,10 +1,10 @@
 package com.sundtrack.catan.session.game.services;
 
-import com.sundtrack.catan.datalayer.domain.event.EventResult;
-import com.sundtrack.catan.datalayer.domain.event.OutgoingEventEnvelope;
-import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
-import com.sundtrack.catan.messaging.OutgoingEventEnvelopeFactory;
-import com.sundtrack.catan.messaging.WebSocketMessagingService;
+import com.sundtrack.catan.shared.event.EventResult;
+import com.sundtrack.catan.shared.event.OutgoingEventEnvelope;
+import com.sundtrack.catan.shared.event.ServerEvent;
+import com.sundtrack.catan.shared.ws.OutgoingEventEnvelopeFactory;
+import com.sundtrack.catan.shared.ws.WebSocketMessagingService;
 import com.sundtrack.catan.messaging.routes.ApiRoutes;
 import org.springframework.stereotype.Service;
 
