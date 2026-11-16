@@ -10,16 +10,35 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 @AnalyzeClasses(packages = "com.sundtrack.catan", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
 
+    /** The domain is a plain-Java core: no Spring, no JPA, no adapters, no wiring. */
     @ArchTest
     static final ArchRule domain_is_framework_and_adapter_free =
-            noClasses().that().resideInAPackage("..datalayer.domain..")
+            noClasses().that().resideInAPackage("..domain..")
                     .should().dependOnClassesThat().resideInAnyPackage(
-                            "..session..", "..messaging..", "..config..", "..common..", "..activeSessions..",
+                            "..application..", "..web..", "..persistence..", "..config..", "..shared.ws..",
                             "org.springframework..", "jakarta.persistence..");
 
+    /** Core domain speaks domain types; only the event/message contracts may carry DTOs. */
     @ArchTest
     static final ArchRule core_domain_does_not_use_dtos =
-            noClasses().that().resideInAPackage("..datalayer.domain..")
-                    .and().resideOutsideOfPackage("..datalayer.domain.event..")
-                    .should().dependOnClassesThat().resideInAPackage("..datalayer.dto..");
+            noClasses().that().resideInAPackage("..domain..")
+                    .and().resideOutsideOfPackage("..domain.event..")
+                    .should().dependOnClassesThat().resideInAPackage("..dto..");
+
+    /** Identity stays at the edge — the domain knows player UUIDs, not transport principals. */
+    @ArchTest
+    static final ArchRule domain_does_not_know_transport_identity =
+            noClasses().that().resideInAPackage("..domain..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.security.Principal");
+
+    /** The kernel must stay feature-agnostic, or it becomes a dumping ground. */
+    @ArchTest
+    static final ArchRule shared_kernel_does_not_depend_on_features =
+            noClasses().that().resideInAPackage("..shared..")
+                    .should().dependOnClassesThat().resideInAnyPackage(
+                            "..game..", "..lobby..", "..presence..");
+
+    // ---- Future ratchets (see notes) ----
+    // No Jackson in the domain: needs mixins first to preserve the wire format.
+    // Application must not reach into adapters: blocked today by the two LobbyStore couplings.
 }

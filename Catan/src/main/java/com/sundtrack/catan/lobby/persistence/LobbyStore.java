@@ -1,0 +1,33 @@
+package com.sundtrack.catan.lobby.persistence;
+
+import com.sundtrack.catan.lobby.domain.Lobby;
+import org.springframework.stereotype.Component;
+
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Component
+public class LobbyStore {
+    private final ConcurrentHashMap<UUID, Lobby> lobbyMap = new ConcurrentHashMap<>();
+
+    public Lobby get(UUID uuid) {
+        return lobbyMap.get(uuid);
+    }
+
+    public void add(UUID uuid, Lobby lobby) {
+        lobbyMap.put(uuid, lobby);
+    }
+
+    public void remove(UUID uuid) {
+        lobbyMap.remove(uuid);
+    }
+
+    public boolean existsByPlayerId(UUID playerId) {
+        return lobbyMap.values().stream()
+                .anyMatch(lobby -> lobby.hasPlayer(playerId));
+    }
+
+    public void persist(Lobby lobby) {
+        // Implementation will come later, when it is decided how it should be implemented.
+    }
+}

@@ -1,8 +1,8 @@
 package com.sundtrack.catan.config;
 
-import com.sundtrack.catan.activeSessions.PresenceInterceptor;
-import com.sundtrack.catan.common.handlers.AnonymousPrincipalHandshakeHandler;
-import com.sundtrack.catan.common.interceptors.UuidCookieHandshakeInterceptor;
+import com.sundtrack.catan.presence.web.PresenceInterceptor;
+import com.sundtrack.catan.shared.ws.AnonymousPrincipalHandshakeHandler;
+import com.sundtrack.catan.shared.ws.UuidCookieHandshakeInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -10,7 +10,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import static com.sundtrack.catan.messaging.routes.ApiRoutes.*;
+import static com.sundtrack.catan.shared.ws.ApiRoutes.*;
 
 @Configuration
 @EnableWebSocketMessageBroker

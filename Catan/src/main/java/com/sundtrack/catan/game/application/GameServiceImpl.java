@@ -1,0 +1,64 @@
+package com.sundtrack.catan.game.application;
+
+import com.sundtrack.catan.shared.util.PrincipalUtils;
+import com.sundtrack.catan.shared.event.ClientAction;
+import com.sundtrack.catan.shared.event.EventResult;
+import com.sundtrack.catan.shared.event.ServerEvent;
+import com.sundtrack.catan.game.domain.Game;
+import com.sundtrack.catan.game.domain.GamePhase;
+import com.sundtrack.catan.game.application.port.ActiveGameRegistry;
+import com.sundtrack.catan.game.application.port.GameArchive;
+import com.sundtrack.catan.game.application.port.GameCreationService;
+import com.sundtrack.catan.game.application.port.GameService;
+import org.springframework.stereotype.Service;
+
+import java.security.Principal;
+import java.util.Optional;
+import java.util.UUID;
+
+@Service
+public class GameServiceImpl implements GameService {
+
+    private final ActiveGameRegistry activeGames;
+    private final GameArchive gameArchive;
+    private final GameCreationService gameCreationService;
+    private final GameDispatcher dispatcher;
+
+    public GameServiceImpl(
+            ActiveGameRegistry activeGames,
+            GameArchive gameArchive,
+            GameCreationService gameCreationService,
+            GameDispatcher gameDispatcher
+    ) {
+        this.activeGames = activeGames;
+        this.gameArchive = gameArchive;
+        this.gameCreationService = gameCreationService;
+        this.dispatcher = gameDispatcher;
+    }
+
+    @Override
+    public EventResult<ServerEvent> handle(Principal principal, UUID gameId, ClientAction action) {
+        UUID playerId = PrincipalUtils.extractPlayerId(principal);
+        GameContext context = new GameContext(principal, playerId, gameId);
+
+        Optional<Game> active = activeGames.findActive(gameId);
+        if (active.isEmpty()) {
+            return dispatcher.dispatch(context, action);   // finished-game read path (EndSummary)
+        }
+        Game game = active.get();
+        synchronized (game) {
+            EventResult<ServerEvent> result = dispatcher.dispatch(context, action);
+            if (game.getCurrentPhase() == GamePhase.GAME_OVER) {
+                gameArchive.archive(game);
+                activeGames.unregister(gameId);
+            }
+            return result;
+        }
+    }
+
+    @Override
+    public void createGame(UUID id) {
+        Game game = gameCreationService.createGame(id);
+        activeGames.register(game);
+    }
+}
