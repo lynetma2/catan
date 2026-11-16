@@ -1,13 +1,8 @@
 package com.sundtrack.catan.datalayer.domain.board;
 
 import com.sundtrack.catan.datalayer.domain.board.tile.*;
-import org.springframework.stereotype.Component;
-
 import java.util.*;
 
-import static com.sundtrack.catan.common.CollectionUtils.shuffled;
-
-@Component
 public class BoardFactory {
 
     // Standard Catan tile distribution
@@ -181,5 +176,11 @@ public class BoardFactory {
 
     private boolean areNeighbors(Hex a, Hex b) {
         return (Math.abs(a.q() - b.q()) + Math.abs(a.r() - b.r()) + Math.abs(a.s() - b.s())) / 2 == 1;
+    }
+
+    private static <T> List<T> shuffled(List<T> list, Random random) {
+        List<T> copy = new ArrayList<>(list);
+        Collections.shuffle(copy, random);
+        return copy;
     }
 }
