@@ -1,11 +1,13 @@
 package com.sundtrack.catan.session.game.services;
 
+import com.sundtrack.catan.common.PrincipalUtils;
 import com.sundtrack.catan.datalayer.domain.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.event.EventResult;
 import com.sundtrack.catan.datalayer.domain.event.ServerEvent;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.game.GamePhase;
-import com.sundtrack.catan.session.game.GameEventDispatcher;
+import com.sundtrack.catan.messaging.game.GameDispatcher;
+import com.sundtrack.catan.session.game.eventHandlers.GameContext;
 import com.sundtrack.catan.session.game.services.interfaces.ActiveGameRegistry;
 import com.sundtrack.catan.session.game.services.interfaces.GameArchive;
 import com.sundtrack.catan.session.game.services.interfaces.GameCreationService;
@@ -13,6 +15,7 @@ import com.sundtrack.catan.session.game.services.interfaces.GameService;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -21,36 +24,36 @@ public class GameServiceImpl implements GameService {
     private final ActiveGameRegistry activeGames;
     private final GameArchive gameArchive;
     private final GameCreationService gameCreationService;
-    private final GameEventDispatcher dispatcher;
+    private final GameDispatcher dispatcher;
 
     public GameServiceImpl(
             ActiveGameRegistry activeGames,
             GameArchive gameArchive,
             GameCreationService gameCreationService,
-            GameEventDispatcher dispatcher
+            GameDispatcher gameDispatcher
     ) {
         this.activeGames = activeGames;
         this.gameArchive = gameArchive;
         this.gameCreationService = gameCreationService;
-        this.dispatcher = dispatcher;
+        this.dispatcher = gameDispatcher;
     }
 
     @Override
-    public EventResult<ServerEvent> handle(
-            Principal principal,
-            UUID gameId,
-            ClientAction event
-    ) {
-        Game game = activeGames.getActive(gameId);
+    public EventResult<ServerEvent> handle(Principal principal, UUID gameId, ClientAction action) {
+        UUID playerId = PrincipalUtils.extractPlayerId(principal);
+        GameContext context = new GameContext(principal, playerId, gameId);
 
+        Optional<Game> active = activeGames.findActive(gameId);
+        if (active.isEmpty()) {
+            return dispatcher.dispatch(context, action);   // finished-game read path (EndSummary)
+        }
+        Game game = active.get();
         synchronized (game) {
-            EventResult<ServerEvent> result = dispatcher.dispatch(game, event, principal);
-
+            EventResult<ServerEvent> result = dispatcher.dispatch(context, action);
             if (game.getCurrentPhase() == GamePhase.GAME_OVER) {
                 gameArchive.archive(game);
                 activeGames.unregister(gameId);
             }
-
             return result;
         }
     }
