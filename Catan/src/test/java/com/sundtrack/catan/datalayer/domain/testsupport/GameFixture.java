@@ -1,9 +1,6 @@
 package com.sundtrack.catan.datalayer.domain.testsupport;
 
-import com.sundtrack.catan.datalayer.domain.board.BoardFactory;
-import com.sundtrack.catan.datalayer.domain.board.Edge;
-import com.sundtrack.catan.datalayer.domain.board.Hex;
-import com.sundtrack.catan.datalayer.domain.board.Vertex;
+import com.sundtrack.catan.datalayer.domain.board.*;
 import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
 import com.sundtrack.catan.datalayer.domain.board.tile.TileType;
 import com.sundtrack.catan.datalayer.domain.event.game.action.build.PlaceRoadAction;
@@ -19,18 +16,52 @@ import java.util.stream.Stream;
 public final class GameFixture {
 
     public static final UUID ALICE = UUID.fromString("00000000-0000-0000-0000-000000000001");
-    public static final UUID BOB   = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    public static final UUID BOB = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
+    private ResourceBank resourceBank;
+    private Board board;
     private long diceSeed = 1;
     private boolean setupCompleted = false;
 
-    private GameFixture() { }
+    private GameFixture() {
+    }
 
-    public static GameFixture aGame() { return new GameFixture(); }
+    public static GameFixture aGame() {
+        return new GameFixture();
+    }
 
-    public GameFixture withDiceSeed(long seed) { this.diceSeed = seed; return this; }
+    public static GamePlayer player(Game game, UUID id) {
+        return game.getPlayers().stream()
+                .filter(p -> p.getId().equals(id))
+                .findFirst().orElseThrow();
+    }
 
-    public GameFixture withSetupCompleted() { this.setupCompleted = true; return this; }
+    /**
+     * Exact hand, wiping starter resources gained during setup.
+     */
+    public static void setHand(GamePlayer p, ResourceType type, int count) {
+        for (ResourceType t : ResourceType.values()) {
+            p.removeAllResourcesOfType(t);
+        }
+        p.receive(Stream.generate(() -> new Resource(UUID.randomUUID(), type))
+                .limit(count).toList());
+    }
+
+    public static Resource resource(ResourceType type) {
+        return new Resource(UUID.randomUUID(), type);
+    }
+
+    public GameFixture withDiceSeed(long seed) {
+        this.diceSeed = seed;
+        return this;
+    }
+
+    // ---------- setup: drive the real public API, A,B,B,A ----------
+
+    public GameFixture withSetupCompleted() {
+        this.setupCompleted = true;
+        return this;
+    }
 
     public Game build() {
         List<UUID> ids = List.of(ALICE, BOB);
@@ -38,24 +69,24 @@ public final class GameFixture {
                 .map(id -> new GamePlayer(id, "P-" + id, "#000000",
                         new ArrayList<>(), new ArrayList<>(), 0))
                 .toList();
+        this.resourceBank = ResourceBank.standard();
+        this.board = new BoardFactory().createStatic();
 
         Game game = new Game(
                 UUID.randomUUID(),
                 players,
-                new BoardFactory().createStatic(),
+                board,
                 new GameFlow(TurnOrder.startingNewGame(ids), 0),
                 new TradeBook(),
                 new ArrayList<>(),
                 new DicePair(diceSeed),
                 DevelopmentCardBank.standard(),
-                ResourceBank.standard(),
+                resourceBank,
                 GameConfiguration.standard());
 
         if (setupCompleted) completeSetup(game);
         return game;
     }
-
-    // ---------- setup: drive the real public API, A,B,B,A ----------
 
     private static void completeSetup(Game game) {
         int maxPlacements = 4 * game.getPlayers().size(); // 2 settlements + 2 roads each
@@ -85,6 +116,8 @@ public final class GameFixture {
         }
         throw new IllegalStateException("Fixture: no legal settlement spot for " + who);
     }
+
+    // ---------- small helpers used by the tests ----------
 
     private static void placeFirstLegalRoad(Game game, UUID who) {
         for (Edge edge : candidateEdges(game)) {
@@ -122,20 +155,13 @@ public final class GameFixture {
         return edges;
     }
 
-    // ---------- small helpers used by the tests ----------
-
-    public static GamePlayer player(Game game, UUID id) {
-        return game.getPlayers().stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst().orElseThrow();
+    public ResourceBank resourceBank() {
+        if (resourceBank == null) throw new IllegalStateException("call build() before resourceBank()");
+        return resourceBank;
     }
 
-    /** Exact hand, wiping starter resources gained during setup. */
-    public static void setHand(GamePlayer p, ResourceType type, int count) {
-        for (ResourceType t : ResourceType.values()) {
-            p.removeAllResourcesOfType(t);
-        }
-        p.receive(Stream.generate(() -> new Resource(UUID.randomUUID(), type))
-                .limit(count).toList());
+    public Board board() {
+        if (board == null) throw new IllegalStateException("call build() before board()");
+        return board;
     }
 }
