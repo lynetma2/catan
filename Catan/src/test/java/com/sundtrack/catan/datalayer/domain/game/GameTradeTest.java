@@ -81,7 +81,6 @@ class GameTradeTest {
     }
 
     @Test
-    @Disabled("Bug: bankTrade keys the 2:1 discount to the WANTED resource; official Catan keys it to the GIVEN resource")
     void a_matching_port_lets_you_trade_two_of_its_resource_for_one_other() {
         GameFixture fixture = aGame();
         Game game = fixture.build();
@@ -96,7 +95,6 @@ class GameTradeTest {
     }
 
     @Test
-    @Disabled("Bug: a lumber port must not make RECEIVING lumber cheaper; the discount belongs to the given resource")
     void a_resource_port_does_not_discount_receiving_that_resource() {
         GameFixture fixture = aGame();
         Game game = fixture.build();
@@ -125,7 +123,6 @@ class GameTradeTest {
     // ---- bug-documentation tests: re-enable in fix/trade-confirm-validation ----
 
     @Test
-    @Disabled("Bug: confirmTrade ignores ownsResources() and throws ResourceNotOwnedException instead of InsufficientResourcesException")
     void confirm_rejects_when_initiator_no_longer_owns_offered_cards() {
         Game game = aGame().build();
         GamePlayer alice = player(game, ALICE);
@@ -142,7 +139,6 @@ class GameTradeTest {
     }
 
     @Test
-    @Disabled("Bug: confirmTrade removes the initiator's remaining offered card before failing")
     void failed_confirm_leaves_both_hands_untouched() {
         Game game = aGame().build();
         GamePlayer alice = player(game, ALICE);
@@ -168,7 +164,6 @@ class GameTradeTest {
     }
 
     @Test
-    @Disabled("Bug: bankTrade removes paid cards from the player but never deposits them into the bank")
     void bank_trade_returns_paid_cards_to_the_bank() {
         GameFixture fixture = aGame();
         Game game = fixture.build();
