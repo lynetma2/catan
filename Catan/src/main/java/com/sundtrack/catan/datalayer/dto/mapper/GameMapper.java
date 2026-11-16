@@ -5,6 +5,7 @@ import com.sundtrack.catan.datalayer.domain.board.Vertex;
 import com.sundtrack.catan.datalayer.domain.board.tile.Tile;
 import com.sundtrack.catan.datalayer.domain.building.Building;
 import com.sundtrack.catan.datalayer.domain.developmentCard.DevelopmentCard;
+import com.sundtrack.catan.datalayer.domain.game.DiceRoll;
 import com.sundtrack.catan.datalayer.domain.game.Game;
 import com.sundtrack.catan.datalayer.domain.game.GamePlayer;
 import com.sundtrack.catan.datalayer.domain.game.trade.TradeOffer;
@@ -31,7 +32,7 @@ public class GameMapper {
                 game.getCurrentPlayerId().toString(),
                 game.getTurnNumber(),
                 mapTradeOffers(game.getActiveTradeOffers()),
-                game.getDiceRoll(),
+                toDiceRollDTO(game.getDiceRoll()),
                 FlowStateMapper.toDTO(game)
         );
     }
@@ -117,7 +118,7 @@ public class GameMapper {
                 game.getCurrentPlayerId().toString(),
                 game.getTurnNumber(),
                 mapTradeOffers(game.getActiveTradeOffers()),
-                game.getDiceRoll(),
+                toDiceRollDTO(game.getDiceRoll()),
                 FlowStateMapper.toDTO(game)
         );
     }
@@ -162,5 +163,9 @@ public class GameMapper {
                 game.hasLongestRoad(p.getId()),
                 game.hasLargestArmy(p.getId())
         );
+    }
+
+    private DiceRollDTO toDiceRollDTO(DiceRoll roll) {
+        return roll == null ? null : new DiceRollDTO(roll.die1(), roll.die2());
     }
 }

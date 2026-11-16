@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sundtrack.catan.datalayer.domain.event.ClientAction;
 import com.sundtrack.catan.datalayer.domain.event.EventEnvelope;
-import com.sundtrack.catan.datalayer.domain.event.EventRegistry;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.InvocationTargetException;

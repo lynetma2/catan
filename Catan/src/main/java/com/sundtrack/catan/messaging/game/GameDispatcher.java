@@ -78,7 +78,7 @@ public class GameDispatcher {
         EventResult<ServerEvent> withCrossCutting = mergeCrossCuttingEvents(game, before, result);
         EventResult<ServerEvent> finalResult = mergeEndOfActionEvents(game, withCrossCutting);
 
-        game.recordEvent(action, finalResult, context);
+        game.recordEvent(action, finalResult, context.playerId());
         return finalResult;
     }
 

@@ -6,7 +6,9 @@ import com.sundtrack.catan.datalayer.domain.event.game.action.RollDiceAction;
 import com.sundtrack.catan.datalayer.domain.event.game.server.RollDiceEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.DiscardRequiredEvent;
 import com.sundtrack.catan.datalayer.domain.event.game.server.resource.ResourceGrantEvent;
+import com.sundtrack.catan.datalayer.domain.game.DiceRoll;
 import com.sundtrack.catan.datalayer.domain.game.Game;
+import com.sundtrack.catan.datalayer.dto.snapshot.DiceRollDTO;
 import com.sundtrack.catan.messaging.HandlesEvent;
 import org.springframework.stereotype.Component;
 
@@ -37,7 +39,8 @@ public class GameRollDiceHandler implements GameActionHandler<RollDiceAction> {
 
     private EventResult<ServerEvent> createResults(Game game, Game.RollOutcome outcome) {
         List<ServerEvent> events = new ArrayList<>();
-        events.add(new RollDiceEvent(outcome.roll()));
+        DiceRoll roll = outcome.roll();
+        events.add(new RollDiceEvent(new DiceRollDTO(roll.die1(), roll.die2())));
 
         outcome.grantedResources().forEach((playerId, resources) ->
                 events.add(new ResourceGrantEvent(playerId, resources)));

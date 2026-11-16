@@ -26,9 +26,6 @@ import com.sundtrack.catan.datalayer.domain.game.trade.TradeOffer;
 import com.sundtrack.catan.datalayer.domain.game.trade.TradeOfferResponseKind;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
-import com.sundtrack.catan.datalayer.dto.snapshot.DevCardSnapshotDTO;
-import com.sundtrack.catan.datalayer.dto.snapshot.DiceRollDTO;
-import com.sundtrack.catan.session.game.eventHandlers.GameContext;
 
 import java.time.Instant;
 import java.util.*;
@@ -85,12 +82,12 @@ public class Game {
         return board.getBuildings();
     }
 
-    public DiceRollDTO getDiceRoll() {
-        return dicePair.getDiceRollDTO();
+    public DiceRoll getDiceRoll() {
+        return dicePair.getDiceRoll();
     }
 
     public RollOutcome rollDice() {
-        DiceRollDTO roll = dicePair.roll();
+        DiceRoll roll = dicePair.roll();
         flow.enterPostRoll();
         if (roll.isSeven()) {
             Map<UUID, Integer> required = computeRequiredDiscards();
@@ -192,8 +189,8 @@ public class Game {
         return flow.getCurrentPlayerId();
     }
 
-    public void recordEvent(ClientAction action, EventResult<ServerEvent> resultingEvents, GameContext gameContext) {
-        gameEvents.add(new RecordedEvent(action, gameContext, resultingEvents, Instant.now()));
+    public void recordEvent(ClientAction action, EventResult<ServerEvent> resultingEvents, UUID playerId) {
+        gameEvents.add(new RecordedEvent(action, playerId, resultingEvents, Instant.now()));
     }
 
     public GameFlow.TurnAdvanceResult advanceTurn() {
@@ -412,8 +409,7 @@ public class Game {
         DevelopmentCard card = developmentCardBank.draw(getTurnNumber());
         player.addDevelopmentCard(card);
 
-        DevCardSnapshotDTO cardSnapshotDTO = new DevCardSnapshotDTO(card);
-        return new DrawDevelopmentCardResult(cardSnapshotDTO, deducted);
+        return new DrawDevelopmentCardResult(card, deducted);
     }
 
     public Integer getTurnNumber() {
@@ -619,9 +615,9 @@ public class Game {
         }
     }
 
-    public record RollOutcome(DiceRollDTO roll, Map<UUID, List<Resource>> grantedResources) {
+    public record RollOutcome(DiceRoll roll, Map<UUID, List<Resource>> grantedResources) {
     }
 
-    public record DrawDevelopmentCardResult(DevCardSnapshotDTO card, List<Resource> deductedResources) {
+    public record DrawDevelopmentCardResult(DevelopmentCard card, List<Resource> deductedResources) {
     }
 }
