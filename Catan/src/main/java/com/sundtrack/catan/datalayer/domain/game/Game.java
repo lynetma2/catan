@@ -27,7 +27,6 @@ import com.sundtrack.catan.datalayer.domain.game.trade.TradeOfferResponseKind;
 import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
 import com.sundtrack.catan.datalayer.dto.snapshot.DevCardSnapshotDTO;
-import com.sundtrack.catan.datalayer.dto.snapshot.DiceRollDTO;
 
 import java.time.Instant;
 import java.util.*;
@@ -84,12 +83,12 @@ public class Game {
         return board.getBuildings();
     }
 
-    public DiceRollDTO getDiceRoll() {
-        return dicePair.getDiceRollDTO();
+    public DiceRoll getDiceRoll() {
+        return dicePair.getDiceRoll();
     }
 
     public RollOutcome rollDice() {
-        DiceRollDTO roll = dicePair.roll();
+        DiceRoll roll = dicePair.roll();
         flow.enterPostRoll();
         if (roll.isSeven()) {
             Map<UUID, Integer> required = computeRequiredDiscards();
@@ -618,7 +617,7 @@ public class Game {
         }
     }
 
-    public record RollOutcome(DiceRollDTO roll, Map<UUID, List<Resource>> grantedResources) {
+    public record RollOutcome(DiceRoll roll, Map<UUID, List<Resource>> grantedResources) {
     }
 
     public record DrawDevelopmentCardResult(DevCardSnapshotDTO card, List<Resource> deductedResources) {
