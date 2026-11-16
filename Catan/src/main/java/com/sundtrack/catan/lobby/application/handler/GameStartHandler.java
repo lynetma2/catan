@@ -1,0 +1,62 @@
+package com.sundtrack.catan.lobby.application.handler;
+
+import com.sundtrack.catan.lobby.application.LobbyContext;
+import com.sundtrack.catan.shared.event.EventResult;
+import com.sundtrack.catan.shared.event.ServerEvent;
+import com.sundtrack.catan.lobby.domain.event.action.GameStartAction;
+import com.sundtrack.catan.lobby.domain.event.reason.GameStartRejectionReason;
+import com.sundtrack.catan.lobby.domain.event.server.GameInitializedEvent;
+import com.sundtrack.catan.lobby.domain.event.server.GameStartRejectedEvent;
+import com.sundtrack.catan.lobby.domain.Lobby;
+import com.sundtrack.catan.shared.ws.HandlesEvent;
+import com.sundtrack.catan.game.application.port.GameService;
+import com.sundtrack.catan.lobby.persistence.LobbyStore;
+import org.springframework.stereotype.Component;
+
+import java.util.UUID;
+
+@Component
+@HandlesEvent(GameStartAction.class)
+public class GameStartHandler implements LobbyActionHandler<GameStartAction> {
+    private final LobbyStore lobbyStore;
+    private final GameService gameService;
+
+    public GameStartHandler(LobbyStore lobbyStore, GameService gameService) {
+        this.lobbyStore = lobbyStore;
+        this.gameService = gameService;
+    }
+
+    @Override
+    public EventResult<ServerEvent> handle(LobbyContext context, GameStartAction action) {
+        UUID playerId = context.playerId();
+        UUID lobbyId = context.lobbyId();
+        Lobby lobby = lobbyStore.get(lobbyId);
+
+        if (!lobby.isLeader(playerId)) {
+            return EventResult.directed(
+                    playerId,
+                    new GameStartRejectedEvent(GameStartRejectionReason.NOT_LEADER)
+            );
+        }
+
+        if (!lobby.allPlayersReady()) {
+            return EventResult.directed(
+                    playerId,
+                    new GameStartRejectedEvent(GameStartRejectionReason.PLAYERS_NOT_READY)
+            );
+        }
+
+        if (lobby.playerCount() < 2) {
+            return EventResult.directed(
+                    playerId,
+                    new GameStartRejectedEvent(GameStartRejectionReason.NOT_ENOUGH_PLAYERS)
+            );
+        }
+
+        gameService.createGame(lobbyId);
+        lobby.markAsStarted();
+        lobbyStore.remove(lobbyId);
+
+        return EventResult.broadcast(new GameInitializedEvent());
+    }
+}

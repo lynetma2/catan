@@ -5,7 +5,7 @@ import com.sundtrack.catan.shared.event.OutgoingEventEnvelope;
 import com.sundtrack.catan.shared.event.ServerEvent;
 import com.sundtrack.catan.shared.ws.OutgoingEventEnvelopeFactory;
 import com.sundtrack.catan.shared.ws.WebSocketMessagingService;
-import com.sundtrack.catan.messaging.routes.ApiRoutes;
+import com.sundtrack.catan.shared.ws.ApiRoutes;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;

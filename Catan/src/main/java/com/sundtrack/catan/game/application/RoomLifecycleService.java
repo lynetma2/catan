@@ -5,7 +5,7 @@ import com.sundtrack.catan.game.domain.Game;
 import com.sundtrack.catan.game.domain.GamePhase;
 import com.sundtrack.catan.game.application.port.ActiveGameRegistry;
 import com.sundtrack.catan.game.application.port.GameArchive;
-import com.sundtrack.catan.session.lobby.services.LobbyStore; // <--- Import your existing store
+import com.sundtrack.catan.lobby.persistence.LobbyStore; // <--- Import your existing store
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;

@@ -6,7 +6,6 @@ import com.sundtrack.catan.shared.event.EventResult;
 import com.sundtrack.catan.shared.event.ServerEvent;
 import com.sundtrack.catan.game.domain.Game;
 import com.sundtrack.catan.game.domain.GamePhase;
-import com.sundtrack.catan.messaging.game.GameDispatcher;
 import com.sundtrack.catan.game.application.port.ActiveGameRegistry;
 import com.sundtrack.catan.game.application.port.GameArchive;
 import com.sundtrack.catan.game.application.port.GameCreationService;

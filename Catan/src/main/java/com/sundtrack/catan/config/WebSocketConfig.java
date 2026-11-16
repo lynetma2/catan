@@ -10,7 +10,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import static com.sundtrack.catan.messaging.routes.ApiRoutes.*;
+import static com.sundtrack.catan.shared.ws.ApiRoutes.*;
 
 @Configuration
 @EnableWebSocketMessageBroker

@@ -2,11 +2,11 @@ package com.sundtrack.catan.game.application;
 
 import com.sundtrack.catan.game.domain.board.Board;
 import com.sundtrack.catan.game.domain.board.BoardFactory;
-import com.sundtrack.catan.datalayer.domain.lobby.Lobby;
-import com.sundtrack.catan.datalayer.domain.lobby.LobbyPlayer;
+import com.sundtrack.catan.lobby.domain.Lobby;
+import com.sundtrack.catan.lobby.domain.LobbyPlayer;
 import com.sundtrack.catan.game.domain.*;
 import com.sundtrack.catan.game.application.port.GameCreationService;
-import com.sundtrack.catan.session.lobby.services.LobbyStore;
+import com.sundtrack.catan.lobby.persistence.LobbyStore;
 import org.springframework.stereotype.Service;
 
 import java.util.*;

@@ -3,7 +3,6 @@ package com.sundtrack.catan.shared.ws;
 import com.sundtrack.catan.shared.event.EventResult;
 import com.sundtrack.catan.shared.event.OutgoingEventEnvelope;
 import com.sundtrack.catan.shared.event.ServerEvent;
-import com.sundtrack.catan.messaging.routes.ApiRoutes;
 import org.springframework.stereotype.Service;
 
 @Service
