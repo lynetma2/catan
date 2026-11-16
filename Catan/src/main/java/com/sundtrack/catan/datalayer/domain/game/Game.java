@@ -28,7 +28,6 @@ import com.sundtrack.catan.datalayer.domain.resource.Resource;
 import com.sundtrack.catan.datalayer.domain.resource.ResourceType;
 import com.sundtrack.catan.datalayer.dto.snapshot.DevCardSnapshotDTO;
 import com.sundtrack.catan.datalayer.dto.snapshot.DiceRollDTO;
-import com.sundtrack.catan.session.game.eventHandlers.GameContext;
 
 import java.time.Instant;
 import java.util.*;
@@ -192,8 +191,8 @@ public class Game {
         return flow.getCurrentPlayerId();
     }
 
-    public void recordEvent(ClientAction action, EventResult<ServerEvent> resultingEvents, GameContext gameContext) {
-        gameEvents.add(new RecordedEvent(action, gameContext, resultingEvents, Instant.now()));
+    public void recordEvent(ClientAction action, EventResult<ServerEvent> resultingEvents, UUID playerId) {
+        gameEvents.add(new RecordedEvent(action, playerId, resultingEvents, Instant.now()));
     }
 
     public GameFlow.TurnAdvanceResult advanceTurn() {
