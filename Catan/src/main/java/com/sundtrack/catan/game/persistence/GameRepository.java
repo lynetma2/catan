@@ -6,5 +6,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 interface GameRepository extends CrudRepository<GameRow, UUID> {
-    Optional<GameRow> findByStatusAndId(String status, UUID id);
+    Optional<GameRow> findByIdAndStatus(UUID id, String status);
+    long countByStatus(String status);
 }

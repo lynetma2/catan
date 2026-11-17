@@ -1,13 +1,11 @@
 package com.sundtrack.catan.game.application;
 
+import com.sundtrack.catan.game.application.port.GameStorePort;
 import com.sundtrack.catan.shared.util.PrincipalUtils;
 import com.sundtrack.catan.shared.event.ClientAction;
 import com.sundtrack.catan.shared.event.EventResult;
 import com.sundtrack.catan.shared.event.ServerEvent;
 import com.sundtrack.catan.game.domain.Game;
-import com.sundtrack.catan.game.domain.GamePhase;
-import com.sundtrack.catan.game.application.port.ActiveGameRegistry;
-import com.sundtrack.catan.game.application.port.GameArchive;
 import com.sundtrack.catan.game.application.port.GameCreationService;
 import com.sundtrack.catan.game.application.port.GameService;
 import org.springframework.stereotype.Service;
@@ -15,25 +13,20 @@ import org.springframework.stereotype.Service;
 import java.security.Principal;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class GameServiceImpl implements GameService {
 
-    private final ActiveGameRegistry activeGames;
-    private final GameArchive gameArchive;
+    private final GameStorePort gameStore;
     private final GameCreationService gameCreationService;
     private final GameDispatcher dispatcher;
+    private final ConcurrentHashMap<UUID, Object> gameLocks = new ConcurrentHashMap<>();
 
-    public GameServiceImpl(
-            ActiveGameRegistry activeGames,
-            GameArchive gameArchive,
-            GameCreationService gameCreationService,
-            GameDispatcher gameDispatcher
-    ) {
-        this.activeGames = activeGames;
-        this.gameArchive = gameArchive;
+    public GameServiceImpl(GameStorePort gameStore, GameCreationService gameCreationService, GameDispatcher dispatcher) {
+        this.gameStore = gameStore;
         this.gameCreationService = gameCreationService;
-        this.dispatcher = gameDispatcher;
+        this.dispatcher = dispatcher;
     }
 
     @Override
@@ -41,17 +34,14 @@ public class GameServiceImpl implements GameService {
         UUID playerId = PrincipalUtils.extractPlayerId(principal);
         GameContext context = new GameContext(principal, playerId, gameId);
 
-        Optional<Game> active = activeGames.findActive(gameId);
-        if (active.isEmpty()) {
-            return dispatcher.dispatch(context, action);   // finished-game read path (EndSummary)
-        }
-        Game game = active.get();
-        synchronized (game) {
-            EventResult<ServerEvent> result = dispatcher.dispatch(context, action);
-            if (game.getCurrentPhase() == GamePhase.GAME_OVER) {
-                gameArchive.archive(game);
-                activeGames.unregister(gameId);
+        synchronized (lockFor(gameId)) {
+            Optional<Game> active = gameStore.findActive(gameId);
+            if (active.isEmpty()) {
+                return dispatcher.dispatchFinished(context, action);
             }
+            Game game = active.get();
+            EventResult<ServerEvent> result = dispatcher.dispatch(context, game, action);
+            gameStore.save(game);   // persist every mutation; adapter auto-finishes on GAME_OVER
             return result;
         }
     }
@@ -59,6 +49,10 @@ public class GameServiceImpl implements GameService {
     @Override
     public void createGame(UUID id) {
         Game game = gameCreationService.createGame(id);
-        activeGames.register(game);
+        gameStore.save(game);
+    }
+
+    private Object lockFor(UUID gameId) {
+        return gameLocks.computeIfAbsent(gameId, id -> new Object());
     }
 }

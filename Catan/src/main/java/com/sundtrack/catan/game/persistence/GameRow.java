@@ -1,6 +1,7 @@
 package com.sundtrack.catan.game.persistence;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -9,16 +10,16 @@ import java.util.UUID;
 
 @Table("game")
 class GameRow {
-
     @Id
     @Column("id")
     private UUID id;
 
     @Column("status")
-    private String status;              // "ACTIVE" or "FINISHED"
+    private String status;
 
+    @Version
     @Column("version")
-    private long version;               // optimistic locking
+    private Long version;   // null = new -> INSERT; set -> UPDATE
 
     @Column("started_at")
     private Instant startedAt;
@@ -33,16 +34,102 @@ class GameRow {
     private int turnNumber;
 
     @Column("state_json")
-    private String stateJson;           // lossless state, only while ACTIVE
+    private String stateJson;
 
     @Column("snapshot_json")
-    private String snapshotJson;        // client snapshot, once FINISHED
+    private String snapshotJson;
 
     @Column("end_summary_json")
-    private String endSummaryJson;      // end summary, once FINISHED
+    private String endSummaryJson;
 
     @Column("updated_at")
     private Instant updatedAt;
 
-    // getters + setters
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
+    public Instant getStartedAt() {
+        return startedAt;
+    }
+
+    public void setStartedAt(Instant startedAt) {
+        this.startedAt = startedAt;
+    }
+
+    public Instant getFinishedAt() {
+        return finishedAt;
+    }
+
+    public void setFinishedAt(Instant finishedAt) {
+        this.finishedAt = finishedAt;
+    }
+
+    public UUID getWinnerId() {
+        return winnerId;
+    }
+
+    public void setWinnerId(UUID winnerId) {
+        this.winnerId = winnerId;
+    }
+
+    public int getTurnNumber() {
+        return turnNumber;
+    }
+
+    public void setTurnNumber(int turnNumber) {
+        this.turnNumber = turnNumber;
+    }
+
+    public String getStateJson() {
+        return stateJson;
+    }
+
+    public void setStateJson(String stateJson) {
+        this.stateJson = stateJson;
+    }
+
+    public String getSnapshotJson() {
+        return snapshotJson;
+    }
+
+    public void setSnapshotJson(String snapshotJson) {
+        this.snapshotJson = snapshotJson;
+    }
+
+    public String getEndSummaryJson() {
+        return endSummaryJson;
+    }
+
+    public void setEndSummaryJson(String endSummaryJson) {
+        this.endSummaryJson = endSummaryJson;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

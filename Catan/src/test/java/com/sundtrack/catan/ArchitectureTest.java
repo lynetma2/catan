@@ -38,6 +38,12 @@ class ArchitectureTest {
                     .should().dependOnClassesThat().resideInAnyPackage(
                             "..game..", "..lobby..", "..presence..");
 
+    /** Persistence state documents are a pure storage format, decoupled from the domain. */
+    @ArchTest
+    static final ArchRule persistence_documents_are_domain_free =
+            noClasses().that().resideInAPackage("..persistence.state..")
+                    .should().dependOnClassesThat().resideInAPackage("..domain..");
+
     // ---- Future ratchets (see notes) ----
     // No Jackson in the domain: needs mixins first to preserve the wire format.
     // Application must not reach into adapters: blocked today by the two LobbyStore couplings.
