@@ -69,8 +69,9 @@ public class Game {
 
     public static Game restore(UUID id, List<GamePlayer> players, Board board, GameFlow flow,
                                TradeBook tradeBook, DicePair dicePair, DevelopmentCardBank developmentCardBank,
-                               ResourceBank resourceBank, GameConfiguration gameConfiguration, GameAwards gameAwards) {
-        return new Game(id, players, board, flow, tradeBook, new ArrayList<>(), dicePair,
+                               ResourceBank resourceBank, GameConfiguration gameConfiguration, GameAwards gameAwards,
+                               List<RecordedEvent> gameEvents) {
+        return new Game(id, players, board, flow, tradeBook, gameEvents, dicePair,
                 developmentCardBank, resourceBank, gameConfiguration, gameAwards);
     }
 
@@ -633,6 +634,7 @@ public class Game {
     public ResourceBank getResourceBank() { return resourceBank; }
     public GameAwards getGameAwards() { return gameAwards; }
     public DicePair getDicePair() { return dicePair; }
+    public List<RecordedEvent> getRecordedEvents() { return List.copyOf(gameEvents); }
 
     public record PlacementResult<T>(Building<T> building, List<Resource> deductedResources,
                                      List<Resource> grantedResources) {

@@ -1,6 +1,7 @@
 
 package com.sundtrack.catan.game.persistence;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sundtrack.catan.game.domain.*;
 import com.sundtrack.catan.game.domain.board.Board;
 import com.sundtrack.catan.game.domain.board.Edge;
@@ -18,6 +19,8 @@ import com.sundtrack.catan.game.domain.subFlows.*;
 import com.sundtrack.catan.game.domain.trade.TradeOffer;
 import com.sundtrack.catan.game.domain.trade.TradeOfferResponseKind;
 import com.sundtrack.catan.game.persistence.state.*;
+import com.sundtrack.catan.shared.event.*;
+import com.sundtrack.catan.shared.ws.EventRegistry;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -26,81 +29,61 @@ import java.util.stream.Collectors;
 @Component
 class GameStateCodec {
 
+    private final EventRegistry eventRegistry;
+    private final ObjectMapper objectMapper;
+
+    GameStateCodec(EventRegistry eventRegistry, ObjectMapper objectMapper) {
+        this.eventRegistry = eventRegistry;
+        this.objectMapper = objectMapper;
+    }
+
     public GameStateDocument toDocument(Game game) {
         return new GameStateDocument(
                 GameStateDocument.CURRENT_SCHEMA_VERSION,
                 game.getId(),
-                game.getPlayers().stream()
-                        .map(this::toPlayerDocument)
-                        .toList(),
+                game.getPlayers().stream().map(this::toPlayerDocument).toList(),
                 toBoardDocument(game.getBoard()),
                 toFlowDocument(game.getFlow(), game.getTurnOrder()),
-                game.getTradeBook().getActiveOffers().stream()
-                        .map(this::toTradeOfferDocument)
-                        .toList(),
+                game.getTradeBook().getActiveOffers().stream().map(this::toTradeOfferDocument).toList(),
                 toDiceDocument(game.getDicePair()),
-                game.getDevelopmentCardBank().getRemainingDeck().stream()
-                        .map(DevelopmentCardType::name)
-                        .toList(),
+                game.getDevelopmentCardBank().getRemainingDeck().stream().map(DevelopmentCardType::name).toList(),
                 toResourceBankMap(game.getResourceBank()),
-                toAwardsDocument(game.getGameAwards())
+                toAwardsDocument(game.getGameAwards()),
+                game.getRecordedEvents().stream().map(this::toRecordedEventDocument).toList()
         );
     }
 
     public Game toGame(GameStateDocument document) {
         GameConfiguration config = GameConfiguration.standard();
-
         TurnOrder turnOrder = toTurnOrder(document.flow().turnOrder());
 
         Deque<SubFlow> flows = document.flow().activeFlows().stream()
                 .map(flow -> toSubFlow(flow, turnOrder))
                 .collect(Collectors.toCollection(ArrayDeque::new));
 
-        GameFlow gameFlow = GameFlow.restore(
-                turnOrder,
+        GameFlow gameFlow = GameFlow.restore(turnOrder,
                 GamePhase.valueOf(document.flow().basePhase()),
-                document.flow().turnNumber(),
-                flows
-        );
+                document.flow().turnNumber(), flows);
 
         Board board = toBoard(document.board());
-
-        TradeBook tradeBook = new TradeBook(
-                document.tradeOffers().stream()
-                        .map(this::toTradeOffer)
-                        .toList()
-        );
-
-        DevelopmentCardBank devBank = new DevelopmentCardBank(
-                document.devDeck().stream()
-                        .map(DevelopmentCardType::valueOf)
-                        .collect(Collectors.toCollection(ArrayDeque::new))
-        );
-
-        ResourceBank resBank = new ResourceBank(
-                toResourceBank(document.resourceBank())
-        );
-
+        TradeBook tradeBook = new TradeBook(document.tradeOffers().stream().map(this::toTradeOffer).toList());
+        DevelopmentCardBank devBank = new DevelopmentCardBank(document.devDeck().stream()
+                .map(DevelopmentCardType::valueOf).collect(Collectors.toCollection(ArrayDeque::new)));
+        ResourceBank resBank = new ResourceBank(toResourceBank(document.resourceBank()));
         GameAwards awards = toAwards(document.awards(), config);
-
         DicePair dice = toDicePair(document.dice());
+
+        List<RecordedEvent> eventLog = document.eventLog() == null
+                ? List.of()
+                : document.eventLog().stream().map(this::toRecordedEvent).toList();
 
         return Game.restore(
                 document.gameId(),
-                document.players().stream()
-                        .map(this::toPlayer)
-                        .toList(),
-                board,
-                gameFlow,
-                tradeBook,
-                dice,
-                devBank,
-                resBank,
-                config,
-                awards
+                document.players().stream().map(this::toPlayer).toList(),
+                board, gameFlow, tradeBook, dice, devBank, resBank, config, awards,
+                eventLog
         );
     }
-
     // -------------------------------------------------------------------------
     // Domain -> Persistence
     // -------------------------------------------------------------------------
@@ -118,6 +101,32 @@ class GameStateCodec {
                         .toList(),
                 player.getKnightsUsed()
         );
+    }
+
+    private RecordedEventDocument toRecordedEventDocument(RecordedEvent e) {
+        return new RecordedEventDocument(
+                e.playerId(), e.timestamp(),
+                toEnvelope(e.action()),
+                toEventResultDocument(e.resultingEvents()));
+    }
+
+    private EventEnvelopeDocument toEnvelope(BaseEvent event) {
+        EventType type = event.getClass().getAnnotation(EventType.class);
+        if (type == null) throw new IllegalStateException("Missing @EventType on " + event.getClass());
+        return new EventEnvelopeDocument(type.value(), objectMapper.valueToTree(event));
+    }
+
+    private EventResultDocument toEventResultDocument(EventResult<ServerEvent> result) {
+        List<EventEnvelopeDocument> broadcast = result.broadcast().stream()
+                .map(this::toEnvelope)
+                .toList();
+
+        Map<UUID, List<EventEnvelopeDocument>> directed = result.directed().entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().stream().map(this::toEnvelope).toList()));
+
+        return new EventResultDocument(broadcast, directed);
     }
 
     private DicePairStateDocument toDiceDocument(DicePair pair) {
@@ -512,6 +521,33 @@ class GameStateCodec {
                 document.longestRoadHolder(),
                 document.largestArmyHolder()
         );
+    }
+
+    private EventResult<ServerEvent> toEventResult(EventResultDocument doc) {
+        List<ServerEvent> broadcast = doc.broadcast().stream()
+                .map(e -> (ServerEvent) fromEnvelope(e))
+                .toList();
+
+        Map<UUID, List<ServerEvent>> directed = doc.directed().entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().stream().map(x -> (ServerEvent) fromEnvelope(x)).toList()));
+
+        return EventResult.of(broadcast, directed);
+    }
+
+    private RecordedEvent toRecordedEvent(RecordedEventDocument doc) {
+        return new RecordedEvent(
+                (ClientAction) fromEnvelope(doc.action()),
+                doc.playerId(),
+                toEventResult(doc.resultingEvents()),
+                doc.timestamp());
+    }
+
+    private BaseEvent fromEnvelope(EventEnvelopeDocument doc) {
+        Class<?> clazz = eventRegistry.getEventClass(doc.type());
+        if (clazz == null) throw new IllegalStateException("Unknown event type: " + doc.type());
+        return (BaseEvent) objectMapper.convertValue(doc.payload(), clazz);
     }
 
     private GamePlayer toPlayer(PlayerStateDocument document) {

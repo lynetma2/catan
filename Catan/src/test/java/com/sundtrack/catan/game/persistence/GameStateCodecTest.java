@@ -1,18 +1,27 @@
 package com.sundtrack.catan.game.persistence;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sundtrack.catan.game.domain.*;
 import com.sundtrack.catan.game.domain.building.Building;
 import com.sundtrack.catan.game.domain.developmentCard.DevelopmentCard;
 import com.sundtrack.catan.game.domain.developmentCard.DevelopmentCardType;
+import com.sundtrack.catan.game.domain.event.action.RollDiceAction;
+import com.sundtrack.catan.game.domain.event.action.TurnEndAction;
 import com.sundtrack.catan.game.domain.event.action.resource.GameDiscardAction;
+import com.sundtrack.catan.game.domain.event.server.state.GamePhaseChangedEvent;
+import com.sundtrack.catan.game.domain.event.server.turn.TurnStartEvent;
 import com.sundtrack.catan.game.domain.resource.Resource;
 import com.sundtrack.catan.game.domain.resource.ResourceType;
 import com.sundtrack.catan.game.domain.trade.TradeOffer;
 import com.sundtrack.catan.game.domain.trade.TradeOfferResponseKind;
 import com.sundtrack.catan.game.persistence.state.GameStateDocument;
+import com.sundtrack.catan.shared.event.EventResult;
+import com.sundtrack.catan.shared.event.ServerEvent;
+import com.sundtrack.catan.shared.ws.EventRegistry;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class GameStateCodecTest {
 
-    private final GameStateCodec codec = new GameStateCodec();
+    private final GameStateCodec codec = new GameStateCodec(new EventRegistry(), new ObjectMapper().findAndRegisterModules());
 
     private Game roundTrip(Game game) {
         return codec.toGame(codec.toDocument(game));
@@ -128,44 +137,6 @@ class GameStateCodecTest {
     }
 
     @Nested
-    class IdentityBasedReferences {
-
-        // These two expose the UUID-regeneration bug: they reference a card/resource
-        // by its ORIGINAL id, which the current codec throws away on restore.
-
-        @Test
-        void in_flight_trade_can_still_be_confirmed_after_restore() {
-            Game game = aGame().withSetupCompleted().build();
-            GamePlayer alice = player(game, ALICE);
-            setHand(alice, ResourceType.LUMBER, 2);
-            setHand(player(game, BOB), ResourceType.BRICK, 1);
-
-            TradeOffer offer = game.startTrade(ALICE, List.copyOf(alice.getResources()), List.of(ResourceType.BRICK));
-            game.respondToTrade(BOB, offer.getTradeOfferId(), TradeOfferResponseKind.ACCEPT);
-
-            Game restored = roundTrip(game);
-            restored.confirmTrade(ALICE, BOB, offer.getTradeOfferId());
-
-            assertThat(player(restored, ALICE).getResources())
-                    .extracting(Resource::resourceType).containsExactly(ResourceType.BRICK);
-        }
-
-        @Test
-        void dev_card_can_still_be_played_by_original_id_after_restore() {
-            Game game = aGame().withSetupCompleted().build();
-            game.advanceTurn();
-            GamePlayer bob = player(game, BOB);
-            DevelopmentCard knight = new DevelopmentCard(UUID.randomUUID(), DevelopmentCardType.KNIGHT, 0);
-            bob.addDevelopmentCard(knight);
-
-            Game restored = roundTrip(game);
-            restored.playKnightCard(BOB, knight.getId());
-
-            assertThat(player(restored, BOB).getKnightsUsed()).isEqualTo(1);
-        }
-    }
-
-    @Nested
     class BanksAndAwards {
 
         @Test
@@ -244,7 +215,7 @@ class GameStateCodecTest {
             Game restored = roundTrip(game);
 
             Set<UUID> handIds = resourceIdsOf(player(restored, ALICE));
-            Set<UUID> offeredIds = restored.getActiveTradeOffers().get(0).getOfferedResources()
+            Set<UUID> offeredIds = restored.getActiveTradeOffers().getFirst().getOfferedResources()
                     .stream().map(Resource::uid).collect(Collectors.toSet());
 
             assertThat(handIds).containsAll(offeredIds);   // offer references cards that actually exist
@@ -282,6 +253,57 @@ class GameStateCodecTest {
 
             assertThat(player(restored, BOB).getKnightsUsed()).isEqualTo(1);
             assertThat(player(restored, BOB).getDevelopmentCardCount()).isZero();
+        }
+    }
+
+    @Nested
+    class AuditLog {
+
+        @Test
+        void recorded_events_survive_a_round_trip() {
+            Game game = aGame().withSetupCompleted().build();
+            game.recordEvent(new RollDiceAction(),
+                    EventResult.<ServerEvent>broadcast(new GamePhaseChangedEvent(GamePhase.POST_ROLL)), ALICE);
+            game.recordEvent(new TurnEndAction(BOB),
+                    EventResult.<ServerEvent>directed(BOB, new TurnStartEvent(BOB, 1)), BOB);
+
+            Game restored = roundTrip(game);
+
+            assertThat(restored.getRecordedEvents()).hasSize(2);
+
+            RecordedEvent first = restored.getRecordedEvents().getFirst();
+            assertThat(first.action()).isInstanceOf(RollDiceAction.class);
+            assertThat(first.playerId()).isEqualTo(ALICE);
+            assertThat(first.resultingEvents().broadcast())
+                    .singleElement().isInstanceOf(GamePhaseChangedEvent.class);
+
+            RecordedEvent second = restored.getRecordedEvents().get(1);
+            assertThat(second.action()).isInstanceOf(TurnEndAction.class);
+            assertThat(second.resultingEvents().directed()).containsKey(BOB);
+            assertThat(second.resultingEvents().directed().get(BOB))
+                    .singleElement().isInstanceOf(TurnStartEvent.class);
+        }
+
+        @Test
+        void event_timestamps_are_preserved() {
+            Game game = aGame().withSetupCompleted().build();
+            game.recordEvent(new RollDiceAction(), EventResult.empty(), ALICE);
+            Instant original = game.getRecordedEvents().getFirst().timestamp();
+
+            Game restored = roundTrip(game);
+
+            assertThat(restored.getRecordedEvents().getFirst().timestamp()).isEqualTo(original);
+        }
+
+        @Test
+        void reencode_is_stable_with_a_populated_log() {
+            Game game = aGame().withSetupCompleted().build();
+            game.recordEvent(new RollDiceAction(),
+                    EventResult.<ServerEvent>broadcast(new GamePhaseChangedEvent(GamePhase.POST_ROLL)), ALICE);
+            game.recordEvent(new TurnEndAction(BOB),
+                    EventResult.<ServerEvent>directed(BOB, new TurnStartEvent(BOB, 1)), BOB);
+
+            assertReencodeStable(game);
         }
     }
 

@@ -14,7 +14,8 @@ public record GameStateDocument(
         DicePairStateDocument dice,
         List<String> devDeck,
         Map<String, Integer> resourceBank,
-        GameAwardsDocument awards
+        GameAwardsDocument awards,
+        List<RecordedEventDocument> eventLog
 ) {
     public static final int CURRENT_SCHEMA_VERSION = 1;
 }
