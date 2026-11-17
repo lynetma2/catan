@@ -16,6 +16,13 @@ public class DiscardFlow implements SubFlow {
         this.pendingPlayers = new HashSet<>(requiredDiscards.keySet());
     }
 
+    public static DiscardFlow restore(Map<UUID, Integer> requiredDiscards, Set<UUID> pendingPlayers) {
+        DiscardFlow flow = new DiscardFlow(requiredDiscards);
+        flow.pendingPlayers.clear();
+        flow.pendingPlayers.addAll(pendingPlayers);
+        return flow;
+    }
+
     public Map<UUID, Integer> getRequiredDiscards() {
         return requiredDiscards;
     }
@@ -52,5 +59,9 @@ public class DiscardFlow implements SubFlow {
         }
         pendingPlayers.remove(actingPlayerId);
         return pendingPlayers.isEmpty() ? Optional.empty() : Optional.of(this);
+    }
+
+    public Set<UUID> getPendingPlayers() {
+        return Set.copyOf(pendingPlayers);
     }
 }

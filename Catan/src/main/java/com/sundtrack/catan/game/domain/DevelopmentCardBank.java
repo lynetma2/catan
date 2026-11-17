@@ -51,4 +51,8 @@ public class DevelopmentCardBank {
     public boolean isEmpty() {
         return deck.isEmpty();
     }
+
+    public List<DevelopmentCardType> getRemainingDeck() {
+        return new ArrayList<>(deck);
+    }
 }

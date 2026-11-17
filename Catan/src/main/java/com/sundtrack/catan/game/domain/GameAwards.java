@@ -13,6 +13,13 @@ public class GameAwards {
         this.gameConfiguration = gameConfiguration;
     }
 
+    public static GameAwards restore(GameConfiguration config, UUID longestRoadHolder, UUID largestArmyHolder) {
+        GameAwards awards = new GameAwards(config);
+        awards.longestRoadHolder = longestRoadHolder;
+        awards.largestArmyHolder = largestArmyHolder;
+        return awards;
+    }
+
     public Optional<UUID> getLongestRoadHolder() {
         return Optional.ofNullable(longestRoadHolder);
     }
