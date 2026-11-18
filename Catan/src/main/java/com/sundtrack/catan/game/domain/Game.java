@@ -55,11 +55,11 @@ public class Game {
                  List<RecordedEvent> gameEvents, DicePair dicePair, DevelopmentCardBank developmentCardBank,
                  ResourceBank resourceBank, GameConfiguration gameConfiguration, GameAwards gameAwards) {
         this.id = id;
-        this.players = players;
+        this.players = new ArrayList<>(players);
         this.board = board;
         this.flow = flow;
         this.tradeBook = tradeBook;
-        this.gameEvents = gameEvents;
+        this.gameEvents = new ArrayList<>(gameEvents);
         this.dicePair = dicePair;
         this.developmentCardBank = developmentCardBank;
         this.resourceBank = resourceBank;

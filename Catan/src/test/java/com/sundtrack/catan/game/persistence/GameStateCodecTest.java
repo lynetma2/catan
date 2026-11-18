@@ -305,6 +305,18 @@ class GameStateCodecTest {
 
             assertReencodeStable(game);
         }
+
+        @Test
+        void restored_game_can_record_new_events() {
+            Game game = aGame().withSetupCompleted().build();
+            game.recordEvent(new TurnEndAction(BOB), EventResult.empty(), BOB);
+
+            Game restored = roundTrip(game);
+
+            restored.recordEvent(new TurnEndAction(ALICE), EventResult.empty(), ALICE);
+
+            assertThat(restored.getRecordedEvents()).hasSize(2);
+        }
     }
 
 }

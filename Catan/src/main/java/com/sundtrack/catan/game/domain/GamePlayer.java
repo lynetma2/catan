@@ -26,8 +26,8 @@ public class GamePlayer {
         this.id = id;
         this.username = username;
         this.color = color;
-        this.resources = resources;
-        this.developmentCards = developmentCards;
+        this.resources = new ArrayList<>(resources);
+        this.developmentCards = new ArrayList<>(developmentCards);
         this.knightsUsed = knightsUsed;
     }
 
@@ -229,7 +229,6 @@ public class GamePlayer {
         return id;
     }
 
-    //TODO move the exception in here.
     public boolean ownsResources(List<Resource> resources) {
         return new HashSet<>(this.resources).containsAll(resources);
     }
