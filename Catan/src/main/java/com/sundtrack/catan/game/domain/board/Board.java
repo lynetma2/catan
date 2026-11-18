@@ -20,12 +20,12 @@ public class Board {
     private final List<Building<?>> buildings;
 
     public Board(List<Tile> tiles, List<Building<?>> buildings) {
-        this.tiles = tiles;
-        this.buildings = buildings;
+        this.tiles = new ArrayList<>(tiles);
+        this.buildings = new ArrayList<>(buildings);
     }
 
     public Board(List<Tile> tiles) {
-        this.tiles = tiles;
+        this.tiles = new ArrayList<>(tiles);
         this.buildings = new ArrayList<>();
     }
 

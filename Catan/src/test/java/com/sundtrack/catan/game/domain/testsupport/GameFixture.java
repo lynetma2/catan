@@ -1,5 +1,7 @@
+
 package com.sundtrack.catan.game.domain.testsupport;
 
+import com.sundtrack.catan.game.domain.*;
 import com.sundtrack.catan.game.domain.board.*;
 import com.sundtrack.catan.game.domain.board.tile.Tile;
 import com.sundtrack.catan.game.domain.board.tile.TileType;
@@ -8,20 +10,25 @@ import com.sundtrack.catan.game.domain.event.action.build.PlaceSettlementAction;
 import com.sundtrack.catan.game.domain.exceptions.validation.GameRuleException;
 import com.sundtrack.catan.game.domain.resource.Resource;
 import com.sundtrack.catan.game.domain.resource.ResourceType;
-import com.sundtrack.catan.game.domain.*;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public final class GameFixture {
 
-    public static final UUID ALICE = UUID.fromString("00000000-0000-0000-0000-000000000001");
-    public static final UUID BOB = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    public static final UUID ALICE =
+            UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+    public static final UUID BOB =
+            UUID.fromString("00000000-0000-0000-0000-000000000002");
 
     private ResourceBank resourceBank;
     private Board board;
     private long diceSeed = 1;
     private boolean setupCompleted = false;
+
+    private final List<Consumer<Game>> setupActions = new ArrayList<>();
 
     private GameFixture() {
     }
@@ -30,45 +37,89 @@ public final class GameFixture {
         return new GameFixture();
     }
 
+    // -------------------------------------------------------------------------
+    // Player helpers
+    // -------------------------------------------------------------------------
+
     public static GamePlayer player(Game game, UUID id) {
         return game.getPlayers().stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst().orElseThrow();
+                .filter(player -> player.getId().equals(id))
+                .findFirst()
+                .orElseThrow();
     }
 
     /**
-     * Exact hand, wiping starter resources gained during setup.
+     * Sets an exact hand, removing all resources the player currently owns.
      */
-    public static void setHand(GamePlayer p, ResourceType type, int count) {
-        for (ResourceType t : ResourceType.values()) {
-            p.removeAllResourcesOfType(t);
+    public static void setHand(
+            GamePlayer player,
+            ResourceType type,
+            int count
+    ) {
+        for (ResourceType resourceType : ResourceType.values()) {
+            player.removeAllResourcesOfType(resourceType);
         }
-        p.receive(Stream.generate(() -> new Resource(UUID.randomUUID(), type))
-                .limit(count).toList());
+
+        player.receive(
+                Stream.generate(() ->
+                                new Resource(UUID.randomUUID(), type))
+                        .limit(count)
+                        .toList()
+        );
     }
 
     public static Resource resource(ResourceType type) {
         return new Resource(UUID.randomUUID(), type);
     }
 
+    // -------------------------------------------------------------------------
+    // Fixture configuration
+    // -------------------------------------------------------------------------
+
     public GameFixture withDiceSeed(long seed) {
         this.diceSeed = seed;
         return this;
     }
-
-    // ---------- setup: drive the real public API, A,B,B,A ----------
 
     public GameFixture withSetupCompleted() {
         this.setupCompleted = true;
         return this;
     }
 
+    /**
+     * Gives a player an exact number of resources of the specified type.
+     * Resources are assigned after setup has completed.
+     */
+    public GameFixture withPlayerResources(
+            UUID playerId,
+            ResourceType type,
+            int count
+    ) {
+        setupActions.add(game ->
+                setHand(player(game, playerId), type, count)
+        );
+
+        return this;
+    }
+
+    // -------------------------------------------------------------------------
+    // Build
+    // -------------------------------------------------------------------------
+
     public Game build() {
         List<UUID> ids = List.of(ALICE, BOB);
+
         List<GamePlayer> players = ids.stream()
-                .map(id -> new GamePlayer(id, "P-" + id, "#000000",
-                        new ArrayList<>(), new ArrayList<>(), 0))
+                .map(id -> new GamePlayer(
+                        id,
+                        "P-" + id,
+                        "#000000",
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        0
+                ))
                 .toList();
+
         this.resourceBank = ResourceBank.standard();
         this.board = new BoardFactory().createStatic();
 
@@ -82,86 +133,150 @@ public final class GameFixture {
                 new DicePair(diceSeed),
                 DevelopmentCardBank.standard(),
                 resourceBank,
-                GameConfiguration.standard());
+                GameConfiguration.standard()
+        );
 
-        if (setupCompleted) completeSetup(game);
+        if (setupCompleted) {
+            completeSetup(game);
+        }
+
+        setupActions.forEach(action -> action.accept(game));
+
         return game;
     }
 
+    // -------------------------------------------------------------------------
+    // Setup helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Drives the real public API through the setup sequence.
+     */
     private static void completeSetup(Game game) {
-        int maxPlacements = 4 * game.getPlayers().size(); // 2 settlements + 2 roads each
-        for (int i = 0; i < maxPlacements && game.getCurrentPhase().isSetupPhase(); i++) {
-            UUID who = game.getCurrentPlayerId();
+        int maxPlacements = 4 * game.getPlayers().size();
+
+        for (int i = 0;
+             i < maxPlacements && game.getCurrentPhase().isSetupPhase();
+             i++) {
+
+            UUID playerId = game.getCurrentPlayerId();
+
             if (game.getCurrentPhase() == GamePhase.SETUP_PLACE_SETTLEMENT) {
-                placeFirstLegalSettlement(game, who);
+                placeFirstLegalSettlement(game, playerId);
             } else {
-                placeFirstLegalRoad(game, who);
+                placeFirstLegalRoad(game, playerId);
             }
         }
+
         if (game.getCurrentPhase().isSetupPhase()) {
-            throw new IllegalStateException("Fixture: setup did not complete");
+            throw new IllegalStateException(
+                    "Fixture: setup did not complete"
+            );
         }
     }
 
-    private static void placeFirstLegalSettlement(Game game, UUID who) {
-        for (Tile tile : game.getTiles()) {              // land tiles come first in getTiles()
-            if (tile.getType() == TileType.SEA) continue;
+    private static void placeFirstLegalSettlement(
+            Game game,
+            UUID playerId
+    ) {
+        for (Tile tile : game.getTiles()) {
+            if (tile.getType() == TileType.SEA) {
+                continue;
+            }
+
             for (Vertex vertex : tile.getAdjacentVertices()) {
                 try {
-                    game.placeSettlement(new PlaceSettlementAction(vertex), who);
-                    return;                              // placed AND setup flow advanced
-                } catch (GameRuleException ignored) {    // occupied / distance rule → next spot
+                    game.placeSettlement(
+                            new PlaceSettlementAction(vertex),
+                            playerId
+                    );
+                    return;
+                } catch (GameRuleException ignored) {
+                    // Occupied or violates the distance rule; try another spot.
                 }
             }
         }
-        throw new IllegalStateException("Fixture: no legal settlement spot for " + who);
+
+        throw new IllegalStateException(
+                "Fixture: no legal settlement spot for " + playerId
+        );
     }
 
-    // ---------- small helpers used by the tests ----------
-
-    private static void placeFirstLegalRoad(Game game, UUID who) {
+    private static void placeFirstLegalRoad(
+            Game game,
+            UUID playerId
+    ) {
         for (Edge edge : candidateEdges(game)) {
             try {
-                game.placeRoad(new PlaceRoadAction(edge), who);
+                game.placeRoad(
+                        new PlaceRoadAction(edge),
+                        playerId
+                );
                 return;
-            } catch (GameRuleException ignored) {        // occupied / sea / not my network → next
+            } catch (GameRuleException ignored) {
+                // Occupied, sea, or not connected to the player's network.
             }
         }
-        throw new IllegalStateException("Fixture: no legal road spot for " + who);
+
+        throw new IllegalStateException(
+                "Fixture: no legal road spot for " + playerId
+        );
     }
 
     /**
      * Every hex border on the board, in stable order.
-     * Mirrors Board's private allEdges(): a tile hex + an existing neighbour = one edge.
-     * Edge.of canonicalises the hex pair, so the LinkedHashSet removes the
-     * "seen from the other side" duplicates.
+     *
+     * Mirrors Board's private allEdges(): a tile hex and an existing
+     * neighbour define one edge.
+     *
+     * Edge.of canonicalises the hex pair, so the LinkedHashSet removes
+     * duplicates encountered from the opposite side.
      */
     private static Set<Edge> candidateEdges(Game game) {
         Set<Hex> onBoard = new HashSet<>();
+
         for (Tile tile : game.getTiles()) {
             onBoard.add(tile.getHex());
         }
 
         Set<Edge> edges = new LinkedHashSet<>();
+
         for (Tile tile : game.getTiles()) {
             Hex hex = tile.getHex();
-            for (int dir = 0; dir < 6; dir++) {
-                Hex neighbour = hex.neighbor(dir);
+
+            for (int direction = 0; direction < 6; direction++) {
+                Hex neighbour = hex.neighbor(direction);
+
                 if (onBoard.contains(neighbour)) {
                     edges.add(Edge.of(hex, neighbour));
                 }
             }
         }
+
         return edges;
     }
 
+    // -------------------------------------------------------------------------
+    // Access to built fixture state
+    // -------------------------------------------------------------------------
+
     public ResourceBank resourceBank() {
-        if (resourceBank == null) throw new IllegalStateException("call build() before resourceBank()");
+        if (resourceBank == null) {
+            throw new IllegalStateException(
+                    "Call build() before resourceBank()"
+            );
+        }
+
         return resourceBank;
     }
 
     public Board board() {
-        if (board == null) throw new IllegalStateException("call build() before board()");
+        if (board == null) {
+            throw new IllegalStateException(
+                    "Call build() before board()"
+            );
+        }
+
         return board;
     }
 }

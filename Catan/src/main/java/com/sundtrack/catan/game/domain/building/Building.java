@@ -12,7 +12,11 @@ public final class Building<T> implements BuildingView<T> {
     private final PieceType kind;
 
     private Building(UUID ownerId, T location, PieceType kind) {
-        this.id = UUID.randomUUID();
+        this(UUID.randomUUID(), ownerId, location, kind);
+    }
+
+    private Building(UUID id, UUID ownerId, T location, PieceType kind) {
+        this.id = id;
         this.ownerId = ownerId;
         this.location = location;
         this.kind = kind;
@@ -22,12 +26,30 @@ public final class Building<T> implements BuildingView<T> {
         return new Building<>(ownerId, location, PieceType.SETTLEMENT);
     }
 
+    public static Building<Vertex> settlement(
+            UUID id, UUID ownerId, Vertex location
+    ) {
+        return new Building<>(id, ownerId, location, PieceType.SETTLEMENT);
+    }
+
     public static Building<Vertex> city(UUID ownerId, Vertex location) {
         return new Building<>(ownerId, location, PieceType.CITY);
     }
 
+    public static Building<Vertex> city(
+            UUID id, UUID ownerId, Vertex location
+    ) {
+        return new Building<>(id, ownerId, location, PieceType.CITY);
+    }
+
     public static Building<Edge> road(UUID ownerId, Edge location) {
         return new Building<>(ownerId, location, PieceType.ROAD);
+    }
+
+    public static Building<Edge> road(
+            UUID id, UUID ownerId, Edge location
+    ) {
+        return new Building<>(id, ownerId, location, PieceType.ROAD);
     }
 
     public static Building<Vertex> upgradeToCity(Building<Vertex> settlement) {

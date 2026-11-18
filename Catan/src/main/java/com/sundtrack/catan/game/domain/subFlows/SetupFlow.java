@@ -24,6 +24,10 @@ public class SetupFlow implements SubFlow {
         return new SetupFlow(turnOrder, GamePhase.SETUP_PLACE_SETTLEMENT);
     }
 
+    public static SetupFlow restore(TurnOrder turnOrder, GamePhase phase) {
+        return new SetupFlow(turnOrder, phase);
+    }
+
     @Override
     public GamePhase currentPhase() {
         return phase;

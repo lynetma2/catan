@@ -1,15 +1,12 @@
 package com.sundtrack.catan.game.application;
 
 import com.sundtrack.catan.presence.application.GameSessionRegistry;
-import com.sundtrack.catan.game.domain.Game;
-import com.sundtrack.catan.game.domain.GamePhase;
-import com.sundtrack.catan.game.application.port.ActiveGameRegistry;
-import com.sundtrack.catan.game.application.port.GameArchive;
-import com.sundtrack.catan.lobby.persistence.LobbyStore; // <--- Import your existing store
+import com.sundtrack.catan.game.application.port.GameQueryPort;
+import com.sundtrack.catan.game.application.port.GameStorePort;
+import com.sundtrack.catan.lobby.persistence.LobbyStore;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.*;
 
@@ -18,33 +15,29 @@ public class RoomLifecycleService {
 
     private static final Duration GRACE_PERIOD = Duration.ofMinutes(5);
 
-    private final ActiveGameRegistry activeGames;
-    private final GameArchive gameArchive;
-    private final LobbyStore lobbyStore; // <--- Use your existing store
+    private final GameStorePort gameStore;
+    private final GameQueryPort gameQuery;
+    private final LobbyStore lobbyStore;
     private final GameSessionRegistry sessions;
 
     private final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(1);
     private final ConcurrentHashMap<UUID, ScheduledFuture<?>> pending = new ConcurrentHashMap<>();
 
-    public RoomLifecycleService(ActiveGameRegistry activeGames, GameArchive gameArchive,
+    public RoomLifecycleService(GameStorePort gameStore, GameQueryPort gameQuery,
                                 LobbyStore lobbyStore, GameSessionRegistry sessions) {
-        this.activeGames = activeGames;
-        this.gameArchive = gameArchive;
+        this.gameStore = gameStore;
+        this.gameQuery = gameQuery;
         this.lobbyStore = lobbyStore;
         this.sessions = sessions;
     }
 
-    /**
-     * Someone (re)connected to the room: cancel any scheduled cleanup.
-     */
+    /** Someone (re)connected to the room: cancel any scheduled cleanup. */
     public void onPlayerConnected(UUID roomId) {
         ScheduledFuture<?> future = pending.remove(roomId);
         if (future != null) future.cancel(false);
     }
 
-    /**
-     * Last known subscription/session for the room is gone: schedule cleanup after grace period.
-     */
+    /** Last known session for the room is gone: schedule cleanup after the grace period. */
     public void onRoomPossiblyEmpty(UUID roomId) {
         if (sessions.hasConnectedSessions(roomId)) return;
         pending.computeIfAbsent(roomId, id -> scheduler.schedule(
@@ -58,17 +51,15 @@ public class RoomLifecycleService {
     private void abandon(UUID roomId) {
         if (sessions.hasConnectedSessions(roomId)) return; // someone came back during grace
 
-        // Phase 2: a game exists (running or finished)
-        Optional<Game> game = activeGames.findActive(roomId);
-        if (game.isPresent()) {
-            if (game.get().getCurrentPhase() != GamePhase.GAME_OVER) {
-                gameArchive.archive(game.get());
+        if (gameQuery.exists(roomId)) {
+            // Game is already persisted. Only a still-running one needs flagging.
+            if (gameStore.isActive(roomId)) {
+                gameStore.markAbandoned(roomId);
             }
-            activeGames.unregister(roomId);
-            return;
+            return; // FINISHED games are already stored — nothing to do
         }
 
-        // Phase 1: still a lobby — discard the empty lobby
-        lobbyStore.remove(roomId); // <--- Calls your existing ConcurrentHashMap.remove()
+        // Still a lobby — discard the empty lobby.
+        lobbyStore.remove(roomId);
     }
 }

@@ -21,6 +21,10 @@ public class RoadBuildingFlow implements SubFlow {
         this.roadsRequired = roadsRequired;
     }
 
+    public static RoadBuildingFlow restore(int roadsPlaced, int roadsRequired) {
+        return new RoadBuildingFlow(roadsPlaced, roadsRequired);
+    }
+
     @Override public GamePhase currentPhase() { return GamePhase.ROAD_BUILDING; }
 
     @Override

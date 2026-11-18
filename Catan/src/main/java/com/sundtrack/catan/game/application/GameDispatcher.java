@@ -17,8 +17,7 @@ import com.sundtrack.catan.game.domain.PlayerStats;
 import com.sundtrack.catan.game.domain.PlayerStatsDiff;
 import com.sundtrack.catan.game.dto.snapshot.EndSummaryDTO;
 import com.sundtrack.catan.game.application.handler.GameActionHandler;
-import com.sundtrack.catan.game.application.port.ActiveGameRegistry;
-import com.sundtrack.catan.game.application.port.GameArchive;
+import com.sundtrack.catan.game.application.port.GameQueryPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,18 +30,17 @@ public class GameDispatcher {
     private static final Logger log = LoggerFactory.getLogger(GameDispatcher.class);
 
     private final GameHandlerRegistry registry;
-    private final ActiveGameRegistry activeGames;
-    private final GameArchive gameArchive;
+    private final GameQueryPort gameQuery;
 
-    public GameDispatcher(GameHandlerRegistry registry, ActiveGameRegistry activeGames, GameArchive gameArchive) {
+    public GameDispatcher(GameHandlerRegistry registry, GameQueryPort gameQuery) {
         this.registry = registry;
-        this.activeGames = activeGames;
-        this.gameArchive = gameArchive;
+        this.gameQuery = gameQuery;
     }
 
-    public EventResult<ServerEvent> dispatch(GameContext context, ClientAction action) {
+    /** Active-game path: the caller already loaded the Game, so we don't re-load it here. */
+    public EventResult<ServerEvent> dispatch(GameContext context, Game game, ClientAction action) {
         try {
-            return doDispatch(context, action);
+            return doDispatch(context, game, action);
         } catch (GameRuleException e) {
             log.info("Game action rejected: {} ({})", e.code(), e.getMessage());
             return errorResult(context, e.code(), e.getMessage(), e.details());
@@ -54,14 +52,18 @@ public class GameDispatcher {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private EventResult<ServerEvent> doDispatch(GameContext context, ClientAction action) {
-        Optional<Game> active = activeGames.findActive(context.gameId());
-
-        if (active.isEmpty()) {
-            return dispatchFinished(context, action);
+    /** Finished-game path: historical reads only, never mutations. */
+    public EventResult<ServerEvent> dispatchFinished(GameContext context, ClientAction action) {
+        if (action instanceof EndSummaryAction) {
+            EndSummaryDTO summary = gameQuery.findEndSummary(context.gameId())
+                    .orElseThrow(() -> new IllegalStateException("Unknown game: " + context.gameId()));
+            return EventResult.directed(context.playerId(), new EndSummaryEvent(summary));
         }
+        throw new IllegalStateException("Game is finished: " + context.gameId());
+    }
 
+    @SuppressWarnings("unchecked")
+    private EventResult<ServerEvent> doDispatch(GameContext context, Game game, ClientAction action) {
         GameActionHandler<ClientAction> handler =
                 (GameActionHandler<ClientAction>) registry.get(action.getClass());
         if (handler == null) {
@@ -69,7 +71,6 @@ public class GameDispatcher {
                     "No handler registered for " + action.getClass().getSimpleName());
         }
 
-        Game game = active.get();
         DispatchSnapshot before = DispatchSnapshot.capture(game);
 
         EventResult<ServerEvent> result = handler.handle(context, game, action);
@@ -85,17 +86,6 @@ public class GameDispatcher {
                                                  String message, Map<String, Object> details) {
         GameErrorEvent error = new GameErrorEvent(code.toString(), message, details);
         return EventResult.of(List.of(), Map.of(context.playerId(), List.of(error)));
-    }
-
-    private EventResult<ServerEvent> dispatchFinished(GameContext context, ClientAction action) {
-        if (action instanceof EndSummaryAction) {
-            EndSummaryDTO summary = gameArchive.findEndSummary(context.gameId())
-                    .orElseThrow(() -> new IllegalStateException("Unknown game: " + context.gameId()));
-            return EventResult.directed(context.playerId(), new EndSummaryEvent(summary));
-        }
-
-        // Finished games only support historical reads — never mutations.
-        throw new IllegalStateException("Game is finished: " + context.gameId());
     }
 
     private EventResult<ServerEvent> mergeCrossCuttingEvents(Game game, DispatchSnapshot before,

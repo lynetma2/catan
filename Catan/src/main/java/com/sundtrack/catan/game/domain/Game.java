@@ -44,18 +44,35 @@ public class Game {
     private final UUID id;
     private final List<GamePlayer> players;
 
-    public Game(UUID id, List<GamePlayer> players, Board board, GameFlow flow, TradeBook tradeBook, List<RecordedEvent> gameEvents, DicePair dicePair, DevelopmentCardBank developmentCardBank, ResourceBank resourceBank, GameConfiguration gameConfiguration) {
+    public Game(UUID id, List<GamePlayer> players, Board board, GameFlow flow, TradeBook tradeBook,
+                List<RecordedEvent> gameEvents, DicePair dicePair, DevelopmentCardBank developmentCardBank,
+                ResourceBank resourceBank, GameConfiguration gameConfiguration) {
+        this(id, players, board, flow, tradeBook, gameEvents, dicePair, developmentCardBank,
+                resourceBank, gameConfiguration, new GameAwards(gameConfiguration));
+    }
+
+    private Game(UUID id, List<GamePlayer> players, Board board, GameFlow flow, TradeBook tradeBook,
+                 List<RecordedEvent> gameEvents, DicePair dicePair, DevelopmentCardBank developmentCardBank,
+                 ResourceBank resourceBank, GameConfiguration gameConfiguration, GameAwards gameAwards) {
         this.id = id;
-        this.players = players;
+        this.players = new ArrayList<>(players);
         this.board = board;
         this.flow = flow;
         this.tradeBook = tradeBook;
-        this.gameEvents = gameEvents;
+        this.gameEvents = new ArrayList<>(gameEvents);
         this.dicePair = dicePair;
         this.developmentCardBank = developmentCardBank;
         this.resourceBank = resourceBank;
         this.gameConfiguration = gameConfiguration;
-        gameAwards = new GameAwards(gameConfiguration);
+        this.gameAwards = gameAwards;
+    }
+
+    public static Game restore(UUID id, List<GamePlayer> players, Board board, GameFlow flow,
+                               TradeBook tradeBook, DicePair dicePair, DevelopmentCardBank developmentCardBank,
+                               ResourceBank resourceBank, GameConfiguration gameConfiguration, GameAwards gameAwards,
+                               List<RecordedEvent> gameEvents) {
+        return new Game(id, players, board, flow, tradeBook, gameEvents, dicePair,
+                developmentCardBank, resourceBank, gameConfiguration, gameAwards);
     }
 
     public UUID getId() {
@@ -607,6 +624,17 @@ public class Game {
 
         return new TradeBook.TradeTerms(offeredResources, wantedResources);
     }
+
+    // Add these to Game class
+    public Board getBoard() { return board; }
+    public GameFlow getFlow() { return flow; }
+    public TurnOrder getTurnOrder() { return flow.getTurnOrder(); }
+    public TradeBook getTradeBook() { return tradeBook; }
+    public DevelopmentCardBank getDevelopmentCardBank() { return developmentCardBank; }
+    public ResourceBank getResourceBank() { return resourceBank; }
+    public GameAwards getGameAwards() { return gameAwards; }
+    public DicePair getDicePair() { return dicePair; }
+    public List<RecordedEvent> getRecordedEvents() { return List.copyOf(gameEvents); }
 
     public record PlacementResult<T>(Building<T> building, List<Resource> deductedResources,
                                      List<Resource> grantedResources) {

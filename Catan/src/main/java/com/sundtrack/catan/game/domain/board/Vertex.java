@@ -2,6 +2,7 @@ package com.sundtrack.catan.game.domain.board;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public record Vertex(List<Hex> hexes) {

@@ -23,6 +23,14 @@ public class GameFlow {
         this.activeFlows.push(SetupFlow.start(turnOrder));
     }
 
+    public static GameFlow restore(TurnOrder turnOrder, GamePhase basePhase, int turnNumber, Deque<SubFlow> activeFlows) {
+        GameFlow flow = new GameFlow(turnOrder, turnNumber);
+        flow.basePhase = basePhase;
+        flow.activeFlows.clear(); // Remove the auto-pushed SetupFlow
+        flow.activeFlows.addAll(activeFlows);
+        return flow;
+    }
+
     public GamePhase getCurrentPhase() {
         return activeFlows.isEmpty() ? basePhase : activeFlows.peek().currentPhase();
     }
@@ -99,6 +107,10 @@ public class GameFlow {
     public boolean isFinalSetupRound() {
         return turnOrder.isFinalSetupRound();
     }
+
+    public TurnOrder getTurnOrder() { return turnOrder; }
+    public GamePhase getBasePhase() { return basePhase; }
+    public Deque<SubFlow> getActiveFlows() { return new ArrayDeque<>(activeFlows); }  // Defensive copy
 
     public record TurnAdvanceResult(UUID previousPlayerId, UUID newCurrentPlayerId, int newTurnNumber,
                                     GamePhase initialPhase) {

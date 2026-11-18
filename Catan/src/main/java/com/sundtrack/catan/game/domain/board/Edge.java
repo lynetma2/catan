@@ -1,5 +1,7 @@
 package com.sundtrack.catan.game.domain.board;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -44,6 +46,7 @@ public record Edge(List<Hex> hexes) {
      * Each vertex is the intersection of the two edge hexes plus a third hex
      * that lies on one side of the edge.
      */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     public List<Vertex> getVertices() {
         Hex a = hexes.get(0);
         Hex b = hexes.get(1);

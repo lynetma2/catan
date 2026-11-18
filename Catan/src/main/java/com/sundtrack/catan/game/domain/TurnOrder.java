@@ -22,8 +22,8 @@ public class TurnOrder {
         return new TurnOrder(List.copyOf(playerIds), 0, false);
     }
 
-    public static TurnOrder restore(List<UUID> playerIds, int index, boolean reversed) {
-        return new TurnOrder(List.copyOf(playerIds), index, reversed);
+    public static TurnOrder restore(List<UUID> playerIds, int currentIndex, boolean reversed) {
+        return new TurnOrder(List.copyOf(playerIds), currentIndex, reversed);
     }
 
     public UUID currentPlayerId() {
@@ -64,6 +64,14 @@ public class TurnOrder {
 
     public List<UUID> getPlayerIds() {
         return playerIds;
+    }
+
+    public int getCurrentIndex() {
+        return index;
+    }
+
+    public boolean isReversed() {
+        return reversed;
     }
 
     public enum SetupAdvanceResult {
